@@ -13,7 +13,7 @@ from collections import defaultdict
 #HASHTAG_STARTING_WINDOW = datetime.datetime(2011, 2, 1)
 #HASHTAG_ENDING_WINDOW = datetime.datetime(2011, 11, 30)
 
-MIN_HASHTAG_OCCURENCES = 25
+MIN_HASHTAG_OCCURENCES = 50
 HASHTAG_STARTING_WINDOW = datetime.datetime(2011, 3, 1)
 HASHTAG_ENDING_WINDOW = datetime.datetime(2011, 10, 31)
 
@@ -21,7 +21,7 @@ def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
     l = data['geo']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
-    for h in data['h']: yield h, [l, t]
+    for h in data['h']: yield h.lower(), [l, t]
 
 class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -52,10 +52,17 @@ class MRAnalysis(ModifiedMRJob):
     ''' End: Methods to get hashtag objects
     '''
     
+    def getHashtagDistributionInTime(self,  key, hashtagObject):
+        distribution = defaultdict(int)
+        for _, t in hashtagObject['oc']: distribution[int(t/3600)*3600]+=1
+        yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'd': distribution.items()}
+    
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
+    def jobsToGetHashtagDistributionInTime(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInTime, None)]
     
     def steps(self):
-        return self.jobsToGetHastagObjects() + self.jobsToCountNumberOfKeys()
+#        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
+        return self.jobsToGetHashtagDistributionInTime()
 
 if __name__ == '__main__':
     MRAnalysis.run()

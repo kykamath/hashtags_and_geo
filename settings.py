@@ -6,9 +6,6 @@ Created on Nov 19, 2011
 
 # Boundaries
 us_boundary = [[24.527135,-127.792969], [49.61071,-59.765625]]
-brazos_valley_boundary = [[30.546887,-96.50322], [30.696973,-96.214828]]
-austin_tx_boundary = [[30.097613,-97.971954], [30.486551,-97.535248]]
-dallas_tx_boundary = [[32.735307,-96.862335], [32.886507,-96.723633]]
-north_ca_boundary = [[37.068328,-122.640381], [37.924701,-122.178955]]
-world_boundary = [[-90,-180], [90, 180]]
-ny_boundary = [[40.491, -74.356], [41.181, -72.612]]
+
+hashtagsAnalysisFolder = '/mnt/chevron/kykamath/data/geo/hashtags/analysis/'
+hashtagsDistributionInTimeFile = hashtagsAnalysisFolder+'hashtagsDistributionInTime'
