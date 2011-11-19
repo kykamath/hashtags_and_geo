@@ -18,10 +18,10 @@ def iterateHashtagObjectInstances(line):
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
     for h in data['h']: yield h, [l, t]
 
-class MRExperiments(ModifiedMRJob):
+class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
-        super(MRExperiments, self).__init__(*args, **kwargs)
+        super(MRAnalysis, self).__init__(*args, **kwargs)
         self.hashtags = defaultdict(list)
         
     ''' Start: Methods to get hashtag objects
@@ -53,4 +53,4 @@ class MRExperiments(ModifiedMRJob):
         return self.jobsToGetHastagObjects() + self.jobsToCountNumberOfKeys()
 
 if __name__ == '__main__':
-    MRExperiments.run()
+    MRAnalysis.run()
