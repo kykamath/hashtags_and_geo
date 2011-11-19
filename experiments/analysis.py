@@ -11,5 +11,5 @@ from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatti
 
 
 tempInputFile = 'hdfs:///user/kykamath/geo/twitter/2_11'
-#runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':90})
-runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':90})
+runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
+#runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
