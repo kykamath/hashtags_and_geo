@@ -8,9 +8,14 @@ from library.mrjobwrapper import ModifiedMRJob
 import cjson, time, datetime
 from collections import defaultdict
 
+
+#MIN_HASHTAG_OCCURENCES = 1
+#HASHTAG_STARTING_WINDOW = datetime.datetime(2011, 2, 1)
+#HASHTAG_ENDING_WINDOW = datetime.datetime(2011, 11, 30)
+
 MIN_HASHTAG_OCCURENCES = 25
-HASHTAG_STARTING_WINDOW = datetime.datetime(2011, 2, 1)
-HASHTAG_ENDING_WINDOW = datetime.datetime(2011, 11, 30)
+HASHTAG_STARTING_WINDOW = datetime.datetime(2011, 3, 1)
+HASHTAG_ENDING_WINDOW = datetime.datetime(2011, 10, 31)
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
