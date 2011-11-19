@@ -5,7 +5,7 @@ Created on Nov 19, 2011
 '''
 import sys
 sys.path.append('../')
-from analysis.mr_analysis import MRAnalysis
+from experiments.mr_analysis import MRAnalysis
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile
 
