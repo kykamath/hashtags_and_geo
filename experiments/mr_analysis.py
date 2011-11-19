@@ -5,9 +5,11 @@ Created on Nov 19, 2011
 '''
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from library.mrjobwrapper import ModifiedMRJob
+from library.geo import getLatticeLid
 import cjson, time, datetime
 from collections import defaultdict
 
+ACCURACY = 0.1
 
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = datetime.datetime(2011, 2, 1)
@@ -57,8 +59,14 @@ class MRAnalysis(ModifiedMRJob):
         for _, t in hashtagObject['oc']: distribution[int(t/3600)*3600]+=1
         yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'd': distribution.items()}
     
+    def getHashtagDistributionInLattice(self,  key, hashtagObject):
+        distribution = defaultdict(int)
+        for l, _ in hashtagObject['oc']: distribution[getLatticeLid(l, accuracy=ACCURACY)]+=1
+        yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'd': distribution.items()}
+    
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
     def jobsToGetHashtagDistributionInTime(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInTime, None)]
+    def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
