@@ -14,7 +14,7 @@ checkinsFile = 'checkins/%s'
 
 def tweetFilesIterator():
     bdeDataFolder = '/mnt/chevron/bde/Data/TweetData/GeoTweets/2011/%s/%s/'
-    for month in range(2, 12):
+    for month in range(3, 12):
         outputFile = checkinsFile%month
         for day in range(1, 32):
             tweetsDayFolder = bdeDataFolder%(month, day)
