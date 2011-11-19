@@ -45,5 +45,5 @@ for outputFile, file in tweetFilesIterator():
                 checkin[geo[0]] = geo[1]
                 FileIO.writeToFileAsJson(checkin, outputFile)
         except Exception as e: 
-            print line
+#            print line
             print e
