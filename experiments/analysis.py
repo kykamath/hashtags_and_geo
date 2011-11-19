@@ -13,12 +13,12 @@ import matplotlib.pyplot as plt
 
 def plotHashtagDistributionInTime():
     for h in FileIO.iterateJsonFromFile(hashtagsDistributionInTimeFile):
-        if h['t']>3000:
+        if h['t']>300:
             distribution = dict(h['d'])
 #            print unicode(h['h']).encode('utf-8'), h['t']
             ax = plt.subplot(111)
             dataX = sorted(distribution)
-            plt.plot_date([datetime.datetime.fromtimestamp(e) for e in dataX], [distribution[x] for x in dataX], '-')
+            plt.plot_date([datetime.datetime.fromtimestamp(e) for e in dataX], [distribution[x] for x in dataX])
             plt.title('%s (%s)'%(h['h'], h['t']))
             plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
             plt.xlim(xmin=datetime.datetime(2011, 2, 1), xmax=datetime.datetime(2011, 11, 30))
@@ -26,9 +26,9 @@ def plotHashtagDistributionInTime():
 
 def mr_analysis():
     tempInputFile = 'hdfs:///user/kykamath/geo/twitter/2_11'
-    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-    #runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
     mr_analysis()
-    #plotHashtagDistributionInTime()
+#    plotHashtagDistributionInTime()
