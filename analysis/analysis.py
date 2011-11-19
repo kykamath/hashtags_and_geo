@@ -3,8 +3,10 @@ Created on Nov 19, 2011
 
 @author: kykamath
 '''
+import sys
+sys.path.append('../')
 from library.mrjobwrapper import runMRJob
-from mr_analysis import MRAnalysis
+from analysis.mr_analysis import MRAnalysis
 from settings import hashtagsDistributionInTimeFile
 
 
