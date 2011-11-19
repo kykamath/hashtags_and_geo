@@ -11,7 +11,7 @@ from collections import defaultdict
 
 ACCURACY = 0.1
 
-#MIN_HASHTAG_OCCURENCES = 1
+#MIN_HASHTAG_OCCURENCES = 25
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
 #HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
 
@@ -41,15 +41,15 @@ class MRAnalysis(ModifiedMRJob):
             yield h, {'oc': instances, 'e': min(instances, key=lambda t: t[1]), 'l': max(instances, key=lambda t: t[1])}
     def combine_hashtag_instances(self, key, values):
         occurences = []
-        e, l = None, None
+#        e, l = None, None
         for instances in values:
-            if e==None or e<instances['e'][1]: e = instances['e']
-            if l==None or l>instances['l'][1]: l = instances['l']
+#            if e==None or e<instances['e'][1]: e = instances['e']
+#            if l==None or l>instances['l'][1]: l = instances['l']
             occurences+=instances['oc']
+        e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
         numberOfInstances=len(occurences)
         if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
-            datetime.datetime.fromtimestamp(e[1])>=HASHTAG_STARTING_WINDOW and \
-            datetime.datetime.fromtimestamp(l[1])<=HASHTAG_ENDING_WINDOW:
+            e[1]>=HASHTAG_STARTING_WINDOW and l[1]<=HASHTAG_ENDING_WINDOW:
                 yield key, {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': occurences}
     ''' End: Methods to get hashtag objects
     '''
