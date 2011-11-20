@@ -5,15 +5,16 @@ Created on Nov 19, 2011
 '''
 import sys, datetime
 sys.path.append('../')
-from library.geo import getHaversineDistance, getLatticeLid
+from library.geo import getHaversineDistance, getLatticeLid, getLattice
 from experiments.mr_wc import MRWC
 from library.file_io import FileIO
 from experiments.mr_analysis import MRAnalysis
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
-    hashtagsWithoutEndingWindowFile
+    hashtagsWithoutEndingWindowFile, hashtagsAverageHaversineDistanceFile
 import matplotlib.pyplot as plt
+from itertools import combinations
 import numpy as np
 
 def getModifiedLatticeLid(point, accuracy=0.0075):
@@ -53,15 +54,30 @@ def plotTimeVsDistance():
 #            plt.savefig(hashtagsImagesTimeVsDistanceFolder+'%s.png'%h['h'])
 #            plt.clf()
 
+def tempAnalysisHashtag():
+    accuracy = 1.45
+    percentageOfEarlyLattices = [0.01*i for i in range(1, 11)]
+    def getAverageHaversineDistance(hashtagObject): 
+        def averageHaversineDistance(llids): return np.mean(list(getHaversineDistance(getLattice(l1,accuracy), getLattice(l2,accuracy)) for l1, l2 in combinations(llids, 2)))
+        llids = sorted([t[0] for t in hashtagObject['oc'] ], key=lambda t: t[1])
+        return [(p, averageHaversineDistance(llids[:int(p*len(llids))])) for p in percentageOfEarlyLattices]
+            
+    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile):
+        if h['t']>300:
+#            llids = sorted([t[0] for t in h['oc'] ], key=lambda t: t[1])
+            print h['h'], h['t'], getAverageHaversineDistance(h)
+#            exit()
+
 def mr_analysis():
     tempInputFile = 'hdfs:///user/kykamath/geo/twitter/2_11'
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsAverageHaversineDistanceFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
     mr_analysis()
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
-
+#    tempAnalysisHashtag()
