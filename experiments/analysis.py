@@ -66,7 +66,7 @@ def mr_analysis():
 #    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsAverageHaversineDistanceFile, getInputFiles(range(2,3)), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsAverageHaversineDistanceFile, getInputFiles(range(2,6)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
     mr_analysis()
