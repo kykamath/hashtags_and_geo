@@ -18,7 +18,7 @@ class MRWC(ModifiedMRJob):
 #        self.clusters = np.array(cjson.decode(data)['clusters'])
     def mapper(self, key, line):
         for w in line.split(): yield w, 1
-    def reducer(self, key, values): yield key, sum(list(values))
+    def reducer(self, key, values): yield key, [key, sum(list(values))]
     
 if __name__ == '__main__':
     MRWC.run()
