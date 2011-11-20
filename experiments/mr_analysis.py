@@ -11,13 +11,13 @@ from collections import defaultdict
 
 ACCURACY = 0.1
 
-#MIN_HASHTAG_OCCURENCES = 25
-#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
-#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
+MIN_HASHTAG_OCCURENCES = 1
+HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
+HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
 
-MIN_HASHTAG_OCCURENCES = 50
-HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
-HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
+#MIN_HASHTAG_OCCURENCES = 50
+#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
+#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
@@ -69,9 +69,9 @@ class MRAnalysis(ModifiedMRJob):
     def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
     
     def steps(self):
-#        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
+        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
 #        return self.jobsToGetHashtagDistributionInTime()
-        return self.jobsToGetHashtagDistributionInLattice()
+#        return self.jobsToGetHashtagDistributionInLattice()
 
 if __name__ == '__main__':
     MRAnalysis.run()
