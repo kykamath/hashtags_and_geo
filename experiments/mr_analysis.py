@@ -88,10 +88,10 @@ class MRAnalysis(ModifiedMRJob):
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
-#        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
-        return self.jobsToGetAverageHaversineDistance()
+#        return self.jobsToGetAverageHaversineDistance()
 
 if __name__ == '__main__':
     MRAnalysis.run()
