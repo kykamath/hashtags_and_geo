@@ -58,9 +58,9 @@ def plotTimeVsDistance():
 #            plt.clf()
 
 def tempAnalysisHashtag():
-    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile):
+    for h in FileIO.iterateJsonFromFile(hashtagsCenterOfMassAnalysisFile):
 #        print h['h'], h['t'], int(h['ahd'][0][1]), int(h['ahd'][-1][1])
-        print h['h'], h['t'], h['oc'][:10]
+        print h['h'], h['t'], int(h['ahd'][0][1][1]), int(h['ahd'][-1][1][1])
 
 def mr_analysis():
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
