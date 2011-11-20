@@ -4,7 +4,7 @@ Created on Nov 19, 2011
 @author: kykamath
 '''
 import sys, datetime
-from library.geo import getHaversineDistance
+from library.geo import getHaversineDistance, getLatticeLid
 sys.path.append('../')
 from library.file_io import FileIO
 from experiments.mr_analysis import MRAnalysis
@@ -12,6 +12,10 @@ from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder
 import matplotlib.pyplot as plt
+import numpy as np
+
+def getModifiedLatticeLid(point, accuracy=0.0075):
+    return '%0.1f_%0.1f'%(int(point[0]/accuracy)*accuracy, int(point[1]/accuracy)*accuracy)
 
 def plotHashtagDistributionInTime():
     for h in FileIO.iterateJsonFromFile(hashtagsDistributionInTimeFile):
@@ -27,16 +31,25 @@ def plotHashtagDistributionInTime():
             plt.show()
 
 def plotTimeVsDistance():
+#    def printLattice(lattice): return '%0.1f '
     i = 1
     for h in FileIO.iterateJsonFromFile(hashtagsFile):
         if h['t']>300:
-            occurences = sorted(h['oc'], key=lambda t: t[1])
+            occurrenceTimes = [t[1] for t in h['oc']] 
+            mean, std = np.mean(occurrenceTimes), np.std(occurrenceTimes)
+#            print mean, std
+            window=1
+            lowerTimeBoundary, upperTimeBoundary = int(mean-window*std), int(mean+window*std)
+            occurences = sorted([t for t in h['oc'] if  t[1]>=lowerTimeBoundary and t[1]<=upperTimeBoundary], key=lambda t: t[1])
+#            print len(h['oc']), len(occurences)
             initialLattice, initialTime  = occurences[0]
-            print i, h['h']; i+=1
-            for l, t in occurences[1:]: plt.semilogx(t-initialTime, getHaversineDistance(initialLattice, l), 'o', color='b')
-            plt.title('%s (%s)'%(h['h'], h['t']))
-            plt.savefig(hashtagsImagesTimeVsDistanceFolder+'%s.png'%h['h'])
-            plt.clf()
+            print i, h['h'], len(h['oc']), int(len(h['oc'])*0.01) #[getModifiedLatticeLid(l[0],accuracy=1.45).replace('_', ',') for l in occurences[:5]]  ; i+=1;
+#            for l,t in occurences: plt.semilogx(t-initialTime, getHaversineDistance(initialLattice, l), 'o', color='b')
+            
+#            for l, t in occurences[1:]: plt.plot(t-mean, getHaversineDistance(initialLattice, l), 'o', color='b')
+#            plt.title('%s (%s)'%(h['h'], h['t']))
+#            plt.savefig(hashtagsImagesTimeVsDistanceFolder+'%s.png'%h['h'])
+#            plt.clf()
 
 def mr_analysis():
     tempInputFile = 'hdfs:///user/kykamath/geo/twitter/2_11'
