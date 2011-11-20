@@ -72,7 +72,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def getAverageHaversineDistance(self,  key, hashtagObject): 
         if hashtagObject['t'] >= 1000:
-            accuracy, percentageOfEarlyLattices = 1.45,  [0.01*i for i in range(1, 11)]
+            accuracy, percentageOfEarlyLattices = 0.5,  [0.01*i for i in range(1, 11)]
             def averageHaversineDistance(llids): 
                 if len(llids)>=2: return np.mean(list(getHaversineDistance(getLattice(l1,accuracy), getLattice(l2,accuracy)) for l1, l2 in combinations(llids, 2)))
             llids = sorted([t[0] for t in hashtagObject['oc'] ], key=lambda t: t[1])
