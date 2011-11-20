@@ -12,7 +12,8 @@ from experiments.mr_analysis import MRAnalysis
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
-    hashtagsWithoutEndingWindowFile, hashtagsAverageHaversineDistanceFile
+    hashtagsWithoutEndingWindowFile, hashtagsAverageHaversineDistanceFile,\
+    tempInputFile, inputFolder
 import matplotlib.pyplot as plt
 from itertools import combinations
 import numpy as np
@@ -59,12 +60,13 @@ def tempAnalysisHashtag():
         print h['h'], h['t'], int(h['ahd'][0][1]), int(h['ahd'][-1][1])
 
 def mr_analysis():
-    tempInputFile = 'hdfs:///user/kykamath/geo/twitter/2_11'
+    def getInputFiles(months): return [inputFolder+str(m) for m in months]
+#    print getInputFiles(range(2,6))
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsAverageHaversineDistanceFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsAverageHaversineDistanceFile, getInputFiles(range(2,6)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
     mr_analysis()
