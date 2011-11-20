@@ -23,7 +23,9 @@ HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
-    l = data['geo']
+    l = None
+    if 'geo' in data: l = data['geo']
+    else: l = data['bb']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
     for h in data['h']: yield h.lower(), [l, t]
 
