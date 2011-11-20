@@ -71,11 +71,12 @@ class MRAnalysis(ModifiedMRJob):
         yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'd': distribution.items()}
     
     def getAverageHaversineDistance(self,  key, hashtagObject): 
-        accuracy, percentageOfEarlyLattices = 1.45,  [0.01*i for i in range(1, 11)]
-        def averageHaversineDistance(llids): 
-            if len(llids)>=2: return np.mean(list(getHaversineDistance(getLattice(l1,accuracy), getLattice(l2,accuracy)) for l1, l2 in combinations(llids, 2)))
-        llids = sorted([t[0] for t in hashtagObject['oc'] ], key=lambda t: t[1])
-        yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'ahd': [(p, averageHaversineDistance(llids[:int(p*len(llids))])) for p in percentageOfEarlyLattices]}
+        if hashtagObject['t'] >= 200:
+            accuracy, percentageOfEarlyLattices = 1.45,  [0.01*i for i in range(1, 11)]
+            def averageHaversineDistance(llids): 
+                if len(llids)>=2: return np.mean(list(getHaversineDistance(getLattice(l1,accuracy), getLattice(l2,accuracy)) for l1, l2 in combinations(llids, 2)))
+            llids = sorted([t[0] for t in hashtagObject['oc'] ], key=lambda t: t[1])
+            yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'ahd': [(p, averageHaversineDistance(llids[:int(p*len(llids))])) for p in percentageOfEarlyLattices]}
     
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]

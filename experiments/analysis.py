@@ -54,20 +54,6 @@ def plotTimeVsDistance():
 #            plt.savefig(hashtagsImagesTimeVsDistanceFolder+'%s.png'%h['h'])
 #            plt.clf()
 
-def tempAnalysisHashtag():
-    accuracy = 1.45
-    percentageOfEarlyLattices = [0.01*i for i in range(1, 11)]
-    def getAverageHaversineDistance(hashtagObject): 
-        def averageHaversineDistance(llids): return np.mean(list(getHaversineDistance(getLattice(l1,accuracy), getLattice(l2,accuracy)) for l1, l2 in combinations(llids, 2)))
-        llids = sorted([t[0] for t in hashtagObject['oc'] ], key=lambda t: t[1])
-        return [(p, averageHaversineDistance(llids[:int(p*len(llids))])) for p in percentageOfEarlyLattices]
-            
-    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile):
-        if h['t']>300:
-#            llids = sorted([t[0] for t in h['oc'] ], key=lambda t: t[1])
-            print h['h'], h['t'], getAverageHaversineDistance(h)
-#            exit()
-
 def mr_analysis():
     tempInputFile = 'hdfs:///user/kykamath/geo/twitter/2_11'
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
