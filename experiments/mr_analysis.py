@@ -41,11 +41,7 @@ class MRAnalysis(ModifiedMRJob):
             yield h, {'oc': instances, 'e': min(instances, key=lambda t: t[1]), 'l': max(instances, key=lambda t: t[1])}
     def combine_hashtag_instances(self, key, values):
         occurences = []
-#        e, l = None, None
-        for instances in values:
-#            if e==None or e<instances['e'][1]: e = instances['e']
-#            if l==None or l>instances['l'][1]: l = instances['l']
-            occurences+=instances['oc']
+        for instances in values: occurences+=instances['oc']
         e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
         numberOfInstances=len(occurences)
         if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \

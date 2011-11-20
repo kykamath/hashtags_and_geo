@@ -11,3 +11,6 @@ hashtagsAnalysisFolder = '/mnt/chevron/kykamath/data/geo/hashtags/analysis/'
 hashtagsFile = hashtagsAnalysisFolder+'hashtags'
 hashtagsDistributionInTimeFile = hashtagsAnalysisFolder+'hashtagsDistributionInTime'
 hashtagsDistributionInLatticeFile = hashtagsAnalysisFolder+'hashtagsDistributionInLattice'
+
+hashtagsImagesFolder = '/data/geo/hashtags/images/'
+hashtagsImagesTimeVsDistanceFolder = hashtagsImagesFolder+'time_vs_distance/'
