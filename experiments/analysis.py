@@ -4,8 +4,9 @@ Created on Nov 19, 2011
 @author: kykamath
 '''
 import sys, datetime
-from library.geo import getHaversineDistance, getLatticeLid
 sys.path.append('../')
+from library.geo import getHaversineDistance, getLatticeLid
+from experiments.mr_wc import MRWC
 from library.file_io import FileIO
 from experiments.mr_analysis import MRAnalysis
 from library.mrjobwrapper import runMRJob
@@ -60,4 +61,6 @@ def mr_analysis():
 if __name__ == '__main__':
 #    mr_analysis()
 #    plotHashtagDistributionInTime()
-    plotTimeVsDistance()
+#    plotTimeVsDistance()
+
+    runMRJob(MRWC, 'temp/file', ['hdfs:///user/kykamath/wc_example'])
