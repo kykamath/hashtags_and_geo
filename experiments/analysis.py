@@ -63,10 +63,10 @@ def mr_analysis():
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
 #    print getInputFiles(range(2,6))
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile, getInputFiles(range(2,6)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsAverageHaversineDistanceFile, getInputFiles(range(2,6)), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsAverageHaversineDistanceFile, getInputFiles(range(2,6)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
     mr_analysis()
