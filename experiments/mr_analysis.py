@@ -9,8 +9,6 @@ from library.geo import getLatticeLid, getHaversineDistance, getLattice,\
     getCenterOfMass
 import cjson, time, datetime
 from collections import defaultdict
-import numpy as np
-from itertools import combinations
 
 ACCURACY = 0.5
 
@@ -91,14 +89,14 @@ class MRAnalysis(ModifiedMRJob):
     def jobsToGetHashtagDistributionInTime(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInTime, None)]
     def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
 #    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
-    def jobsToDoHashtagCenterOfMassAnalysis(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.doHashtagCenterOfMassAnalysis, None)] 
+    def jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.doHashtagCenterOfMassAnalysis, None)] 
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
-        return self.jobsToDoHashtagCenterOfMassAnalysis()
+        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
 
 if __name__ == '__main__':
     MRAnalysis.run()

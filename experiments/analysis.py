@@ -12,7 +12,7 @@ from experiments.mr_analysis import MRAnalysis
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
-    hashtagsWithoutEndingWindowFile, hashtagsCenterOfMassAnalysisFile,\
+    hashtagsWithoutEndingWindowFile, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile,\
     tempInputFile, inputFolder
 import matplotlib.pyplot as plt
 from itertools import combinations
@@ -58,18 +58,19 @@ def plotTimeVsDistance():
 #            plt.clf()
 
 def tempAnalysisHashtag():
-    for h in FileIO.iterateJsonFromFile(hashtagsCenterOfMassAnalysisFile):
+    for h in FileIO.iterateJsonFromFile(hashtagsCenterOfMassAnalysisWithoutEndingWindowFile):
 #        print h['h'], h['t'], int(h['ahd'][0][1]), int(h['ahd'][-1][1])
         print h['h'], h['t'], int(h['ahd'][0][1][1]), int(h['ahd'][-1][1][1])
 
 def mr_analysis():
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
-#    print getInputFiles(range(2,6))
+#    timeRange = (2,5)
+    timeRange = (2,11)
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile, getInputFiles(range(2,6)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisFile, getInputFiles(range(2,6)), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
     mr_analysis()
