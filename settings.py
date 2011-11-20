@@ -15,7 +15,7 @@ inputFolder = 'hdfs:///user/kykamath/geo/hashtags/'
 hashtagsAnalysisFolder = '/mnt/chevron/kykamath/data/geo/hashtags/analysis/'
 hashtagsFile = hashtagsAnalysisFolder+'hashtags'
 hashtagsWithoutEndingWindowFile = hashtagsAnalysisFolder+'hashtagsWithoutEndingWindow'
-hashtagsAverageHaversineDistanceFile = hashtagsAnalysisFolder+'hashtagsAverageHaversineDistance'
+hashtagsCenterOfMassAnalysisFile = hashtagsAnalysisFolder+'hashtagsCenterOfMassAnalysis'
 hashtagsDistributionInTimeFile = hashtagsAnalysisFolder+'hashtagsDistributionInTime'
 hashtagsDistributionInLatticeFile = hashtagsAnalysisFolder+'hashtagsDistributionInLattice'
 

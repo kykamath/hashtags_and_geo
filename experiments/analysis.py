@@ -12,7 +12,7 @@ from experiments.mr_analysis import MRAnalysis
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
-    hashtagsWithoutEndingWindowFile, hashtagsAverageHaversineDistanceFile,\
+    hashtagsWithoutEndingWindowFile, hashtagsCenterOfMassAnalysisFile,\
     tempInputFile, inputFolder
 import matplotlib.pyplot as plt
 from itertools import combinations
@@ -33,6 +33,8 @@ def plotHashtagDistributionInTime():
             plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
             plt.xlim(xmin=datetime.datetime(2011, 2, 1), xmax=datetime.datetime(2011, 11, 30))
             plt.show()
+
+
 
 def plotTimeVsDistance():
 #    def printLattice(lattice): return '%0.1f '
@@ -56,17 +58,18 @@ def plotTimeVsDistance():
 #            plt.clf()
 
 def tempAnalysisHashtag():
-    for h in FileIO.iterateJsonFromFile(hashtagsAverageHaversineDistanceFile):
-        print h['h'], h['t'], int(h['ahd'][0][1]), int(h['ahd'][-1][1])
+    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile):
+#        print h['h'], h['t'], int(h['ahd'][0][1]), int(h['ahd'][-1][1])
+        print h['h'], h['t'], h['oc'][:10]
 
 def mr_analysis():
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
 #    print getInputFiles(range(2,6))
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile, getInputFiles(range(2,6)), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile, getInputFiles(range(2,6)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-#    runMRJob(MRAnalysis, hashtagsAverageHaversineDistanceFile, getInputFiles(range(2,6)), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisFile, getInputFiles(range(2,6)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
     mr_analysis()

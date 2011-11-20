@@ -5,13 +5,14 @@ Created on Nov 19, 2011
 '''
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from library.mrjobwrapper import ModifiedMRJob
-from library.geo import getLatticeLid, getHaversineDistance, getLattice
+from library.geo import getLatticeLid, getHaversineDistance, getLattice,\
+    getCenterOfMass
 import cjson, time, datetime
 from collections import defaultdict
 import numpy as np
 from itertools import combinations
 
-ACCURACY = 0.1
+ACCURACY = 0.5
 
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
@@ -27,7 +28,7 @@ def iterateHashtagObjectInstances(line):
     if 'geo' in data: l = data['geo']
     else: l = data['bb']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
-    for h in data['h']: yield h.lower(), [l, t]
+    for h in data['h']: yield h.lower(), [getLattice(l, ACCURACY), t]
 
 class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -72,26 +73,32 @@ class MRAnalysis(ModifiedMRJob):
         for l, _ in hashtagObject['oc']: distribution[getLatticeLid(l, accuracy=ACCURACY)]+=1
         yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'd': distribution.items()}
     
-    def getAverageHaversineDistance(self,  key, hashtagObject): 
-        if hashtagObject['t'] >= 1000:
-            accuracy, percentageOfEarlyLattices = 0.5,  [0.01*i for i in range(1, 11)]
-            def averageHaversineDistance(llids): 
-                if len(llids)>=2: return np.mean(list(getHaversineDistance(getLattice(l1,accuracy), getLattice(l2,accuracy)) for l1, l2 in combinations(llids, 2)))
-            llids = sorted([t[0] for t in hashtagObject['oc'] ], key=lambda t: t[1])
-            yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'ahd': [(p, averageHaversineDistance(llids[:int(p*len(llids))])) for p in percentageOfEarlyLattices]}
+#    def getAverageHaversineDistance(self,  key, hashtagObject): 
+#        if hashtagObject['t'] >= 1000:
+#            percentageOfEarlyLattices = [0.01*i for i in range(1, 11)]
+#            def averageHaversineDistance(llids): 
+#                if len(llids)>=2: return np.mean(list(getHaversineDistance(getLattice(l1,accuracy=ACCURACY), getLattice(l2,accuracy=ACCURACY)) for l1, l2 in combinations(llids, 2)))
+#            llids = sorted([t[0] for t in hashtagObject['oc'] ], key=lambda t: t[1])
+#            yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'ahd': [(p, averageHaversineDistance(llids[:int(p*len(llids))])) for p in percentageOfEarlyLattices]}
+
+    def doHashtagCenterOfMassAnalysis(self,  key, hashtagObject): 
+        percentageOfEarlyLattices = [0.01*i for i in range(1, 11)]
+        llids = sorted([t[0] for t in hashtagObject['oc'] ], key=lambda t: t[1])
+        yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'ahd': [(p, getCenterOfMass(llids[:int(p*len(llids))], accuracy=ACCURACY, error=True)) for p in percentageOfEarlyLattices]}
     
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
     def jobsToGetHashtagDistributionInTime(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInTime, None)]
     def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
-    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
+#    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
+    def jobsToDoHashtagCenterOfMassAnalysis(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.doHashtagCenterOfMassAnalysis, None)] 
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
-        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+#        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
-#        return self.jobsToGetAverageHaversineDistance()
+        return self.jobsToDoHashtagCenterOfMassAnalysis()
 
 if __name__ == '__main__':
     MRAnalysis.run()
