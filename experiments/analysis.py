@@ -67,10 +67,11 @@ def plotCenterOfMassHashtag(timeRange):
         dataX = sorted(data.keys())
         print h['h'], data[0.1]
         assignedLattice = h['com'][0][1][0]
-#        plt.plot(dataX, [data[k][1] for k in dataX])
-#        plt.title('%s %s (%s)'%(h['h'], assignedLattice, h['t']))
-#        plt.savefig('%s/%s_%s.png'%(hashtagsImagesCenterOfMassFolder, h['h'], '%s_%s'%(assignedLattice[0], assignedLattice[1])))
-#        plt.clf()
+        plt.plot(dataX, [data[k][1] for k in dataX])
+        plt.title('%s %s (%s)'%(h['h'], assignedLattice, h['t']))
+        plt.ylim(ymax=1500)
+        plt.savefig('%s/%s_%s.png'%(hashtagsImagesCenterOfMassFolder, h['h'], '%s_%s'%(assignedLattice[0], assignedLattice[1])))
+        plt.clf()
 #        exit()
 
 def doHashtagCenterOfMassAnalysis(hashtagObject): 
@@ -78,7 +79,6 @@ def doHashtagCenterOfMassAnalysis(hashtagObject):
     sortedOcc = sorted(hashtagObject['oc'], key=lambda t: t[1])
     llids = [t[0] for t in sortedOcc]
     return {'h':hashtagObject['h'], 't': hashtagObject['t'], 'com': [(p, getCenterOfMass(llids[:int(p*len(llids))], accuracy=0.5, error=True)) for p in percentageOfEarlyLattices]}
-    
 
 def tempAnalysisHashtag(timeRange):
     for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
@@ -105,3 +105,4 @@ if __name__ == '__main__':
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
 #    tempAnalysisHashtag(timeRange)
+#    plotCenterOfMassHashtag(timeRange)

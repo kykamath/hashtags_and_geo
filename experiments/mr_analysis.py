@@ -82,8 +82,12 @@ class MRAnalysis(ModifiedMRJob):
     def doHashtagCenterOfMassAnalysis(self,  key, hashtagObject): 
         percentageOfEarlyLattices = [0.01*i for i in range(1, 10)] + [0.1*i for i in range(1, 11)]
         sortedOcc = sorted(hashtagObject['oc'], key=lambda t: t[1])
-        llids = [t[0] for t in sortedOcc]
-        yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'com': [(p, getCenterOfMass(llids[:int(p*len(llids))], accuracy=ACCURACY, error=True)) for p in percentageOfEarlyLattices]}
+        llids = [t[0] for t in sortedOcc]; epochs = sortedOcc = [t[1] for t in sortedOcc]
+        yield key, {
+                    'h':hashtagObject['h'], 't': hashtagObject['t'], 
+                    'com': [(p, getCenterOfMass(llids[:int(p*len(llids))], accuracy=ACCURACY, error=True)) for p in percentageOfEarlyLattices],
+                    'ep': [(p, epochs[int(p*len(epochs))-1]) for p in percentageOfEarlyLattices]
+                }
     
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
