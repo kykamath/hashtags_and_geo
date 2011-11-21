@@ -10,7 +10,7 @@ from library.geo import getLatticeLid, getHaversineDistance, getLattice,\
 import cjson, time, datetime
 from collections import defaultdict
 
-ACCURACY = 0.5
+ACCURACY = 0.145
 
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
@@ -98,10 +98,10 @@ class MRAnalysis(ModifiedMRJob):
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
-#        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
-        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
+#        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
 
 if __name__ == '__main__':
     MRAnalysis.run()

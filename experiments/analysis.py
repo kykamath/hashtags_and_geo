@@ -68,7 +68,7 @@ def plotCenterOfMassHashtag(timeRange):
         print h['h'], comData[0.1]
         assignedLattice = h['com'][0][1][0]
         initialTime = h['ep'][0][1]
-        plt.subplot(211); plt.plot(dataX, [(epData[k]-initialTime)/3600 for k in dataX]); plt.ylabel('Hours')
+        plt.subplot(211); plt.semilogy(dataX, [(epData[k]-initialTime)/3600 for k in dataX]); plt.ylabel('Hours')
         plt.title('%s %s (%s)'%(h['h'], assignedLattice, h['t']))
         plt.subplot(212); plt.plot(dataX, [comData[k][1] for k in dataX])
         plt.ylim(ymax=1500)
@@ -82,29 +82,34 @@ def doHashtagCenterOfMassAnalysis(hashtagObject):
     llids = [t[0] for t in sortedOcc]
     return {'h':hashtagObject['h'], 't': hashtagObject['t'], 'com': [(p, getCenterOfMass(llids[:int(p*len(llids))], accuracy=0.5, error=True)) for p in percentageOfEarlyLattices]}
 
+def getSourceLattice(llids, percentageOfLlidsToConsider):
+    print getCenterOfMass(llids, accuracy=0.5, error=True)
+
 def tempAnalysisHashtag(timeRange):
     for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
         if h['h']=='occupyboston':
             sortedOcc = sorted(h['oc'], key=lambda t: t[1])
-            i=1
-            for o in sortedOcc:
-                print i, o[0], datetime.datetime.fromtimestamp(o[1]); i+=1
-            print doHashtagCenterOfMassAnalysis(h)
+            llids = [t[0] for t in sortedOcc]
+            print getSourceLattice(llids, 0.1)
+#            i=1
+#            for o in sortedOcc:
+#                print i, o[0], datetime.datetime.fromtimestamp(o[1]); i+=1
+#            print doHashtagCenterOfMassAnalysis(h)
 
 def mr_analysis(timeRange):
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
 #    timeRange = (2,5)
     timeRange = (2,11)
     
-#    mr_analysis(timeRange)
+    mr_analysis(timeRange)
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
 #    tempAnalysisHashtag(timeRange)
-    plotCenterOfMassHashtag(timeRange)
+#    plotCenterOfMassHashtag(timeRange)
