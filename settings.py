@@ -22,3 +22,4 @@ hashtagsDistributionInLatticeFile = hashtagsAnalysisFolder+'hashtagsDistribution
 # Images
 hashtagsImagesFolder = '/data/geo/hashtags/images/'
 hashtagsImagesTimeVsDistanceFolder = hashtagsImagesFolder+'time_vs_distance/'
+hashtagsImagesCenterOfMassFolder = hashtagsImagesFolder+'center_of_mass/'

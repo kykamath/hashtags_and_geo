@@ -40,7 +40,7 @@ for outputFile, file in tweetFilesIterator():
         try:
             data = cjson.decode(line)
             geo = getGeoData(data)
-            if geo and isWithinBoundingBox(geo[1], us_boundary): 
+            if geo:# and isWithinBoundingBox(geo[1], us_boundary): 
                 checkin = getCheckinObject(data)
                 checkin[geo[0]] = geo[1]
                 FileIO.writeToFileAsJson(checkin, outputFile)
