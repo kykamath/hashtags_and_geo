@@ -69,7 +69,7 @@ class MRAnalysis(ModifiedMRJob):
         sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
 #        hashtagObject['src'] = sorted([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])[-1]
         llids = sorted([t[0] for t in sortedOcc])
-        hashtagObject['src'] = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in llids], key=lambda t: t[1])
+        hashtagObject['src'] = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in set(llids)], key=lambda t: t[1])
         yield key, hashtagObject
             
     def getHashtagDistributionInTime(self,  key, hashtagObject):
@@ -110,7 +110,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
-        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
+        return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
 #        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()

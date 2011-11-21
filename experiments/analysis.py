@@ -95,8 +95,8 @@ def tempAnalysisHashtag(timeRange):
         if h['h'].startswith('occupy'):
 #            sortedOcc = sorted(h['oc'], key=lambda t: t[1])
 #            llids = [t[0] for t in sortedOcc]
-#        print h['h'], h['src'], int(h['t']*0.01)
-            print h['h'], getSourceLattice(h, 0.01)
+            print h['h'], h['src'], int(h['t']*0.01)
+#            print h['h'], getSourceLattice(h, 0.01)
 #            i=1
 #            for o in sortedOcc:
 #                print i, o[0], datetime.datetime.fromtimestamp(o[1]); i+=1
