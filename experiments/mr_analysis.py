@@ -81,7 +81,8 @@ class MRAnalysis(ModifiedMRJob):
 
     def doHashtagCenterOfMassAnalysis(self,  key, hashtagObject): 
         percentageOfEarlyLattices = [0.01*i for i in range(1, 10)] + [0.1*i for i in range(1, 11)]
-        llids = sorted([t[0] for t in hashtagObject['oc'] ], key=lambda t: t[1])
+        sortedOcc = sorted(hashtagObject['oc'], key=lambda t: t[1])
+        llids = [t[0] for t in sortedOcc]
         yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'com': [(p, getCenterOfMass(llids[:int(p*len(llids))], accuracy=ACCURACY, error=True)) for p in percentageOfEarlyLattices]}
     
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
@@ -93,10 +94,10 @@ class MRAnalysis(ModifiedMRJob):
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
-        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+#        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
-#        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
+        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
 
 if __name__ == '__main__':
     MRAnalysis.run()
