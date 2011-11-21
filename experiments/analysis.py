@@ -6,7 +6,7 @@ Created on Nov 19, 2011
 import sys, datetime
 sys.path.append('../')
 from library.geo import getHaversineDistance, getLatticeLid, getLattice,\
-    getCenterOfMass
+    getCenterOfMass, getLocationFromLid
 from operator import itemgetter
 from experiments.mr_wc import MRWC
 from library.file_io import FileIO
@@ -17,7 +17,7 @@ from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatti
     hashtagsWithoutEndingWindowFile, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile,\
     tempInputFile, inputFolder, hashtagsImagesCenterOfMassFolder
 import matplotlib.pyplot as plt
-from itertools import combinations
+from itertools import combinations, groupby 
 import numpy as np
 
 def getModifiedLatticeLid(point, accuracy=0.0075):
@@ -82,15 +82,17 @@ def doHashtagCenterOfMassAnalysis(hashtagObject):
     llids = [t[0] for t in sortedOcc]
     return {'h':hashtagObject['h'], 't': hashtagObject['t'], 'com': [(p, getCenterOfMass(llids[:int(p*len(llids))], accuracy=0.5, error=True)) for p in percentageOfEarlyLattices]}
 
-def getSourceLattice(llids, percentageOfLlidsToConsider):
-    print getCenterOfMass(llids, accuracy=0.5, error=True)
+def getSourceLattice(hashtagObject, percentageOfLlidsToConsider):
+    sortedOcc = sorted(hashtagObject['oc'], key=lambda t: t[1])[:int(percentageOfLlidsToConsider*len(hashtagObject['oc']))]
+    return sorted([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])[-1]
+#    print getCenterOfMass(llids[:int(percentageOfLlidsToConsider*len(llids))], accuracy=0.5, error=True)
 
 def tempAnalysisHashtag(timeRange):
     for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
-        if h['h']=='occupyboston':
-            sortedOcc = sorted(h['oc'], key=lambda t: t[1])
-            llids = [t[0] for t in sortedOcc]
-            print getSourceLattice(llids, 0.1)
+        if h['h'].startswith('occupy'):
+#            sortedOcc = sorted(h['oc'], key=lambda t: t[1])
+#            llids = [t[0] for t in sortedOcc]
+            print h['h'], getSourceLattice(h, 0.01)
 #            i=1
 #            for o in sortedOcc:
 #                print i, o[0], datetime.datetime.fromtimestamp(o[1]); i+=1

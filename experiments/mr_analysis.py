@@ -6,11 +6,13 @@ Created on Nov 19, 2011
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from library.mrjobwrapper import ModifiedMRJob
 from library.geo import getLatticeLid, getHaversineDistance, getLattice,\
-    getCenterOfMass
+    getCenterOfMass, getLocationFromLid
 import cjson, time, datetime
 from collections import defaultdict
+from itertools import groupby
 
 ACCURACY = 0.145
+PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE=0.01
 
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
@@ -61,6 +63,11 @@ class MRAnalysis(ModifiedMRJob):
     ''' End: Methods to get hashtag objects
     '''
             
+    def addSourceLatticeToHashTagObject(self, key, hashtagObject):
+        sortedOcc = sorted(hashtagObject['oc'], key=lambda t: t[1])[:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
+        hashtagObject['src'] = sorted([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])[-1]
+        yield key, hashtagObject
+            
     def getHashtagDistributionInTime(self,  key, hashtagObject):
         distribution = defaultdict(int)
         for _, t in hashtagObject['oc']: distribution[int(t/3600)*3600]+=1
@@ -91,6 +98,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
+    def jobsToAddSourceLatticeToHashTagObject(self): return [(self.addSourceLatticeToHashTagObject, None)]
     def jobsToGetHashtagDistributionInTime(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInTime, None)]
     def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
 #    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
@@ -98,7 +106,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
-        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+        return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
 #        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
