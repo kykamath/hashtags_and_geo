@@ -90,23 +90,27 @@ def plotCenterOfMassHashtag(timeRange):
 #    return source
 #    print getCenterOfMass(llids[:int(percentageOfLlidsToConsider*len(llids))], accuracy=0.5, error=True)
 
-def addSourceLatticeToHashTagObject(hashtagObject):
-        def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
-#        sortedOcc = hashtagObject['oc'][:int(0.01*len(hashtagObject['oc']))]
-        if len(hashtagObject['oc'])>1000: sortedOcc = hashtagObject['oc'][:10]
-        else: sortedOcc = hashtagObject['oc'][:int(0.01*len(hashtagObject['oc']))]
-        llids = sorted([t[0] for t in sortedOcc])
-        uniquellids = [getLocationFromLid(l) for l in set(['%s %s'%(l[0], l[1]) for l in llids])]
-        sourceLlid = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in uniquellids], key=lambda t: t[1])
-        if sourceLlid[1]>=600: return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
-        else: return sourceLlid
+#def addSourceLatticeToHashTagObject(hashtagObject):
+#        def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
+##        sortedOcc = hashtagObject['oc'][:int(0.01*len(hashtagObject['oc']))]
+#        if len(hashtagObject['oc'])>1000: sortedOcc = hashtagObject['oc'][:10]
+#        else: sortedOcc = hashtagObject['oc'][:int(0.01*len(hashtagObject['oc']))]
+##        llids = sorted([t[0] for t in sortedOcc])
+##        uniquellids = [getLocationFromLid(l) for l in set(['%s %s'%(l[0], l[1]) for l in llids])]
+##        sourceLlid = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in uniquellids], key=lambda t: t[1])
+##        if sourceLlid[1]>=600: 
+#        return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
+#        else: return sourceLlid
+
+def addRadiusOfGyrationAtVaryingTimeScales(hashtagObject):
+    print hashtagObject
 
 def tempAnalysisHashtag(timeRange):
     for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
-#        if h['h'].startswith('occupy'):
+        if h['h'].startswith('occupy'):
 #            sortedOcc = sorted(h['oc'], key=lambda t: t[1])
 #            llids = [t[0] for t in sortedOcc]
-        print h['h'], addSourceLatticeToHashTagObject(h), h['t']
+            print h['h'], addRadiusOfGyrationAtVaryingTimeScales(h)
 #            print h['h'], getSourceLattice(h, 0.01)
 #            i=1
 #            for o in sortedOcc:
@@ -125,8 +129,8 @@ if __name__ == '__main__':
 #    timeRange = (2,5)
     timeRange = (2,11)
     
-    mr_analysis(timeRange)
+#    mr_analysis(timeRange)
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
-#    tempAnalysisHashtag(timeRange)
+    tempAnalysisHashtag(timeRange)
 #    plotCenterOfMassHashtag(timeRange)
