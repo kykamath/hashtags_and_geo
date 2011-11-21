@@ -64,8 +64,11 @@ class MRAnalysis(ModifiedMRJob):
     '''
             
     def addSourceLatticeToHashTagObject(self, key, hashtagObject):
+        def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
         sortedOcc = sorted(hashtagObject['oc'], key=lambda t: t[1])[:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
-        hashtagObject['src'] = sorted([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])[-1]
+#        hashtagObject['src'] = sorted([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])[-1]
+        llids = sorted([t[0] for t in sortedOcc])
+        hashtagObject['src'] = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in llids], key=lambda t: t[1])
         yield key, hashtagObject
             
     def getHashtagDistributionInTime(self,  key, hashtagObject):

@@ -83,8 +83,11 @@ def doHashtagCenterOfMassAnalysis(hashtagObject):
     return {'h':hashtagObject['h'], 't': hashtagObject['t'], 'com': [(p, getCenterOfMass(llids[:int(p*len(llids))], accuracy=0.5, error=True)) for p in percentageOfEarlyLattices]}
 
 def getSourceLattice(hashtagObject, percentageOfLlidsToConsider):
+    def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
     sortedOcc = sorted(hashtagObject['oc'], key=lambda t: t[1])[:int(percentageOfLlidsToConsider*len(hashtagObject['oc']))]
-    return sorted([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])[-1]
+    llids = sorted([t[0] for t in sortedOcc])
+    source = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in llids], key=lambda t: t[1])
+    return source
 #    print getCenterOfMass(llids[:int(percentageOfLlidsToConsider*len(llids))], accuracy=0.5, error=True)
 
 def tempAnalysisHashtag(timeRange):
@@ -92,6 +95,7 @@ def tempAnalysisHashtag(timeRange):
         if h['h'].startswith('occupy'):
 #            sortedOcc = sorted(h['oc'], key=lambda t: t[1])
 #            llids = [t[0] for t in sortedOcc]
+#        print h['h'], h['src'], int(h['t']*0.01)
             print h['h'], getSourceLattice(h, 0.01)
 #            i=1
 #            for o in sortedOcc:
