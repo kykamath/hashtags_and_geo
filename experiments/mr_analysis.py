@@ -86,7 +86,7 @@ class MRAnalysis(ModifiedMRJob):
         yield key, {
                     'h':hashtagObject['h'], 't': hashtagObject['t'], 
                     'com': [(p, getCenterOfMass(llids[:int(p*len(llids))], accuracy=ACCURACY, error=True)) for p in percentageOfEarlyLattices],
-                    'ep': [(p, epochs[int(p*len(epochs))-1]) for p in percentageOfEarlyLattices]
+                    'ep': [(0.0, epochs[0])] + [(p, epochs[int(p*len(epochs))-1]) for p in percentageOfEarlyLattices]
                 }
     
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
