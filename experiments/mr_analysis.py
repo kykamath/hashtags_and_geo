@@ -68,8 +68,15 @@ class MRAnalysis(ModifiedMRJob):
         def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
         sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
 #        hashtagObject['src'] = sorted([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])[-1]
+#        llids = sorted([t[0] for t in sortedOcc])
+#        hashtagObject['src'] = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in set(llids)], key=lambda t: t[1])
+        if len(hashtagObject['oc'])>1000: sortedOcc = hashtagObject['oc'][:10]
+        else: sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
         llids = sorted([t[0] for t in sortedOcc])
-        hashtagObject['src'] = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in set(llids)], key=lambda t: t[1])
+        uniquellids = [getLocationFromLid(l) for l in set(['%s %s'%(l[0], l[1]) for l in llids])]
+        sourceLlid = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in uniquellids], key=lambda t: t[1])
+        if sourceLlid[1]>=600: hashtagObject['src'] = max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
+        else: hashtagObject['src'] = sourceLlid
         yield key, hashtagObject
             
     def getHashtagDistributionInTime(self,  key, hashtagObject):
