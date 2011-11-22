@@ -10,12 +10,14 @@ from library.geo import getHaversineDistance, getLatticeLid, getLattice,\
 from operator import itemgetter
 from experiments.mr_wc import MRWC
 from library.file_io import FileIO
-from experiments.mr_analysis import MRAnalysis
+from experiments.mr_analysis import MRAnalysis,\
+    addHashtagSpreadInTime
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
     hashtagsWithoutEndingWindowFile, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile,\
-    tempInputFile, inputFolder, hashtagsImagesCenterOfMassFolder
+    tempInputFile, inputFolder, hashtagsImagesCenterOfMassFolder,\
+    hashtagsSpreadInTimeFile
 import matplotlib.pyplot as plt
 from itertools import combinations, groupby 
 import numpy as np
@@ -102,15 +104,15 @@ def plotCenterOfMassHashtag(timeRange):
 #        return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
 #        else: return sourceLlid
 
-def addRadiusOfGyrationAtVaryingTimeScales(hashtagObject):
-    print hashtagObject
 
 def tempAnalysisHashtag(timeRange):
     for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
         if h['h'].startswith('occupy'):
 #            sortedOcc = sorted(h['oc'], key=lambda t: t[1])
 #            llids = [t[0] for t in sortedOcc]
-            print h['h'], addRadiusOfGyrationAtVaryingTimeScales(h)
+            print h['h'],
+            addHashtagSpreadInTime(h)
+            print h['sit']
 #            print h['h'], getSourceLattice(h, 0.01)
 #            i=1
 #            for o in sortedOcc:
@@ -120,17 +122,18 @@ def tempAnalysisHashtag(timeRange):
 def mr_analysis(timeRange):
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsSpreadInTimeFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
 #    timeRange = (2,5)
     timeRange = (2,11)
     
-#    mr_analysis(timeRange)
+    mr_analysis(timeRange)
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
-    tempAnalysisHashtag(timeRange)
+#    tempAnalysisHashtag(timeRange)
 #    plotCenterOfMassHashtag(timeRange)

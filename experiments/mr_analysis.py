@@ -13,7 +13,8 @@ from itertools import groupby
 import numpy as np
 
 ACCURACY = 0.145
-PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE=0.01
+PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
+HASHTAG_SPREAD_ANALYSIS_WINDOW = datetime.timedelta(seconds=24*4*15*60)
 
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
@@ -32,6 +33,27 @@ def iterateHashtagObjectInstances(line):
     for h in data['h']: yield h.lower(), [getLattice(l, ACCURACY), t]
 
 def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
+
+def addSourceLatticeToHashTagObject(hashtagObject):
+    sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
+    if len(hashtagObject['oc'])>1000: sortedOcc = hashtagObject['oc'][:10]
+    else: sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
+    llids = sorted([t[0] for t in sortedOcc])
+    uniquellids = [getLocationFromLid(l) for l in set(['%s %s'%(l[0], l[1]) for l in llids])]
+    sourceLlid = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in uniquellids], key=lambda t: t[1])
+    if sourceLlid[1]>=600: hashtagObject['src'] = max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
+    else: hashtagObject['src'] = sourceLlid
+
+def addHashtagSpreadInTime(hashtagObject):
+    observedOccurences, currentTime = 0, datetime.datetime.fromtimestamp(hashtagObject['oc'][0][1])
+    spread = []
+    while observedOccurences<len(hashtagObject['oc']):
+        currentTimeWindowBoundary = currentTime+HASHTAG_SPREAD_ANALYSIS_WINDOW
+        llidsToMeasureSpread = [lid for lid, t in hashtagObject['oc'][observedOccurences:] if datetime.datetime.fromtimestamp(t)<currentTimeWindowBoundary]
+        if llidsToMeasureSpread: spread.append([time.mktime(currentTimeWindowBoundary.timetuple()), [len(llidsToMeasureSpread), getMeanDistanceFromSource(hashtagObject['src'][0], llidsToMeasureSpread)]])
+        else: spread.append([time.mktime(currentTimeWindowBoundary.timetuple()), [len(llidsToMeasureSpread), 0]])
+        observedOccurences+=len(llidsToMeasureSpread); currentTime=currentTimeWindowBoundary
+    hashtagObject['sit'] = spread
 
 class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -67,19 +89,13 @@ class MRAnalysis(ModifiedMRJob):
     '''
             
     def addSourceLatticeToHashTagObject(self, key, hashtagObject):
-        sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
-#        hashtagObject['src'] = sorted([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])[-1]
-#        llids = sorted([t[0] for t in sortedOcc])
-#        hashtagObject['src'] = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in set(llids)], key=lambda t: t[1])
-        if len(hashtagObject['oc'])>1000: sortedOcc = hashtagObject['oc'][:10]
-        else: sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
-        llids = sorted([t[0] for t in sortedOcc])
-        uniquellids = [getLocationFromLid(l) for l in set(['%s %s'%(l[0], l[1]) for l in llids])]
-        sourceLlid = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in uniquellids], key=lambda t: t[1])
-        if sourceLlid[1]>=600: hashtagObject['src'] = max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
-        else: hashtagObject['src'] = sourceLlid
+        addSourceLatticeToHashTagObject(hashtagObject)
         yield key, hashtagObject
-            
+    
+    def addHashtagSpreadInTime(self, key, hashtagObject):
+        addHashtagSpreadInTime(hashtagObject)
+        yield key, hashtagObject
+    
     def getHashtagDistributionInTime(self,  key, hashtagObject):
         distribution = defaultdict(int)
         for _, t in hashtagObject['oc']: distribution[int(t/3600)*3600]+=1
@@ -113,15 +129,18 @@ class MRAnalysis(ModifiedMRJob):
     def jobsToAddSourceLatticeToHashTagObject(self): return [(self.addSourceLatticeToHashTagObject, None)]
     def jobsToGetHashtagDistributionInTime(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInTime, None)]
     def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
+    def jobsToGetHastagSpreadInTime(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
+                                                    [(self.addHashtagSpreadInTime, None)]
 #    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
 #    def jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.doHashtagCenterOfMassAnalysis, None)] 
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
-        return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject()
+#        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
 #        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
+        return self.jobsToGetHastagSpreadInTime()
 
 if __name__ == '__main__':
     MRAnalysis.run()
