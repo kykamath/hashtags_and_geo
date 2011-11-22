@@ -17,7 +17,8 @@ from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatti
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
     hashtagsWithoutEndingWindowFile, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile,\
     tempInputFile, inputFolder, hashtagsImagesCenterOfMassFolder,\
-    hashtagsSpreadInTimeFile, hashtagsImagesSpreadInTime
+    hashtagsSpreadInTimeFile, hashtagsImagesSpreadInTime,\
+    hashtagsMeanDistanceInTimeFile
 import matplotlib.pyplot as plt
 from itertools import combinations, groupby 
 import numpy as np
@@ -106,18 +107,24 @@ def plotCenterOfMassHashtag(timeRange):
 
 
 def plotHashtagsSpreadInTime(timeRange):
+    MINIMUM_CHECKINS_PER_TIME_INTERVAL = 5
     for h in FileIO.iterateJsonFromFile(hashtagsSpreadInTimeFile%'%s_%s'%timeRange):
 #        if h['h'].startswith('occupy'):
         print h['h'] 
-        dataX, dataY = zip(*h['sit'])
-        plt.subplot(211); plt.plot_date([datetime.datetime.fromtimestamp(t) for t in dataX], [y[1] for y in dataY], '-'); plt.xticks([])
+        dataX, dataY = [], []
+        for x, y in h['sit']:
+            if y[0]>=MINIMUM_CHECKINS_PER_TIME_INTERVAL: 
+                if y[1]!=0: dataX.append(x), dataY.append(y)
+                else: dataX.append(x), dataY.append([y[0], 1])
+            else: dataX.append(x), dataY.append([1,1])
+        plt.subplot(211); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX], [y[1] for y in dataY], '-'); plt.xticks([])
         plt.title('%s'%(h['h'])), plt.ylabel('Spread')
-        ax = plt.subplot(212); plt.plot_date([datetime.datetime.fromtimestamp(t) for t in dataX], [y[0] for y in dataY], '-')
+        ax = plt.subplot(212); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX], [y[0] for y in dataY], '-')
         plt.ylabel('Number of tweets')
         plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
         plt.savefig('%s/%s.png'%(hashtagsImagesSpreadInTime, h['h']))
         plt.clf()
-#            exit()
+#        exit()
             
 def mr_analysis(timeRange):
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
@@ -126,14 +133,15 @@ def mr_analysis(timeRange):
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsSpreadInTimeFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsSpreadInTimeFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsMeanDistanceInTimeFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
 #    timeRange = (2,5)
     timeRange = (2,11)
     
-#    mr_analysis(timeRange)
+    mr_analysis(timeRange)
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
-    plotHashtagsSpreadInTime(timeRange)
+#    plotHashtagsSpreadInTime(timeRange)
 #    plotCenterOfMassHashtag(timeRange)
