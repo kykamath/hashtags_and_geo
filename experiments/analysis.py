@@ -16,8 +16,8 @@ from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
     hashtagsWithoutEndingWindowFile, \
-    tempInputFile, inputFolder, hashtagsImagesCenterOfMassFolder, hashtagsImagesSpreadInTime,\
-    hashtagsDisplacementStatsFile
+    tempInputFile, inputFolder, hashtagsImagesCenterOfMassFolder,\
+    hashtagsDisplacementStatsFile, hashtagsImagesDisplacementStatsInTime
 import matplotlib.pyplot as plt
 from itertools import combinations, groupby 
 import numpy as np
@@ -107,7 +107,7 @@ def plotCenterOfMassHashtag(timeRange):
 
 def plotHashtagsSpreadInTime(timeRange):
     MINIMUM_CHECKINS_PER_TIME_INTERVAL = 5
-    for h in FileIO.iterateJsonFromFile(hashtagsSpreadInTimeFile%'%s_%s'%timeRange):
+    for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%'%s_%s'%timeRange):
 #        if h['h'].startswith('occupy'):
         print h['h'] 
         dataX, dataY = [], []
@@ -116,12 +116,21 @@ def plotHashtagsSpreadInTime(timeRange):
                 if y[1]!=0: dataX.append(x), dataY.append(y)
                 else: dataX.append(x), dataY.append([y[0], 1])
             else: dataX.append(x), dataY.append([1,1])
-        plt.subplot(211); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX], [y[1] for y in dataY], '-'); plt.xticks([])
+        dataX1, dataY1 = [], []
+        for x, y in h['mdit']:
+            if y[0]>=MINIMUM_CHECKINS_PER_TIME_INTERVAL: 
+                if y[1]!=0: dataX1.append(x), dataY1.append(y)
+                else: dataX1.append(x), dataY1.append([y[0], 1])
+            else: dataX1.append(x), dataY1.append([1,1])
+        plt.subplot(311); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX], [y[1] for y in dataY], '-'); plt.xticks([])
         plt.title('%s'%(h['h'])), plt.ylabel('Spread')
-        ax = plt.subplot(212); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX], [y[0] for y in dataY], '-')
+        plt.subplot(312); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX1], [y[1] for y in dataY1], '-'); plt.xticks([])
+        plt.ylabel('Mean distance')
+        ax = plt.subplot(313); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX], [y[0] for y in dataY], '-')
         plt.ylabel('Number of tweets')
         plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-        plt.savefig('%s/%s.png'%(hashtagsImagesSpreadInTime, h['h']))
+        plt.savefig('%s/%s.png'%(hashtagsImagesDisplacementStatsInTime, h['h']))
+#        plt.show()
         plt.clf()
 #        exit()
 
