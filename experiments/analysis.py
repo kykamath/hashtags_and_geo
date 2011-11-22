@@ -10,8 +10,7 @@ from library.geo import getHaversineDistance, getLatticeLid, getLattice,\
 from operator import itemgetter
 from experiments.mr_wc import MRWC
 from library.file_io import FileIO
-from experiments.mr_analysis import MRAnalysis,\
-    addHashtagSpreadInTime
+from experiments.mr_analysis import MRAnalysis
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
