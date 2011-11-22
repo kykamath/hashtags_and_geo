@@ -156,10 +156,10 @@ if __name__ == '__main__':
 #    timeRange = (2,5)
     timeRange = (2,11)
     
-#    mr_analysis(timeRange)
+    mr_analysis(timeRange)
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
 #    plotHashtagsDisplacementStats(timeRange)
 #    plotCenterOfMassHashtag(timeRange)
-    tempAnalysis(timeRange)
+#    tempAnalysis(timeRange)
     
