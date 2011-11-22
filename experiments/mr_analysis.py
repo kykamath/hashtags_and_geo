@@ -34,6 +34,11 @@ def iterateHashtagObjectInstances(line):
 
 def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
 
+#def getMeanDistanceFromSource(source, llids): 
+#    for p in llids: 
+#        print source, p, getHaversineDistance(source, p)
+#    return np.mean([getHaversineDistance(source, p) for p in llids])
+
 def getMeanDistanceBetweenLids(_, llids): 
     meanLid = getCenterOfMass(llids,accuracy=ACCURACY)
     return getMeanDistanceFromSource(meanLid, llids)
@@ -48,7 +53,7 @@ def addSourceLatticeToHashTagObject(hashtagObject):
     if sourceLlid[1]>=600: hashtagObject['src'] = max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
     else: hashtagObject['src'] = sourceLlid
 
-def addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceFromSource):
+def addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceFromSource, key='sit'):
     observedOccurences, currentTime = 0, datetime.datetime.fromtimestamp(hashtagObject['oc'][0][1])
     spread = []
     while observedOccurences<len(hashtagObject['oc']):
@@ -57,7 +62,7 @@ def addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceF
         if llidsToMeasureSpread: spread.append([time.mktime(currentTimeWindowBoundary.timetuple()), [len(llidsToMeasureSpread), distanceMethod(hashtagObject['src'][0], llidsToMeasureSpread)]])
         else: spread.append([time.mktime(currentTimeWindowBoundary.timetuple()), [len(llidsToMeasureSpread), 0]])
         observedOccurences+=len(llidsToMeasureSpread); currentTime=currentTimeWindowBoundary
-    hashtagObject['sit'] = spread
+    hashtagObject[key] = spread
 
 class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -96,16 +101,25 @@ class MRAnalysis(ModifiedMRJob):
         addSourceLatticeToHashTagObject(hashtagObject)
         yield key, hashtagObject
     
-    def addHashtagSpreadInTime(self, key, hashtagObject):
-        '''Spread measures the distance from source.
+#    def addHashtagSpreadInTime(self, key, hashtagObject):
+#        '''Spread measures the distance from source.
+#        '''
+#        addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceFromSource, key='sit')
+#        yield key, hashtagObject
+#
+#    def addHashtagMeanDistanceInTime(self, key, hashtagObject):
+#        '''Mean distance measures the mean distance between various occurences of the hastag at that time.
+#        '''
+#        addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceBetweenLids, key='mdit')
+#        yield key, hashtagObject
+        
+    def getHashtagDisplacementStats(self, key, hashtagObject):
+        ''' Spread measures the distance from source.
+            Mean distance measures the mean distance between various occurences of the hastag at that time.
         '''
-        addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceFromSource)
-        yield key, hashtagObject
-
-    def addHashtagMeanDistanceInTime(self, key, hashtagObject):
-        '''Mean distance measures the mean distance between various occurences of the hastag at that time.
-        '''
-        addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceBetweenLids)
+        addSourceLatticeToHashTagObject(hashtagObject)
+        addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceFromSource, key='sit')
+        addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceBetweenLids, key='mdit')
         yield key, hashtagObject
     
     def getHashtagDistributionInTime(self,  key, hashtagObject):
@@ -138,11 +152,12 @@ class MRAnalysis(ModifiedMRJob):
     
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
-    def jobsToAddSourceLatticeToHashTagObject(self): return [(self.addSourceLatticeToHashTagObject, None)]
+#    def jobsToAddSourceLatticeToHashTagObject(self): return [(self.addSourceLatticeToHashTagObject, None)]
     def jobsToGetHashtagDistributionInTime(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInTime, None)]
     def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
-    def jobsToGetHastagDisplacementInTime(self, method): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
-                                                    [(method, None)]
+#    def jobsToGetHastagDisplacementInTime(self, method): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
+#                                                    [(method, None)]
+    def jobsToGetHashtagDisplacementStats(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getHashtagDisplacementStats, None)]
 #    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
 #    def jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.doHashtagCenterOfMassAnalysis, None)] 
     
@@ -153,7 +168,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHashtagDistributionInLattice()
 #        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagSpreadInTime)
-        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagMeanDistanceInTime)
+#        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagMeanDistanceInTime)
+        return self.jobsToGetHashtagDisplacementStats()
 
 if __name__ == '__main__':
     MRAnalysis.run()

@@ -10,14 +10,14 @@ from library.geo import getHaversineDistance, getLatticeLid, getLattice,\
 from operator import itemgetter
 from experiments.mr_wc import MRWC
 from library.file_io import FileIO
-from experiments.mr_analysis import MRAnalysis
+from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
+    getMeanDistanceBetweenLids, getMeanDistanceFromSource
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
-    hashtagsWithoutEndingWindowFile, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile,\
-    tempInputFile, inputFolder, hashtagsImagesCenterOfMassFolder,\
-    hashtagsSpreadInTimeFile, hashtagsImagesSpreadInTime,\
-    hashtagsMeanDistanceInTimeFile
+    hashtagsWithoutEndingWindowFile, \
+    tempInputFile, inputFolder, hashtagsImagesCenterOfMassFolder, hashtagsImagesSpreadInTime,\
+    hashtagsDisplacementStatsFile
 import matplotlib.pyplot as plt
 from itertools import combinations, groupby 
 import numpy as np
@@ -124,6 +124,14 @@ def plotHashtagsSpreadInTime(timeRange):
         plt.savefig('%s/%s.png'%(hashtagsImagesSpreadInTime, h['h']))
         plt.clf()
 #        exit()
+
+def tempAnalysis(timeRange):
+    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
+        if h['h'].startswith('occupysf'):
+#            addHashtagDisplacementsInTime(h, distanceMethod=getMeanDistanceFromSource)
+            print h['h'],
+            addHashtagDisplacementsInTime(h, distanceMethod=getMeanDistanceBetweenLids)
+            print h['sit']
             
 def mr_analysis(timeRange):
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
@@ -133,7 +141,7 @@ def mr_analysis(timeRange):
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsSpreadInTimeFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsMeanDistanceInTimeFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsDisplacementStatsFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
 #    timeRange = (2,5)
@@ -144,3 +152,5 @@ if __name__ == '__main__':
 #    plotTimeVsDistance()
 #    plotHashtagsSpreadInTime(timeRange)
 #    plotCenterOfMassHashtag(timeRange)
+#    tempAnalysis(timeRange)
+    
