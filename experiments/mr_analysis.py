@@ -11,11 +11,12 @@ import cjson, time, datetime
 from collections import defaultdict
 from itertools import groupby
 import numpy as np
+from library.classes import GeneralMethods
 
 ACCURACY = 0.145
 PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
 #HASHTAG_SPREAD_ANALYSIS_WINDOW = datetime.timedelta(seconds=24*4*15*60)
-HASHTAG_SPREAD_ANALYSIS_WINDOW = datetime.timedelta(seconds=5*60)
+HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 5*60
 
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
@@ -55,14 +56,22 @@ def addSourceLatticeToHashTagObject(hashtagObject):
     else: hashtagObject['src'] = sourceLlid
 
 def addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceFromSource, key='sit'):
-    observedOccurences, currentTime = 0, datetime.datetime.fromtimestamp(hashtagObject['oc'][0][1])
-    spread = []
-    while observedOccurences<len(hashtagObject['oc']):
-        currentTimeWindowBoundary = currentTime+HASHTAG_SPREAD_ANALYSIS_WINDOW
-        llidsToMeasureSpread = [lid for lid, t in hashtagObject['oc'][observedOccurences:] if datetime.datetime.fromtimestamp(t)<currentTimeWindowBoundary]
-        if llidsToMeasureSpread: spread.append([time.mktime(currentTimeWindowBoundary.timetuple()), [len(llidsToMeasureSpread), distanceMethod(hashtagObject['src'][0], llidsToMeasureSpread)]])
-        else: spread.append([time.mktime(currentTimeWindowBoundary.timetuple()), [len(llidsToMeasureSpread), 0]])
-        observedOccurences+=len(llidsToMeasureSpread); currentTime=currentTimeWindowBoundary
+#    observedOccurences, currentTime = 0, datetime.datetime.fromtimestamp(hashtagObject['oc'][0][1])
+#    spread = []
+#    while observedOccurences<len(hashtagObject['oc']):
+#        currentTimeWindowBoundary = currentTime+HASHTAG_SPREAD_ANALYSIS_WINDOW
+#        llidsToMeasureSpread = [lid for lid, t in hashtagObject['oc'][observedOccurences:] if datetime.datetime.fromtimestamp(t)<currentTimeWindowBoundary]
+#        if llidsToMeasureSpread: spread.append([time.mktime(currentTimeWindowBoundary.timetuple()), [len(llidsToMeasureSpread), distanceMethod(hashtagObject['src'][0], llidsToMeasureSpread)]])
+#        else: spread.append([time.mktime(currentTimeWindowBoundary.timetuple()), [len(llidsToMeasureSpread), 0]])
+#        observedOccurences+=len(llidsToMeasureSpread); currentTime=currentTimeWindowBoundary
+#    hashtagObject[key] = spread
+    
+    spread, occurencesDistribution = [], defaultdict(list)
+    for oc in hashtagObject['oc']: occurencesDistribution[GeneralMethods.approximateEpoch(oc[1], HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS)].append(oc)
+    for currentTime, oc in occurencesDistribution.iteritems():
+        llidsToMeasureSpread = [i[0] for i in oc]
+        if llidsToMeasureSpread: spread.append([currentTime, [len(llidsToMeasureSpread), distanceMethod(hashtagObject['src'][0], llidsToMeasureSpread)]])
+        else: spread.append([currentTime, [len(llidsToMeasureSpread), 0]])
     hashtagObject[key] = spread
 
 class MRAnalysis(ModifiedMRJob):

@@ -105,7 +105,7 @@ def plotCenterOfMassHashtag(timeRange):
 #        else: return sourceLlid
 
 
-def plotHashtagsSpreadInTime(timeRange):
+def plotHashtagsDisplacementStats(timeRange):
     MINIMUM_CHECKINS_PER_TIME_INTERVAL = 5
     for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%'%s_%s'%timeRange):
 #        if h['h'].startswith('occupy'):
@@ -129,8 +129,8 @@ def plotHashtagsSpreadInTime(timeRange):
         ax = plt.subplot(313); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX], [y[0] for y in dataY], '-')
         plt.ylabel('Number of tweets')
         plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-        plt.savefig('%s/%s.png'%(hashtagsImagesDisplacementStatsInTime, h['h']))
-#        plt.show()
+#        plt.savefig('%s/%s.png'%(hashtagsImagesDisplacementStatsInTime, h['h']))
+        plt.show()
         plt.clf()
 #        exit()
 
@@ -156,10 +156,10 @@ if __name__ == '__main__':
 #    timeRange = (2,5)
     timeRange = (2,11)
     
-    mr_analysis(timeRange)
+#    mr_analysis(timeRange)
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
-#    plotHashtagsSpreadInTime(timeRange)
+#    plotHashtagsDisplacementStats(timeRange)
 #    plotCenterOfMassHashtag(timeRange)
-#    tempAnalysis(timeRange)
+    tempAnalysis(timeRange)
     
