@@ -59,7 +59,7 @@ def getLocalityIndexAtK(occurances, kValue):
         currentHigherLatticeSet, totalOccurances = {'distance': ()}, float(len(occurances))
         for hl, occs  in higherLattices: 
             higherLatticeSet = {'distance': 0, 'observedOccurances': len(occs), 'lattices': [hl], 'sourceLattice': hl}
-            while currentHigherLatticeSet['distance']>higherLatticeSet['distance'] and higherLatticeSet['observedOccurances']/totalOccurances<kValue:
+            while currentHigherLatticeSet['distance']>higherLatticeSet['distance'] and higherLatticeSet['observedOccurances']/totalOccurances<0.5:
                 (l, d) = distanceMatrix[hl][0]; 
                 distanceMatrix[hl]=distanceMatrix[hl][1:]
                 higherLatticeSet['distance']+=d
