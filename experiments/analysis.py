@@ -134,8 +134,8 @@ def plotCenterOfMassHashtag(timeRange):
 def tempGetLocality(timeRange):
     K_FOR_LOCALITY_INDEX = 0.5
     for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
-#        if h['h'].startswith('occupy') or h['h']=='ows':
-        print h['h'], getLocalityIndexAtK(zip(*h['oc'])[0], K_FOR_LOCALITY_INDEX)
+        if h['h'].startswith('occupy') or h['h']=='ows':
+            print h['h'], getLocalityIndexAtK(zip(*h['oc'])[0], K_FOR_LOCALITY_INDEX)
                             
 def plotOnUsMap(timeRange):
     '''convert -delay 60 -quality 95 * movie.gif
@@ -201,12 +201,16 @@ def plotHashtagsDisplacementStats(timeRange):
 #        exit()
 
 def analayzeLocalityIndexAtK(timeRange):
+    imagesFolder = '/tmp/images/'
+    FileIO.createDirectoryForFile(imagesFolder+'dsf')
     for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange):
         if h['h'].startswith('occupy') or h['h']=='ows':
             print h['h']
-            for k, v in h['liAtVaryingK']:
-                print k, v
-
+            dataX, dataY = zip(*[(k, v[0])for k, v in h['liAtVaryingK']])
+            plt.plot(dataX, dataY)
+            plt.title(h['h'])
+            plt.show()
+            
 def tempAnalysis(timeRange):
     for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
         if h['h'].startswith('occupysf'):

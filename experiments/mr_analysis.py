@@ -76,7 +76,7 @@ def getLocalityIndexAtK(occurances, kValue):
     sortedLatticeObjects = sorted([(getLocationFromLid(k.replace('_', ' ')), getHaversineDistance(lattice, getLocationFromLid(k.replace('_', ' '))), v) for k, v in occurancesDistributionInHigherLattice.iteritems()],
                  key=itemgetter(1))
     for l, d, oc in sortedLatticeObjects:
-        distance+=d; observedOccuraces+=oc
+        distance=d; observedOccuraces+=oc
         if observedOccuraces/totalOccurances>=kValue: break
     return (d, lattice)
 
