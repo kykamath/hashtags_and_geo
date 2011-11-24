@@ -151,9 +151,9 @@ class MRAnalysis(ModifiedMRJob):
     ''' End: Methods to get hashtag objects
     '''
             
-    def addSourceLatticeToHashTagObject(self, key, hashtagObject):
-        addSourceLatticeToHashTagObject(hashtagObject)
-        yield key, hashtagObject
+#    def addSourceLatticeToHashTagObject(self, key, hashtagObject):
+#        addSourceLatticeToHashTagObject(hashtagObject)
+#        yield key, hashtagObject
     
 #    def addHashtagSpreadInTime(self, key, hashtagObject):
 #        '''Spread measures the distance from source.
@@ -189,6 +189,7 @@ class MRAnalysis(ModifiedMRJob):
     def analayzeLocalityIndexAtK(self,  key, hashtagObject):
         occurances = zip(*hashtagObject['oc'])[0]
         hashtagObject['liAtVaryingK'] = [(k, getLocalityIndexAtK(occurances, k)) for k in [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]]
+        addSourceLatticeToHashTagObject(hashtagObject)
         yield key, hashtagObject
     
 #    def getAverageHaversineDistance(self,  key, hashtagObject): 
