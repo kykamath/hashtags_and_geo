@@ -173,13 +173,13 @@ class MRAnalysis(ModifiedMRJob):
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
-#        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
+        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
 #        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagSpreadInTime)
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagMeanDistanceInTime)
-        return self.jobsToGetHashtagDisplacementStats()
+#        return self.jobsToGetHashtagDisplacementStats()
 
 if __name__ == '__main__':
     MRAnalysis.run()
