@@ -21,6 +21,7 @@ hashtagsWithoutEndingWindowFile = hashtagsAnalysisFolder+'%s/hashtagsWithoutEndi
 hashtagsDisplacementStatsFile = hashtagsAnalysisFolder+'%s/hashtagsDisplacementStats'
 hashtagsDistributionInTimeFile = hashtagsAnalysisFolder+'hashtagsDistributionInTime'
 hashtagsDistributionInLatticeFile = hashtagsAnalysisFolder+'hashtagsDistributionInLattice'
+hashtagsAnalayzeLocalityIndexAtKFile = hashtagsAnalysisFolder+'%s/hashtagsAnalayzeLocalityIndexAtK'
 
 # Images
 hashtagsImagesFolder = '/data/geo/hashtags/images/'

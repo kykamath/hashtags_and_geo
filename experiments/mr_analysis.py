@@ -12,6 +12,8 @@ from collections import defaultdict
 from itertools import groupby
 import numpy as np
 from library.classes import GeneralMethods
+from itertools import combinations
+from operator import itemgetter
 
 ACCURACY = 0.145
 PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
@@ -36,6 +38,48 @@ def iterateHashtagObjectInstances(line):
 
 def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
 
+def getLocalityIndexAtK(occurances, kValue):
+    ''' Locality index at k - for a hashtag is the minimum radius that covers k percentage of occurrances.
+            A high locality index suggests hashtag was global with a small index suggests it was local.
+        To find locality index at k, I must find a point that is closest to k percentage of occurances. 
+            Brute force requires nC2 complexity. 
+            Hence, use lattices of bigger size technique.
+    '''
+    def getLatticeThatGivesMinimumLocalityIndexAtK():
+        occurancesDict = {'occurances': occurances}
+        for accuracy in [4, 2, 1, 0.5, ACCURACY]: occurancesDict = getLatticeThatGivesMinimumLocalityIndexAtKForAccuracy(occurancesDict['occurances'], accuracy)
+        return occurancesDict['sourceLattice']
+    def getLatticeThatGivesMinimumLocalityIndexAtKForAccuracy(occurances, accuracy):
+        occurancesDistributionInHigherLattice, distanceMatrix = defaultdict(list), defaultdict(dict)
+        for oc in occurances: occurancesDistributionInHigherLattice[getLatticeLid(oc, accuracy)].append(oc)
+        higherLattices = sorted(occurancesDistributionInHigherLattice.iteritems(), key=lambda t: len(t[1]), reverse=True)
+        for hl1, hl2 in combinations(occurancesDistributionInHigherLattice, 2): distanceMatrix[hl1][hl2] = distanceMatrix[hl2][hl1] = getHaversineDistance(getLocationFromLid(hl1.replace('_', ' ')), getLocationFromLid(hl2.replace('_', ' ')))
+        for k,v in distanceMatrix.iteritems(): distanceMatrix[k] = sorted(v.iteritems(), key=itemgetter(1))
+        occurancesToReturn = []
+        currentHigherLatticeSet, totalOccurances = {'distance': ()}, float(len(occurances))
+        for hl, occs  in higherLattices: 
+            higherLatticeSet = {'distance': 0, 'observedOccurances': len(occs), 'lattices': [hl], 'sourceLattice': hl}
+            while currentHigherLatticeSet['distance']>higherLatticeSet['distance'] and higherLatticeSet['observedOccurances']/totalOccurances<kValue:
+                (l, d) = distanceMatrix[hl][0]; 
+                distanceMatrix[hl]=distanceMatrix[hl][1:]
+                higherLatticeSet['distance']+=d
+                higherLatticeSet['lattices'].append(l)
+                higherLatticeSet['observedOccurances']+=len(occurancesDistributionInHigherLattice[l])
+            if currentHigherLatticeSet==None or currentHigherLatticeSet['distance']>higherLatticeSet['distance']: currentHigherLatticeSet=higherLatticeSet
+        for l in currentHigherLatticeSet['lattices']: occurancesToReturn+=occurancesDistributionInHigherLattice[l]
+    #    return {'distance': currentHigherLatticeSet['distance'], 'occurances': occurancesToReturn, 'sourceLattice': getLocationFromLid(currentHigherLatticeSet['sourceLattice'].replace('_', ' '))}
+        return {'occurances': occurancesToReturn, 'sourceLattice': getLocationFromLid(currentHigherLatticeSet['sourceLattice'].replace('_', ' '))}
+    occurancesDistributionInHigherLattice = defaultdict(int)
+    for oc in occurances: occurancesDistributionInHigherLattice[getLatticeLid(oc, ACCURACY)]+=1
+    totalOccurances, distance, observedOccuraces = float(len(occurances)), 0, 0
+    lattice = getLatticeThatGivesMinimumLocalityIndexAtK()
+    sortedLatticeObjects = sorted([(getLocationFromLid(k.replace('_', ' ')), getHaversineDistance(lattice, getLocationFromLid(k.replace('_', ' '))), v) for k, v in occurancesDistributionInHigherLattice.iteritems()],
+                 key=itemgetter(1))
+    for l, d, oc in sortedLatticeObjects:
+        distance+=d; observedOccuraces+=oc
+        if observedOccuraces/totalOccurances>=kValue: break
+    return (d, lattice)
+
 #def getMeanDistanceFromSource(source, llids): 
 #    for p in llids: 
 #        print source, p, getHaversineDistance(source, p)
@@ -48,7 +92,7 @@ def getMeanDistanceBetweenLids(_, llids):
 def addSourceLatticeToHashTagObject(hashtagObject):
     sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
     if len(hashtagObject['oc'])>1000: sortedOcc = hashtagObject['oc'][:10]
-    else: sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
+#    else: sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
     llids = sorted([t[0] for t in sortedOcc])
     uniquellids = [getLocationFromLid(l) for l in set(['%s %s'%(l[0], l[1]) for l in llids])]
     sourceLlid = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in uniquellids], key=lambda t: t[1])
@@ -142,6 +186,11 @@ class MRAnalysis(ModifiedMRJob):
         for l, _ in hashtagObject['oc']: distribution[getLatticeLid(l, accuracy=ACCURACY)]+=1
         yield key, {'h':hashtagObject['h'], 't': hashtagObject['t'], 'd': distribution.items()}
     
+    def analayzeLocalityIndexAtK(self,  key, hashtagObject):
+        occurances = zip(*hashtagObject['oc'])[0]
+        hashtagObject['liAtVaryingK'] = [(k, getLocalityIndexAtK(occurances, k)) for k in [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]]
+        yield key, hashtagObject
+    
 #    def getAverageHaversineDistance(self,  key, hashtagObject): 
 #        if hashtagObject['t'] >= 1000:
 #            percentageOfEarlyLattices = [0.01*i for i in range(1, 11)]
@@ -170,16 +219,18 @@ class MRAnalysis(ModifiedMRJob):
     def jobsToGetHashtagDisplacementStats(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getHashtagDisplacementStats, None)]
 #    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
 #    def jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.doHashtagCenterOfMassAnalysis, None)] 
+    def jobsToAnalayzeLocalityIndexAtK(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.analayzeLocalityIndexAtK, None)]
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
-        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
+#        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
 #        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagSpreadInTime)
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagMeanDistanceInTime)
 #        return self.jobsToGetHashtagDisplacementStats()
+        return self.jobsToAnalayzeLocalityIndexAtK()
 
 if __name__ == '__main__':
     MRAnalysis.run()

@@ -12,14 +12,15 @@ from operator import itemgetter
 from experiments.mr_wc import MRWC
 from library.file_io import FileIO
 from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
-    getMeanDistanceBetweenLids, getMeanDistanceFromSource
+    getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
     hashtagsWithoutEndingWindowFile, \
     tempInputFile, inputFolder, hashtagsImagesCenterOfMassFolder,\
     hashtagsDisplacementStatsFile, hashtagsImagesDisplacementStatsInTime,\
-    hashtagsImagesHashtagsDistributionInLid
+    hashtagsImagesHashtagsDistributionInLid,\
+    hashtagsAnalayzeLocalityIndexAtKFile
 import matplotlib.pyplot as plt
 from itertools import combinations, groupby 
 import numpy as np
@@ -107,63 +108,34 @@ def plotCenterOfMassHashtag(timeRange):
 #        return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
 #        else: return sourceLlid
 
-def getLatticeThatGivesMinimumLocalityIndexAtKForAccuracy(occurances, kValue, accuracy):
-    occurancesDistributionInHigherLattice, distanceMatrix = defaultdict(list), defaultdict(dict)
-    for oc in occurances: occurancesDistributionInHigherLattice[getLatticeLid(oc, accuracy)].append(oc)
-    higherLattices = sorted(occurancesDistributionInHigherLattice.iteritems(), key=lambda t: len(t[1]), reverse=True)
-    
-    for hl1, hl2 in combinations(occurancesDistributionInHigherLattice, 2): distanceMatrix[hl1][hl2] = distanceMatrix[hl2][hl1] = getHaversineDistance(getLocationFromLid(hl1.replace('_', ' ')), getLocationFromLid(hl2.replace('_', ' ')))
-    for k,v in distanceMatrix.iteritems(): distanceMatrix[k] = sorted(v.iteritems(), key=itemgetter(1))
-    
-    occurancesToReturn = []
-    currentHigherLatticeSet, totalOccurances = {'distance': ()}, float(len(occurances))
-    for hl, occs  in higherLattices: 
-        higherLatticeSet = {'distance': 0, 'observedOccurances': len(occs), 'lattices': [hl], 'sourceLattice': hl}
-        while currentHigherLatticeSet['distance']>higherLatticeSet['distance'] and higherLatticeSet['observedOccurances']/totalOccurances<kValue:
-            (l, d) = distanceMatrix[hl][0]; 
-            distanceMatrix[hl]=distanceMatrix[hl][1:]
-            higherLatticeSet['distance']+=d
-            higherLatticeSet['lattices'].append(l)
-            higherLatticeSet['observedOccurances']+=len(occurancesDistributionInHigherLattice[l])
-        if currentHigherLatticeSet==None or currentHigherLatticeSet['distance']>higherLatticeSet['distance']: currentHigherLatticeSet=higherLatticeSet
-    
-    for l in currentHigherLatticeSet['lattices']: occurancesToReturn+=occurancesDistributionInHigherLattice[l]
-#    return {'distance': currentHigherLatticeSet['distance'], 'occurances': occurancesToReturn, 'sourceLattice': getLocationFromLid(currentHigherLatticeSet['sourceLattice'].replace('_', ' '))}
-    return {'occurances': occurancesToReturn, 'sourceLattice': getLocationFromLid(currentHigherLatticeSet['sourceLattice'].replace('_', ' '))}
+#def getLatticeThatGivesMinimumLocalityIndexAtKForAccuracy(occurances, kValue, accuracy):
+#    occurancesDistributionInHigherLattice, distanceMatrix = defaultdict(list), defaultdict(dict)
+#    for oc in occurances: occurancesDistributionInHigherLattice[getLatticeLid(oc, accuracy)].append(oc)
+#    higherLattices = sorted(occurancesDistributionInHigherLattice.iteritems(), key=lambda t: len(t[1]), reverse=True)
+#    for hl1, hl2 in combinations(occurancesDistributionInHigherLattice, 2): distanceMatrix[hl1][hl2] = distanceMatrix[hl2][hl1] = getHaversineDistance(getLocationFromLid(hl1.replace('_', ' ')), getLocationFromLid(hl2.replace('_', ' ')))
+#    for k,v in distanceMatrix.iteritems(): distanceMatrix[k] = sorted(v.iteritems(), key=itemgetter(1))
+#    occurancesToReturn = []
+#    currentHigherLatticeSet, totalOccurances = {'distance': ()}, float(len(occurances))
+#    for hl, occs  in higherLattices: 
+#        higherLatticeSet = {'distance': 0, 'observedOccurances': len(occs), 'lattices': [hl], 'sourceLattice': hl}
+#        while currentHigherLatticeSet['distance']>higherLatticeSet['distance'] and higherLatticeSet['observedOccurances']/totalOccurances<kValue:
+#            (l, d) = distanceMatrix[hl][0]; 
+#            distanceMatrix[hl]=distanceMatrix[hl][1:]
+#            higherLatticeSet['distance']+=d
+#            higherLatticeSet['lattices'].append(l)
+#            higherLatticeSet['observedOccurances']+=len(occurancesDistributionInHigherLattice[l])
+#        if currentHigherLatticeSet==None or currentHigherLatticeSet['distance']>higherLatticeSet['distance']: currentHigherLatticeSet=higherLatticeSet
+#    
+#    for l in currentHigherLatticeSet['lattices']: occurancesToReturn+=occurancesDistributionInHigherLattice[l]
+##    return {'distance': currentHigherLatticeSet['distance'], 'occurances': occurancesToReturn, 'sourceLattice': getLocationFromLid(currentHigherLatticeSet['sourceLattice'].replace('_', ' '))}
+#    return {'occurances': occurancesToReturn, 'sourceLattice': getLocationFromLid(currentHigherLatticeSet['sourceLattice'].replace('_', ' '))}
 
-def getLatticeThatGivesMinimumLocalityIndexAtK(hashtagObject, kValue):
-    ACCURACY = 0.145
-    occurances = {'occurances': zip(*hashtagObject['oc'])[0]}
-    for accuracy in [4, 2, 1, 0.5, ACCURACY]: occurances = getLatticeThatGivesMinimumLocalityIndexAtKForAccuracy(occurances['occurances'], kValue, accuracy)
-    return occurances['sourceLattice']
-
-def getLocalityIndexAtK(hashtagObject, lattice, kValue):
-    ACCURACY = 0.145
-    occurancesDistributionInHigherLattice, occurances = defaultdict(int), zip(*hashtagObject['oc'])[0]
-    for oc in occurances: occurancesDistributionInHigherLattice[getLatticeLid(oc, ACCURACY)]+=1
-    totalOccurances, distance, observedOccuraces = float(len(occurances)), 0, 0#occurancesDistributionInHigherLattice[getLatticeLid(lattice, ACCURACY)]
-#    del occurancesDistributionInHigherLattice[getLatticeLid(lattice, ACCURACY)]
-    sortedLatticeObjects = sorted([(getLocationFromLid(k.replace('_', ' ')), getHaversineDistance(lattice, getLocationFromLid(k.replace('_', ' '))), v) for k, v in occurancesDistributionInHigherLattice.iteritems()],
-                 key=itemgetter(1))
-    for l, d, oc in sortedLatticeObjects:
-        distance+=d; observedOccuraces+=oc
-        if observedOccuraces/totalOccurances>=kValue: break
-    return d
-    
 
 def tempGetLocality(timeRange):
-    ''' Locality index at k - for a hashtag is the minimum radius that covers k percentage of occurrances.
-            A high locality index suggests hashtag was global with a small index suggests it was local.
-        To find locality index at k, I must find a point that is closest to k percentage of occurances. 
-            Brute force requires nC2 complexity. 
-            Hence, use lattices of bigger size technique.
-    '''
-    K_FOR_LOCALITY_INDEX = 0.75
-    for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%'%s_%s'%timeRange):
-        if h['h'].startswith('occupy') or h['h']=='ows':
-            lattice = getLatticeThatGivesMinimumLocalityIndexAtK(h, K_FOR_LOCALITY_INDEX)
-            print h['h'], getLocalityIndexAtK(h, lattice, K_FOR_LOCALITY_INDEX)
-#            exit()
+    K_FOR_LOCALITY_INDEX = 0.5
+    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
+#        if h['h'].startswith('occupy') or h['h']=='ows':
+        print h['h'], getLocalityIndexAtK(zip(*h['oc'])[0], K_FOR_LOCALITY_INDEX)
                             
 def plotOnUsMap(timeRange):
     '''convert -delay 60 -quality 95 * movie.gif
@@ -239,12 +211,13 @@ def tempAnalysis(timeRange):
 def mr_analysis(timeRange):
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsSpreadInTimeFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDisplacementStatsFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':90})
+    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':90})
     
 if __name__ == '__main__':
 #    timeRange = (2,5)
