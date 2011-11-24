@@ -200,6 +200,13 @@ def plotHashtagsDisplacementStats(timeRange):
             plt.clf()
 #        exit()
 
+def analayzeLocalityIndexAtK(timeRange):
+    for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange):
+        if h['h'].startswith('occupy') or h['h']=='ows':
+            print h['h']
+            for k, v in h['liAtVaryingK']:
+                print k, v
+
 def tempAnalysis(timeRange):
     for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
         if h['h'].startswith('occupysf'):
@@ -231,4 +238,5 @@ if __name__ == '__main__':
 #    tempAnalysis(timeRange)
 #    plotOnUsMap(timeRange)
 #    tempGetLocality(timeRange)
+#    analayzeLocalityIndexAtK(timeRange)
     

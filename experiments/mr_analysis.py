@@ -188,7 +188,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def analayzeLocalityIndexAtK(self,  key, hashtagObject):
         occurances = zip(*hashtagObject['oc'])[0]
-        hashtagObject['liAtVaryingK'] = [(k, getLocalityIndexAtK(occurances, k)) for k in [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]]
+        hashtagObject['liAtVaryingK'] = [(k, getLocalityIndexAtK(occurances, k)) for k in [0.5+0.05*i for i in range(11)]]
         addSourceLatticeToHashTagObject(hashtagObject)
         yield key, hashtagObject
     
