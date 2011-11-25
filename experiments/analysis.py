@@ -135,7 +135,9 @@ def tempGetLocality(timeRange):
     K_FOR_LOCALITY_INDEX = 0.5
     for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
         if h['h'].startswith('occupy') or h['h']=='ows':
-            print h['h'], getLocalityIndexAtK(zip(*h['oc'])[0], K_FOR_LOCALITY_INDEX)
+#            print h['h'], getLocalityIndexAtK(zip(*h['oc'])[0], K_FOR_LOCALITY_INDEX)
+            occurances = zip(*h['oc'])[0]
+            print h['h'], [(k, getLocalityIndexAtK(occurances, k)) for k in [0.5+0.05*i for i in range(11)]]
                             
 def plotOnUsMap(timeRange):
     '''convert -delay 60 -quality 95 * movie.gif
@@ -202,14 +204,18 @@ def plotHashtagsDisplacementStats(timeRange):
 
 def analayzeLocalityIndexAtK(timeRange):
     imagesFolder = '/tmp/images/'
+    occupyList = ['occupywallst', 'occupyoakland', 'occupydc', 'occupysf']
     FileIO.createDirectoryForFile(imagesFolder+'dsf')
     for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange):
-        if h['h'].startswith('occupy') or h['h']=='ows':
-            print h['h']
+#        if h['h'].startswith('occupy') or h['h']=='ows':
+        if h['h'] in occupyList:
+            print h['h']#, h['liAtVaryingK']
             dataX, dataY = zip(*[(k, v[0])for k, v in h['liAtVaryingK']])
-            plt.plot(dataX, dataY)
-            plt.title(h['h'])
-            plt.show()
+            plt.plot(dataX, dataY, label=h['h'])
+#    plt.title(h['h'])
+    plt.ylim(ymax=4000)
+    plt.legend(loc=2)
+    plt.show()
             
 def tempAnalysis(timeRange):
     for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
@@ -234,7 +240,7 @@ if __name__ == '__main__':
 #    timeRange = (2,5)
     timeRange = (2,11)
     
-    mr_analysis(timeRange)
+#    mr_analysis(timeRange)
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
 #    plotHashtagsDisplacementStats(timeRange)
@@ -242,5 +248,5 @@ if __name__ == '__main__':
 #    tempAnalysis(timeRange)
 #    plotOnUsMap(timeRange)
 #    tempGetLocality(timeRange)
-#    analayzeLocalityIndexAtK(timeRange)
+    analayzeLocalityIndexAtK(timeRange)
     
