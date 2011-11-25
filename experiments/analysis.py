@@ -228,19 +228,19 @@ def tempAnalysis(timeRange):
 def mr_analysis(timeRange):
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsSpreadInTimeFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDisplacementStatsFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':90})
-    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':90})
+#    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':90})
     
 if __name__ == '__main__':
 #    timeRange = (2,5)
     timeRange = (2,11)
     
-#    mr_analysis(timeRange)
+    mr_analysis(timeRange)
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
 #    plotHashtagsDisplacementStats(timeRange)
@@ -248,5 +248,5 @@ if __name__ == '__main__':
 #    tempAnalysis(timeRange)
 #    plotOnUsMap(timeRange)
 #    tempGetLocality(timeRange)
-    analayzeLocalityIndexAtK(timeRange)
+#    analayzeLocalityIndexAtK(timeRange)
     
