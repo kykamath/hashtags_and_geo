@@ -7,6 +7,7 @@ from library.file_io import FileIO
 from settings import hashtagsAnalayzeLocalityIndexAtKFile
 import matplotlib.pyplot as plt
 from operator import itemgetter
+from library.geo import getHaversineDistance
 
 class AnalyzeLocalityIndexAtK:
     @staticmethod
@@ -30,7 +31,14 @@ class AnalyzeLocalityIndexAtK:
         for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange)]
         for h, s in sorted(hashtagsLIScore, key=itemgetter(1)):
             print h, s
+    @staticmethod
+    def plotDifferenceBetweenSourceAndLocalityLattice(timeRange):
+        differenceBetweenLattices = [(h['h'], getHaversineDistance(h['src'][0], h['liAtVaryingK'][0][1][1]))
+                                     for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange)]
+        for h, s in sorted(differenceBetweenLattices, key=itemgetter(1)):
+            print h, s
 if __name__ == '__main__':
     timeRange = (2,11)
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
-    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
+#    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
+    AnalyzeLocalityIndexAtK.plotDifferenceBetweenSourceAndLocalityLattice(timeRange)
