@@ -37,8 +37,15 @@ class AnalyzeLocalityIndexAtK:
                                      for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange)]
         for h, s in sorted(differenceBetweenLattices, key=itemgetter(1)):
             print h, s
+hashtagsCSV = '../data/hashtags.csv'
+def createCSV(timeRange):
+    for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange):
+        FileIO.writeToFile(h['h']+', ', hashtagsCSV)
 if __name__ == '__main__':
     timeRange = (2,11)
+    
+    createCSV(timeRange)
+    
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
-    AnalyzeLocalityIndexAtK.plotDifferenceBetweenSourceAndLocalityLattice(timeRange)
+#    AnalyzeLocalityIndexAtK.plotDifferenceBetweenSourceAndLocalityLattice(timeRange)
