@@ -25,7 +25,7 @@ K_VALUE_FOR_LOCALITY_INDEX = 0.5
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
 #HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
 
-MIN_HASHTAG_OCCURENCES = 500
+MIN_HASHTAG_OCCURENCES = 1000
 HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
 
@@ -218,7 +218,7 @@ class MRAnalysis(ModifiedMRJob):
     def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
 #    def jobsToGetHastagDisplacementInTime(self, method): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
 #                                                    [(method, None)]
-    def jobsToGetHashtagDisplacementStats(self): return self.jobsToGetHashtagWithGuranteedSource() + [(self.getHashtagDisplacementStats, None)]
+    def jobsToGetHashtagDisplacementStats(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getHashtagDisplacementStats, None)]
 #    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
 #    def jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.doHashtagCenterOfMassAnalysis, None)] 
     def jobsToAnalayzeLocalityIndexAtK(self): return self.jobsToGetHashtagWithGuranteedSource() + [(self.analayzeLocalityIndexAtK, None)]

@@ -201,32 +201,33 @@ def plotOnUsMap(timeRange):
         exit()
 
 def plotHashtagsDisplacementStats(timeRange):
-    MINIMUM_CHECKINS_PER_TIME_INTERVAL = 5
+    MINIMUM_CHECKINS_PER_TIME_INTERVAL = 0
     for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%'%s_%s'%timeRange):
-        if h['h'].startswith('occupy'):
-            print h['h'] 
-            dataX, dataY = [], []
-            for x, y in sorted(h['sit']):
-                if y[0]>=MINIMUM_CHECKINS_PER_TIME_INTERVAL: 
-                    if y[1]!=0: dataX.append(x), dataY.append(y)
-                    else: dataX.append(x), dataY.append([y[0], 1])
-                else: dataX.append(x), dataY.append([1,1])
-            dataX1, dataY1 = [], []
-            for x, y in sorted(h['mdit']):
-                if y[0]>=MINIMUM_CHECKINS_PER_TIME_INTERVAL: 
-                    if y[1]!=0: dataX1.append(x), dataY1.append(y)
-                    else: dataX1.append(x), dataY1.append([y[0], 1])
-                else: dataX1.append(x), dataY1.append([1,1])
-            plt.subplot(311); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX], [y[1] for y in dataY], '-'); plt.xticks([])
-            plt.title('%s'%(h['h'])), plt.ylabel('Spread'), plt.ylim(ymin=4, ymax=10**4)
-            plt.subplot(312); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX1], [y[1] for y in dataY1], '-'); plt.xticks([])
-            plt.ylabel('Mean distance'), plt.ylim(ymin=4, ymax=10**4)
-            ax = plt.subplot(313); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX], [y[0] for y in dataY], '-')
-            plt.ylabel('Number of tweets')
-            plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-    #        plt.savefig('%s/%s.png'%(hashtagsImagesDisplacementStatsInTime, h['h']))
-            plt.show()
-            plt.clf()
+#        if h['h'].startswith('occupy'):
+        print h['h'] 
+        dataX, dataY = [], []
+        for x, y in sorted(h['sit']):
+            if y[0]>=MINIMUM_CHECKINS_PER_TIME_INTERVAL: 
+                if y[1]!=0: dataX.append(x), dataY.append(y)
+                else: dataX.append(x), dataY.append([y[0], 1])
+            else: dataX.append(x), dataY.append([1,1])
+        dataX1, dataY1 = [], []
+        for x, y in sorted(h['liInTime']):
+            if y[0]>=MINIMUM_CHECKINS_PER_TIME_INTERVAL: 
+                if y[1]!=0: dataX1.append(x), dataY1.append(y)
+                else: dataX1.append(x), dataY1.append([y[0], 1])
+            else: dataX1.append(x), dataY1.append([1,1])
+        plt.subplot(311); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX], [y[1] for y in dataY], '-'); plt.xticks([])
+        plt.title('%s'%(h['h'])), plt.ylabel('Spread'), plt.ylim(ymin=4, ymax=10**4)
+        plt.subplot(312); 
+        plt.plot([datetime.datetime.fromtimestamp(t) for t in dataX1], [y[1] for y in dataY1], '-'); plt.xticks([])
+        plt.ylabel('LI'), #plt.ylim(ymin=4, ymax=10**4)
+        ax = plt.subplot(313); plt.semilogy([datetime.datetime.fromtimestamp(t) for t in dataX], [y[0] for y in dataY], '-')
+        plt.ylabel('Number of tweets')
+        plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
+#        plt.savefig('%s/%s.png'%(hashtagsImagesDisplacementStatsInTime, h['h']))
+        plt.show()
+        plt.clf()
 #        exit()
 
 def analayzeLocalityIndexAtK(timeRange):
@@ -255,7 +256,13 @@ def tempAnalysis(timeRange):
 #            print h['h'],
 #            addHashtagDisplacementsInTime(h, distanceMethod=getMeanDistanceBetweenLids)
 #            print h['sit']
-            
+
+def plotChangeLIOnUSMap(timeRange):
+    for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%'%s_%s'%timeRange):
+        plotPointsOnUSMap([t[1] for t in zip(*h['liInTime'])[1]])
+        plt.show()
+        exit()
+
 def mr_analysis(timeRange):
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
@@ -275,6 +282,7 @@ if __name__ == '__main__':
     mr_analysis(timeRange)
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
+#    plotChangeLIOnUSMap(timeRange)
 #    plotHashtagsDisplacementStats(timeRange)
 #    plotCenterOfMassHashtag(timeRange)
 #    tempAnalysis(timeRange)
