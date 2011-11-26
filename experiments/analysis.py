@@ -13,7 +13,7 @@ from experiments.mr_wc import MRWC
 from library.file_io import FileIO
 from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
     getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK,\
-    addSourceLatticeToHashTagObject
+    addSourceLatticeToHashTagObject, addHashtagLocalityIndexInTime
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
@@ -245,8 +245,11 @@ def analayzeLocalityIndexAtK(timeRange):
     plt.show()
             
 def tempAnalysis(timeRange):
-    for h in FileIO.iterateJsonFromFile(hashtagWithGuranteedSourceFile%'%s_%s'%timeRange):
-        print h['h']
+    for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange):
+        if h['liAtVaryingK'][0][1][0] > 0:
+            print h['h']
+            addHashtagLocalityIndexInTime(h)
+            exit()
 #        if h['h'].startswith('occupysf'):
 ##            addHashtagDisplacementsInTime(h, distanceMethod=getMeanDistanceFromSource)
 #            print h['h'],
@@ -261,8 +264,8 @@ def mr_analysis(timeRange):
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsSpreadInTimeFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
-#    runMRJob(MRAnalysis, hashtagsDisplacementStatsFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':90})
-    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsDisplacementStatsFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':90})
+#    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagWithGuranteedSourceFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':

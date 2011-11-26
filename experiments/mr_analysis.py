@@ -18,7 +18,8 @@ from operator import itemgetter
 ACCURACY = 0.145
 PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
 #HASHTAG_SPREAD_ANALYSIS_WINDOW = datetime.timedelta(seconds=24*4*15*60)
-HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 60*60
+HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 15*60
+K_VALUE_FOR_LOCALITY_INDEX = 0.5
 
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
@@ -80,11 +81,6 @@ def getLocalityIndexAtK(occurances, kValue):
         if observedOccuraces/totalOccurances>=kValue: break
     return (d, lattice)
 
-#def getMeanDistanceFromSource(source, llids): 
-#    for p in llids: 
-#        print source, p, getHaversineDistance(source, p)
-#    return np.mean([getHaversineDistance(source, p) for p in llids])
-
 def getMeanDistanceBetweenLids(_, llids): 
     meanLid = getCenterOfMass(llids,accuracy=ACCURACY)
     return getMeanDistanceFromSource(meanLid, llids)
@@ -105,16 +101,6 @@ def addSourceLatticeToHashTagObject(hashtagObject):
 
 
 def addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceFromSource, key='sit'):
-#    observedOccurences, currentTime = 0, datetime.datetime.fromtimestamp(hashtagObject['oc'][0][1])
-#    spread = []
-#    while observedOccurences<len(hashtagObject['oc']):
-#        currentTimeWindowBoundary = currentTime+HASHTAG_SPREAD_ANALYSIS_WINDOW
-#        llidsToMeasureSpread = [lid for lid, t in hashtagObject['oc'][observedOccurences:] if datetime.datetime.fromtimestamp(t)<currentTimeWindowBoundary]
-#        if llidsToMeasureSpread: spread.append([time.mktime(currentTimeWindowBoundary.timetuple()), [len(llidsToMeasureSpread), distanceMethod(hashtagObject['src'][0], llidsToMeasureSpread)]])
-#        else: spread.append([time.mktime(currentTimeWindowBoundary.timetuple()), [len(llidsToMeasureSpread), 0]])
-#        observedOccurences+=len(llidsToMeasureSpread); currentTime=currentTimeWindowBoundary
-#    hashtagObject[key] = spread
-    
     spread, occurencesDistribution = [], defaultdict(list)
     for oc in hashtagObject['oc']: occurencesDistribution[GeneralMethods.approximateEpoch(oc[1], HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS)].append(oc)
     for currentTime, oc in occurencesDistribution.iteritems():
@@ -123,6 +109,12 @@ def addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceF
         else: spread.append([currentTime, [len(llidsToMeasureSpread), 0]])
     hashtagObject[key] = spread
 
+def addHashtagLocalityIndexInTime(hashtagObject):
+    liInTime, occurencesDistribution = [], defaultdict(list)
+    for oc in hashtagObject['oc']: occurencesDistribution[GeneralMethods.approximateEpoch(oc[1], HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS)].append(oc)
+    for currentTime, oc in occurencesDistribution.iteritems(): liInTime.append([currentTime, getLocalityIndexAtK(zip(*oc)[0], K_VALUE_FOR_LOCALITY_INDEX)])
+    hashtagObject['liInTime'] = liInTime
+    
 class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
@@ -181,7 +173,8 @@ class MRAnalysis(ModifiedMRJob):
         '''
         addSourceLatticeToHashTagObject(hashtagObject)
         addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceFromSource, key='sit')
-        addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceBetweenLids, key='mdit')
+#        addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceBetweenLids, key='mdit')
+        addHashtagLocalityIndexInTime(hashtagObject)
         yield key, hashtagObject
     
     def getHashtagDistributionInTime(self,  key, hashtagObject):
@@ -225,7 +218,7 @@ class MRAnalysis(ModifiedMRJob):
     def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
 #    def jobsToGetHastagDisplacementInTime(self, method): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
 #                                                    [(method, None)]
-    def jobsToGetHashtagDisplacementStats(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getHashtagDisplacementStats, None)]
+    def jobsToGetHashtagDisplacementStats(self): return self.jobsToGetHashtagWithGuranteedSource() + [(self.getHashtagDisplacementStats, None)]
 #    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
 #    def jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.doHashtagCenterOfMassAnalysis, None)] 
     def jobsToAnalayzeLocalityIndexAtK(self): return self.jobsToGetHashtagWithGuranteedSource() + [(self.analayzeLocalityIndexAtK, None)]
@@ -240,8 +233,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagSpreadInTime)
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagMeanDistanceInTime)
-#        return self.jobsToGetHashtagDisplacementStats()
-        return self.jobsToAnalayzeLocalityIndexAtK()
+        return self.jobsToGetHashtagDisplacementStats()
+#        return self.jobsToAnalayzeLocalityIndexAtK()
 #        return self.jobsToGetHashtagWithGuranteedSource()
 
 if __name__ == '__main__':
