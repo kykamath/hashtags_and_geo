@@ -258,9 +258,15 @@ def tempAnalysis(timeRange):
 #            print h['sit']
 
 def plotChangeLIOnUSMap(timeRange):
-    for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%'%s_%s'%timeRange):
-        plotPointsOnUSMap([t[1] for t in zip(*h['liInTime'])[1]])
-        plt.show()
+    hashtagClasses = HashtagClass.getHashtagClasses()
+#    classesToPlot = ['technology', 'tv', 'movie', 'sports', 'occupy', 'events', 'republican_debates', 'song_game_releases']
+    classesToPlot = ['republican_debates']
+    for cls in classesToPlot:
+        for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%'%s_%s'%timeRange):
+            if h['h'] in hashtagClasses[cls]:
+                plotPointsOnUSMap([t[1] for t in zip(*h['liInTime'])[1]])
+                plt.title(h['h'])
+                plt.show()
         exit()
 
 def mr_analysis(timeRange):
