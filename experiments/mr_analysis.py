@@ -228,7 +228,7 @@ class MRAnalysis(ModifiedMRJob):
     def jobsToGetHashtagDisplacementStats(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getHashtagDisplacementStats, None)]
 #    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
 #    def jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.doHashtagCenterOfMassAnalysis, None)] 
-    def jobsToAnalayzeLocalityIndexAtK(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.analayzeLocalityIndexAtK, None)]
+    def jobsToAnalayzeLocalityIndexAtK(self): return self.jobsToGetHashtagWithGuranteedSource() + [(self.analayzeLocalityIndexAtK, None)]
     def jobsToGetHashtagWithGuranteedSource(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
                                                         [(self.getHashtagWithGuranteedSource, None)]
     
@@ -241,8 +241,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagSpreadInTime)
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagMeanDistanceInTime)
 #        return self.jobsToGetHashtagDisplacementStats()
-#        return self.jobsToAnalayzeLocalityIndexAtK()
-        return self.jobsToGetHashtagWithGuranteedSource()
+        return self.jobsToAnalayzeLocalityIndexAtK()
+#        return self.jobsToGetHashtagWithGuranteedSource()
 
 if __name__ == '__main__':
     MRAnalysis.run()

@@ -245,12 +245,13 @@ def analayzeLocalityIndexAtK(timeRange):
     plt.show()
             
 def tempAnalysis(timeRange):
-    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
-        if h['h'].startswith('occupysf'):
-#            addHashtagDisplacementsInTime(h, distanceMethod=getMeanDistanceFromSource)
-            print h['h'],
-            addHashtagDisplacementsInTime(h, distanceMethod=getMeanDistanceBetweenLids)
-            print h['sit']
+    for h in FileIO.iterateJsonFromFile(hashtagWithGuranteedSourceFile%'%s_%s'%timeRange):
+        print h['h']
+#        if h['h'].startswith('occupysf'):
+##            addHashtagDisplacementsInTime(h, distanceMethod=getMeanDistanceFromSource)
+#            print h['h'],
+#            addHashtagDisplacementsInTime(h, distanceMethod=getMeanDistanceBetweenLids)
+#            print h['sit']
             
 def mr_analysis(timeRange):
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
@@ -261,8 +262,8 @@ def mr_analysis(timeRange):
 #    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsSpreadInTimeFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDisplacementStatsFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':90})
-#    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':90})
-    runMRJob(MRAnalysis, hashtagWithGuranteedSourceFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagWithGuranteedSourceFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
 #    timeRange = (2,5)
