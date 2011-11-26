@@ -22,7 +22,7 @@ hashtagsDisplacementStatsFile = hashtagsAnalysisFolder+'%s/hashtagsDisplacementS
 hashtagsDistributionInTimeFile = hashtagsAnalysisFolder+'hashtagsDistributionInTime'
 hashtagsDistributionInLatticeFile = hashtagsAnalysisFolder+'hashtagsDistributionInLattice'
 hashtagsAnalayzeLocalityIndexAtKFile = hashtagsAnalysisFolder+'%s/hashtagsAnalayzeLocalityIndexAtK'
-hashtagsWithKnownSourcesFile = hashtagsAnalysisFolder+'%s/hashtagsWithKnownSources'
+hashtagWithGuranteedSourceFile = hashtagsAnalysisFolder+'%s/hashtagWithGuranteedSource'
 
 # Images
 hashtagsImagesFolder = '/data/geo/hashtags/images/'

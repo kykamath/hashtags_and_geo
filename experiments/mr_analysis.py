@@ -156,9 +156,9 @@ class MRAnalysis(ModifiedMRJob):
     ''' End: Methods to get hashtag objects
     '''
             
-#    def addSourceLatticeToHashTagObject(self, key, hashtagObject):
-#        addSourceLatticeToHashTagObject(hashtagObject)
-#        yield key, hashtagObject
+    def addSourceLatticeToHashTagObject(self, key, hashtagObject):
+        addSourceLatticeToHashTagObject(hashtagObject)
+        yield key, hashtagObject
     
 #    def addHashtagSpreadInTime(self, key, hashtagObject):
 #        '''Spread measures the distance from source.
@@ -172,7 +172,7 @@ class MRAnalysis(ModifiedMRJob):
 #        addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceBetweenLids, key='mdit')
 #        yield key, hashtagObject
     
-    def getHashtagWithKnownSource(self, key, hashtagObject):
+    def getHashtagWithGuranteedSource(self, key, hashtagObject):
         if hashtagObject['src'][1]/(hashtagObject['t']*0.01)>=0.5: yield key, hashtagObject
         
     def getHashtagDisplacementStats(self, key, hashtagObject):
@@ -220,7 +220,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
-#    def jobsToAddSourceLatticeToHashTagObject(self): return [(self.addSourceLatticeToHashTagObject, None)]
+    def jobsToAddSourceLatticeToHashTagObject(self): return [(self.addSourceLatticeToHashTagObject, None)]
     def jobsToGetHashtagDistributionInTime(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInTime, None)]
     def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
 #    def jobsToGetHastagDisplacementInTime(self, method): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
@@ -229,7 +229,8 @@ class MRAnalysis(ModifiedMRJob):
 #    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
 #    def jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.doHashtagCenterOfMassAnalysis, None)] 
     def jobsToAnalayzeLocalityIndexAtK(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.analayzeLocalityIndexAtK, None)]
-    def jobsToGetHashtagWithKnownSources(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getHashtagWithKnownSource, None)]
+    def jobsToGetHashtagWithGuranteedSource(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
+                                                        [(self.getHashtagWithGuranteedSource, None)]
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
@@ -241,7 +242,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagMeanDistanceInTime)
 #        return self.jobsToGetHashtagDisplacementStats()
 #        return self.jobsToAnalayzeLocalityIndexAtK()
-        return self.jobsToGetHashtagWithKnownSources()
+        return self.jobsToGetHashtagWithGuranteedSource()
 
 if __name__ == '__main__':
     MRAnalysis.run()
