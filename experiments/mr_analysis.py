@@ -91,13 +91,18 @@ def getMeanDistanceBetweenLids(_, llids):
 
 def addSourceLatticeToHashTagObject(hashtagObject):
     sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
-    if len(hashtagObject['oc'])>1000: sortedOcc = hashtagObject['oc'][:10]
-#    else: sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
-    llids = sorted([t[0] for t in sortedOcc])
-    uniquellids = [getLocationFromLid(l) for l in set(['%s %s'%(l[0], l[1]) for l in llids])]
-    sourceLlid = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in uniquellids], key=lambda t: t[1])
-    if sourceLlid[1]>=600: hashtagObject['src'] = max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
-    else: hashtagObject['src'] = sourceLlid
+    hashtagObject['src'] = max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
+
+#def addSourceLatticeToHashTagObject(hashtagObject):
+#    sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
+#    if len(hashtagObject['oc'])>1000: sortedOcc = hashtagObject['oc'][:10]
+##    else: sortedOcc = hashtagObject['oc'][:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(hashtagObject['oc']))]
+#    llids = sorted([t[0] for t in sortedOcc])
+#    uniquellids = [getLocationFromLid(l) for l in set(['%s %s'%(l[0], l[1]) for l in llids])]
+#    sourceLlid = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in uniquellids], key=lambda t: t[1])
+#    if sourceLlid[1]>=600: hashtagObject['src'] = max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
+#    else: hashtagObject['src'] = sourceLlid
+
 
 def addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceFromSource, key='sit'):
 #    observedOccurences, currentTime = 0, datetime.datetime.fromtimestamp(hashtagObject['oc'][0][1])
@@ -166,6 +171,9 @@ class MRAnalysis(ModifiedMRJob):
 #        '''
 #        addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceBetweenLids, key='mdit')
 #        yield key, hashtagObject
+    
+    def getHashtagWithKnownSource(self, key, hashtagObject):
+        if hashtagObject['src'][1]/(hashtagObject['t']*0.01)>=0.5: yield key, hashtagObject
         
     def getHashtagDisplacementStats(self, key, hashtagObject):
         ''' Spread measures the distance from source.
@@ -221,10 +229,11 @@ class MRAnalysis(ModifiedMRJob):
 #    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
 #    def jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.doHashtagCenterOfMassAnalysis, None)] 
     def jobsToAnalayzeLocalityIndexAtK(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.analayzeLocalityIndexAtK, None)]
+    def jobsToGetHashtagWithKnownSources(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getHashtagWithKnownSource, None)]
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
-        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
+#        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
 #        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
@@ -232,6 +241,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagMeanDistanceInTime)
 #        return self.jobsToGetHashtagDisplacementStats()
 #        return self.jobsToAnalayzeLocalityIndexAtK()
+        return self.jobsToGetHashtagWithKnownSources()
 
 if __name__ == '__main__':
     MRAnalysis.run()

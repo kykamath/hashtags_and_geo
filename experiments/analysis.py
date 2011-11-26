@@ -12,7 +12,8 @@ from operator import itemgetter
 from experiments.mr_wc import MRWC
 from library.file_io import FileIO
 from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
-    getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK
+    getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK,\
+    addSourceLatticeToHashTagObject
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
@@ -20,7 +21,7 @@ from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatti
     tempInputFile, inputFolder, hashtagsImagesCenterOfMassFolder,\
     hashtagsDisplacementStatsFile, hashtagsImagesDisplacementStatsInTime,\
     hashtagsImagesHashtagsDistributionInLid,\
-    hashtagsAnalayzeLocalityIndexAtKFile
+    hashtagsAnalayzeLocalityIndexAtKFile, hashtagsWithKnownSourcesFile
 import matplotlib.pyplot as plt
 from itertools import combinations, groupby 
 import numpy as np
@@ -41,7 +42,31 @@ def plotHashtagDistributionInTime():
             plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
             plt.xlim(xmin=datetime.datetime(2011, 2, 1), xmax=datetime.datetime(2011, 11, 30))
             plt.show()
+            
+class HashtagObject:
+    def __init__(self, hashtagDict): self.dict = hashtagDict
+    def getLocalLattice(self): return self.dict['liAtVaryingK'][0][1]
+    @staticmethod
+    def iterateHashtagObjects(timeRange, file=hashtagsAnalayzeLocalityIndexAtKFile, hastagsList = None):
+        for h in FileIO.iterateJsonFromFile(file%'%s_%s'%timeRange): 
+            if hastagsList==None or h['h'] in hastagsList: yield HashtagObject(h)
 
+class HashtagClass:
+    hashtagsCSV = '../data/hashtags.csv'
+    @staticmethod
+    def createCSV(timeRange):
+        i=1
+        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
+            FileIO.writeToFile(h['h']+', ', HashtagClass.hashtagsCSV)
+    @staticmethod
+    def iterateHashtagsWithClass():
+        for line in FileIO.iterateLinesFromFile(HashtagClass.hashtagsCSV): 
+            h, cls = line.strip().split(', ')   
+            yield h.strip(), cls.strip()
+    @staticmethod
+    def getHashtagClasses():
+        hashtags = sorted(HashtagClass.iterateHashtagsWithClass(), key=itemgetter(1))
+        return dict((cls, list(h[0] for h in hashtags)) for cls, hashtags in groupby(hashtags, key=itemgetter(1)))
 
 
 def plotTimeVsDistance():
@@ -132,12 +157,14 @@ def plotCenterOfMassHashtag(timeRange):
 
 
 def tempGetLocality(timeRange):
-    K_FOR_LOCALITY_INDEX = 0.5
+#    K_FOR_LOCALITY_INDEX = 0.5
     for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
         if h['h'].startswith('occupy') or h['h']=='ows':
-#            print h['h'], getLocalityIndexAtK(zip(*h['oc'])[0], K_FOR_LOCALITY_INDEX)
-            occurances = zip(*h['oc'])[0]
-            print h['h'], [(k, getLocalityIndexAtK(occurances, k)) for k in [0.5+0.05*i for i in range(11)]]
+##            print h['h'], getLocalityIndexAtK(zip(*h['oc'])[0], K_FOR_LOCALITY_INDEX)
+#            occurances = zip(*h['oc'])[0]
+#            print h['h'], [(k, getLocalityIndexAtK(occurances, k)) for k in [0.5+0.05*i for i in range(11)]]
+            addSourceLatticeToHashTagObject(h)
+            print h['h'], h['src'], int(h['t']*0.01), h['src'][1]/(h['t']*0.01)
                             
 def plotOnUsMap(timeRange):
     '''convert -delay 60 -quality 95 * movie.gif
@@ -228,13 +255,14 @@ def tempAnalysis(timeRange):
 def mr_analysis(timeRange):
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsSpreadInTimeFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDisplacementStatsFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':90})
 #    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':90})
+    runMRJob(MRAnalysis, hashtagsWithKnownSourcesFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
 #    timeRange = (2,5)
@@ -249,4 +277,3 @@ if __name__ == '__main__':
 #    plotOnUsMap(timeRange)
 #    tempGetLocality(timeRange)
 #    analayzeLocalityIndexAtK(timeRange)
-    

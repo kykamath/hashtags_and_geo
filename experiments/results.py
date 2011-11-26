@@ -4,10 +4,13 @@ Created on Nov 24, 2011
 @author: kykamath
 '''
 from library.file_io import FileIO
-from settings import hashtagsAnalayzeLocalityIndexAtKFile
+from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
+    hashtagsWithoutEndingWindowFile
 import matplotlib.pyplot as plt
 from operator import itemgetter
-from library.geo import getHaversineDistance
+from library.geo import getHaversineDistance, plotPointsOnUSMap
+from itertools import groupby
+from experiments.analysis import HashtagClass, HashtagObject
 
 class AnalyzeLocalityIndexAtK:
     @staticmethod
@@ -37,14 +40,26 @@ class AnalyzeLocalityIndexAtK:
                                      for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange)]
         for h, s in sorted(differenceBetweenLattices, key=itemgetter(1)):
             print h, s
-hashtagsCSV = '../data/hashtags.csv'
-def createCSV(timeRange):
-    for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange):
-        FileIO.writeToFile(h['h']+', ', hashtagsCSV)
+def plotHashtagsOnUSMap(timeRange):
+    hashtagClasses = HashtagClass.getHashtagClasses()
+    classesToPlot = ['technology', 'tv', 'movie', 'sports', 'occupy', 'events', 'republican_debates', 'song_game_releases']
+    for cls in classesToPlot:
+        points, labels, scores, sources = [], [], [], []
+        for h in HashtagObject.iterateHashtagObjects(timeRange, hastagsList=hashtagClasses[cls]):
+            score, point = h.getLocalLattice()
+            points.append(point), labels.append(h.dict['h']), scores.append(score), sources.append(h.dict['src'])
+#            print score, point
+        for i, j, k, l in zip(labels, scores, points, sources):
+            print i, j, k, l
+        print '\n\n\n\n'
+#        plotPointsOnUSMap(points, pointLabels=labels)
+#        plt.show()
+#        exit()
+
 if __name__ == '__main__':
     timeRange = (2,11)
     
-    createCSV(timeRange)
+    plotHashtagsOnUSMap(timeRange)
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
