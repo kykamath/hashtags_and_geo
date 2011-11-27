@@ -201,15 +201,16 @@ class MRAnalysis(ModifiedMRJob):
             yield lattice, ['o', latticeObject]
             for no in neighborLatticeIds: yield no, ['no', [lattice, latticeObject['h']]]
     def buildHashtagSharingProbabilityGraphReduce2(self, lattice, values):
-        nodeObject, latticeObject, neighborObjects = {'links':{}, 'id': lattice}, {}, {}
+        nodeObject, latticeObject, neighborObjects = {'links':{}, 'id': lattice}, None, {}
         for type, value in values:
             if type=='o': latticeObject = value
             else: neighborObjects[value[0]]=value[1]
-        currentObjectHashtags = set(latticeObject['h'])
-        for no, neighborHashtags in neighborObjects.iteritems():
-            neighborHashtags=set(neighborHashtags)
-            nodeObject['links'][no] = len(currentObjectHashtags.intersection(neighborHashtags))/float(len(currentObjectHashtags)) 
-        yield lattice, nodeObject
+        if latticeObject:
+            currentObjectHashtags = set(latticeObject['h'])
+            for no, neighborHashtags in neighborObjects.iteritems():
+                neighborHashtags=set(neighborHashtags)
+                nodeObject['links'][no] = len(currentObjectHashtags.intersection(neighborHashtags))/float(len(currentObjectHashtags)) 
+            yield lattice, nodeObject
     ''' End: Methods to get hashtag co-occurence probabilities among lattices.
     '''
             
