@@ -20,9 +20,9 @@ PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
 HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 24*60*60
 K_VALUE_FOR_LOCALITY_INDEX = 0.5
 
-#MIN_HASHTAG_OCCURENCES = 1
-#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
-#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
+MIN_HASHTAG_OCCURENCES = 1
+HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
+HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
 
 #BOUNDARY_NAME, BOUNDARY_SPECIFIC_MIN_HASHTAG_OCCURENCES, BOUNDARY = 
 BOUNDARIES_DICT = dict([
@@ -34,9 +34,9 @@ BOUNDARIES_DICT = dict([
         ('ap', (25, [[-46.55886,54.492188], [59.175928,176.835938]]))
 ])
 
-MIN_HASHTAG_OCCURENCES = 1000
-HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
-HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
+#MIN_HASHTAG_OCCURENCES = 1000
+#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
+#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
