@@ -6,7 +6,7 @@ Created on Nov 19, 2011
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from library.mrjobwrapper import ModifiedMRJob
 from library.geo import getLatticeLid, getHaversineDistance, getLattice,\
-    getCenterOfMass, getLocationFromLid
+    getCenterOfMass, getLocationFromLid, isWithinBoundingBox
 import cjson, time, datetime
 from collections import defaultdict
 from itertools import groupby
@@ -17,13 +17,14 @@ from operator import itemgetter
 
 ACCURACY = 0.145
 PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
-#HASHTAG_SPREAD_ANALYSIS_WINDOW = datetime.timedelta(seconds=24*4*15*60)
 HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 24*60*60
 K_VALUE_FOR_LOCALITY_INDEX = 0.5
 
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
 #HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
+
+BOUNDARY_NAME, BOUNDARY_SPECIFIC_MIN_HASHTAG_OCCURENCES, BOUNDARY = ('us', 100, [[24.527135,-127.792969], [49.61071,-59.765625]])
 
 MIN_HASHTAG_OCCURENCES = 1000
 HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
@@ -145,6 +146,15 @@ class MRAnalysis(ModifiedMRJob):
         if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
             e[1]>=HASHTAG_STARTING_WINDOW:
                 yield key, {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
+    def combine_hashtag_instances_without_ending_window_using_boundary(self, key, values):
+        occurences = []
+        for instances in values: 
+            for occurence in instances['oc']:
+                if isWithinBoundingBox(occurence[0], BOUNDARY): occurences.append(occurence)
+        e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
+        numberOfInstances=len(occurences)
+        if numberOfInstances>=BOUNDARY_SPECIFIC_MIN_HASHTAG_OCCURENCES and \
+            e[1]>=HASHTAG_STARTING_WINDOW: yield key, {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
     ''' End: Methods to get hashtag objects
     '''
             
@@ -213,6 +223,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
+    def jobsToGetHastagObjectsWithoutEndingWindowUsingBoundary(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window_using_boundary)]
     def jobsToAddSourceLatticeToHashTagObject(self): return [(self.addSourceLatticeToHashTagObject, None)]
     def jobsToGetHashtagDistributionInTime(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInTime, None)]
     def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
@@ -228,12 +239,13 @@ class MRAnalysis(ModifiedMRJob):
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
+        return self.jobsToGetHastagObjectsWithoutEndingWindowUsingBoundary()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
 #        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagSpreadInTime)
 #        return self.jobsToGetHastagDisplacementInTime(method=self.addHashtagMeanDistanceInTime)
-        return self.jobsToGetHashtagDisplacementStats()
+#        return self.jobsToGetHashtagDisplacementStats()
 #        return self.jobsToAnalayzeLocalityIndexAtK()
 #        return self.jobsToGetHashtagWithGuranteedSource()
 
