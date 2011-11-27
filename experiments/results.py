@@ -66,7 +66,7 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
 #    nodes = getNodesFromFile('../data/hashtagSharingProbabilityGraph')
     nodes = getNodesFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))
     latticeNodeId = getLatticeLid(sourceLattice, accuracy=ACCURACY)
-    points, colors = zip(*nodes[latticeNodeId].iteritems())
+    points, colors = zip(*sorted(nodes[latticeNodeId].iteritems(), key=itemgetter(1)))
     points = [getLocationFromLid(p.replace('_', ' ')) for p in points]
 #    print colors
     cm = matplotlib.cm.get_cmap('gist_yarg')
