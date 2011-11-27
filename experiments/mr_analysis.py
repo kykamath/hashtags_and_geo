@@ -167,7 +167,9 @@ class MRAnalysis(ModifiedMRJob):
         occurences = []
         for instances in values: occurences+=instances['oc']
         if min(occurences, key=lambda t: t[1])[1]>=HASHTAG_STARTING_WINDOW:
-            for occurence in occurences: yield getLocationBoundaryId(occurence[0])+':ilab:'+key, 1
+            for occurence in occurences: 
+                bid = getLocationBoundaryId(occurence[0])
+                if bid: yield bid+':ilab:'+key, 1
     def reduceBoundarySpecificStats(self, key, values):
         bid, hashTag = key.split(':ilab:')
         noOfHashtags = sum(list(values))
