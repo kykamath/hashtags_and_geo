@@ -20,9 +20,9 @@ PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
 HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 24*60*60
 K_VALUE_FOR_LOCALITY_INDEX = 0.5
 
-#MIN_HASHTAG_OCCURENCES = 1
-#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
-#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
+MIN_HASHTAG_OCCURENCES = 1
+HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
+HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
 
 #BOUNDARY_NAME, BOUNDARY_SPECIFIC_MIN_HASHTAG_OCCURENCES, BOUNDARY = 
 BOUNDARIES_DICT = dict([
@@ -34,9 +34,9 @@ BOUNDARIES_DICT = dict([
         ('ap', (25, [[-46.55886,54.492188], [59.175928,176.835938]]))
 ])
 
-MIN_HASHTAG_OCCURENCES = 1000
-HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
-HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
+#MIN_HASHTAG_OCCURENCES = 1000
+#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
+#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
@@ -178,6 +178,37 @@ class MRAnalysis(ModifiedMRJob):
         yield bid, {'bid': bid, 'hashTags': list(hashTags)}
     ''' End: Methods to get boundary specific stats
     '''
+        
+    ''' Start: Methods to get hashtag co-occurence probabilities among lattices.
+        E(Place_a, Place_b) = len(Hastags(Place_a) and Hastags(Place_b)) / len(Hastags(Place_a))
+    '''
+    def m1(self, key, hashtagObject):
+        lattices = list(set([getLatticeLid(l, accuracy=ACCURACY) for l in zip(*hashtagObject['oc'])[0]]))
+        for lattice in lattices: 
+            yield lattice, ['h', [hashtagObject['h']]]
+            yield lattice, ['n', lattices]
+    def m2(self, lattice, values):
+        latticeObject = {'h': [], 'n': []}
+        for type, value in values: latticeObject[type]+=value
+        for k in latticeObject.keys()[:]: latticeObject[k]=list(set(latticeObject[k]))
+        latticeObject['n'].remove(lattice)
+        neighborLatticeIds = latticeObject['n']; del latticeObject['n']
+        if neighborLatticeIds:
+            latticeObject['id'] = lattice
+            yield lattice, ['o', latticeObject]
+            for no in neighborLatticeIds: yield no, ['no', [lattice, latticeObject['h']]]
+    def m3(self, lattice, values):
+        nodeObject, latticeObject, neighborObjects = {'links':{}, 'id': lattice}, {}, {}
+        for type, value in values:
+            if type=='o': latticeObject = value
+            else: neighborObjects[value[0]]=value[1]
+        currentObjectHashtags = set(latticeObject['h'])
+        for no, neighborHashtags in neighborObjects.iteritems():
+            neighborHashtags=set(neighborHashtags)
+            nodeObject['links'][no] = len(currentObjectHashtags.intersection(neighborHashtags))/float(len(currentObjectHashtags)) 
+        yield lattice, nodeObject
+    ''' End: Methods to get hashtag co-occurence probabilities among lattices.
+    '''
             
     def addSourceLatticeToHashTagObject(self, key, hashtagObject):
         addSourceLatticeToHashTagObject(hashtagObject)
@@ -250,7 +281,7 @@ class MRAnalysis(ModifiedMRJob):
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
-        return self.jobsToGetBoundarySpecificStats()
+#        return self.jobsToGetBoundarySpecificStats()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
 #        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()
@@ -259,6 +290,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHashtagDisplacementStats()
 #        return self.jobsToAnalayzeLocalityIndexAtK()
 #        return self.jobsToGetHashtagWithGuranteedSource()
-
+        return self.jobsToGetHastagObjectsWithoutEndingWindow()+ [(self.m1, self.m2), (self.emptyMapper, self.m3)]
+        
 if __name__ == '__main__':
     MRAnalysis.run()
