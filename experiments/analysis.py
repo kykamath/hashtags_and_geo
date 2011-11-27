@@ -49,7 +49,7 @@ class HashtagObject:
     def getLocalLattice(self): return self.dict['liAtVaryingK'][0][1]
     @staticmethod
     def iterateHashtagObjects(timeRange, file=hashtagsAnalayzeLocalityIndexAtKFile, hastagsList = None):
-        for h in FileIO.iterateJsonFromFile(file%'%s_%s'%timeRange): 
+        for h in FileIO.iterateJsonFromFile(file%(outputFolder, '%s_%s'%timeRange)): 
             if hastagsList==None or h['h'] in hastagsList: yield HashtagObject(h)
 
 class HashtagClass:
@@ -57,7 +57,7 @@ class HashtagClass:
     @staticmethod
     def createCSV(timeRange):
         i=1
-        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
+        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
             FileIO.writeToFile(h['h']+', ', HashtagClass.hashtagsCSV)
     @staticmethod
     def iterateHashtagsWithClass():
@@ -92,7 +92,7 @@ def plotTimeVsDistance():
 #            plt.clf()
 
 def plotCenterOfMassHashtag(timeRange):
-    for h in FileIO.iterateJsonFromFile(hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%'%s_%s'%timeRange):
+    for h in FileIO.iterateJsonFromFile(hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
 #        print h['h'], h['t'], int(h['ahd'][0][1]), int(h['ahd'][-1][1])
 #        print h['h'], h['t'], int(h['com'][0][1][1]), int(h['com'][-1][1][1])
         comData, epData = dict(h['com']), dict(h['ep'])
@@ -159,7 +159,7 @@ def plotCenterOfMassHashtag(timeRange):
 
 def tempGetLocality(timeRange):
 #    K_FOR_LOCALITY_INDEX = 0.5
-    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange):
+    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
         if h['h'].startswith('occupy') or h['h']=='ows':
 ##            print h['h'], getLocalityIndexAtK(zip(*h['oc'])[0], K_FOR_LOCALITY_INDEX)
 #            occurances = zip(*h['oc'])[0]
@@ -174,7 +174,7 @@ def plotOnUsMap(timeRange):
     MINIMUM_CHECKINS_PER_TIME_INTERVAL = 10
     ACCURACY = 0.5
     SOURCE_COLOR = 'r'; OTHER_POINTS_COLOR = 'b'
-    for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%'%s_%s'%timeRange):
+    for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%(outputFolder, '%s_%s'%timeRange)):
         if h['h'].startswith('occupy'):
             occurencesDistribution = defaultdict(list)
             source = getLatticeLid(h['src'][0], ACCURACY)
@@ -203,7 +203,7 @@ def plotOnUsMap(timeRange):
 
 def plotHashtagsDisplacementStats(timeRange):
     MINIMUM_CHECKINS_PER_TIME_INTERVAL = 0
-    for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%'%s_%s'%timeRange):
+    for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%(outputFolder, '%s_%s'%timeRange)):
 #        if h['h'].startswith('occupy'):
         print h['h'] 
         dataX, dataY = [], []
@@ -235,7 +235,7 @@ def analayzeLocalityIndexAtK(timeRange):
     imagesFolder = '/tmp/images/'
     occupyList = ['occupywallst', 'occupyoakland', 'occupydc', 'occupysf']
     FileIO.createDirectoryForFile(imagesFolder+'dsf')
-    for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange):
+    for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%(outputFolder, '%s_%s'%timeRange)):
 #        if h['h'].startswith('occupy') or h['h']=='ows':
         if h['h'] in occupyList:
             print h['h']#, h['liAtVaryingK']
@@ -247,7 +247,7 @@ def analayzeLocalityIndexAtK(timeRange):
     plt.show()
             
 def tempAnalysis(timeRange):
-    for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange):
+    for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%(outputFolder, '%s_%s'%timeRange)):
         if h['liAtVaryingK'][0][1][0] > 0:
             print h['h']
             addHashtagLocalityIndexInTime(h)
@@ -265,7 +265,7 @@ def plotChangeLIOnUSMap(timeRange):
     folderName = '/tmp/images/%s/%s.png'
     classesToPlot = ['occupy']
     for cls in classesToPlot:
-        for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%'%s_%s'%timeRange):
+        for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%(outputFolder, '%s_%s'%timeRange)):
             if h['h'] in hashtagClasses[cls]:
                 occurencesDistribution = defaultdict(list)
                 for oc in h['oc']: occurencesDistribution[GeneralMethods.approximateEpoch(oc[1], HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS)].append(oc)
@@ -273,7 +273,7 @@ def plotChangeLIOnUSMap(timeRange):
                 dataY = [len(occurencesDistribution[x]) for x in dataX]
                 dataX = [datetime.datetime.fromtimestamp(x) for x in dataX]
                 for t, l in sorted(h['liInTime'], key=itemgetter(0)):
-                    print t,l
+                    print h['h'], t, l
                     plt.subplot(211), plt.title(h['h'] + ' ' + str(datetime.datetime.fromtimestamp(t)))
                     plotPointsOnUSMap([l[1]], pointSize=[100+l[0]], pointColor=['r'])
                     ax = plt.subplot(212)
@@ -287,23 +287,26 @@ def plotChangeLIOnUSMap(timeRange):
                     plt.clf()
 #        exit()
 
-def mr_analysis(timeRange):
-    def getInputFiles(months): return [inputFolder+str(m) for m in months]
+def mr_analysis(timeRange, outputFolder):
+    def getInputFiles(months, folderType='/'): return [inputFolder+folderType+'/'+str(m) for m in months]
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-#    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
-#    runMRJob(MRAnalysis, hashtagsSpreadInTimeFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsDisplacementStatsFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':90})
-#    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
-#    runMRJob(MRAnalysis, hashtagWithGuranteedSourceFile%'%s_%s'%timeRange, getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsSpreadInTimeFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsDisplacementStatsFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':90})
+#    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagWithGuranteedSourceFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
     
 if __name__ == '__main__':
 #    timeRange = (2,5)
     timeRange = (2,11)
     
-    mr_analysis(timeRange)
+#    outputFolder = 'us'
+    outputFolder = 'world'
+    
+    mr_analysis(timeRange, outputFolder)
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
 #    plotChangeLIOnUSMap(timeRange)

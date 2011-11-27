@@ -18,11 +18,11 @@ hashtagsWithoutEndingWindowFile = hashtagsAnalysisFolder+'%s/hashtagsWithoutEndi
 #hashtagsCenterOfMassAnalysisWithoutEndingWindowFile = hashtagsAnalysisFolder+'%s/hashtagsCenterOfMassAnalysisWithoutEndingWindow'
 #hashtagsSpreadInTimeFile = hashtagsAnalysisFolder+'%s/hashtagsSpreadInTime'
 #hashtagsMeanDistanceInTimeFile = hashtagsAnalysisFolder + '%s/hashtagsMeanDistanceInTime'
-hashtagsDisplacementStatsFile = hashtagsAnalysisFolder+'%s/hashtagsDisplacementStats'
+hashtagsDisplacementStatsFile = hashtagsAnalysisFolder+'%s/%s/hashtagsDisplacementStats'
 hashtagsDistributionInTimeFile = hashtagsAnalysisFolder+'hashtagsDistributionInTime'
 hashtagsDistributionInLatticeFile = hashtagsAnalysisFolder+'hashtagsDistributionInLattice'
-hashtagsAnalayzeLocalityIndexAtKFile = hashtagsAnalysisFolder+'%s/hashtagsAnalayzeLocalityIndexAtK'
-hashtagWithGuranteedSourceFile = hashtagsAnalysisFolder+'%s/hashtagWithGuranteedSource'
+hashtagsAnalayzeLocalityIndexAtKFile = hashtagsAnalysisFolder+'%s/%s/hashtagsAnalayzeLocalityIndexAtK'
+hashtagWithGuranteedSourceFile = hashtagsAnalysisFolder+'%s/%s/hashtagWithGuranteedSource'
 
 # Images
 hashtagsImagesFolder = '/data/geo/hashtags/images/'
