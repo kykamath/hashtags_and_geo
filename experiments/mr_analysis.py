@@ -182,12 +182,12 @@ class MRAnalysis(ModifiedMRJob):
     ''' Start: Methods to get hashtag co-occurence probabilities among lattices.
         E(Place_a, Place_b) = len(Hastags(Place_a) and Hastags(Place_b)) / len(Hastags(Place_a))
     '''
-    def m1(self, key, hashtagObject):
+    def buildHashtagSharingProbabilityGraphMap(self, key, hashtagObject):
         lattices = list(set([getLatticeLid(l, accuracy=ACCURACY) for l in zip(*hashtagObject['oc'])[0]]))
         for lattice in lattices: 
             yield lattice, ['h', [hashtagObject['h']]]
             yield lattice, ['n', lattices]
-    def m2(self, lattice, values):
+    def buildHashtagSharingProbabilityGraphReduce1(self, lattice, values):
         latticeObject = {'h': [], 'n': []}
         for type, value in values: latticeObject[type]+=value
         for k in latticeObject.keys()[:]: latticeObject[k]=list(set(latticeObject[k]))
@@ -197,7 +197,7 @@ class MRAnalysis(ModifiedMRJob):
             latticeObject['id'] = lattice
             yield lattice, ['o', latticeObject]
             for no in neighborLatticeIds: yield no, ['no', [lattice, latticeObject['h']]]
-    def m3(self, lattice, values):
+    def buildHashtagSharingProbabilityGraphReduce2(self, lattice, values):
         nodeObject, latticeObject, neighborObjects = {'links':{}, 'id': lattice}, {}, {}
         for type, value in values:
             if type=='o': latticeObject = value
@@ -277,6 +277,10 @@ class MRAnalysis(ModifiedMRJob):
     def jobsToAnalayzeLocalityIndexAtK(self): return self.jobsToGetHashtagWithGuranteedSource() + [(self.analayzeLocalityIndexAtK, None)]
     def jobsToGetHashtagWithGuranteedSource(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
                                                         [(self.getHashtagWithGuranteedSource, None)]
+    def jobsToBuildHashtagSharingProbabilityGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+\
+             [(self.buildHashtagSharingProbabilityGraphMap, self.buildHashtagSharingProbabilityGraphReduce1), 
+              (self.emptyMapper, self.buildHashtagSharingProbabilityGraphReduce2)]
+        
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
@@ -290,7 +294,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHashtagDisplacementStats()
 #        return self.jobsToAnalayzeLocalityIndexAtK()
 #        return self.jobsToGetHashtagWithGuranteedSource()
-        return self.jobsToGetHastagObjectsWithoutEndingWindow()+ [(self.m1, self.m2), (self.emptyMapper, self.m3)]
+        return self.jobsToBuildHashtagSharingProbabilityGraph()
         
 if __name__ == '__main__':
     MRAnalysis.run()

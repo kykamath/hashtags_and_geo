@@ -23,7 +23,7 @@ from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatti
     hashtagsDisplacementStatsFile, hashtagsImagesDisplacementStatsInTime,\
     hashtagsImagesHashtagsDistributionInLid,\
     hashtagsAnalayzeLocalityIndexAtKFile, hashtagWithGuranteedSourceFile,\
-    hashtagsBoundarySpecificStatsFile
+    hashtagsBoundarySpecificStatsFile, hashtagSharingProbabilityGraphFile
 import matplotlib.pyplot as plt
 from itertools import combinations, groupby 
 import numpy as np
@@ -299,14 +299,15 @@ def mr_analysis(timeRange, outputFolder):
 #    runMRJob(MRAnalysis, hashtagsDisplacementStatsFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':90})
 #    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagWithGuranteedSourceFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsBoundarySpecificStatsFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':600})
+#    runMRJob(MRAnalysis, hashtagsBoundarySpecificStatsFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':600})
+    runMRJob(MRAnalysis, hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':600})
 
 if __name__ == '__main__':
 #    timeRange = (2,5)
     timeRange = (2,11)
     
-#    outputFolder = 'us'
-    outputFolder = 'world'
+    outputFolder = '/'
+#    outputFolder = 'world'
     
     mr_analysis(timeRange, outputFolder)
 #    plotHashtagDistributionInTime()
