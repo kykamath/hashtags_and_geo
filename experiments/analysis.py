@@ -13,7 +13,8 @@ from experiments.mr_wc import MRWC
 from library.file_io import FileIO
 from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
     getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK,\
-    addSourceLatticeToHashTagObject, addHashtagLocalityIndexInTime
+    addSourceLatticeToHashTagObject, addHashtagLocalityIndexInTime,\
+    HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
@@ -260,14 +261,31 @@ def tempAnalysis(timeRange):
 def plotChangeLIOnUSMap(timeRange):
     hashtagClasses = HashtagClass.getHashtagClasses()
 #    classesToPlot = ['technology', 'tv', 'movie', 'sports', 'occupy', 'events', 'republican_debates', 'song_game_releases']
-    classesToPlot = ['republican_debates']
+    
+    folderName = '/tmp/images/%s/%s.png'
+    classesToPlot = ['occupy']
     for cls in classesToPlot:
         for h in FileIO.iterateJsonFromFile(hashtagsDisplacementStatsFile%'%s_%s'%timeRange):
             if h['h'] in hashtagClasses[cls]:
-                plotPointsOnUSMap([t[1] for t in zip(*h['liInTime'])[1]])
-                plt.title(h['h'])
-                plt.show()
-        exit()
+                occurencesDistribution = defaultdict(list)
+                for oc in h['oc']: occurencesDistribution[GeneralMethods.approximateEpoch(oc[1], HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS)].append(oc)
+                dataX = sorted(occurencesDistribution)
+                dataY = [len(occurencesDistribution[x]) for x in dataX]
+                dataX = [datetime.datetime.fromtimestamp(x) for x in dataX]
+                for t, l in sorted(h['liInTime'], key=itemgetter(0)):
+                    print t,l
+                    plt.subplot(211), plt.title(h['h'] + ' ' + str(datetime.datetime.fromtimestamp(t)))
+                    plotPointsOnUSMap([l[1]], pointSize=[100+l[0]], pointColor=['r'])
+                    ax = plt.subplot(212)
+                    plt.semilogy(dataX, dataY, '-')
+                    plt.plot(datetime.datetime.fromtimestamp(t), len(occurencesDistribution[t]), 'o')
+                    plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
+#                plotPointsOnUSMap([t[1] for t in zip(*h['liInTime'])[1]])
+#                    plt.show()
+                    FileIO.createDirectoryForFile(folderName%(h['h'], t))
+                    plt.savefig(folderName%(h['h'], t))
+                    plt.clf()
+#        exit()
 
 def mr_analysis(timeRange):
     def getInputFiles(months): return [inputFolder+str(m) for m in months]
