@@ -24,9 +24,14 @@ K_VALUE_FOR_LOCALITY_INDEX = 0.5
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
 #HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
 #MIN_HASHTAG_OCCURENCES_PER_LATTICE = 4
+#MIN_HASHTAG_SHARING_PROBABILITY = 0.1
 
+MIN_HASHTAG_OCCURENCES = 1000
+HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
+HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
+MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10
+MIN_HASHTAG_SHARING_PROBABILITY = 0.1
 
-#BOUNDARY_NAME, BOUNDARY_SPECIFIC_MIN_HASHTAG_OCCURENCES, BOUNDARY = 
 BOUNDARIES_DICT = dict([
         ('us', (100, [[24.527135,-127.792969], [49.61071,-59.765625]])),
         ('na', (100, [[8.05923,-170.859375], [72.395706,-53.789062]])),
@@ -36,10 +41,6 @@ BOUNDARIES_DICT = dict([
         ('ap', (25, [[-46.55886,54.492188], [59.175928,176.835938]]))
 ])
 
-MIN_HASHTAG_OCCURENCES = 1000
-HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
-HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
-MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
@@ -201,15 +202,16 @@ class MRAnalysis(ModifiedMRJob):
             yield lattice, ['o', latticeObject]
             for no in neighborLatticeIds: yield no, ['no', [lattice, latticeObject['h']]]
     def buildHashtagSharingProbabilityGraphReduce2(self, lattice, values):
-        nodeObject, latticeObject, neighborObjects = {'links':{}, 'id': lattice}, None, {}
+        nodeObject, latticeObject, neighborObjects = {'links':{}, 'id': lattice}, None, []
         for type, value in values:
             if type=='o': latticeObject = value
-            else: neighborObjects[value[0]]=value[1]
+            else: neighborObjects.append(value)
         if latticeObject:
             currentObjectHashtags = set(latticeObject['h'])
-            for no, neighborHashtags in neighborObjects.iteritems():
+            for no, neighborHashtags in neighborObjects:
                 neighborHashtags=set(neighborHashtags)
-                nodeObject['links'][no] = len(currentObjectHashtags.intersection(neighborHashtags))/float(len(currentObjectHashtags)) 
+                prob = len(currentObjectHashtags.intersection(neighborHashtags))/float(len(currentObjectHashtags))
+                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: nodeObject['links'][no] =  prob
             yield lattice, nodeObject
     ''' End: Methods to get hashtag co-occurence probabilities among lattices.
     '''
