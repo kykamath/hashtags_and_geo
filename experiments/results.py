@@ -71,7 +71,7 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
 #    print colors
     cm = matplotlib.cm.get_cmap('YlOrRd')
     #pointColor = ['b', 'r', 'g']
-    sc = plotPointsOnUSMap(points, c=colors, cmap=cm, lw = 0)
+    sc = plotPointsOnUSMap(points, c=colors, cmap=cm, lw = 0, alpha=0.5)
     plt.colorbar(sc)
     plt.savefig('fig.png')
     
