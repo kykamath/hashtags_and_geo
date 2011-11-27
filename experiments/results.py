@@ -65,16 +65,15 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
     def getNodesFromFile(graphFile): return dict([(data['id'], data['links']) for data in FileIO.iterateJsonFromFile(graphFile)])
 #    nodes = getNodesFromFile('../data/hashtagSharingProbabilityGraph')
     nodes = getNodesFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))
-    print len(nodes)
-#    latticeNodeId = getLatticeLid(sourceLattice, accuracy=ACCURACY)
-#    points, colors = zip(*nodes[latticeNodeId].iteritems())
-#    points = [getLocationFromLid(p.replace('_', ' ')) for p in points]
-##    print colors
-#    cm = matplotlib.cm.get_cmap('YlOrRd')
-#    #pointColor = ['b', 'r', 'g']
-#    sc = plotPointsOnUSMap(points, c=colors, cmap=cm, lw = 0)
-#    plt.colorbar(sc)
-#    plt.show()
+    latticeNodeId = getLatticeLid(sourceLattice, accuracy=ACCURACY)
+    points, colors = zip(*nodes[latticeNodeId].iteritems())
+    points = [getLocationFromLid(p.replace('_', ' ')) for p in points]
+#    print colors
+    cm = matplotlib.cm.get_cmap('YlOrRd')
+    #pointColor = ['b', 'r', 'g']
+    sc = plotPointsOnUSMap(points, c=colors, cmap=cm, lw = 0)
+    plt.colorbar(sc)
+    plt.savefig('fig.png')
     
 
 if __name__ == '__main__':
