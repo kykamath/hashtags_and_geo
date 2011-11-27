@@ -20,9 +20,11 @@ PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
 HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 24*60*60
 K_VALUE_FOR_LOCALITY_INDEX = 0.5
 
-MIN_HASHTAG_OCCURENCES = 1
-HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
-HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
+#MIN_HASHTAG_OCCURENCES = 1
+#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
+#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
+#MIN_HASHTAG_OCCURENCES_PER_LATTICE = 4
+
 
 #BOUNDARY_NAME, BOUNDARY_SPECIFIC_MIN_HASHTAG_OCCURENCES, BOUNDARY = 
 BOUNDARIES_DICT = dict([
@@ -34,9 +36,10 @@ BOUNDARIES_DICT = dict([
         ('ap', (25, [[-46.55886,54.492188], [59.175928,176.835938]]))
 ])
 
-#MIN_HASHTAG_OCCURENCES = 1000
-#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
-#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
+MIN_HASHTAG_OCCURENCES = 1000
+HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
+HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
+MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
@@ -193,7 +196,7 @@ class MRAnalysis(ModifiedMRJob):
         for k in latticeObject.keys()[:]: latticeObject[k]=list(set(latticeObject[k]))
         latticeObject['n'].remove(lattice)
         neighborLatticeIds = latticeObject['n']; del latticeObject['n']
-        if neighborLatticeIds:
+        if neighborLatticeIds and len(latticeObject['h'])>=MIN_HASHTAG_OCCURENCES_PER_LATTICE:
             latticeObject['id'] = lattice
             yield lattice, ['o', latticeObject]
             for no in neighborLatticeIds: yield no, ['no', [lattice, latticeObject['h']]]
@@ -279,7 +282,8 @@ class MRAnalysis(ModifiedMRJob):
                                                         [(self.getHashtagWithGuranteedSource, None)]
     def jobsToBuildHashtagSharingProbabilityGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+\
              [(self.buildHashtagSharingProbabilityGraphMap, self.buildHashtagSharingProbabilityGraphReduce1), 
-              (self.emptyMapper, self.buildHashtagSharingProbabilityGraphReduce2)]
+              (self.emptyMapper, self.buildHashtagSharingProbabilityGraphReduce2)
+                ]
         
     
     def steps(self):
