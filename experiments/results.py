@@ -66,19 +66,20 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
     def getNodesFromFile(graphFile): return dict([(data['id'], data['links']) for data in FileIO.iterateJsonFromFile(graphFile)])
 #    nodes = getNodesFromFile('../data/hashtagSharingProbabilityGraph')
     nodes = getNodesFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))
+    i=0
     for node in nodes:
         sourceLattice = getLocationFromLid(node.replace('_', ' '))
         latticeNodeId = getLatticeLid(sourceLattice, accuracy=ACCURACY)
         outputFileName = hashtagsImagesHastagsSharingProbabilitiesFolder%outputFolder+'%s.png'%latticeNodeId
         FileIO.createDirectoryForFile(outputFileName)
-        print outputFileName
-    #    points, colors = zip(*sorted(nodes[latticeNodeId].iteritems(), key=itemgetter(1)))
-    #    points = [getLocationFromLid(p.replace('_', ' ')) for p in points]
-    #    cm = matplotlib.cm.get_cmap('gist_yarg')
-    #    sc = plotPointsOnUSMap(points, c=colors, cmap=cm, lw = 0, alpha=1.0)
-    #    plotPointsOnUSMap([sourceLattice], c='r', lw=0)
-    #    plt.colorbar(sc)
-    #    plt.savefig(outputFileName)
+        print i, len(nodes), outputFileName; i+=1
+        points, colors = zip(*sorted(nodes[latticeNodeId].iteritems(), key=itemgetter(1)))
+        points = [getLocationFromLid(p.replace('_', ' ')) for p in points]
+        cm = matplotlib.cm.get_cmap('gist_yarg')
+        sc = plotPointsOnUSMap(points, c=colors, cmap=cm, lw = 0, alpha=1.0)
+        plotPointsOnUSMap([sourceLattice], c='r', lw=0)
+        plt.colorbar(sc)
+        plt.savefig(outputFileName)
     
 
 if __name__ == '__main__':
