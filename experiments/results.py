@@ -8,7 +8,8 @@ sys.path.append('../')
 from library.file_io import FileIO
 import matplotlib
 from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
-    hashtagsWithoutEndingWindowFile, hashtagSharingProbabilityGraphFile
+    hashtagsWithoutEndingWindowFile, hashtagSharingProbabilityGraphFile,\
+    hashtagsImagesHastagsSharingProbabilitiesFolder
 import matplotlib.pyplot as plt
 from operator import itemgetter
 from library.geo import getHaversineDistance, plotPointsOnUSMap, getLatticeLid,\
@@ -65,16 +66,19 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
     def getNodesFromFile(graphFile): return dict([(data['id'], data['links']) for data in FileIO.iterateJsonFromFile(graphFile)])
 #    nodes = getNodesFromFile('../data/hashtagSharingProbabilityGraph')
     nodes = getNodesFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))
-    latticeNodeId = getLatticeLid(sourceLattice, accuracy=ACCURACY)
-    points, colors = zip(*sorted(nodes[latticeNodeId].iteritems(), key=itemgetter(1)))
-    points = [getLocationFromLid(p.replace('_', ' ')) for p in points]
-#    print colors
-    cm = matplotlib.cm.get_cmap('gist_yarg')
-    #pointColor = ['b', 'r', 'g']
-    sc = plotPointsOnUSMap(points, c=colors, cmap=cm, lw = 0, alpha=1.0)
-    plotPointsOnUSMap([sourceLattice], c='r', lw=0)
-    plt.colorbar(sc)
-    plt.savefig('fig.png')
+    for node in nodes:
+        sourceLattice = getLocationFromLid(node.replace('_', ' '))
+        latticeNodeId = getLatticeLid(sourceLattice, accuracy=ACCURACY)
+        outputFileName = hashtagsImagesHastagsSharingProbabilitiesFolder%outputFolder+'%s.png'%latticeNodeId
+        FileIO.createDirectoryForFile(outputFileName)
+        print outputFileName
+    #    points, colors = zip(*sorted(nodes[latticeNodeId].iteritems(), key=itemgetter(1)))
+    #    points = [getLocationFromLid(p.replace('_', ' ')) for p in points]
+    #    cm = matplotlib.cm.get_cmap('gist_yarg')
+    #    sc = plotPointsOnUSMap(points, c=colors, cmap=cm, lw = 0, alpha=1.0)
+    #    plotPointsOnUSMap([sourceLattice], c='r', lw=0)
+    #    plt.colorbar(sc)
+    #    plt.savefig(outputFileName)
     
 
 if __name__ == '__main__':
