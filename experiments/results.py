@@ -3,6 +3,8 @@ Created on Nov 24, 2011
 
 @author: kykamath
 '''
+import sys
+sys.path.append('../')
 from library.file_io import FileIO
 import matplotlib
 from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
