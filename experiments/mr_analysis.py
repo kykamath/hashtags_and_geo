@@ -24,7 +24,15 @@ K_VALUE_FOR_LOCALITY_INDEX = 0.5
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
 #HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
 
-BOUNDARY_NAME, BOUNDARY_SPECIFIC_MIN_HASHTAG_OCCURENCES, BOUNDARY = ('us', 100, [[24.527135,-127.792969], [49.61071,-59.765625]])
+#BOUNDARY_NAME, BOUNDARY_SPECIFIC_MIN_HASHTAG_OCCURENCES, BOUNDARY = 
+BOUNDARIES_DICT = dict([
+        ('us', (100, [[24.527135,-127.792969], [49.61071,-59.765625]])),
+        ('na', (100, [[8.05923,-170.859375], [72.395706,-53.789062]])),
+        ('sa', (25, [[-58.447733,-120.585937], [13.239945,-35.15625]])),
+        ('eu', (25, [[32.842674,-16.523437], [71.856229,50.625]])),
+        ('mea', (25, [[-38.272689,-24.257812], [38.548165,63.984375]])),
+        ('ap', (25, [[-46.55886,54.492188], [59.175928,176.835938]]))
+])
 
 MIN_HASHTAG_OCCURENCES = 1000
 HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
@@ -37,6 +45,10 @@ def iterateHashtagObjectInstances(line):
     else: l = data['bb']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
     for h in data['h']: yield h.lower(), [getLattice(l, ACCURACY), t]
+
+def getLocationBoundaryId(point):
+    for id, (_, boundingBox) in BOUNDARIES_DICT.iteritems():
+        if isWithinBoundingBox(point, boundingBox): return id
 
 def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
 
@@ -146,33 +158,28 @@ class MRAnalysis(ModifiedMRJob):
         if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
             e[1]>=HASHTAG_STARTING_WINDOW:
                 yield key, {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
-    def combine_hashtag_instances_without_ending_window_using_boundary(self, key, values):
-        occurences = []
-        for instances in values: 
-            for occurence in instances['oc']:
-                if isWithinBoundingBox(occurence[0], BOUNDARY): occurences.append(occurence)
-        e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
-        numberOfInstances=len(occurences)
-        if numberOfInstances>=BOUNDARY_SPECIFIC_MIN_HASHTAG_OCCURENCES and \
-            e[1]>=HASHTAG_STARTING_WINDOW: yield key, {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
     ''' End: Methods to get hashtag objects
+    '''
+            
+    ''' Start: Methods to get boundary specific stats
+    '''
+    def mapBoundarySpecificStats(self, key, values):
+        occurences = []
+        for instances in values: occurences+=instances['oc']
+        if min(occurences, key=lambda t: t[1])[1]>=HASHTAG_STARTING_WINDOW:
+            for occurence in occurences: yield getLocationBoundaryId(occurence[0])+':ilab:'+key, 1
+    def reduceBoundarySpecificStats(self, key, values):
+        bid, hashTag = key.split(':ilab:')
+        noOfHashtags = sum(list(values))
+        if noOfHashtags>=4: yield bid, [hashTag, noOfHashtags]
+    def combineBoundarySpecificStats(self, bid, hashTags):
+        yield bid, {'bid': bid, 'hashTags': list(hashTags)}
+    ''' End: Methods to get boundary specific stats
     '''
             
     def addSourceLatticeToHashTagObject(self, key, hashtagObject):
         addSourceLatticeToHashTagObject(hashtagObject)
         yield key, hashtagObject
-    
-#    def addHashtagSpreadInTime(self, key, hashtagObject):
-#        '''Spread measures the distance from source.
-#        '''
-#        addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceFromSource, key='sit')
-#        yield key, hashtagObject
-#
-#    def addHashtagMeanDistanceInTime(self, key, hashtagObject):
-#        '''Mean distance measures the mean distance between various occurences of the hastag at that time.
-#        '''
-#        addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceBetweenLids, key='mdit')
-#        yield key, hashtagObject
     
     def getHashtagWithGuranteedSource(self, key, hashtagObject):
         if hashtagObject['src'][1]/(hashtagObject['t']*0.01)>=0.5: yield key, hashtagObject
@@ -223,7 +230,9 @@ class MRAnalysis(ModifiedMRJob):
     
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
-    def jobsToGetHastagObjectsWithoutEndingWindowUsingBoundary(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window_using_boundary)]
+    def jobsToGetBoundarySpecificStats(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.mapBoundarySpecificStats),
+                                                      self.mr(self.emptyMapper, self.reduceBoundarySpecificStats), 
+                                                      self.mr(self.emptyMapper, self.combineBoundarySpecificStats)]
     def jobsToAddSourceLatticeToHashTagObject(self): return [(self.addSourceLatticeToHashTagObject, None)]
     def jobsToGetHashtagDistributionInTime(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInTime, None)]
     def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
@@ -239,7 +248,7 @@ class MRAnalysis(ModifiedMRJob):
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
-        return self.jobsToGetHastagObjectsWithoutEndingWindowUsingBoundary()
+        return self.jobsToGetBoundarySpecificStats()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
 #        return self.jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow()

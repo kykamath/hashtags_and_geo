@@ -14,7 +14,7 @@ from library.file_io import FileIO
 from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
     getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK,\
     addSourceLatticeToHashTagObject, addHashtagLocalityIndexInTime,\
-    HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS, BOUNDARY_NAME
+    HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
@@ -23,7 +23,7 @@ from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatti
     hashtagsDisplacementStatsFile, hashtagsImagesDisplacementStatsInTime,\
     hashtagsImagesHashtagsDistributionInLid,\
     hashtagsAnalayzeLocalityIndexAtKFile, hashtagWithGuranteedSourceFile,\
-    hashtagsWithoutEndingWindowUsingBoundaryFile
+    hashtagsBoundarySpecificStatsFile
 import matplotlib.pyplot as plt
 from itertools import combinations, groupby 
 import numpy as np
@@ -299,7 +299,7 @@ def mr_analysis(timeRange, outputFolder):
 #    runMRJob(MRAnalysis, hashtagsDisplacementStatsFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':90})
 #    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagWithGuranteedSourceFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowUsingBoundaryFile%(outputFolder,'%s_%s'%timeRange, BOUNDARY_NAME), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':90})
+    runMRJob(MRAnalysis, hashtagsBoundarySpecificStatsFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':90})
 
 if __name__ == '__main__':
 #    timeRange = (2,5)
