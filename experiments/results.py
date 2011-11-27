@@ -4,13 +4,16 @@ Created on Nov 24, 2011
 @author: kykamath
 '''
 from library.file_io import FileIO
+import matplotlib
 from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
-    hashtagsWithoutEndingWindowFile
+    hashtagsWithoutEndingWindowFile, hashtagSharingProbabilityGraphFile
 import matplotlib.pyplot as plt
 from operator import itemgetter
-from library.geo import getHaversineDistance, plotPointsOnUSMap
+from library.geo import getHaversineDistance, plotPointsOnUSMap, getLatticeLid,\
+    getLocationFromLid
 from itertools import groupby
 from experiments.analysis import HashtagClass, HashtagObject
+from experiments.mr_analysis import ACCURACY
 
 class AnalyzeLocalityIndexAtK:
     @staticmethod
@@ -56,12 +59,26 @@ def plotHashtagsOnUSMap(timeRange):
 #        plt.show()
 #        exit()
 
-def analyzeBoundarySpecificStats():
-    pass
+def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
+    def getNodesFromFile(graphFile): return dict([(data['id'], data['links']) for data in FileIO.iterateJsonFromFile(graphFile)])
+#    nodes = getNodesFromFile('../data/hashtagSharingProbabilityGraph')
+    nodes = getNodesFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))
+    print len(nodes)
+#    latticeNodeId = getLatticeLid(sourceLattice, accuracy=ACCURACY)
+#    points, colors = zip(*nodes[latticeNodeId].iteritems())
+#    points = [getLocationFromLid(p.replace('_', ' ')) for p in points]
+##    print colors
+#    cm = matplotlib.cm.get_cmap('YlOrRd')
+#    #pointColor = ['b', 'r', 'g']
+#    sc = plotPointsOnUSMap(points, c=colors, cmap=cm, lw = 0)
+#    plt.colorbar(sc)
+#    plt.show()
+    
+
 if __name__ == '__main__':
     timeRange = (2,11)
-    
-    plotHashtagsOnUSMap(timeRange)
+    outputFolder = '/'
+    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
