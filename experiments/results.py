@@ -13,7 +13,7 @@ from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
 import matplotlib.pyplot as plt
 from operator import itemgetter
 from library.geo import getHaversineDistance, plotPointsOnUSMap, getLatticeLid,\
-    getLocationFromLid
+    getLocationFromLid, plotPointsOnWorldMap
 from itertools import groupby
 from experiments.analysis import HashtagClass, HashtagObject
 from experiments.mr_analysis import ACCURACY
@@ -84,28 +84,63 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         plt.clf()
         if i==10: exit()
         
-def plotHashtagFlowInTimeOnUSMap(timeRange, outputFolder):
-    HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 24*60*60
-    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
-        observedLattices = {}
-        for lid, t in [(getLatticeLid(l, ACCURACY), t) for l, t in h['oc']]:
-            if lid not in observedLattices: observedLattices[lid] = t
-        points = sorted([(getLocationFromLid(l.replace('_', ' ')), GeneralMethods.approximateEpoch(t, HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS)) for l, t in observedLattices.iteritems()], key=itemgetter(1))
-        points, colors = zip(*points)
-        colors = [c-colors[0] for c in colors]
-        cm = matplotlib.cm.get_cmap('autumn')
-        sc = plotPointsOnUSMap(points, c=colors, cmap=cm, lw = 0, alpha=1.0)
-        plt.colorbar(sc), plt.title(h['h'])
-        plt.show()
-#        plt.savefig(outputFileName)
-        plt.clf()
-        
-#        exit()
+class PlotsOnMap:
+    @staticmethod
+    def plotHashtagFlowInTime(timeRange, outputFolder):
+        HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 1*60*60
+        MIN_OBSERVATIONS_PER_TIME_UNIT = 10
+        def getValidEpochs(h):
+            occurranceDistributionInEpochs = [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS) for t in zip(*h['oc'])[1]]))]
+            return [t[0] for t in occurranceDistributionInEpochs if t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT]
+        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
+            if h['h'].startswith('occ') or h['h'] in ['ows']:
+                print h['h']
+                validEpochs = getValidEpochs(h)
+                observedLattices = {}
+                for lid, t in [(getLatticeLid(l, ACCURACY), t) for l, t in h['oc']]:
+                    if lid not in observedLattices: observedLattices[lid] = t
+                points = sorted([(getLocationFromLid(l.replace('_', ' ')), GeneralMethods.approximateEpoch(t, HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS)) for l, t in observedLattices.iteritems() if GeneralMethods.approximateEpoch(t, HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS) in validEpochs], key=itemgetter(1))
+                points, colors = zip(*points)
+                
+                colors = [(c-colors[0])/HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS for c in colors]
+                cm = matplotlib.cm.get_cmap('autumn')
+                sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, alpha=1.0)
+                plt.colorbar(sc), plt.title(h['h'])
+                plt.show()
+    @staticmethod
+    def plotHashtagFlowInTimeForFirstNLocations(timeRange, outputFolder):
+        HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 1*60*60
+        TIME_UNIT_IN_SECONDS = 60*60
+        MIN_OBSERVATIONS_PER_TIME_UNIT = 10
+        PERCENTAGE_OF_EARLIEST_LOCATIONS = 0.25
+        def getValidEpochs(h):
+            occurranceDistributionInEpochs = [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS) for t in zip(*h['oc'])[1]]))]
+            return [t[0] for t in occurranceDistributionInEpochs if t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT]
+        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
+            try:
+#                if h['h'].startswith('occ') or h['h'] in ['ows']:
+                    print h['h']
+                    validEpochs = getValidEpochs(h)
+                    observedLattices = {}
+                    for lid, t in [(getLatticeLid(l, ACCURACY), t) for l, t in h['oc']]:
+                        if lid not in observedLattices: observedLattices[lid] = t
+                    points = sorted([(getLocationFromLid(l.replace('_', ' ')), t) for l, t in observedLattices.iteritems() if GeneralMethods.approximateEpoch(t, HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS) in validEpochs], key=itemgetter(1), reverse=True)
+                    points = points[-1*int(PERCENTAGE_OF_EARLIEST_LOCATIONS*len(points)):]
+                    points, colors = zip(*points)
+                    
+                    colors = [(c-colors[-1])/TIME_UNIT_IN_SECONDS for c in colors]
+                    cm = matplotlib.cm.get_cmap('autumn')
+                    sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, alpha=1.0)
+                    plt.colorbar(sc), plt.title(h['h'])
+                    plt.show()
+            except: pass
+
 if __name__ == '__main__':
     timeRange = (2,11)
-    outputFolder = '/'
+    outputFolder = 'world'
 #    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
-    plotHashtagFlowInTimeOnUSMap(timeRange, outputFolder)
+    
+    PlotsOnMap.plotHashtagFlowInTimeForFirstNLocations(timeRange, outputFolder)
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
