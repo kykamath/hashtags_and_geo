@@ -26,7 +26,7 @@ K_VALUE_FOR_LOCALITY_INDEX = 0.5
 #MIN_HASHTAG_OCCURENCES_PER_LATTICE = 4
 #MIN_HASHTAG_SHARING_PROBABILITY = 0.1
 
-MIN_HASHTAG_OCCURENCES = 1000
+MIN_HASHTAG_OCCURENCES = 500
 HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
 MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10
@@ -291,7 +291,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
-#        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
+        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
 #        return self.jobsToGetBoundarySpecificStats()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
@@ -301,7 +301,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHashtagDisplacementStats()
 #        return self.jobsToAnalayzeLocalityIndexAtK()
 #        return self.jobsToGetHashtagWithGuranteedSource()
-        return self.jobsToBuildHashtagSharingProbabilityGraph()
+#        return self.jobsToBuildHashtagSharingProbabilityGraph()
         
 if __name__ == '__main__':
     MRAnalysis.run()

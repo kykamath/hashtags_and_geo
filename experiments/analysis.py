@@ -291,7 +291,7 @@ def plotChangeLIOnUSMap(timeRange):
 def mr_analysis(timeRange, outputFolder):
     def getInputFiles(months, folderType='/'): return [inputFolder+folderType+'/'+str(m) for m in months]
 #    runMRJob(MRAnalysis, hashtagsFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
-#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
@@ -306,8 +306,8 @@ if __name__ == '__main__':
 #    timeRange = (2,5)
     timeRange = (2,11)
     
-    outputFolder = '/'
-#    outputFolder = 'world'
+#    outputFolder = '/'
+    outputFolder = 'world'
     
     mr_analysis(timeRange, outputFolder)
 #    plotHashtagDistributionInTime()
