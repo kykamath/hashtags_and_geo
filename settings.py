@@ -13,7 +13,7 @@ inputFolder = 'hdfs:///user/kykamath/geo/hashtags/'
 
 # Analysis
 hashtagsAnalysisFolder = '/mnt/chevron/kykamath/data/geo/hashtags/analysis/'
-hashtagsFile = hashtagsAnalysisFolder+'hashtags'
+hashtagsFile = hashtagsAnalysisFolder+'%s/%s/hashtags'
 hashtagsWithoutEndingWindowFile = hashtagsAnalysisFolder+'%s/%s/hashtagsWithoutEndingWindow'
 hashtagsBoundarySpecificStatsFile = hashtagsAnalysisFolder+'%s/%s/hashtagsBoundarySpecificStats'
 #hashtagsCenterOfMassAnalysisWithoutEndingWindowFile = hashtagsAnalysisFolder+'%s/hashtagsCenterOfMassAnalysisWithoutEndingWindow'
