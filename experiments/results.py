@@ -17,6 +17,7 @@ from library.geo import getHaversineDistance, plotPointsOnUSMap, getLatticeLid,\
 from itertools import groupby
 from experiments.analysis import HashtagClass, HashtagObject
 from experiments.mr_analysis import ACCURACY
+from library.classes import GeneralMethods
 
 class AnalyzeLocalityIndexAtK:
     @staticmethod
@@ -82,11 +83,29 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         plt.savefig(outputFileName)
         plt.clf()
         if i==10: exit()
-
+        
+def plotHashtagFlowInTimeOnUSMap(timeRange, outputFolder):
+    HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 24*60*60
+    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
+        observedLattices = {}
+        for lid, t in [(getLatticeLid(l, ACCURACY), t) for l, t in h['oc']]:
+            if lid not in observedLattices: observedLattices[lid] = t
+        points = sorted([(getLocationFromLid(l.replace('_', ' ')), GeneralMethods.approximateEpoch(t, HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS)) for l, t in observedLattices.iteritems()], key=itemgetter(1))
+        points, colors = zip(*points)
+        colors = [c-colors[0] for c in colors]
+        cm = matplotlib.cm.get_cmap('autumn')
+        sc = plotPointsOnUSMap(points, c=colors, cmap=cm, lw = 0, alpha=1.0)
+        plt.colorbar(sc), plt.title(h['h'])
+        plt.show()
+#        plt.savefig(outputFileName)
+        plt.clf()
+        
+#        exit()
 if __name__ == '__main__':
     timeRange = (2,11)
     outputFolder = '/'
-    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
+#    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
+    plotHashtagFlowInTimeOnUSMap(timeRange, outputFolder)
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
