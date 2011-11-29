@@ -14,7 +14,7 @@ from library.file_io import FileIO
 from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
     getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK,\
     addSourceLatticeToHashTagObject, addHashtagLocalityIndexInTime,\
-    HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS
+    HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS, filterLattices, ACCURACY
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
@@ -249,10 +249,14 @@ def analayzeLocalityIndexAtK(timeRange):
             
 def tempAnalysis(timeRange):
     for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%(outputFolder, '%s_%s'%timeRange)):
-        if h['liAtVaryingK'][0][1][0] > 0:
-            print h['h']
-            addHashtagLocalityIndexInTime(h)
-            exit()
+        print h['h'], len(set([getLatticeLid(l, accuracy=ACCURACY) for l in zip(*h['oc'])[0]])), len(filterLattices(h)), len(filterLattices(h).keys())
+        assert len(filterLattices(h))==len(filterLattices(h).keys())
+        print filterLattices(h).keys()
+        exit()
+#        if h['liAtVaryingK'][0][1][0] > 0:
+#            print h['h']
+#            addHashtagLocalityIndexInTime(h)
+#            exit()
 #        if h['h'].startswith('occupysf'):
 ##            addHashtagDisplacementsInTime(h, distanceMethod=getMeanDistanceFromSource)
 #            print h['h'],
@@ -290,7 +294,7 @@ def plotChangeLIOnUSMap(timeRange):
 
 def mr_analysis(timeRange, outputFolder):
     def getInputFiles(months, folderType='/'): return [inputFolder+folderType+'/'+str(m) for m in months]
-    runMRJob(MRAnalysis, hashtagsFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, hashtagsFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
@@ -300,7 +304,7 @@ def mr_analysis(timeRange, outputFolder):
 #    runMRJob(MRAnalysis, hashtagsAnalayzeLocalityIndexAtKFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagWithGuranteedSourceFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsBoundarySpecificStatsFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':600})
-#    runMRJob(MRAnalysis, hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
+    runMRJob(MRAnalysis, hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
 
 if __name__ == '__main__':
 #    timeRange = (2,5)
