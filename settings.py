@@ -38,3 +38,4 @@ hashtagsImagesHastagsSharingProbabilitiesFolder = hashtagsImagesFolder+'hashtags
 hashtagsImagesFlowInTimeForFirstNLocationsFolder = hashtagsImagesFolder+'fit_first_n_locations/%s/'
 hashtagsImagesFlowInTimeForFirstNOccurrencesFolder = hashtagsImagesFolder+'fit_first_n_occ/%s/'
 hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder = hashtagsImagesFolder+'fit_window_of_n_occ/%s/'
+hashtagsImagesFlowInTimeForWindowOfNLocationsFolder = hashtagsImagesFolder+'fit_window_of_n_loc/%s/'
