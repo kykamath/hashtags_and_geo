@@ -31,7 +31,7 @@ MIN_HASHTAG_OCCURENCES = 500 # Min no. of hashtags observed in the dataset. For 
 HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 1).timetuple())
 MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 10 # Min no. of unique hashtags a lattice should have observed. For example: l1 is valid of it produces [h1, h2, h3] >= 3 (min)
-MIN_HASHTAG_OCCURENCES_PER_LATTICE = 5 # Min no. hashtags lattice should have observed. For example: l1 is valid of it produces [h1, h1, h1] >= 3 (min)
+MIN_HASHTAG_OCCURENCES_PER_LATTICE = 3 # Min no. hashtags lattice should have observed. For example: l1 is valid of it produces [h1, h1, h1] >= 3 (min)
 MIN_HASHTAG_SHARING_PROBABILITY = 0.0
 
 BOUNDARIES_DICT = dict([
