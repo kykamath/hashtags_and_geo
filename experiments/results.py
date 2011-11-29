@@ -92,7 +92,7 @@ class LocationGraphAnalysis():
     @staticmethod
     def tempAnalysis(timeRange, outputFolder):
         for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange)):
-            print n
+            print n.keys()
 
 #class PlotsOnMap:
 #    TIME_UNIT_IN_SECONDS = 60*60

@@ -220,7 +220,7 @@ class MRAnalysis(ModifiedMRJob):
                 neighborHashtags=set(neighborHashtags)
                 prob = len(currentObjectHashtags.intersection(neighborHashtags))/float(len(currentObjectHashtags))
                 if prob>=MIN_HASHTAG_SHARING_PROBABILITY: nodeObject['links'][no] =  prob
-            yield lattice, nodeObject['links']
+            yield lattice, nodeObject
     ''' End: Methods to get hashtag co-occurence probabilities among lattices.
     '''
             
