@@ -117,7 +117,7 @@ def plotHashtagFlowInTimeForWindowOfNLocations(hashTagObject):
                 previousIndex=currentIndex
             except: break
 
-timeRange, outputFolder = (2,11), '/'
+timeRange, outputFolder = (2,11), 'world'
 counter = 0
 '''
 ls -al /data/geo/hashtags/images/fit_window_of_n_occ/ | wc -l
