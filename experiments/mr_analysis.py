@@ -32,10 +32,10 @@ HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 1).timetuple())
 MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 10 # Min no. of unique hashtags a lattice should have observed. For example: l1 is valid of it produces [h1, h2, h3] >= 3 (min)
 MIN_HASHTAG_OCCURENCES_PER_LATTICE = 3 # Min no. hashtags lattice should have observed. For example: l1 is valid of it produces [h1, h1, h1] >= 3 (min)
-MIN_HASHTAG_SHARING_PROBABILITY = 0.0
+MIN_HASHTAG_SHARING_PROBABILITY = 0.1
 
-BOUNDARIES_DICT = dict([
-        ('us', (100, [[24.527135,-127.792969], [49.61071,-59.765625]])),
+US_BOUNDARY = ('us', (100, [[24.527135,-127.792969], [49.61071,-59.765625]]))
+CONTINENT_BOUNDARIES_DICT = dict([
         ('na', (100, [[8.05923,-170.859375], [72.395706,-53.789062]])),
         ('sa', (25, [[-58.447733,-120.585937], [13.239945,-35.15625]])),
         ('eu', (25, [[32.842674,-16.523437], [71.856229,50.625]])),
@@ -53,7 +53,7 @@ def iterateHashtagObjectInstances(line):
     for h in data['h']: yield h.lower(), [getLattice(l, ACCURACY), t]
 
 def getLocationBoundaryId(point):
-    for id, (_, boundingBox) in BOUNDARIES_DICT.iteritems():
+    for id, (_, boundingBox) in CONTINENT_BOUNDARIES_DICT.iteritems():
         if isWithinBoundingBox(point, boundingBox): return id
 
 def filterLattices(h):
@@ -299,7 +299,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
-#        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
+        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
 #        return self.jobsToGetBoundarySpecificStats()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
@@ -309,7 +309,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHashtagDisplacementStats()
 #        return self.jobsToAnalayzeLocalityIndexAtK()
 #        return self.jobsToGetHashtagWithGuranteedSource()
-        return self.jobsToBuildHashtagSharingProbabilityGraph()
+#        return self.jobsToBuildHashtagSharingProbabilityGraph()
         
 if __name__ == '__main__':
     MRAnalysis.run()
