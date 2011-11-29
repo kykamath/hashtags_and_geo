@@ -111,7 +111,7 @@ def plotHashtagFlowInTimeForWindowOfNLocations(hashTagObject):
                 if currentIndex>len(latticesSortedByTime): currentIndex=len(latticesSortedByTime)
                 occurences = []
                 for l in latticesSortedByTime[previousIndex:currentIndex]: occurences+=latticesToOccranceMap[l[0]]
-                startingEpoch = plotDistributionGraphs(occurences, validTimeUnits, '%s - Interval (%d - %d) of %d'%(hashTagObject['h'], previousIndex+1, currentIndex, len(hashTagObject['oc'])), startingEpoch)
+                startingEpoch = plotDistributionGraphs(occurences, validTimeUnits, '%s - Interval (%d - %d) of %d'%(hashTagObject['h'], previousIndex+1, currentIndex, len(latticesSortedByTime)), startingEpoch)
 #                plt.show()
                 plt.savefig(outputFile); plt.clf()
                 previousIndex=currentIndex
