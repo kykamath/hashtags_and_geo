@@ -124,7 +124,7 @@ ls -al /data/geo/hashtags/images/fit_window_of_n_occ/ | wc -l
 for hashtagObjects in iterateHashtagObjectsFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)): 
     counter+=len(hashtagObjects); print counter
     po = Pool()
-    po.map_async(plotHashtagFlowInTimeForWindowOfNOccurences, hashtagObjects)
+    po.map_async(plotHashtagFlowInTimeForWindowOfNLocations, hashtagObjects)
     po.close(); po.join()
 
 #outputFolder = '/'

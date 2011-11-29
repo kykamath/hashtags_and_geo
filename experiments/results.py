@@ -87,6 +87,13 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         plt.clf()
         if i==10: exit()
         
+
+class LocationGraphAnalysis():
+    @staticmethod
+    def tempAnalysis(timeRange, outputFolder):
+        for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange)):
+            print n
+
 #class PlotsOnMap:
 #    TIME_UNIT_IN_SECONDS = 60*60
 #    MIN_OBSERVATIONS_PER_TIME_UNIT = 10
@@ -216,11 +223,13 @@ if __name__ == '__main__':
     timeRange = (2,11)
     outputFolder = 'world'
 #    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
+
+    LocationGraphAnalysis.tempAnalysis(timeRange, outputFolder)
     
 #    PlotsOnMap.plotHashtagFlowInTimeForFirstNLocations(timeRange, outputFolder)
 #    PlotsOnMap.plotHashtagFlowInTimeForFirstNOccurences(timeRange, outputFolder)
 #    PlotsOnMap.plotHashtagFlowInTimeForWindowOfNOccurences(timeRange, outputFolder)
-    PlotsOnMap.ana(timeRange, outputFolder)
+#    PlotsOnMap.ana(timeRange, outputFolder)
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
