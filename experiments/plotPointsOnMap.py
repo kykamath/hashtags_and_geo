@@ -91,6 +91,9 @@ timeRange, outputFolder = (2,11), 'world'
 #hashtagObjects, counter = [], 0
 
 counter = 0
+'''
+ls -al /data/geo/hashtags/images/fit_window_of_n_occ/ | wc -l
+'''
 for hashtagObjects in iterateHashtagObjectsFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)): 
     counter+=len(hashtagObjects); print counter
 #    plotHashtagFlowInTimeForWindowOfNOccurences(h)
