@@ -28,8 +28,7 @@ def getCheckinObject(data):
     return checkin
 
 def getGeoData(data):
-    if 'geo' in data and data['geo']!=None: 
-        return ('geo', data['geo']['coordinates'])
+    if 'geo' in data and data['geo']!=None: return ('geo', data['geo']['coordinates'])
     elif 'place' in data: 
         point = getCenterOfMass(data['place']['bounding_box']['coordinates'][0])
         return ('bb', [point[1], point[0]])

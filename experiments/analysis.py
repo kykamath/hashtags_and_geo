@@ -308,7 +308,8 @@ def mr_analysis(timeRange, outputFolder):
 
 if __name__ == '__main__':
 #    timeRange = (2,5)
-    timeRange = (2,11)
+#    timeRange = (2,11)
+    timeRange = (9,9)
     
 #    outputFolder = '/'
     outputFolder = 'world'
