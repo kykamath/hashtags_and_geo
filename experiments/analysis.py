@@ -14,7 +14,8 @@ from library.file_io import FileIO
 from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
     getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK,\
     addSourceLatticeToHashTagObject, addHashtagLocalityIndexInTime,\
-    HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS, filterLattices, ACCURACY
+    HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS, filterLattices, ACCURACY,\
+    HASHTAG_STARTING_WINDOW
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
@@ -248,11 +249,16 @@ def analayzeLocalityIndexAtK(timeRange):
     plt.show()
             
 def tempAnalysis(timeRange):
-    for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%(outputFolder, '%s_%s'%timeRange)):
-        print h['h'], len(set([getLatticeLid(l, accuracy=ACCURACY) for l in zip(*h['oc'])[0]])), len(filterLattices(h)), len(filterLattices(h).keys())
-        assert len(filterLattices(h))==len(filterLattices(h).keys())
-        print filterLattices(h).keys()
-        exit()
+    for h in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/9_9/hashtagsWithoutEndingWindow'):
+        print datetime.datetime.fromtimestamp(h['e'][1]), datetime.datetime.fromtimestamp(h['l'][1])
+#        for l, t in h['oc']:
+#            if t<HASHTAG_STARTING_WINDOW:
+#                print l, t
+#    for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%(outputFolder, '%s_%s'%timeRange)):
+#        print h['h'], len(set([getLatticeLid(l, accuracy=ACCURACY) for l in zip(*h['oc'])[0]])), len(filterLattices(h)), len(filterLattices(h).keys())
+#        assert len(filterLattices(h))==len(filterLattices(h).keys())
+#        print filterLattices(h).keys()
+#        exit()
 #        if h['liAtVaryingK'][0][1][0] > 0:
 #            print h['h']
 #            addHashtagLocalityIndexInTime(h)
@@ -308,8 +314,8 @@ def mr_analysis(timeRange, outputFolder):
 
 if __name__ == '__main__':
 #    timeRange = (2,5)
-#    timeRange = (2,11)
-    timeRange = (9,9)
+    timeRange = (2,11)
+#    timeRange = (9,9)
     
 #    outputFolder = '/'
     outputFolder = 'world'
