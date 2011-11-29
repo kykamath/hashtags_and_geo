@@ -4,7 +4,6 @@ Created on Nov 28, 2011
 @author: kykamath
 '''
 import sys, os, json, matplotlib, random
-from library.file_io import FileIO
 sys.path.append('../')
 import matplotlib.pyplot as plt
 from settings import hashtagsWithoutEndingWindowFile,\
@@ -125,7 +124,7 @@ ls -al /data/geo/hashtags/images/fit_window_of_n_occ/ | wc -l
 for hashtagObjects in iterateHashtagObjectsFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)): 
     counter+=len(hashtagObjects); print counter
     po = Pool()
-    po.map_async(plotHashtagFlowInTimeForWindowOfNLocations, hashtagObjects)
+    po.map_async(plotHashtagFlowInTimeForWindowOfNOccurences, hashtagObjects)
     po.close(); po.join()
 
 #outputFolder = '/'
