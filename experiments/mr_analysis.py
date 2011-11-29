@@ -166,8 +166,9 @@ class MRAnalysis(ModifiedMRJob):
         for instances in values: occurences+=instances['oc']
         e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
         numberOfInstances=len(occurences)
-        if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
-            e[1]>=HASHTAG_STARTING_WINDOW:
+#        if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
+#            e[1]>=HASHTAG_STARTING_WINDOW:
+        if key=='f8':
                 yield key, {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
     ''' End: Methods to get hashtag objects
     '''
