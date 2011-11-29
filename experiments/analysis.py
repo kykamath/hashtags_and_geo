@@ -249,8 +249,9 @@ def analayzeLocalityIndexAtK(timeRange):
     plt.show()
             
 def tempAnalysis(timeRange):
-    for h in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/9_9/hashtagsWithoutEndingWindow'):
+    for h in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/2_11/hashtagsWithoutEndingWindow'):
         print datetime.datetime.fromtimestamp(h['e'][1]), datetime.datetime.fromtimestamp(h['l'][1])
+        print h['oc'][0][1], h['oc'][1][1]
 #        for l, t in h['oc']:
 #            if t<HASHTAG_STARTING_WINDOW:
 #                print l, t

@@ -28,7 +28,7 @@ K_VALUE_FOR_LOCALITY_INDEX = 0.5
 #MIN_HASHTAG_SHARING_PROBABILITY = 0.1
 
 MIN_HASHTAG_OCCURENCES = 500 # Min no. of hashtags observed in the dataset. For example: h1 is valid if it is seen atleast 5 times in the dataset
-HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 3, 1).timetuple())
+HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 1).timetuple())
 MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 10 # Min no. of unique hashtags a lattice should have observed. For example: l1 is valid of it produces [h1, h2, h3] >= 3 (min)
 MIN_HASHTAG_OCCURENCES_PER_LATTICE = 3 # Min no. hashtags lattice should have observed. For example: l1 is valid of it produces [h1, h1, h1] >= 3 (min)
@@ -166,9 +166,8 @@ class MRAnalysis(ModifiedMRJob):
         for instances in values: occurences+=instances['oc']
         e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
         numberOfInstances=len(occurences)
-#        if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
-#            e[1]>=HASHTAG_STARTING_WINDOW:
-        if key=='f8':
+        if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
+            e[1]>=HASHTAG_STARTING_WINDOW:
                 yield key, {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
     ''' End: Methods to get hashtag objects
     '''
