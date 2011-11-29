@@ -27,16 +27,18 @@ ACCURACY = 0.145
 TIME_UNIT_IN_SECONDS = 60*60
 MIN_OBSERVATIONS_PER_TIME_UNIT = 5
 WINDOW_SIZE = 200
-global counter
 
 def createDirectoryForFile(path):
     dir = path[:path.rfind('/')]
     if not os.path.exists(dir): os.umask(0), os.makedirs('%s'%dir, 0777)
     
 def iterateHashtagObjectsFromFile(file):
+    numberOfHashtagsPerCall = 100
+    hashtagsToYield = []
     for line in open(file): 
         try:
-            yield json.loads(line.strip())
+            hashtagsToYield.append(json.loads(line.strip()))
+            if len(hashtagsToYield)==numberOfHashtagsPerCall: yield hashtagsToYield; hashtagsToYield=[]
         except: pass
         
 def getFileName():
@@ -82,12 +84,20 @@ def plotHashtagFlowInTimeForWindowOfNOccurences(hashTagObject):
 #                plt.show()
                 plt.savefig(outputFile); plt.clf()
                 previousIndex=currentIndex
+    
 #            except: break
 
 timeRange, outputFolder = (2,11), 'world'
-po = Pool()
-#for h in iterateHashtagObjectsFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
-#    print h.keys()
-po.map_async(plotHashtagFlowInTimeForWindowOfNOccurences, iterateHashtagObjectsFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)))
-#po.map_async(plotHashtagFlowInTimeForWindowOfNOccurences, iterateHashtagObjectsFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/2_11/temp_hashtagsWithoutEndingWindow'))
-po.close(); po.join()
+#hashtagObjects, counter = [], 0
+
+counter = 0
+for hashtagObjects in iterateHashtagObjectsFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)): 
+    counter+=len(hashtagObjects); print counter
+#    plotHashtagFlowInTimeForWindowOfNOccurences(h)
+#    print counter; hashtagObjects.append(h); counter+=1
+#print len(hashtagObjects)
+#print len(list(iterateHashtagObjectsFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/2_11/temp_hashtagsWithoutEndingWindow')))
+    po = Pool()
+    po.map_async(plotHashtagFlowInTimeForWindowOfNOccurences, hashtagObjects)
+    #po.map_async(plotHashtagFlowInTimeForWindowOfNOccurences, iterateHashtagObjectsFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/2_11/temp_hashtagsWithoutEndingWindow'))
+    po.close(); po.join()
