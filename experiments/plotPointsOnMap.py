@@ -17,15 +17,6 @@ from operator import itemgetter
 from multiprocessing import Pool
 from collections import defaultdict
 
-#GLOBALVAL = 10
-#def getFile(i): return '/tmp/00%s.png'%(i+GLOBALVAL)
-#def plotFun((i, h)):
-#    outputFile = getFile(i)
-#    print outputFile
-#    plt.plot(h)
-#    plt.savefig(outputFile)
-
-
 ACCURACY = 0.145
 TIME_UNIT_IN_SECONDS = 60*60
 MIN_OBSERVATIONS_PER_TIME_UNIT = 5
@@ -115,17 +106,25 @@ def plotHashtagFlowInTimeForWindowOfNLocations(hashTagObject):
                 plt.savefig(outputFile); plt.clf()
                 previousIndex=currentIndex
             except: break
+            
+def plotNodeObject(nodeObject):
+    cm = matplotlib.cm.get_cmap('cool')
+    points, colors = zip(*[(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()])
+    plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
+    plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='r', lw=0)
+    plt.show()
+    plt.savefig(outputFile); plt.clf()
 
 timeRange, outputFolder = (2,11), 'world'
 counter = 0
 '''
 ls -al /data/geo/hashtags/images/fit_window_of_n_occ/ | wc -l
 '''
-for hashtagObjects in iterateHashtagObjectsFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)): 
-    counter+=len(hashtagObjects); print counter
-    po = Pool()
-    po.map_async(plotHashtagFlowInTimeForWindowOfNLocations, hashtagObjects)
-    po.close(); po.join()
+#for hashtagObjects in iterateHashtagObjectsFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)): 
+#    counter+=len(hashtagObjects); print counter
+#    po = Pool()
+#    po.map_async(plotHashtagFlowInTimeForWindowOfNLocations, hashtagObjects)
+#    po.close(); po.join()
 
 #outputFolder = '/'
 #for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):

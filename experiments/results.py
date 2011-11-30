@@ -88,11 +88,21 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         if i==10: exit()
         
 
-class LocationGraphAnalysis():
-    @staticmethod
-    def tempAnalysis(timeRange, outputFolder):
-        for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange)):
-            print n.keys()
+#class LocationGraphAnalysis():
+#    @staticmethod
+def tempAnalysis(timeRange, outputFolder):
+#    points = [getLocationFromLid(n['id'].replace('_', ' ')) for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))]
+#    plotPointsOnWorldMap(points)
+#    plt.show()
+    for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange)):
+#        print n['id'], n['links']
+        cm = matplotlib.cm.get_cmap('brg')
+        points, colors = zip(*[(getLocationFromLid(k.replace('_', ' ')), v)for k, v in n['links'].iteritems()])
+        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
+        plotPointsOnWorldMap([getLocationFromLid(n['id'].replace('_', ' '))], c='y', lw=0)
+        plt.colorbar(sc), plt.xlabel('Measure of closeness'), plt.title(n['id'].replace('_', ' '))
+        plt.show()
+#        exit()
 
 #class PlotsOnMap:
 #    TIME_UNIT_IN_SECONDS = 60*60
@@ -224,7 +234,7 @@ if __name__ == '__main__':
     outputFolder = 'world'
 #    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
 
-    LocationGraphAnalysis.tempAnalysis(timeRange, outputFolder)
+    tempAnalysis(timeRange, outputFolder)
     
 #    PlotsOnMap.plotHashtagFlowInTimeForFirstNLocations(timeRange, outputFolder)
 #    PlotsOnMap.plotHashtagFlowInTimeForFirstNOccurences(timeRange, outputFolder)
