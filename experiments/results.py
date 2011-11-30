@@ -13,6 +13,7 @@ from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
     hashtagsImagesFlowInTimeForFirstNLocationsFolder,\
     hashtagsImagesFlowInTimeForFirstNOccurrencesFolder,\
     hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder
+from library.graphs import plot
 import matplotlib.pyplot as plt
 from operator import itemgetter
 from library.geo import getHaversineDistance, plotPointsOnUSMap, getLatticeLid,\
@@ -21,6 +22,7 @@ from itertools import groupby
 from experiments.analysis import HashtagClass, HashtagObject
 from experiments.mr_analysis import ACCURACY
 from library.classes import GeneralMethods
+import networkx as nx
 
 class AnalyzeLocalityIndexAtK:
     @staticmethod
@@ -91,24 +93,20 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         
 #class LocationGraphAnalysis():
 #    @staticmethod
+
+def getDiGraph(graphFile):
+    graph = nx.DiGraph()
+    for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange)):
+        for dest, w in n['links'].iteritems(): graph.add_edge(n['id'], dest, {'w':w})
+    return graph
+
 def tempAnalysis(timeRange, outputFolder):
 #    points = [getLocationFromLid(n['id'].replace('_', ' ')) for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))]
 #    plotPointsOnWorldMap(points)
 #    plt.show()
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
-    for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange)):
-        ax = plt.subplot(111)
-        cm = matplotlib.cm.get_cmap('cool')
-        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in n['links'].iteritems()], key=itemgetter(1)))
-        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
-        plotPointsOnWorldMap([getLocationFromLid(n['id'].replace('_', ' '))], c='k', s=20, lw=0)
-        plt.xlabel('Measure of closeness'), plt.title(n['id'].replace('_', ' '))
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(sc, cax=cax)
-#        plt.show()
-        plt.savefig('abc.png')
-        exit()
+
+    graph = getDiGraph(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))
+    plot(graph)
 
 #class PlotsOnMap:
 #    TIME_UNIT_IN_SECONDS = 60*60
