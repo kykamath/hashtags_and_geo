@@ -100,13 +100,39 @@ def getDiGraph(graphFile):
         for dest, w in n['links'].iteritems(): graph.add_edge(n['id'], dest, {'w':w})
     return graph
 
+
+def getValidOccurences(occ, TIME_UNIT_IN_SECONDS = 60*60, MIN_OBSERVATIONS_PER_TIME_UNIT=5): 
+    def getValidTimeUnits(occ):
+        occurranceDistributionInEpochs = [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
+        return [t[0] for t in occurranceDistributionInEpochs if t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT]
+    validTimeUnits = getValidTimeUnits(occ)
+    return [(p,t) for p,t in occ if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
+
+
 def tempAnalysis(timeRange, outputFolder):
 #    points = [getLocationFromLid(n['id'].replace('_', ' ')) for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))]
 #    plotPointsOnWorldMap(points)
 #    plt.show()
 
-    graph = getDiGraph(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))
-    plot(graph)
+#    graph = getDiGraph(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))
+#    plot(graph)
+
+    import datetime
+    TIME_UNIT_IN_SECONDS = 60*60
+    MIN_OBSERVATIONS_PER_TIME_UNIT = 5
+    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder,'%s_%s'%timeRange)):
+#        print len(h['oc']), len(getValidOccurences(h['oc']))
+        occ = h['oc']
+        occurranceDistributionInEpochs = sorted([(k[0], len(list(k[1]))) 
+                                                 for k in groupby(sorted(
+                                                                          [GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]])
+                                                                  )
+                                                 ], key=itemgetter(0))
+        occurranceDistributionInEpochs = filter(lambda t: t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT, occurranceDistributionInEpochs)
+        dataX, dataY = zip(*occurranceDistributionInEpochs)
+        plt.plot_date(map(datetime.datetime.fromtimestamp, dataX), dataY, '-')
+        plt.show()
+        exit()
 
 #class PlotsOnMap:
 #    TIME_UNIT_IN_SECONDS = 60*60
