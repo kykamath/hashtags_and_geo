@@ -9,7 +9,9 @@ import matplotlib.pyplot as plt
 from settings import hashtagsWithoutEndingWindowFile,\
     hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder,\
     hashtagsImagesFlowInTimeForFirstNLocationsFolder,\
-    hashtagsImagesFlowInTimeForWindowOfNLocationsFolder
+    hashtagsImagesFlowInTimeForWindowOfNLocationsFolder,\
+    hashtagsImagesNodeFolder, hashtagSharingProbabilityGraphFile
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from library.classes import GeneralMethods
 from itertools import groupby, combinations
 from library.geo import getLocationFromLid, plotPointsOnWorldMap, getLatticeLid
@@ -108,12 +110,21 @@ def plotHashtagFlowInTimeForWindowOfNLocations(hashTagObject):
             except: break
             
 def plotNodeObject(nodeObject):
+    ax = plt.subplot(111)
     cm = matplotlib.cm.get_cmap('cool')
-    points, colors = zip(*[(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()])
-    plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
-    plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='r', lw=0)
-    plt.show()
-    plt.savefig(outputFile); plt.clf()
+    point = getLocationFromLid(nodeObject['id'].replace('_', ' '))
+    outputFile = hashtagsImagesNodeFolder+'%s.png'%getLatticeLid([point[1], point[0]], ACCURACY); createDirectoryForFile(outputFile)
+    if not os.path.exists(outputFile):
+        print outputFile
+        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()], key=itemgetter(1)))
+        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
+        plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='k', s=20, lw=0)
+        plt.xlabel('Measure of closeness'), plt.title(nodeObject['id'].replace('_', ' '))
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        plt.colorbar(sc, cax=cax)
+    #    plt.show()
+        plt.savefig(outputFile); plt.clf()
 
 timeRange, outputFolder = (2,11), 'world'
 counter = 0
@@ -121,10 +132,11 @@ counter = 0
 ls -al /data/geo/hashtags/images/fit_window_of_n_occ/ | wc -l
 '''
 #for hashtagObjects in iterateHashtagObjectsFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)): 
-#    counter+=len(hashtagObjects); print counter
-#    po = Pool()
-#    po.map_async(plotHashtagFlowInTimeForWindowOfNLocations, hashtagObjects)
-#    po.close(); po.join()
+for object in iterateHashtagObjectsFromFile(hashtagSharingProbabilityGraphFile%(outputFolder, '%s_%s'%timeRange)): 
+    counter+=len(object); print counter
+    po = Pool()
+    po.map_async(plotNodeObject, object)
+    po.close(); po.join()
 
 #outputFolder = '/'
 #for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):

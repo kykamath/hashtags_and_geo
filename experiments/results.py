@@ -87,22 +87,28 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         plt.clf()
         if i==10: exit()
         
-
+        
+        
 #class LocationGraphAnalysis():
 #    @staticmethod
 def tempAnalysis(timeRange, outputFolder):
 #    points = [getLocationFromLid(n['id'].replace('_', ' ')) for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))]
 #    plotPointsOnWorldMap(points)
 #    plt.show()
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
     for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange)):
-#        print n['id'], n['links']
-        cm = matplotlib.cm.get_cmap('brg')
-        points, colors = zip(*[(getLocationFromLid(k.replace('_', ' ')), v)for k, v in n['links'].iteritems()])
+        ax = plt.subplot(111)
+        cm = matplotlib.cm.get_cmap('cool')
+        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in n['links'].iteritems()], key=itemgetter(1)))
         sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
-        plotPointsOnWorldMap([getLocationFromLid(n['id'].replace('_', ' '))], c='y', lw=0)
-        plt.colorbar(sc), plt.xlabel('Measure of closeness'), plt.title(n['id'].replace('_', ' '))
-        plt.show()
-#        exit()
+        plotPointsOnWorldMap([getLocationFromLid(n['id'].replace('_', ' '))], c='k', s=20, lw=0)
+        plt.xlabel('Measure of closeness'), plt.title(n['id'].replace('_', ' '))
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        plt.colorbar(sc, cax=cax)
+#        plt.show()
+        plt.savefig('abc.png')
+        exit()
 
 #class PlotsOnMap:
 #    TIME_UNIT_IN_SECONDS = 60*60
