@@ -101,7 +101,7 @@ def getDiGraph(graphFile):
     return graph
 
 
-def getValidOccurences(occ, TIME_UNIT_IN_SECONDS = 60*60, MIN_OBSERVATIONS_PER_TIME_UNIT=5): 
+def getOccurencesFilteredByDistributionInTimeUnits(occ, TIME_UNIT_IN_SECONDS = 60*60, MIN_OBSERVATIONS_PER_TIME_UNIT=5): 
     def getValidTimeUnits(occ):
         occurranceDistributionInEpochs = [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
         return [t[0] for t in occurranceDistributionInEpochs if t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT]
@@ -121,7 +121,7 @@ def tempAnalysis(timeRange, outputFolder):
     TIME_UNIT_IN_SECONDS = 60*60
     MIN_OBSERVATIONS_PER_TIME_UNIT = 5
     for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder,'%s_%s'%timeRange)):
-#        print len(h['oc']), len(getValidOccurences(h['oc']))
+#        print len(h['oc']), len(getOccurencesFilteredByDistributionInTimeUnits(h['oc']))
         occ = h['oc']
         occurranceDistributionInEpochs = sorted([(k[0], len(list(k[1]))) 
                                                  for k in groupby(sorted(
@@ -142,7 +142,7 @@ def tempAnalysis(timeRange, outputFolder):
 #        occurranceDistributionInEpochs = [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, PlotsOnMap.TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
 #        return [t[0] for t in occurranceDistributionInEpochs if t[1]>=PlotsOnMap.MIN_OBSERVATIONS_PER_TIME_UNIT]
 #    @staticmethod
-#    def getValidOccurences(occ, validTimeUnits): return [(p,t) for p,t in occ if GeneralMethods.approximateEpoch(t, PlotsOnMap.TIME_UNIT_IN_SECONDS) in validTimeUnits]
+#    def getOccurencesFilteredByDistributionInTimeUnits(occ, validTimeUnits): return [(p,t) for p,t in occ if GeneralMethods.approximateEpoch(t, PlotsOnMap.TIME_UNIT_IN_SECONDS) in validTimeUnits]
         
 #    @staticmethod
 #    def plotHashtagFlowInTime(timeRange, outputFolder):
@@ -194,7 +194,7 @@ def tempAnalysis(timeRange, outputFolder):
 #
 #    @staticmethod
 #    def plotDistributionGraphs(occurences, validTimeUnits, title, startingEpoch=None):
-#        occurences = PlotsOnMap.getValidOccurences(occurences, validTimeUnits)
+#        occurences = PlotsOnMap.getOccurencesFilteredByDistributionInTimeUnits(occurences, validTimeUnits)
 #        occurancesGroupedByLattice = [(getLocationFromLid(lid.replace('_', ' ')), sorted(zip(*occs)[1])) for lid, occs in groupby(sorted([(getLatticeLid(l, ACCURACY), t) for l, t in occurences], key=itemgetter(0)), key=itemgetter(0))]
 #        plt.subplot(211)
 #        pointsForNumberOfOccurances, numberOfOccurancesList = zip(*sorted(occurancesGroupedByLattice, key=lambda t: len(t[1])))

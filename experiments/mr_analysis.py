@@ -19,6 +19,8 @@ ACCURACY = 0.145
 PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
 HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 24*60*60
 K_VALUE_FOR_LOCALITY_INDEX = 0.5
+TIME_UNIT_IN_SECONDS = 60*60
+MIN_OCCUREANCES_PER_TIME_UNIT = 5
 
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
@@ -42,7 +44,6 @@ CONTINENT_BOUNDARIES_DICT = dict([
         ('mea', (25, [[-38.272689,-24.257812], [38.548165,63.984375]])),
         ('ap', (25, [[-46.55886,54.492188], [59.175928,176.835938]]))
 ])
-
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
@@ -123,7 +124,6 @@ def addSourceLatticeToHashTagObject(hashtagObject):
 #    if sourceLlid[1]>=600: hashtagObject['src'] = max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
 #    else: hashtagObject['src'] = sourceLlid
 
-
 def addHashtagDisplacementsInTime(hashtagObject, distanceMethod=getMeanDistanceFromSource, key='sit'):
     spread, occurencesDistribution = [], defaultdict(list)
     for oc in hashtagObject['oc']: occurencesDistribution[GeneralMethods.approximateEpoch(oc[1], HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS)].append(oc)
@@ -138,7 +138,20 @@ def addHashtagLocalityIndexInTime(hashtagObject):
     for oc in hashtagObject['oc']: occurencesDistribution[GeneralMethods.approximateEpoch(oc[1], HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS)].append(oc)
     for currentTime, oc in occurencesDistribution.iteritems(): liInTime.append([currentTime, getLocalityIndexAtK(zip(*oc)[0], K_VALUE_FOR_LOCALITY_INDEX)])
     hashtagObject['liInTime'] = liInTime
-    
+
+def getHashtagWithoutEndingWindow(key, values):
+    occurences = []
+    for instances in values: occurences+=instances['oc']
+    e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
+    numberOfInstances=len(occurences)
+    if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
+        e[1]>=HASHTAG_STARTING_WINDOW: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
+
+def getOccurranceDistributionInEpochs(occ): return [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
+def getOccurencesFilteredByDistributionInTimeUnits(occ): 
+    validTimeUnits = [t[0] for t in getOccurranceDistributionInEpochs(occ) if t[1]>=MIN_OCCUREANCES_PER_TIME_UNIT]
+    return [(p,t) for p,t in occ if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
+
 class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
@@ -162,13 +175,14 @@ class MRAnalysis(ModifiedMRJob):
             e[1]>=HASHTAG_STARTING_WINDOW and l[1]<=HASHTAG_ENDING_WINDOW:
                 yield key, {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
     def combine_hashtag_instances_without_ending_window(self, key, values):
-        occurences = []
-        for instances in values: occurences+=instances['oc']
-        e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
-        numberOfInstances=len(occurences)
-        if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
-            e[1]>=HASHTAG_STARTING_WINDOW:
-                yield key, {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
+        hashtagObject = getHashtagWithoutEndingWindow(key, values)
+        if hashtagObject: yield key, hashtagObject 
+    def combine_hashtag_instances_without_ending_window_and_occurences_filtered_by_distribution_in_time_units(self, key, values):
+        hashtagObject = getHashtagWithoutEndingWindow(key, values)
+        if hashtagObject: 
+            hashtagObject['oc'] = getOccurencesFilteredByDistributionInTimeUnits(hashtagObject['oc'])
+            yield key, hashtagObject 
+        
     ''' End: Methods to get hashtag objects
     '''
             
@@ -277,6 +291,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
+    def jobsToGetHastagObjectsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnits(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window_and_occurences_filtered_by_distribution_in_time_units)]
     def jobsToGetBoundarySpecificStats(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.mapBoundarySpecificStats),
                                                       self.mr(self.emptyMapper, self.reduceBoundarySpecificStats), 
                                                       self.mr(self.emptyMapper, self.combineBoundarySpecificStats)]
@@ -300,6 +315,7 @@ class MRAnalysis(ModifiedMRJob):
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
+        return self.jobsToGetHastagObjectsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnits()
 #        return self.jobsToGetBoundarySpecificStats()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
@@ -309,7 +325,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHashtagDisplacementStats()
 #        return self.jobsToAnalayzeLocalityIndexAtK()
 #        return self.jobsToGetHashtagWithGuranteedSource()
-        return self.jobsToBuildHashtagSharingProbabilityGraph()
+#        return self.jobsToBuildHashtagSharingProbabilityGraph()
         
 if __name__ == '__main__':
     MRAnalysis.run()
