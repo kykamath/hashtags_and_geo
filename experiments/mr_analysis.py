@@ -288,7 +288,7 @@ class MRAnalysis(ModifiedMRJob):
             hastagStartTime, hastagEndTime = min(latticesOccranceTimeList, key=itemgetter(1))[1], max(latticesOccranceTimeList, key=itemgetter(1))[1]
             hashtagTimePeriod = hastagEndTime - hastagStartTime
             if hashtagTimePeriod:
-                latticesOccranceTimeList = [(t[0], (t[1]-hastagStartTime)/hashtagTimePeriod) for t in latticesOccranceTimeList]
+                latticesOccranceTimeList = [(t[0], (1-(t[1]-hastagStartTime)/hashtagTimePeriod)) for t in latticesOccranceTimeList]
                 for l1, l2 in combinations(latticesOccranceTimeList, 2):
                     yield l1[0], [hashtagObject['h'], l2]
                     yield l2[0], [hashtagObject['h'], l1]

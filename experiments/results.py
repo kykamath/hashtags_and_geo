@@ -17,9 +17,10 @@ from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
     hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder,\
     hashtagsImagesTimeSeriesAnalysisFolder,\
     hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile,\
-    hashtagsImagesNodeFolder
+    hashtagsImagesNodeFolder, hashtagLocationTemporalClosenessGraphFile
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy import fft, array
+from collections import defaultdict
 from library.graphs import plot
 import matplotlib.pyplot as plt
 from operator import itemgetter
@@ -96,7 +97,7 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         plt.savefig(outputFileName)
         plt.clf()
         if i==10: exit()
-        
+
 def plotNodeObject(nodeObject):
     ax = plt.subplot(111)
     cm = matplotlib.cm.get_cmap('cool')
@@ -113,6 +114,45 @@ def plotNodeObject(nodeObject):
         plt.colorbar(sc, cax=cax)
     #    plt.show()
         plt.savefig(outputFile); plt.clf()
+def plotGraphs(timeRange, outputFolder):
+    sharingProbabilityId = 'sharing_probability'
+    temporalClosenessId = 'temporal_closeness'
+    def plotPoints(nodeObject):
+        cm = matplotlib.cm.get_cmap('cool')
+        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()], key=itemgetter(1)))
+        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0, vmax=1.0, vmin=0.0)
+        plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='k', s=20, lw=0)
+        plt.colorbar(sc)
+    def plotLocationObject(locationObject):
+#        ax = plt.subplot(111)
+        point = getLocationFromLid(locationObject['id'].replace('_', ' '))
+#        outputFile = hashtagsImagesNodeFolder+'%s.png'%getLatticeLid([point[1], point[0]], ACCURACY); FileIO.createDirectoryForFile(outputFile)
+#        if not os.path.exists(outputFile):
+#        print outputFile
+#        for graphId, nodeObject in locationObject['graphs'].iteritems():
+#            print point, graphId, nodeObject.keys()
+        plt.subplot(211)
+        plt.title(locationObject['id'].replace('_', ' '))
+        plotPoints(locationObject['graphs'][sharingProbabilityId], xlabel = 'Hashtag sharing probability')
+        plt.subplot(212)
+        plotPoints(locationObject['graphs'][temporalClosenessId], xlabel = 'Temporal closeness')
+#            plt.xlabel('Measure of closeness'), plt.title(nodeObject['id'].replace('_', ' '))
+#            divider = make_axes_locatable(ax)
+#            cax = divider.append_axes("right", size="5%", pad=0.05)
+#            plt.colorbar(sc, cax=cax)
+        plt.show()
+#            plt.savefig(outputFile); plt.clf()
+    locationsMap = defaultdict(dict)
+    for node in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder, '%s_%s'%timeRange)): 
+        if 'graphs' not in locationsMap[node['id']]: locationsMap[node['id']] = {'id': node['id'], 'graphs': {}}
+        locationsMap[node['id']]['graphs'][sharingProbabilityId] = node
+    for node in FileIO.iterateJsonFromFile(hashtagLocationTemporalClosenessGraphFile%(outputFolder, '%s_%s'%timeRange)): 
+        if 'graphs' not in locationsMap[node['id']]: locationsMap[node['id']] = {'id': node['id'], 'graphs': {}}
+        locationsMap[node['id']]['graphs'][temporalClosenessId] = node
+    for l in locationsMap:
+        if len(locationsMap[l]['graphs'])==2:
+            plotLocationObject(locationsMap[l])
+            exit()
 
 def plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder):
     def plotTimeSeries(hashtagObject):
@@ -170,8 +210,8 @@ if __name__ == '__main__':
 #    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
 
 #    tempAnalysis(timeRange, outputFolder)
-    plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder)
-    
+#    plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder)
+    plotGraphs(timeRange, outputFolder)
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
