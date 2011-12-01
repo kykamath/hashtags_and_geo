@@ -117,12 +117,12 @@ def plotNodeObject(nodeObject):
 def plotGraphs(timeRange, outputFolder):
     sharingProbabilityId = 'sharing_probability'
     temporalClosenessId = 'temporal_closeness'
-    def plotPoints(nodeObject):
+    def plotPoints(nodeObject, xlabel):
         cm = matplotlib.cm.get_cmap('cool')
         points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()], key=itemgetter(1)))
         sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0, vmax=1.0, vmin=0.0)
         plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='k', s=20, lw=0)
-        plt.colorbar(sc)
+        plt.xlabel(xlabel), plt.colorbar(sc)
     def plotLocationObject(locationObject):
 #        ax = plt.subplot(111)
         point = getLocationFromLid(locationObject['id'].replace('_', ' '))
@@ -152,7 +152,7 @@ def plotGraphs(timeRange, outputFolder):
     for l in locationsMap:
         if len(locationsMap[l]['graphs'])==2:
             plotLocationObject(locationsMap[l])
-            exit()
+#            exit()
 
 def plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder):
     def plotTimeSeries(hashtagObject):
@@ -207,6 +207,7 @@ def getDiGraph(graphFile):
 if __name__ == '__main__':
     timeRange = (2,11)
     outputFolder = 'world'
+#    outputFolder='/'
 #    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
 
 #    tempAnalysis(timeRange, outputFolder)

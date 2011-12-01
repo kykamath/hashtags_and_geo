@@ -14,6 +14,7 @@ import numpy as np
 from library.classes import GeneralMethods
 from itertools import combinations
 from operator import itemgetter
+import math
 
 ACCURACY = 0.145
 PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
@@ -288,10 +289,13 @@ class MRAnalysis(ModifiedMRJob):
             hastagStartTime, hastagEndTime = min(latticesOccranceTimeList, key=itemgetter(1))[1], max(latticesOccranceTimeList, key=itemgetter(1))[1]
             hashtagTimePeriod = hastagEndTime - hastagStartTime
             if hashtagTimePeriod:
-                latticesOccranceTimeList = [(t[0], (1-(t[1]-hastagStartTime)/hashtagTimePeriod)) for t in latticesOccranceTimeList]
+#                latticesOccranceTimeList = [(t[0], (1-(t[1]-hastagStartTime)/hashtagTimePeriod)) for t in latticesOccranceTimeList]
                 for l1, l2 in combinations(latticesOccranceTimeList, 2):
-                    yield l1[0], [hashtagObject['h'], l2]
-                    yield l2[0], [hashtagObject['h'], l1]
+#                    yield l1[0], [hashtagObject['h'], l2]
+#                    yield l2[0], [hashtagObject['h'], l1]
+                    score = 1-np.abs((l1[1]-l2[1])/hashtagTimePeriod)
+                    yield l1[0], [hashtagObject['h'], [l2[0], score]]
+                    yield l2[0], [hashtagObject['h'], [l1[0], score]]
     def buildLocationTemporalClosenessGraphReduce(self, lattice, values):
         nodeObject, latticesScoreMap, observedHashtags = {'links':{}, 'id': lattice}, defaultdict(list), set()
         for h, (l, v) in values: observedHashtags.add(h), latticesScoreMap[l].append(v)
