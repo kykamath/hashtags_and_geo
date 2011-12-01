@@ -112,6 +112,8 @@ def plotTimeSeriesFFTImVsRe(hashtagObject):
         plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
         plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
 #        plt.show()
+        print timeSeries
+        exit()
         
         Y=fft(timeSeries)
         plt.subplot(311)
