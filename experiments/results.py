@@ -16,7 +16,9 @@ from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
     hashtagsImagesFlowInTimeForFirstNOccurrencesFolder,\
     hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder,\
     hashtagsImagesTimeSeriesAnalysisFolder,\
-    hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile
+    hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile,\
+    hashtagsImagesNodeFolder
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy import fft, array
 from library.graphs import plot
 import matplotlib.pyplot as plt
@@ -94,62 +96,59 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         plt.savefig(outputFileName)
         plt.clf()
         if i==10: exit()
+        
+def plotNodeObject(nodeObject):
+    ax = plt.subplot(111)
+    cm = matplotlib.cm.get_cmap('cool')
+    point = getLocationFromLid(nodeObject['id'].replace('_', ' '))
+    outputFile = hashtagsImagesNodeFolder+'%s.png'%getLatticeLid([point[1], point[0]], ACCURACY); FileIO.createDirectoryForFile(outputFile)
+    if not os.path.exists(outputFile):
+        print outputFile
+        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()], key=itemgetter(1)))
+        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
+        plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='k', s=20, lw=0)
+        plt.xlabel('Measure of closeness'), plt.title(nodeObject['id'].replace('_', ' '))
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        plt.colorbar(sc, cax=cax)
+    #    plt.show()
+        plt.savefig(outputFile); plt.clf()
 
-def plotTimeSeriesFFTImVsRe(hashtagObject):
-    def getDataToPlot(occ):
-        occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(occ)
-        startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
-        dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
-        occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
-        for x in dataX: 
-            if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
-        return zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
-    
-    outputFile = hashtagsImagesTimeSeriesAnalysisFolder+'%s.png'%(hashtagObject['h']); FileIO.createDirectoryForFile(outputFile)
-    print unicode(outputFile).encode('utf-8')
-    
-    timeUnits, timeSeries = getDataToPlot(hashtagObject['oc'])
-    timeUnitsForActiveRegion, timeSeriesForActiveRegion = getDataToPlot(getOccuranesInHighestActiveRegion(hashtagObject))
-    
-#    ax=plt.subplot(311)
-#    plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
-#    plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-    ax=plt.subplot(211)
-    plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
-    plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnitsForActiveRegion), timeSeriesForActiveRegion, 'o', c='r')
-    plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-    plt.title(hashtagObject['h'])
-    ax=plt.subplot(212)
-    plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnitsForActiveRegion), timeSeriesForActiveRegion, '-')
-    plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-    
-    plt.savefig(outputFile); plt.clf()
-#    plt.show()
-            
-#            Y=fft(timeSeries)
-#            plt.subplot(311)
-#            plt.scatter(Y.real,Y.imag)#, plt.title('"Meas" with points')
-#            plt.xlabel('real(FFT)')
-#            plt.ylabel('img(FFT)')
-#            plt.title('%s'%(hashtagObject['h']))
-    #        plt.show()
-            
-#            n=len(Y)
-#            power = abs(Y[1:(n/2)])**2
-#            nyquist=1./2
-#            freq=array(range(n/2))/(n/2.0)*nyquist
-#            
-#            period=1./freq
-#            plt.subplot(312)
-#            plt.plot(period[1:len(period)], power)#, plt.title('"Meas" with linespoints')
-    #        plt.xlabel('Period [hour]')
-#            plt.ylabel('|FFT|**2')
-#            print len( period[1:len(period)]), len(power)
-#            cf = CurveFit(CurveFit.logFunction, [1., 1.], period[1:len(period)], power)
-#            cf.estimate()
-#            plt.plot(period[1:len(period)], CurveFit.logFunction(cf.actualParameters, period[1:len(period)]), 'o', c='r')
-#            print cf.errorVal()
-#            plt.show()
+def plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder):
+    def plotTimeSeries(hashtagObject):
+        def getDataToPlot(occ):
+            occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(occ)
+            startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
+            dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
+            occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
+            for x in dataX: 
+                if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
+            return zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
+        
+        outputFile = hashtagsImagesTimeSeriesAnalysisFolder+'%s.png'%(hashtagObject['h']); FileIO.createDirectoryForFile(outputFile)
+        print unicode(outputFile).encode('utf-8')
+        
+        timeUnits, timeSeries = getDataToPlot(hashtagObject['oc'])
+        timeUnitsForActiveRegion, timeSeriesForActiveRegion = getDataToPlot(getOccuranesInHighestActiveRegion(hashtagObject))
+        
+    #    ax=plt.subplot(311)
+    #    plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
+    #    plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
+        ax=plt.subplot(211)
+        plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
+        plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnitsForActiveRegion), timeSeriesForActiveRegion, 'o', c='r')
+        plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
+        plt.title(hashtagObject['h'])
+        ax=plt.subplot(212)
+        plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnitsForActiveRegion), timeSeriesForActiveRegion, '-')
+        plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
+#        plt.show()
+        plt.savefig(outputFile); plt.clf()
+    counter=1
+    for object in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
+#        if object['h']=='beatohio':
+        print counter; counter+=1
+        plotTimeSeries(object)
 
 def getDiGraph(graphFile):
     graph = nx.DiGraph()
@@ -171,11 +170,7 @@ if __name__ == '__main__':
 #    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
 
 #    tempAnalysis(timeRange, outputFolder)
-    counter = 1
-    for object in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
-        print counter; counter+=1
-    #    plotNodeObject(object)
-        plotTimeSeriesFFTImVsRe(object)
+    plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder)
     
 #    PlotsOnMap.plotHashtagFlowInTimeForFirstNLocations(timeRange, outputFolder)
 #    PlotsOnMap.plotHashtagFlowInTimeForFirstNOccurences(timeRange, outputFolder)

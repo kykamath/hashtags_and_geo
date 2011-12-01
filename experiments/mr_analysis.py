@@ -58,7 +58,7 @@ def getLocationBoundaryId(point):
     for id, (_, boundingBox) in CONTINENT_BOUNDARIES_DICT.iteritems():
         if isWithinBoundingBox(point, boundingBox): return id
 
-def filterLattices(h):
+def filterLatticesByMinHashtagOccurencesPerLattice(h):
     latticesToOccurancesMap = defaultdict(list)
     for l, oc in h['oc']:latticesToOccurancesMap[getLatticeLid(l, ACCURACY)].append(oc)
     return dict([(k,v) for k, v in latticesToOccurancesMap.iteritems() if len(v)>=MIN_HASHTAG_OCCURENCES_PER_LATTICE])
@@ -155,6 +155,7 @@ def getOccurencesFilteredByDistributionInTimeUnits(occ):
 def getOccuranesInHighestActiveRegion(hashtagObject):
     def getActiveRegions(timeSeries):
         noOfZerosObserved, activeRegions = 0, []
+        currentRegion, occurancesForRegion = None, 0
         for index, l in zip(range(len(timeSeries)),timeSeries):
             if l>0: 
                 if noOfZerosObserved>MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION or index==0:
@@ -170,6 +171,9 @@ def getOccuranesInHighestActiveRegion(hashtagObject):
                     currentRegion[2] = occurancesForRegion
                     activeRegions.append(currentRegion)
         if not activeRegions: activeRegions.append([0, len(timeSeries)-1, sum(timeSeries)])
+        else: 
+            currentRegion[1], currentRegion[2] = index, occurancesForRegion
+            activeRegions.append(currentRegion)
         return activeRegions
     occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
     startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
@@ -178,6 +182,8 @@ def getOccuranesInHighestActiveRegion(hashtagObject):
     for x in dataX: 
         if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
     timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
+#    for k, v in zip(timeUnits, timeSeries):
+#        print k, v
     hashtagPropagatingRegion = max(getActiveRegions(timeSeries), key=itemgetter(2))
     validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
     return [(p,t) for p,t in hashtagObject['oc'] if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
@@ -239,7 +245,7 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def buildHashtagSharingProbabilityGraphMap(self, key, hashtagObject):
 #        lattices = list(set([getLatticeLid(l, accuracy=ACCURACY) for l in zip(*hashtagObject['oc'])[0]]))
-        lattices = filterLattices(hashtagObject).keys()
+        lattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
         for lattice in lattices: 
             yield lattice, ['h', [hashtagObject['h']]]
             yield lattice, ['n', lattices]
@@ -266,6 +272,30 @@ class MRAnalysis(ModifiedMRJob):
                 if prob>=MIN_HASHTAG_SHARING_PROBABILITY: nodeObject['links'][no] =  prob
             yield lattice, nodeObject
     ''' End: Methods to get hashtag co-occurence probabilities among lattices.
+    '''
+    
+    ''' Start: Methods to get temporal closeness among lattices.
+    '''
+    def buildLocationTemporalClosenessGraphMap(self, key, hashtagObject):
+        occuranesInHighestActiveRegion, latticesToOccranceTimeMap = getOccuranesInHighestActiveRegion(hashtagObject), {}
+        for k, v in occuranesInHighestActiveRegion:
+            lid = getLatticeLid(k, ACCURACY)
+            if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
+        latticesOccranceTimeList = latticesToOccranceTimeMap.items()
+        hastagStartTime, hastagEndTime = min(latticesOccranceTimeList, key=itemgetter(1))[1], max(latticesOccranceTimeList, key=itemgetter(1))[1]
+        hashtagTimePeriod = hastagEndTime - hastagStartTime
+        if hashtagTimePeriod:
+            latticesOccranceTimeList = [(t[0], (t[1]-hastagStartTime)/hashtagTimePeriod) for t in latticesOccranceTimeList]
+            for l1, l2 in combinations(latticesOccranceTimeList, 2):
+                yield l1[0], l2
+                yield l2[0], l1
+    def buildLocationTemporalClosenessGraphReduce(self, lattice, values):
+        nodeObject, latticesScoreMap = {'links':{}, 'id': lattice}, defaultdict(list)
+        for l, v in values: latticesScoreMap[l].append(v)
+        for l in latticesScoreMap: nodeObject['links'][l]=np.mean(latticesScoreMap[l])
+        yield lattice, nodeObject
+        
+    ''' End: Methods to get temporal closeness among lattices.
     '''
             
     def addSourceLatticeToHashTagObject(self, key, hashtagObject):
@@ -340,12 +370,12 @@ class MRAnalysis(ModifiedMRJob):
              [(self.buildHashtagSharingProbabilityGraphMap, self.buildHashtagSharingProbabilityGraphReduce1), 
               (self.emptyMapper, self.buildHashtagSharingProbabilityGraphReduce2)
                 ]
-        
+    def jobToBuildLocationTemporalClosenessGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+[(self.buildLocationTemporalClosenessGraphMap, self.buildLocationTemporalClosenessGraphReduce)]    
     
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
-        return self.jobsToGetHastagObjectsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnits()
+#        return self.jobsToGetHastagObjectsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnits()
 #        return self.jobsToGetBoundarySpecificStats()
 #        return self.jobsToGetHashtagDistributionInTime()
 #        return self.jobsToGetHashtagDistributionInLattice()
@@ -356,6 +386,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToAnalayzeLocalityIndexAtK()
 #        return self.jobsToGetHashtagWithGuranteedSource()
 #        return self.jobsToBuildHashtagSharingProbabilityGraph()
-        
+        return self.jobToBuildLocationTemporalClosenessGraph()
+    
 if __name__ == '__main__':
     MRAnalysis.run()

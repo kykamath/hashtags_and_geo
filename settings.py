@@ -26,6 +26,7 @@ hashtagsDistributionInLatticeFile = hashtagsAnalysisFolder+'hashtagsDistribution
 hashtagsAnalayzeLocalityIndexAtKFile = hashtagsAnalysisFolder+'%s/%s/hashtagsAnalayzeLocalityIndexAtK'
 hashtagWithGuranteedSourceFile = hashtagsAnalysisFolder+'%s/%s/hashtagWithGuranteedSource'
 hashtagSharingProbabilityGraphFile = hashtagsAnalysisFolder+'%s/%s/hashtagSharingProbabilityGraph'
+hashtagLocationTemporalClosenessGraphFile = hashtagsAnalysisFolder+'%s/%s/locationTemporalClosenessGraph'
 
 # Images
 hashtagsImagesFolder = '/data/geo/hashtags/images/'

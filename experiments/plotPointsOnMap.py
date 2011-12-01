@@ -3,20 +3,11 @@ Created on Nov 28, 2011
 
 @author: kykamath
 '''
-import sys, os, json, matplotlib, random, datetime
-from library.file_io import FileIO
-from experiments.mr_analysis import TIME_UNIT_IN_SECONDS,\
-    getOccurranceDistributionInEpochs
-sys.path.append('../')
+import os, json, matplotlib
 import matplotlib.pyplot as plt
-from settings import hashtagsWithoutEndingWindowFile,\
-    hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder,\
-    hashtagsImagesFlowInTimeForFirstNLocationsFolder,\
+from settings import  hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder,\
     hashtagsImagesFlowInTimeForWindowOfNLocationsFolder,\
-    hashtagsImagesNodeFolder, hashtagSharingProbabilityGraphFile,\
-    hashtagsImagesTimeSeriesAnalysisFolder,\
-    hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+    hashtagsWithoutEndingWindowFile
 from library.classes import GeneralMethods
 from itertools import groupby, combinations
 from library.geo import getLocationFromLid, plotPointsOnWorldMap, getLatticeLid
@@ -109,62 +100,19 @@ def plotHashtagFlowInTimeForWindowOfNLocations(hashTagObject):
                 occurences = []
                 for l in latticesSortedByTime[previousIndex:currentIndex]: occurences+=latticesToOccranceMap[l[0]]
                 startingEpoch = plotDistributionGraphs(occurences, validTimeUnits, '%s - Interval (%d - %d) of %d'%(hashTagObject['h'], previousIndex+1, currentIndex, len(latticesSortedByTime)), startingEpoch)
-#                plt.show()
-                plt.savefig(outputFile); plt.clf()
+                plt.show()
+#                plt.savefig(outputFile); plt.clf()
                 previousIndex=currentIndex
             except: break
             
-def plotNodeObject(nodeObject):
-    ax = plt.subplot(111)
-    cm = matplotlib.cm.get_cmap('cool')
-    point = getLocationFromLid(nodeObject['id'].replace('_', ' '))
-    outputFile = hashtagsImagesNodeFolder+'%s.png'%getLatticeLid([point[1], point[0]], ACCURACY); createDirectoryForFile(outputFile)
-    if not os.path.exists(outputFile):
-        print outputFile
-        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()], key=itemgetter(1)))
-        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
-        plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='k', s=20, lw=0)
-        plt.xlabel('Measure of closeness'), plt.title(nodeObject['id'].replace('_', ' '))
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(sc, cax=cax)
-    #    plt.show()
-        plt.savefig(outputFile); plt.clf()
-        
-def plotTimeSeriesRealData(hashtagObject, id='real_data'):
-#    MIN_OBSERVATIONS_PER_TIME_UNIT = 2
-    ax = plt.subplot(111)
-    outputFile = hashtagsImagesTimeSeriesAnalysisFolder%(id, hashtagObject['h'])+'%s.png'%id; createDirectoryForFile(outputFile)
-    print unicode(outputFile).encode('utf-8')
-    occurranceDistributionInEpochs = sorted([(k[0], len(list(k[1]))) 
-                                                 for k in groupby(sorted(
-                                                                          [GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*hashtagObject['oc'])[1]])
-                                                                  )
-                                             ], key=itemgetter(0))
-#    occurranceDistributionInEpochs = filter(lambda t: t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT, occurranceDistributionInEpochs)
-    dataX, dataY = zip(*occurranceDistributionInEpochs)
-    plt.plot_date(map(datetime.datetime.fromtimestamp, dataX), dataY, '-')
-    plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-    plt.title('%s - %s'%(hashtagObject['h'], id))
-#    plt.show()
-    plt.savefig(outputFile); plt.clf()
-
-#    exit()
-   
-
 timeRange, outputFolder = (2,11), 'world'
 counter = 0
 '''
 ls -al /data/geo/hashtags/images/fit_window_of_n_occ/ | wc -l
 '''
-#for hashtagObjects in iterateHashtagObjectsFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)): 
-#for object in iterateHashtagObjectsFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)): 
-#    counter+=len(object); print counter
-#    po = Pool()
-#    po.map_async(plotTimeSeries, object)
-#    po.close(); po.join()
+for hashtagObjects in iterateHashtagObjectsFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)): 
+    counter+=len(object); print counter
+    po = Pool()
+    po.map_async(plotHashtagFlowInTimeForWindowOfNLocations, object)
+    po.close(); po.join()
 
-#for object in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder, '%s_%s'%timeRange)):
-#for object in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile%(outputFolder, '%s_%s'%timeRange)):
-#    print counter; counter+=1
-#    plotNodeObject(object)

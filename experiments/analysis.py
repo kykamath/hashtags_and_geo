@@ -14,7 +14,7 @@ from library.file_io import FileIO
 from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
     getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK,\
     addSourceLatticeToHashTagObject, addHashtagLocalityIndexInTime,\
-    HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS, filterLattices, ACCURACY,\
+    HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS, ACCURACY,\
     HASHTAG_STARTING_WINDOW,\
     getOccuranesInHighestActiveRegion
 from library.mrjobwrapper import runMRJob
@@ -26,7 +26,8 @@ from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatti
     hashtagsImagesHashtagsDistributionInLid,\
     hashtagsAnalayzeLocalityIndexAtKFile, hashtagWithGuranteedSourceFile,\
     hashtagsBoundarySpecificStatsFile, hashtagSharingProbabilityGraphFile,\
-    hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile
+    hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile,\
+    hashtagLocationTemporalClosenessGraphFile
 import matplotlib.pyplot as plt
 from itertools import combinations, groupby 
 import numpy as np
@@ -110,56 +111,6 @@ def plotCenterOfMassHashtag(timeRange):
         plt.ylim(ymax=1500)
         plt.savefig('%s/%s_%s.png'%(hashtagsImagesCenterOfMassFolder, h['h'], '%s_%s'%(assignedLattice[0], assignedLattice[1])))
         plt.clf()
-#        exit()
-
-#def doHashtagCenterOfMassAnalysis(hashtagObject): 
-#    percentageOfEarlyLattices = [0.01*i for i in range(1, 10)] + [0.1*i for i in range(1, 11)]
-#    sortedOcc = sorted(hashtagObject['oc'], key=lambda t: t[1])
-#    llids = [t[0] for t in sortedOcc]
-#    return {'h':hashtagObject['h'], 't': hashtagObject['t'], 'com': [(p, getCenterOfMass(llids[:int(p*len(llids))], accuracy=0.5, error=True)) for p in percentageOfEarlyLattices]}
-
-#def getSourceLattice(hashtagObject, percentageOfLlidsToConsider):
-#    def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
-#    sortedOcc = sorted(hashtagObject['oc'], key=lambda t: t[1])[:int(percentageOfLlidsToConsider*len(hashtagObject['oc']))]
-#    llids = sorted([t[0] for t in sortedOcc])
-#    source = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in llids], key=lambda t: t[1])
-#    return source
-#    print getCenterOfMass(llids[:int(percentageOfLlidsToConsider*len(llids))], accuracy=0.5, error=True)
-
-#def addSourceLatticeToHashTagObject(hashtagObject):
-#        def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
-##        sortedOcc = hashtagObject['oc'][:int(0.01*len(hashtagObject['oc']))]
-#        if len(hashtagObject['oc'])>1000: sortedOcc = hashtagObject['oc'][:10]
-#        else: sortedOcc = hashtagObject['oc'][:int(0.01*len(hashtagObject['oc']))]
-##        llids = sorted([t[0] for t in sortedOcc])
-##        uniquellids = [getLocationFromLid(l) for l in set(['%s %s'%(l[0], l[1]) for l in llids])]
-##        sourceLlid = min([(lid, getMeanDistanceFromSource(lid, llids)) for lid in uniquellids], key=lambda t: t[1])
-##        if sourceLlid[1]>=600: 
-#        return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
-#        else: return sourceLlid
-
-#def getLatticeThatGivesMinimumLocalityIndexAtKForAccuracy(occurances, kValue, accuracy):
-#    occurancesDistributionInHigherLattice, distanceMatrix = defaultdict(list), defaultdict(dict)
-#    for oc in occurances: occurancesDistributionInHigherLattice[getLatticeLid(oc, accuracy)].append(oc)
-#    higherLattices = sorted(occurancesDistributionInHigherLattice.iteritems(), key=lambda t: len(t[1]), reverse=True)
-#    for hl1, hl2 in combinations(occurancesDistributionInHigherLattice, 2): distanceMatrix[hl1][hl2] = distanceMatrix[hl2][hl1] = getHaversineDistance(getLocationFromLid(hl1.replace('_', ' ')), getLocationFromLid(hl2.replace('_', ' ')))
-#    for k,v in distanceMatrix.iteritems(): distanceMatrix[k] = sorted(v.iteritems(), key=itemgetter(1))
-#    occurancesToReturn = []
-#    currentHigherLatticeSet, totalOccurances = {'distance': ()}, float(len(occurances))
-#    for hl, occs  in higherLattices: 
-#        higherLatticeSet = {'distance': 0, 'observedOccurances': len(occs), 'lattices': [hl], 'sourceLattice': hl}
-#        while currentHigherLatticeSet['distance']>higherLatticeSet['distance'] and higherLatticeSet['observedOccurances']/totalOccurances<kValue:
-#            (l, d) = distanceMatrix[hl][0]; 
-#            distanceMatrix[hl]=distanceMatrix[hl][1:]
-#            higherLatticeSet['distance']+=d
-#            higherLatticeSet['lattices'].append(l)
-#            higherLatticeSet['observedOccurances']+=len(occurancesDistributionInHigherLattice[l])
-#        if currentHigherLatticeSet==None or currentHigherLatticeSet['distance']>higherLatticeSet['distance']: currentHigherLatticeSet=higherLatticeSet
-#    
-#    for l in currentHigherLatticeSet['lattices']: occurancesToReturn+=occurancesDistributionInHigherLattice[l]
-##    return {'distance': currentHigherLatticeSet['distance'], 'occurances': occurancesToReturn, 'sourceLattice': getLocationFromLid(currentHigherLatticeSet['sourceLattice'].replace('_', ' '))}
-#    return {'occurances': occurancesToReturn, 'sourceLattice': getLocationFromLid(currentHigherLatticeSet['sourceLattice'].replace('_', ' '))}
-
 
 def tempGetLocality(timeRange):
 #    K_FOR_LOCALITY_INDEX = 0.5
@@ -251,30 +202,11 @@ def analayzeLocalityIndexAtK(timeRange):
     plt.show()
             
 def tempAnalysis(timeRange):
+    mra = MRAnalysis()
     for h in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/2_11/hashtagsWithoutEndingWindow'):
-        print getOccuranesInHighestActiveRegion(h)
+        mra.buildHashtagTemporalClosenessGraphMap(None, h)
         exit()
         
-#        print datetime.datetime.fromtimestamp(h['e'][1]), datetime.datetime.fromtimestamp(h['l'][1])
-#        print h['oc'][0][1], h['oc'][1][1]
-#        for l, t in h['oc']:
-#            if t<HASHTAG_STARTING_WINDOW:
-#                print l, t
-#    for h in FileIO.iterateJsonFromFile(hashtagsAnalayzeLocalityIndexAtKFile%(outputFolder, '%s_%s'%timeRange)):
-#        print h['h'], len(set([getLatticeLid(l, accuracy=ACCURACY) for l in zip(*h['oc'])[0]])), len(filterLattices(h)), len(filterLattices(h).keys())
-#        assert len(filterLattices(h))==len(filterLattices(h).keys())
-#        print filterLattices(h).keys()
-#        exit()
-#        if h['liAtVaryingK'][0][1][0] > 0:
-#            print h['h']
-#            addHashtagLocalityIndexInTime(h)
-#            exit()
-#        if h['h'].startswith('occupysf'):
-##            addHashtagDisplacementsInTime(h, distanceMethod=getMeanDistanceFromSource)
-#            print h['h'],
-#            addHashtagDisplacementsInTime(h, distanceMethod=getMeanDistanceBetweenLids)
-#            print h['sit']
-
 def plotChangeLIOnUSMap(timeRange):
     hashtagClasses = HashtagClass.getHashtagClasses()
 #    classesToPlot = ['technology', 'tv', 'movie', 'sports', 'occupy', 'events', 'republican_debates', 'song_game_releases']
@@ -308,7 +240,7 @@ def mr_analysis(timeRange, outputFolder):
     def getInputFiles(months, folderType='/'): return [inputFolder+folderType+'/'+str(m) for m in months]
 #    runMRJob(MRAnalysis, hashtagsFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
-    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
+#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
 #    runMRJob(MRAnalysis, hashtagsDistributionInTimeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsDistributionInLatticeFile, [tempInputFile], jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsCenterOfMassAnalysisWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
@@ -318,22 +250,23 @@ def mr_analysis(timeRange, outputFolder):
 #    runMRJob(MRAnalysis, hashtagWithGuranteedSourceFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsBoundarySpecificStatsFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':600})
 #    runMRJob(MRAnalysis, hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
+    runMRJob(MRAnalysis, hashtagLocationTemporalClosenessGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
 
 if __name__ == '__main__':
 #    timeRange = (2,5)
     timeRange = (2,11)
 #    timeRange = (9,9)
     
-#    outputFolder = '/'
-    outputFolder = 'world'
+    outputFolder = '/'
+#    outputFolder = 'world'
     
-#    mr_analysis(timeRange, outputFolder)
+    mr_analysis(timeRange, outputFolder)
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
 #    plotChangeLIOnUSMap(timeRange)
 #    plotHashtagsDisplacementStats(timeRange)
 #    plotCenterOfMassHashtag(timeRange)
-    tempAnalysis(timeRange)
+#    tempAnalysis(timeRange)
 #    plotOnUsMap(timeRange)
 #    tempGetLocality(timeRange)
 #    analayzeLocalityIndexAtK(timeRange)
