@@ -287,13 +287,14 @@ class MRAnalysis(ModifiedMRJob):
         if hashtagTimePeriod:
             latticesOccranceTimeList = [(t[0], (t[1]-hastagStartTime)/hashtagTimePeriod) for t in latticesOccranceTimeList]
             for l1, l2 in combinations(latticesOccranceTimeList, 2):
-                yield l1[0], l2
-                yield l2[0], l1
+                yield l1[0], [hashtagObject['h'], l2]
+                yield l2[0], [hashtagObject['h'], l1]
     def buildLocationTemporalClosenessGraphReduce(self, lattice, values):
-        nodeObject, latticesScoreMap = {'links':{}, 'id': lattice}, defaultdict(list)
-        for l, v in values: latticesScoreMap[l].append(v)
-        for l in latticesScoreMap: nodeObject['links'][l]=np.mean(latticesScoreMap[l])
-        yield lattice, nodeObject
+        nodeObject, latticesScoreMap, observedHashtags = {'links':{}, 'id': lattice}, defaultdict(list), set()
+        for h, (l, v) in values: observedHashtags.add(h), latticesScoreMap[l].append(v)
+        if len(observedHashtags)>=MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE:
+            for l in latticesScoreMap: nodeObject['links'][l]=np.mean(latticesScoreMap[l])
+            yield lattice, nodeObject
         
     ''' End: Methods to get temporal closeness among lattices.
     '''
