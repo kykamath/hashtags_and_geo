@@ -4,6 +4,7 @@ Created on Nov 24, 2011
 @author: kykamath
 '''
 import sys, os
+import datetime
 sys.path.append('../')
 from library.file_io import FileIO
 import matplotlib
@@ -12,7 +13,10 @@ from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
     hashtagsImagesHastagsSharingProbabilitiesFolder,\
     hashtagsImagesFlowInTimeForFirstNLocationsFolder,\
     hashtagsImagesFlowInTimeForFirstNOccurrencesFolder,\
-    hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder
+    hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder,\
+    hashtagsImagesTimeSeriesAnalysisFolder,\
+    hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile
+from scipy import fft, array
 from library.graphs import plot
 import matplotlib.pyplot as plt
 from operator import itemgetter
@@ -20,7 +24,8 @@ from library.geo import getHaversineDistance, plotPointsOnUSMap, getLatticeLid,\
     getLocationFromLid, plotPointsOnWorldMap
 from itertools import groupby
 from experiments.analysis import HashtagClass, HashtagObject
-from experiments.mr_analysis import ACCURACY
+from experiments.mr_analysis import ACCURACY, getOccurranceDistributionInEpochs,\
+    TIME_UNIT_IN_SECONDS
 from library.classes import GeneralMethods
 import networkx as nx
 
@@ -88,6 +93,47 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         plt.savefig(outputFileName)
         plt.clf()
         if i==10: exit()
+
+def plotTimeSeriesFFTImVsRe(hashtagObject):
+    if hashtagObject['oc']:
+        outputFile = hashtagsImagesTimeSeriesAnalysisFolder+'%s.png'%(hashtagObject['h']); FileIO.createDirectoryForFile(outputFile)
+        print unicode(outputFile).encode('utf-8')
+        occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
+        startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
+#        startEpoch-=2*TIME_UNIT_IN_SECONDS
+        dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
+        occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
+        for x in dataX: 
+            if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
+#        print occurranceDistributionInEpochs
+        timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
+        
+        ax=plt.subplot(313)
+        plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
+        plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
+#        plt.show()
+        
+        Y=fft(timeSeries)
+        plt.subplot(311)
+        plt.scatter(Y.real,Y.imag)#, plt.title('"Meas" with points')
+        plt.xlabel('real(FFT)')
+        plt.ylabel('img(FFT)')
+        plt.title('%s'%(hashtagObject['h']))
+#        plt.show()
+        
+        n=len(Y)
+        power = abs(Y[1:(n/2)])**2
+        nyquist=1./2
+        freq=array(range(n/2))/(n/2.0)*nyquist
+        
+        period=1./freq
+        plt.subplot(312)
+        plt.semilogx(period[1:len(period)], power)#, plt.title('"Meas" with linespoints')
+#        plt.xlabel('Period [hour]')
+        plt.ylabel('|FFT|**2')
+#        plt.show()
+        plt.savefig(outputFile); plt.clf()
+        
         
         
         
@@ -110,6 +156,9 @@ def getOccurencesFilteredByDistributionInTimeUnits(occ, TIME_UNIT_IN_SECONDS = 6
 
 
 def tempAnalysis(timeRange, outputFolder):
+    
+    pass
+    
 #    points = [getLocationFromLid(n['id'].replace('_', ' ')) for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))]
 #    plotPointsOnWorldMap(points)
 #    plt.show()
@@ -117,22 +166,22 @@ def tempAnalysis(timeRange, outputFolder):
 #    graph = getDiGraph(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))
 #    plot(graph)
 
-    import datetime
-    TIME_UNIT_IN_SECONDS = 60*60
-    MIN_OBSERVATIONS_PER_TIME_UNIT = 5
-    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder,'%s_%s'%timeRange)):
-#        print len(h['oc']), len(getOccurencesFilteredByDistributionInTimeUnits(h['oc']))
-        occ = h['oc']
-        occurranceDistributionInEpochs = sorted([(k[0], len(list(k[1]))) 
-                                                 for k in groupby(sorted(
-                                                                          [GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]])
-                                                                  )
-                                                 ], key=itemgetter(0))
-        occurranceDistributionInEpochs = filter(lambda t: t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT, occurranceDistributionInEpochs)
-        dataX, dataY = zip(*occurranceDistributionInEpochs)
-        plt.plot_date(map(datetime.datetime.fromtimestamp, dataX), dataY, '-')
-        plt.show()
-        exit()
+#    import datetime
+#    TIME_UNIT_IN_SECONDS = 60*60
+#    MIN_OBSERVATIONS_PER_TIME_UNIT = 5
+#    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder,'%s_%s'%timeRange)):
+##        print len(h['oc']), len(getOccurencesFilteredByDistributionInTimeUnits(h['oc']))
+#        occ = h['oc']
+#        occurranceDistributionInEpochs = sorted([(k[0], len(list(k[1]))) 
+#                                                 for k in groupby(sorted(
+#                                                                          [GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]])
+#                                                                  )
+#                                                 ], key=itemgetter(0))
+#        occurranceDistributionInEpochs = filter(lambda t: t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT, occurranceDistributionInEpochs)
+#        dataX, dataY = zip(*occurranceDistributionInEpochs)
+#        plt.plot_date(map(datetime.datetime.fromtimestamp, dataX), dataY, '-')
+#        plt.show()
+#        exit()
 
 #class PlotsOnMap:
 #    TIME_UNIT_IN_SECONDS = 60*60
@@ -264,7 +313,12 @@ if __name__ == '__main__':
     outputFolder = 'world'
 #    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
 
-    tempAnalysis(timeRange, outputFolder)
+#    tempAnalysis(timeRange, outputFolder)
+    counter = 1
+    for object in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
+        print counter; counter+=1
+    #    plotNodeObject(object)
+        plotTimeSeriesFFTImVsRe(object)
     
 #    PlotsOnMap.plotHashtagFlowInTimeForFirstNLocations(timeRange, outputFolder)
 #    PlotsOnMap.plotHashtagFlowInTimeForFirstNOccurences(timeRange, outputFolder)

@@ -5,6 +5,8 @@ Created on Nov 28, 2011
 '''
 import sys, os, json, matplotlib, random, datetime
 from library.file_io import FileIO
+from experiments.mr_analysis import TIME_UNIT_IN_SECONDS,\
+    getOccurranceDistributionInEpochs
 sys.path.append('../')
 import matplotlib.pyplot as plt
 from settings import hashtagsWithoutEndingWindowFile,\
@@ -12,9 +14,9 @@ from settings import hashtagsWithoutEndingWindowFile,\
     hashtagsImagesFlowInTimeForFirstNLocationsFolder,\
     hashtagsImagesFlowInTimeForWindowOfNLocationsFolder,\
     hashtagsImagesNodeFolder, hashtagSharingProbabilityGraphFile,\
-    hashtagsImagesTimeSeriesAnalysisFolder
+    hashtagsImagesTimeSeriesAnalysisFolder,\
+    hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from scipy import fft, array
 from library.classes import GeneralMethods
 from itertools import groupby, combinations
 from library.geo import getLocationFromLid, plotPointsOnWorldMap, getLatticeLid
@@ -147,42 +149,8 @@ def plotTimeSeriesRealData(hashtagObject, id='real_data'):
 #    plt.show()
     plt.savefig(outputFile); plt.clf()
 
-def plotTimeSeriesFFTImVsRe(hashtagObject, id='real_data'):
-    ax = plt.subplot(111)
-    outputFile = hashtagsImagesTimeSeriesAnalysisFolder%(id, hashtagObject['h'])+'%s.png'%id; createDirectoryForFile(outputFile)
-    print unicode(outputFile).encode('utf-8')
-    occurranceDistributionInEpochs = sorted([(k[0], len(list(k[1]))) 
-                                                 for k in groupby(sorted(
-                                                                          [GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*hashtagObject['oc'])[1]])
-                                                                  )
-                                             ], key=itemgetter(0))
-    MIN_OBSERVATIONS_PER_TIME_UNIT = 5
-    occurranceDistributionInEpochs = filter(lambda t: t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT, occurranceDistributionInEpochs)
-    startEpoch, endEpoch = occurranceDistributionInEpochs[0][0], occurranceDistributionInEpochs[-1][0]
-    print startEpoch, endEpoch
-#    dataX, dataY = zip(*occurranceDistributionInEpochs)
-    exit()
-   
-#    print dataY
-#    Y=fft(dataY)
-#    n=len(Y)
-#    power = abs(Y[1:(n/2)])**2
-#    nyquist=1./2
-#    freq=array(range(n/2))/(n/2.0)*nyquist
-#    period=1./freq
-#    plt.plot(period[1:len(period)], power), plt.title('"Meas" with linespoints')
-##    plt.xlim((0,40))
-#    plt.xlabel('Period [hours]')
-#    plt.ylabel('|FFT|**2')
-#    plt.show()
-    
-    
 #    exit()
-#    plt.plot_date(map(datetime.datetime.fromtimestamp, dataX), dataY, '-')
-#    plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-#    plt.title('%s - %s'%(hashtagObject['h'], id))
-#    plt.show()
-#    plt.savefig(outputFile); plt.clf()
+   
 
 timeRange, outputFolder = (2,11), 'world'
 counter = 0
@@ -197,7 +165,6 @@ ls -al /data/geo/hashtags/images/fit_window_of_n_occ/ | wc -l
 #    po.close(); po.join()
 
 #for object in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder, '%s_%s'%timeRange)):
-for object in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
-    print counter; counter+=1
+#for object in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile%(outputFolder, '%s_%s'%timeRange)):
+#    print counter; counter+=1
 #    plotNodeObject(object)
-    plotTimeSeriesFFTImVsRe(object)

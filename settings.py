@@ -41,4 +41,4 @@ hashtagsImagesFlowInTimeForFirstNOccurrencesFolder = hashtagsImagesFolder+'fit_f
 hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder = hashtagsImagesFolder+'fit_window_of_n_occ/%s/'
 hashtagsImagesFlowInTimeForWindowOfNLocationsFolder = hashtagsImagesFolder+'fit_window_of_n_loc/%s/'
 hashtagsImagesNodeFolder = hashtagsImagesFolder + 'graph_nodes/'
-hashtagsImagesTimeSeriesAnalysisFolder = hashtagsImagesFolder + 'time_series/%s/%s/'
+hashtagsImagesTimeSeriesAnalysisFolder = hashtagsImagesFolder + 'time_series/'
