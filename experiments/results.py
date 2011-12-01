@@ -26,7 +26,7 @@ from library.geo import getHaversineDistance, plotPointsOnUSMap, getLatticeLid,\
 from itertools import groupby
 from experiments.analysis import HashtagClass, HashtagObject
 from experiments.mr_analysis import ACCURACY, getOccurranceDistributionInEpochs,\
-    TIME_UNIT_IN_SECONDS
+    TIME_UNIT_IN_SECONDS, getOccuranesInHighestActiveRegion
 from library.classes import GeneralMethods
 import networkx as nx
 
@@ -96,27 +96,35 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         if i==10: exit()
 
 def plotTimeSeriesFFTImVsRe(hashtagObject):
-    windowLength = 3
-    if hashtagObject['oc']:
-        outputFile = hashtagsImagesTimeSeriesAnalysisFolder+'%s.png'%(hashtagObject['h']); FileIO.createDirectoryForFile(outputFile)
-        print unicode(outputFile).encode('utf-8')
-        occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
+    def getDataToPlot(occ):
+        occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(occ)
         startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
-    #        startEpoch-=2*TIME_UNIT_IN_SECONDS
         dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
         occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
         for x in dataX: 
             if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
-    #        print occurranceDistributionInEpochs
-        timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
-        if len(timeSeries)>windowLength:
-            ax=plt.subplot(313)
-            plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
-            plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-    #        plt.show()
-            print len(timeSeries)
-            timeSeries = smooth(timeSeries, window_len=windowLength)
-            
+        return zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
+    
+    outputFile = hashtagsImagesTimeSeriesAnalysisFolder+'%s.png'%(hashtagObject['h']); FileIO.createDirectoryForFile(outputFile)
+    print unicode(outputFile).encode('utf-8')
+    
+    timeUnits, timeSeries = getDataToPlot(hashtagObject['oc'])
+    timeUnitsForActiveRegion, timeSeriesForActiveRegion = getDataToPlot(getOccuranesInHighestActiveRegion(hashtagObject))
+    
+#    ax=plt.subplot(311)
+#    plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
+#    plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
+    ax=plt.subplot(211)
+    plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
+    plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnitsForActiveRegion), timeSeriesForActiveRegion, 'o', c='r')
+    plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
+    plt.title(hashtagObject['h'])
+    ax=plt.subplot(212)
+    plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnitsForActiveRegion), timeSeriesForActiveRegion, '-')
+    plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
+    
+    plt.savefig(outputFile); plt.clf()
+#    plt.show()
             
 #            Y=fft(timeSeries)
 #            plt.subplot(311)
@@ -142,13 +150,6 @@ def plotTimeSeriesFFTImVsRe(hashtagObject):
 #            plt.plot(period[1:len(period)], CurveFit.logFunction(cf.actualParameters, period[1:len(period)]), 'o', c='r')
 #            print cf.errorVal()
 #            plt.show()
-#            plt.savefig(outputFile); plt.clf()
-        
-        
-        
-        
-#class LocationGraphAnalysis():
-#    @staticmethod
 
 def getDiGraph(graphFile):
     graph = nx.DiGraph()
@@ -157,167 +158,13 @@ def getDiGraph(graphFile):
     return graph
 
 
-def getOccurencesFilteredByDistributionInTimeUnits(occ, TIME_UNIT_IN_SECONDS = 60*60, MIN_OBSERVATIONS_PER_TIME_UNIT=5): 
-    def getValidTimeUnits(occ):
-        occurranceDistributionInEpochs = [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
-        return [t[0] for t in occurranceDistributionInEpochs if t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT]
-    validTimeUnits = getValidTimeUnits(occ)
-    return [(p,t) for p,t in occ if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
-
-
-def tempAnalysis(timeRange, outputFolder):
-    
-    pass
-    
-#    points = [getLocationFromLid(n['id'].replace('_', ' ')) for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))]
-#    plotPointsOnWorldMap(points)
-#    plt.show()
-
-#    graph = getDiGraph(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange))
-#    plot(graph)
-
-#    import datetime
-#    TIME_UNIT_IN_SECONDS = 60*60
-#    MIN_OBSERVATIONS_PER_TIME_UNIT = 5
-#    for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder,'%s_%s'%timeRange)):
-##        print len(h['oc']), len(getOccurencesFilteredByDistributionInTimeUnits(h['oc']))
-#        occ = h['oc']
-#        occurranceDistributionInEpochs = sorted([(k[0], len(list(k[1]))) 
-#                                                 for k in groupby(sorted(
-#                                                                          [GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]])
-#                                                                  )
-#                                                 ], key=itemgetter(0))
-#        occurranceDistributionInEpochs = filter(lambda t: t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT, occurranceDistributionInEpochs)
-#        dataX, dataY = zip(*occurranceDistributionInEpochs)
-#        plt.plot_date(map(datetime.datetime.fromtimestamp, dataX), dataY, '-')
-#        plt.show()
-#        exit()
-
-#class PlotsOnMap:
-#    TIME_UNIT_IN_SECONDS = 60*60
-#    MIN_OBSERVATIONS_PER_TIME_UNIT = 10
-#    @staticmethod
+#def getOccurencesFilteredByDistributionInTimeUnits(occ, TIME_UNIT_IN_SECONDS = 60*60, MIN_OBSERVATIONS_PER_TIME_UNIT=5): 
 #    def getValidTimeUnits(occ):
-#        occurranceDistributionInEpochs = [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, PlotsOnMap.TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
-#        return [t[0] for t in occurranceDistributionInEpochs if t[1]>=PlotsOnMap.MIN_OBSERVATIONS_PER_TIME_UNIT]
-#    @staticmethod
-#    def getOccurencesFilteredByDistributionInTimeUnits(occ, validTimeUnits): return [(p,t) for p,t in occ if GeneralMethods.approximateEpoch(t, PlotsOnMap.TIME_UNIT_IN_SECONDS) in validTimeUnits]
-        
-#    @staticmethod
-#    def plotHashtagFlowInTime(timeRange, outputFolder):
-#        HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 1*60*60
-#        MIN_OBSERVATIONS_PER_TIME_UNIT = 10
-#        def getValidTimeUnits(h):
-#            occurranceDistributionInEpochs = [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS) for t in zip(*h['oc'])[1]]))]
-#            return [t[0] for t in occurranceDistributionInEpochs if t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT]
-#        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
-#            if h['h'].startswith('occ') or h['h'] in ['ows']:
-#                print h['h']
-#                validEpochs = getValidTimeUnits(h)
-#                observedLattices = {}
-#                for lid, t in [(getLatticeLid(l, ACCURACY), t) for l, t in h['oc']]:
-#                    if lid not in observedLattices: observedLattices[lid] = t
-#                points = sorted([(getLocationFromLid(l.replace('_', ' ')), GeneralMethods.approximateEpoch(t, HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS)) for l, t in observedLattices.iteritems() if GeneralMethods.approximateEpoch(t, HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS) in validEpochs], key=itemgetter(1))
-#                points, colors = zip(*points)
-#                
-#                colors = [(c-colors[0])/HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS for c in colors]
-#                cm = matplotlib.cm.get_cmap('autumn')
-#                sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, alpha=1.0)
-#                plt.colorbar(sc), plt.title(h['h'])
-#                plt.show()
-#    @staticmethod
-#    def plotHashtagFlowInTimeForFirstNLocations(timeRange, outputFolder):
-#        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
-#            try:
-##                if h['h'].startswith('occ') or h['h'] in ['ows']:
-#                for PERCENTAGE_OF_EARLIEST_LOCATIONS in [0.25*i for i in range(1,5)]:
-#                    outputFile = hashtagsImagesFlowInTimeForFirstNLocationsFolder%h['h']+'%d_%s.png'%(PERCENTAGE_OF_EARLIEST_LOCATIONS/0.25, PERCENTAGE_OF_EARLIEST_LOCATIONS); FileIO.createDirectoryForFile(outputFile)
-#                    print outputFile
-#                    validEpochs = PlotsOnMap.getValidTimeUnits(h['oc'])
-#                    observedLattices = {}
-#                    for lid, t in [(getLatticeLid(l, ACCURACY), t) for l, t in h['oc']]:
-#                        if lid not in observedLattices: observedLattices[lid] = t
-#                    points = sorted([(getLocationFromLid(l.replace('_', ' ')), t) for l, t in observedLattices.iteritems() if GeneralMethods.approximateEpoch(t, PlotsOnMap.TIME_UNIT_IN_SECONDS) in validEpochs], key=itemgetter(1), reverse=True)
-#                    points = points[-1*int(PERCENTAGE_OF_EARLIEST_LOCATIONS*len(points)):]
-#                    points, colors = zip(*points)
-#                    
-#                    colors = [(c-colors[-1])/PlotsOnMap.TIME_UNIT_IN_SECONDS for c in colors]
-#                    cm = matplotlib.cm.get_cmap('autumn')
-#                    sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, alpha=1.0)
-#                    plt.colorbar(sc), plt.title(h['h'])
-#    #                plt.show()
-#                    plt.savefig(outputFile); plt.clf()
-#            except: pass
-#            exit()
-#
-#
-#    @staticmethod
-#    def plotDistributionGraphs(occurences, validTimeUnits, title, startingEpoch=None):
-#        occurences = PlotsOnMap.getOccurencesFilteredByDistributionInTimeUnits(occurences, validTimeUnits)
-#        occurancesGroupedByLattice = [(getLocationFromLid(lid.replace('_', ' ')), sorted(zip(*occs)[1])) for lid, occs in groupby(sorted([(getLatticeLid(l, ACCURACY), t) for l, t in occurences], key=itemgetter(0)), key=itemgetter(0))]
-#        plt.subplot(211)
-#        pointsForNumberOfOccurances, numberOfOccurancesList = zip(*sorted(occurancesGroupedByLattice, key=lambda t: len(t[1])))
-#        numberOfOccurancesList = [len(ocs) for ocs in numberOfOccurancesList]
-#        cm = matplotlib.cm.get_cmap('cool')
-#        sc = plotPointsOnWorldMap(pointsForNumberOfOccurances, c=numberOfOccurancesList, cmap=cm, lw = 0, alpha=1.0)
-#        plt.colorbar(sc), plt.title(title), plt.xlabel('Number of mentions')
-#        
-#        plt.subplot(212)
-#        pointsForNumberOfOccurances, occuranceTime = zip(*sorted(occurancesGroupedByLattice, key=lambda t: min(t[1]), reverse=True))
-#        occuranceTime=[min(t) for t in occuranceTime]
-#        if not startingEpoch: startingEpoch = occuranceTime[-1]
-#        occuranceTime=[(t-startingEpoch)/PlotsOnMap.TIME_UNIT_IN_SECONDS for t in occuranceTime]
-#        cm = matplotlib.cm.get_cmap('autumn')
-#        sc = plotPointsOnWorldMap(pointsForNumberOfOccurances, c=occuranceTime, cmap=cm, lw = 0, alpha=1.0)
-#        plt.colorbar(sc), plt.xlabel('Speed of hashtag arrival')
-#        return startingEpoch
-
-#    @staticmethod
-#    def plotHashtagFlowInTimeForFirstNOccurences(timeRange, outputFolder):
-#        numberOfObservedHashtags = 1
-#        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
-#            if not os.path.exists(hashtagsImagesFlowInTimeForFirstNOccurrencesFolder%h['h']):
-#                validTimeUnits = PlotsOnMap.getValidTimeUnits(h['oc'])
-#                for PERCENTAGE_OF_EARLIEST_OCCURENCES in [0.1*i for i in range(1,11)]:
-#                    try:
-#                        outputFile = hashtagsImagesFlowInTimeForFirstNOccurrencesFolder%h['h']+'%d_%s.png'%(PERCENTAGE_OF_EARLIEST_OCCURENCES/0.1, PERCENTAGE_OF_EARLIEST_OCCURENCES); FileIO.createDirectoryForFile(outputFile)
-#                        print numberOfObservedHashtags, outputFile
-#                        occurences = h['oc'][:int(PERCENTAGE_OF_EARLIEST_OCCURENCES*len(h['oc']))]
-#                        PlotsOnMap.plotDistributionGraphs(occurences, validTimeUnits, '%s - %d'%(h['h'], 100*PERCENTAGE_OF_EARLIEST_OCCURENCES)+'%')
-##                        plt.show()
-#                        plt.savefig(outputFile); plt.clf()
-#                    except: pass
-#            numberOfObservedHashtags+=1
-#            
-#    @staticmethod
-#    def plotHashtagFlowInTimeForWindowOfNOccurences(timeRange, outputFolder):
-#        numberOfObservedHashtags = 1
-#        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
-#            previousIndex, startingEpoch = 0, None
-#            if not os.path.exists(hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder%h['h']):
-#                validTimeUnits = PlotsOnMap.getValidTimeUnits(h['oc'])
-#                for PERCENTAGE_OF_EARLIEST_OCCURENCES in [0.1*i for i in range(1,11)]:
-#                    try:
-#                        outputFile = hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder%h['h']+'%d_%s.png'%(PERCENTAGE_OF_EARLIEST_OCCURENCES/0.1, PERCENTAGE_OF_EARLIEST_OCCURENCES); FileIO.createDirectoryForFile(outputFile)
-#                        print numberOfObservedHashtags, outputFile
-#                        currentIndex = int(PERCENTAGE_OF_EARLIEST_OCCURENCES*len(h['oc']))
-#                        occurences = h['oc'][previousIndex:currentIndex]; previousIndex=currentIndex
-#                        startingEpoch = PlotsOnMap.plotDistributionGraphs(occurences, validTimeUnits, '%s - Interval %d'%(h['h'], PERCENTAGE_OF_EARLIEST_OCCURENCES/0.1)+'', startingEpoch)
-#    #                    plt.show()
-#                        plt.savefig(outputFile); plt.clf()
-#                    except: pass
-#            numberOfObservedHashtags+=1
-##            exit()
-
-#    @staticmethod
-#    def ana(timeRange, outputFolder):
-#        numberOfObservedHashtags = 1
-#        dataX = []
-#        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
-#            dataX.append(len(h['oc']))
-#            if len(h['oc'])>2000: print numberOfObservedHashtags, len(h['oc']), unicode(h['h']).encode('utf-8'); numberOfObservedHashtags+=1
-#        plt.hist(dataX, bins=100)
-#        plt.show()
+#        occurranceDistributionInEpochs = [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
+#        return [t[0] for t in occurranceDistributionInEpochs if t[1]>=MIN_OBSERVATIONS_PER_TIME_UNIT]
+#    validTimeUnits = getValidTimeUnits(occ)
+#    return [(p,t) for p,t in occ if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
+    
 if __name__ == '__main__':
     timeRange = (2,11)
     outputFolder = 'world'
@@ -325,7 +172,7 @@ if __name__ == '__main__':
 
 #    tempAnalysis(timeRange, outputFolder)
     counter = 1
-    for object in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile%(outputFolder, '%s_%s'%timeRange)):
+    for object in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
         print counter; counter+=1
     #    plotNodeObject(object)
         plotTimeSeriesFFTImVsRe(object)

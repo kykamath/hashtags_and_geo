@@ -169,6 +169,7 @@ def getOccuranesInHighestActiveRegion(hashtagObject):
                     currentRegion[1] = index-MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION-1
                     currentRegion[2] = occurancesForRegion
                     activeRegions.append(currentRegion)
+        if not activeRegions: activeRegions.append([0, len(timeSeries)-1, sum(timeSeries)])
         return activeRegions
     occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
     startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
