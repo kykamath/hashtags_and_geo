@@ -278,9 +278,11 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def buildLocationTemporalClosenessGraphMap(self, key, hashtagObject):
         occuranesInHighestActiveRegion, latticesToOccranceTimeMap = getOccuranesInHighestActiveRegion(hashtagObject), {}
+        validLattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
         for k, v in occuranesInHighestActiveRegion:
             lid = getLatticeLid(k, ACCURACY)
-            if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
+            if lid in validLattices:
+                if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
         latticesOccranceTimeList = latticesToOccranceTimeMap.items()
         hastagStartTime, hastagEndTime = min(latticesOccranceTimeList, key=itemgetter(1))[1], max(latticesOccranceTimeList, key=itemgetter(1))[1]
         hashtagTimePeriod = hastagEndTime - hastagStartTime
@@ -295,7 +297,6 @@ class MRAnalysis(ModifiedMRJob):
         if len(observedHashtags)>=MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE:
             for l in latticesScoreMap: nodeObject['links'][l]=np.mean(latticesScoreMap[l])
             yield lattice, nodeObject
-        
     ''' End: Methods to get temporal closeness among lattices.
     '''
             
