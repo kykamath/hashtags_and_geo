@@ -21,7 +21,7 @@ HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 24*60*60
 K_VALUE_FOR_LOCALITY_INDEX = 0.5
 TIME_UNIT_IN_SECONDS = 60*60
 MIN_OCCUREANCES_PER_TIME_UNIT = 5
-NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
+MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
 
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
@@ -65,34 +65,6 @@ def filterLattices(h):
 
 def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
 
-def getHashtagPropagatingRegion(hashtagObject):
-    occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
-    startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
-    dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
-    occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
-    for x in dataX: 
-        if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
-    timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
-    noOfConsecutiveZerosObserved = 0
-    regionBoundaries = []
-    currentRegion = None
-    for tu, val in zip(timeUnits, timeSeries):
-        if val>0: 
-            print tu, val, noOfConsecutiveZerosObserved
-            if not currentRegion or not currentRegion[0]:
-                if not currentRegion: currentRegion = [None,None]
-                currentRegion[0]=tu
-            elif noOfConsecutiveZerosObserved>NO_OF_TIME_UNITS_IN_INACTIVE_REGION: 
-                print timeUnits[timeUnits.index(tu)-noOfConsecutiveZerosObserved-1]
-                currentRegion[1]=timeUnits[timeUnits.index(tu)-noOfConsecutiveZerosObserved-1]
-                regionBoundaries.append(currentRegion)
-                currentRegion = [None,None]
-            noOfConsecutiveZerosObserved = 0
-        else: 
-#            print t, noOfConsecutiveZerosObserved
-            noOfConsecutiveZerosObserved+=1
-    print regionBoundaries
-    
 def getLocalityIndexAtK(occurances, kValue):
     ''' Locality index at k - for a hashtag is the minimum radius that covers k percentage of occurrances.
             A high locality index suggests hashtag was global with a small index suggests it was local.
@@ -180,6 +152,34 @@ def getOccurranceDistributionInEpochs(occ): return [(k[0], len(list(k[1]))) for 
 def getOccurencesFilteredByDistributionInTimeUnits(occ): 
     validTimeUnits = [t[0] for t in getOccurranceDistributionInEpochs(occ) if t[1]>=MIN_OCCUREANCES_PER_TIME_UNIT]
     return [(p,t) for p,t in occ if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
+def getOccuranesInHighestActiveRegion(hashtagObject):
+    def getActiveRegions(timeSeries):
+        noOfZerosObserved, activeRegions = 0, []
+        for index, l in zip(range(len(timeSeries)),timeSeries):
+            if l>0: 
+                if noOfZerosObserved>MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION or index==0:
+                    currentRegion = [None, None, None]
+                    currentRegion[0] = index
+                    occurancesForRegion = 0
+                noOfZerosObserved = 0
+                occurancesForRegion+=l
+            else: 
+                noOfZerosObserved+=1
+                if noOfZerosObserved>MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION and currentRegion and currentRegion[1]==None:
+                    currentRegion[1] = index-MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION-1
+                    currentRegion[2] = occurancesForRegion
+                    activeRegions.append(currentRegion)
+        return activeRegions
+    occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
+    startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
+    dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
+    occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
+    for x in dataX: 
+        if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
+    timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
+    hashtagPropagatingRegion = max(getActiveRegions(timeSeries), key=itemgetter(2))
+    validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
+    return [(p,t) for p,t in hashtagObject['oc'] if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
 
 class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'

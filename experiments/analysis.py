@@ -15,7 +15,8 @@ from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
     getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK,\
     addSourceLatticeToHashTagObject, addHashtagLocalityIndexInTime,\
     HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS, filterLattices, ACCURACY,\
-    HASHTAG_STARTING_WINDOW, getHashtagPropagatingRegion
+    HASHTAG_STARTING_WINDOW,\
+    getOccuranesInHighestActiveRegion
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
@@ -251,7 +252,7 @@ def analayzeLocalityIndexAtK(timeRange):
             
 def tempAnalysis(timeRange):
     for h in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/2_11/hashtagsWithoutEndingWindow'):
-        getHashtagPropagatingRegion(h)
+        print getOccuranesInHighestActiveRegion(h)
         exit()
         
 #        print datetime.datetime.fromtimestamp(h['e'][1]), datetime.datetime.fromtimestamp(h['l'][1])
