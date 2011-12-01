@@ -283,14 +283,15 @@ class MRAnalysis(ModifiedMRJob):
             lid = getLatticeLid(k, ACCURACY)
             if lid in validLattices:
                 if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
-        latticesOccranceTimeList = latticesToOccranceTimeMap.items()
-        hastagStartTime, hastagEndTime = min(latticesOccranceTimeList, key=itemgetter(1))[1], max(latticesOccranceTimeList, key=itemgetter(1))[1]
-        hashtagTimePeriod = hastagEndTime - hastagStartTime
-        if hashtagTimePeriod:
-            latticesOccranceTimeList = [(t[0], (t[1]-hastagStartTime)/hashtagTimePeriod) for t in latticesOccranceTimeList]
-            for l1, l2 in combinations(latticesOccranceTimeList, 2):
-                yield l1[0], [hashtagObject['h'], l2]
-                yield l2[0], [hashtagObject['h'], l1]
+        if latticesToOccranceTimeMap:
+            latticesOccranceTimeList = latticesToOccranceTimeMap.items()
+            hastagStartTime, hastagEndTime = min(latticesOccranceTimeList, key=itemgetter(1))[1], max(latticesOccranceTimeList, key=itemgetter(1))[1]
+            hashtagTimePeriod = hastagEndTime - hastagStartTime
+            if hashtagTimePeriod:
+                latticesOccranceTimeList = [(t[0], (t[1]-hastagStartTime)/hashtagTimePeriod) for t in latticesOccranceTimeList]
+                for l1, l2 in combinations(latticesOccranceTimeList, 2):
+                    yield l1[0], [hashtagObject['h'], l2]
+                    yield l2[0], [hashtagObject['h'], l1]
     def buildLocationTemporalClosenessGraphReduce(self, lattice, values):
         nodeObject, latticesScoreMap, observedHashtags = {'links':{}, 'id': lattice}, defaultdict(list), set()
         for h, (l, v) in values: observedHashtags.add(h), latticesScoreMap[l].append(v)
