@@ -172,10 +172,6 @@ if __name__ == '__main__':
 #    tempAnalysis(timeRange, outputFolder)
     plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder)
     
-#    PlotsOnMap.plotHashtagFlowInTimeForFirstNLocations(timeRange, outputFolder)
-#    PlotsOnMap.plotHashtagFlowInTimeForFirstNOccurences(timeRange, outputFolder)
-#    PlotsOnMap.plotHashtagFlowInTimeForWindowOfNOccurences(timeRange, outputFolder)
-#    PlotsOnMap.ana(timeRange, outputFolder)
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)

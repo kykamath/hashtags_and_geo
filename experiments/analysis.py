@@ -257,8 +257,8 @@ if __name__ == '__main__':
     timeRange = (2,11)
 #    timeRange = (9,9)
     
-    outputFolder = '/'
-#    outputFolder = 'world'
+#    outputFolder = '/'
+    outputFolder = 'world'
     
     mr_analysis(timeRange, outputFolder)
 #    plotHashtagDistributionInTime()
