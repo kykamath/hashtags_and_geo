@@ -5,6 +5,7 @@ Created on Nov 24, 2011
 '''
 import sys, os
 import datetime
+from library.plotting import smooth, CurveFit
 sys.path.append('../')
 from library.file_io import FileIO
 import matplotlib
@@ -95,46 +96,53 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         if i==10: exit()
 
 def plotTimeSeriesFFTImVsRe(hashtagObject):
+    windowLength = 3
     if hashtagObject['oc']:
         outputFile = hashtagsImagesTimeSeriesAnalysisFolder+'%s.png'%(hashtagObject['h']); FileIO.createDirectoryForFile(outputFile)
         print unicode(outputFile).encode('utf-8')
         occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
         startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
-#        startEpoch-=2*TIME_UNIT_IN_SECONDS
+    #        startEpoch-=2*TIME_UNIT_IN_SECONDS
         dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
         occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
         for x in dataX: 
             if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
-#        print occurranceDistributionInEpochs
+    #        print occurranceDistributionInEpochs
         timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
-        
-        ax=plt.subplot(313)
-        plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
-        plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-#        plt.show()
-        print timeSeries
-        exit()
-        
-        Y=fft(timeSeries)
-        plt.subplot(311)
-        plt.scatter(Y.real,Y.imag)#, plt.title('"Meas" with points')
-        plt.xlabel('real(FFT)')
-        plt.ylabel('img(FFT)')
-        plt.title('%s'%(hashtagObject['h']))
-#        plt.show()
-        
-        n=len(Y)
-        power = abs(Y[1:(n/2)])**2
-        nyquist=1./2
-        freq=array(range(n/2))/(n/2.0)*nyquist
-        
-        period=1./freq
-        plt.subplot(312)
-        plt.semilogx(period[1:len(period)], power)#, plt.title('"Meas" with linespoints')
-#        plt.xlabel('Period [hour]')
-        plt.ylabel('|FFT|**2')
-#        plt.show()
-        plt.savefig(outputFile); plt.clf()
+        if len(timeSeries)>windowLength:
+            ax=plt.subplot(313)
+            plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
+            plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
+    #        plt.show()
+            print len(timeSeries)
+            timeSeries = smooth(timeSeries, window_len=windowLength)
+            
+            
+#            Y=fft(timeSeries)
+#            plt.subplot(311)
+#            plt.scatter(Y.real,Y.imag)#, plt.title('"Meas" with points')
+#            plt.xlabel('real(FFT)')
+#            plt.ylabel('img(FFT)')
+#            plt.title('%s'%(hashtagObject['h']))
+    #        plt.show()
+            
+#            n=len(Y)
+#            power = abs(Y[1:(n/2)])**2
+#            nyquist=1./2
+#            freq=array(range(n/2))/(n/2.0)*nyquist
+#            
+#            period=1./freq
+#            plt.subplot(312)
+#            plt.plot(period[1:len(period)], power)#, plt.title('"Meas" with linespoints')
+    #        plt.xlabel('Period [hour]')
+#            plt.ylabel('|FFT|**2')
+#            print len( period[1:len(period)]), len(power)
+#            cf = CurveFit(CurveFit.logFunction, [1., 1.], period[1:len(period)], power)
+#            cf.estimate()
+#            plt.plot(period[1:len(period)], CurveFit.logFunction(cf.actualParameters, period[1:len(period)]), 'o', c='r')
+#            print cf.errorVal()
+#            plt.show()
+#            plt.savefig(outputFile); plt.clf()
         
         
         
@@ -317,7 +325,7 @@ if __name__ == '__main__':
 
 #    tempAnalysis(timeRange, outputFolder)
     counter = 1
-    for object in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
+    for object in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile%(outputFolder, '%s_%s'%timeRange)):
         print counter; counter+=1
     #    plotNodeObject(object)
         plotTimeSeriesFFTImVsRe(object)

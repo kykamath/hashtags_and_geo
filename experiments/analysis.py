@@ -15,7 +15,7 @@ from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
     getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK,\
     addSourceLatticeToHashTagObject, addHashtagLocalityIndexInTime,\
     HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS, filterLattices, ACCURACY,\
-    HASHTAG_STARTING_WINDOW
+    HASHTAG_STARTING_WINDOW, getHashtagPropagatingRegion
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
@@ -251,8 +251,11 @@ def analayzeLocalityIndexAtK(timeRange):
             
 def tempAnalysis(timeRange):
     for h in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/2_11/hashtagsWithoutEndingWindow'):
-        print datetime.datetime.fromtimestamp(h['e'][1]), datetime.datetime.fromtimestamp(h['l'][1])
-        print h['oc'][0][1], h['oc'][1][1]
+        getHashtagPropagatingRegion(h)
+        exit()
+        
+#        print datetime.datetime.fromtimestamp(h['e'][1]), datetime.datetime.fromtimestamp(h['l'][1])
+#        print h['oc'][0][1], h['oc'][1][1]
 #        for l, t in h['oc']:
 #            if t<HASHTAG_STARTING_WINDOW:
 #                print l, t
@@ -323,13 +326,13 @@ if __name__ == '__main__':
 #    outputFolder = '/'
     outputFolder = 'world'
     
-    mr_analysis(timeRange, outputFolder)
+#    mr_analysis(timeRange, outputFolder)
 #    plotHashtagDistributionInTime()
 #    plotTimeVsDistance()
 #    plotChangeLIOnUSMap(timeRange)
 #    plotHashtagsDisplacementStats(timeRange)
 #    plotCenterOfMassHashtag(timeRange)
-#    tempAnalysis(timeRange)
+    tempAnalysis(timeRange)
 #    plotOnUsMap(timeRange)
 #    tempGetLocality(timeRange)
 #    analayzeLocalityIndexAtK(timeRange)
