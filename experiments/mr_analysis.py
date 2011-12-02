@@ -23,6 +23,7 @@ K_VALUE_FOR_LOCALITY_INDEX = 0.5
 TIME_UNIT_IN_SECONDS = 60*60
 MIN_OCCUREANCES_PER_TIME_UNIT = 5
 MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
+MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS = 0.0
 
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
@@ -331,7 +332,7 @@ class MRAnalysis(ModifiedMRJob):
                 if hashtagTimePeriod:
                     latticesOccranceTimeList = [(t[0], temporalScore(t[1]-hastagStartTime, hashtagTimePeriod)) for t in latticesOccranceTimeList if t[1]>hastagStartTime]
                     for lattice, score in latticesOccranceTimeList:
-                        if score>=MIN_TEMPORAL_CLOSENESS_SCORE:
+                        if score>=MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS:
                             yield sourceLattice, [hashtagObject['h'], 'out_link', [lattice, score]]
                             yield lattice, [hashtagObject['h'], 'in_link', [sourceLattice, score]]
     def buildLocationInAndOutTemporalClosenessGraphReduce(self, lattice, values):

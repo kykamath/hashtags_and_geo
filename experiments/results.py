@@ -18,7 +18,8 @@ from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
     hashtagsImagesTimeSeriesAnalysisFolder,\
     hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile,\
     hashtagLocationTemporalClosenessGraphFile,\
-    hashtagsImagesLocationClosenessFolder
+    hashtagsImagesLocationClosenessFolder,\
+    hashtagLocationInAndOutTemporalClosenessGraphFile
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy import fft, array
 from collections import defaultdict
@@ -116,6 +117,24 @@ def plotNodeObject(timeRange, outputFolder):
         plt.colorbar(sc, cax=cax)
         plt.show()
 #            plt.savefig(outputFile); plt.clf()
+
+def plotInOutGraphs(timeRange, outputFolder):
+    def plotPoints(links, xlabel):
+        cm = matplotlib.cm.get_cmap('cool')
+        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in links.iteritems()], key=itemgetter(1)))
+        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
+        plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='k', s=20, lw=0)
+        plt.xlabel(xlabel), plt.colorbar(sc)
+        
+    for nodeObject in FileIO.iterateJsonFromFile(hashtagLocationInAndOutTemporalClosenessGraphFile%(outputFolder, '%s_%s'%timeRange)): 
+        plt.subplot(211)
+        plt.title(nodeObject['id'])
+        plotPoints(nodeObject['in_link'], 'in links')
+        plt.subplot(212)
+        plotPoints(nodeObject['out_link'], 'out links')
+        plt.show()
+#        exit()
+        
 def plotGraphs(timeRange, outputFolder):
     sharingProbabilityId = 'sharing_probability'
     temporalClosenessId = 'temporal_closeness'
@@ -211,8 +230,10 @@ if __name__ == '__main__':
 
 #    tempAnalysis(timeRange, outputFolder)
 #    plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder)
-    plotGraphs(timeRange, outputFolder)
+#    plotGraphs(timeRange, outputFolder)
 #    plotNodeObject(timeRange, outputFolder)
+    
+    plotInOutGraphs(timeRange, outputFolder)
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
