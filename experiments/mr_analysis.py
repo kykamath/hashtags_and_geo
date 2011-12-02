@@ -315,23 +315,25 @@ class MRAnalysis(ModifiedMRJob):
     def buildLocationInAndOutTemporalClosenessGraphMap(self, key, hashtagObject):
         def getSourceLattice(occ):
             sortedOcc = occ[:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(occ))]
-            return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
+            if sortedOcc: return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
         occuranesInHighestActiveRegion, latticesToOccranceTimeMap = getOccuranesInHighestActiveRegion(hashtagObject), {}
         validLattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
         occuranesInHighestActiveRegion = [(getLatticeLid(k, ACCURACY), v) for k, v in occuranesInHighestActiveRegion if getLatticeLid(k, ACCURACY) in validLattices]
         if occuranesInHighestActiveRegion:
-            sourceLattice = getSourceLattice(occuranesInHighestActiveRegion)[0]
-            for lid, v in occuranesInHighestActiveRegion:
-                if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
-            latticesOccranceTimeList = latticesToOccranceTimeMap.items()
-            hastagStartTime, hastagEndTime = latticesToOccranceTimeMap[sourceLattice][1], max(latticesOccranceTimeList, key=itemgetter(1))[1]
-            hashtagTimePeriod = hastagEndTime - hastagStartTime
-            if hashtagTimePeriod:
-                latticesOccranceTimeList = [(t[0], temporalScore(t[1]-hastagStartTime, hashtagTimePeriod)) for t in latticesOccranceTimeList if t[1]>hastagStartTime]
-                for lattice, score in latticesOccranceTimeList:
-                    if score>=MIN_TEMPORAL_CLOSENESS_SCORE:
-                        yield sourceLattice, [hashtagObject['h'], 'out_link', [lattice, score]]
-                        yield lattice, [hashtagObject['h'], 'in_link', [sourceLattice, score]]
+            sourceLattice = getSourceLattice(occuranesInHighestActiveRegion)
+            if sourceLattice:
+                sourceLattice = sourceLattice[0]
+                for lid, v in occuranesInHighestActiveRegion:
+                    if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
+                latticesOccranceTimeList = latticesToOccranceTimeMap.items()
+                hastagStartTime, hastagEndTime = latticesToOccranceTimeMap[sourceLattice], max(latticesOccranceTimeList, key=itemgetter(1))[1]
+                hashtagTimePeriod = hastagEndTime - hastagStartTime
+                if hashtagTimePeriod:
+                    latticesOccranceTimeList = [(t[0], temporalScore(t[1]-hastagStartTime, hashtagTimePeriod)) for t in latticesOccranceTimeList if t[1]>hastagStartTime]
+                    for lattice, score in latticesOccranceTimeList:
+                        if score>=MIN_TEMPORAL_CLOSENESS_SCORE:
+                            yield sourceLattice, [hashtagObject['h'], 'out_link', [lattice, score]]
+                            yield lattice, [hashtagObject['h'], 'in_link', [sourceLattice, score]]
     def buildLocationInAndOutTemporalClosenessGraphReduce(self, lattice, values):
         nodeObject, latticesScoreMap, observedHashtags = {'in_link':{}, 'out_link':{}, 'id': lattice}, {'in_link': defaultdict(list), 'out_link': defaultdict(list)}, set()
         for h, linkType, (l, v) in values: observedHashtags.add(h), latticesScoreMap[linkType][l].append(v)
