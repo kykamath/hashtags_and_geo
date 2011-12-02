@@ -431,8 +431,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToAnalayzeLocalityIndexAtK()
 #        return self.jobsToGetHashtagWithGuranteedSource()
 #        return self.jobsToBuildHashtagSharingProbabilityGraph()
-        return self.jobToBuildLocationTemporalClosenessGraph()
-#        return self.jobToBuildLocationInAndOutTemporalClosenessGraph()
+#        return self.jobToBuildLocationTemporalClosenessGraph()
+        return self.jobToBuildLocationInAndOutTemporalClosenessGraph()
     
 if __name__ == '__main__':
     MRAnalysis.run()

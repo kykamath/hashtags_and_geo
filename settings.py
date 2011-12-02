@@ -42,5 +42,5 @@ hashtagsImagesFlowInTimeForFirstNLocationsFolder = hashtagsImagesFolder+'fit_fir
 hashtagsImagesFlowInTimeForFirstNOccurrencesFolder = hashtagsImagesFolder+'fit_first_n_occ/%s/'
 hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder = hashtagsImagesFolder+'fit_window_of_n_occ/%s/'
 hashtagsImagesFlowInTimeForWindowOfNLocationsFolder = hashtagsImagesFolder+'fit_window_of_n_loc/%s/'
-hashtagsImagesNodeFolder = hashtagsImagesFolder + 'graph_nodes/'
+hashtagsImagesLocationClosenessFolder = hashtagsImagesFolder + 'location_closeness/'
 hashtagsImagesTimeSeriesAnalysisFolder = hashtagsImagesFolder + 'time_series/'

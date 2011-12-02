@@ -17,7 +17,8 @@ from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
     hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder,\
     hashtagsImagesTimeSeriesAnalysisFolder,\
     hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile,\
-    hashtagsImagesNodeFolder, hashtagLocationTemporalClosenessGraphFile
+    hashtagLocationTemporalClosenessGraphFile,\
+    hashtagsImagesLocationClosenessFolder
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy import fft, array
 from collections import defaultdict
@@ -120,8 +121,8 @@ def plotGraphs(timeRange, outputFolder):
     temporalClosenessId = 'temporal_closeness'
     def plotPoints(nodeObject, xlabel):
         cm = matplotlib.cm.get_cmap('cool')
-        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems() if v>=0.99], key=itemgetter(1)))
-#        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()], key=itemgetter(1)))
+#        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems() if v>=0.99], key=itemgetter(1)))
+        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()], key=itemgetter(1)))
 #        plt.hist(colors, bins=100)
 #        plt.show()
         sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
@@ -130,22 +131,16 @@ def plotGraphs(timeRange, outputFolder):
     def plotLocationObject(locationObject):
 #        ax = plt.subplot(111)
         point = getLocationFromLid(locationObject['id'].replace('_', ' '))
-#        outputFile = hashtagsImagesNodeFolder+'%s.png'%getLatticeLid([point[1], point[0]], ACCURACY); FileIO.createDirectoryForFile(outputFile)
-#        if not os.path.exists(outputFile):
-#        print outputFile
-#        for graphId, nodeObject in locationObject['graphs'].iteritems():
-#            print point, graphId, nodeObject.keys()
-#        plt.subplot(211)
-#        plt.title(locationObject['id'].replace('_', ' '))
-#        plotPoints(locationObject['graphs'][sharingProbabilityId], xlabel = 'Hashtag sharing probability')
-        plt.subplot(212)
-        plotPoints(locationObject['graphs'][temporalClosenessId], xlabel = 'Temporal closeness')
-#            plt.xlabel('Measure of closeness'), plt.title(nodeObject['id'].replace('_', ' '))
-#            divider = make_axes_locatable(ax)
-#            cax = divider.append_axes("right", size="5%", pad=0.05)
-#            plt.colorbar(sc, cax=cax)
-        plt.show()
-#            plt.savefig(outputFile); plt.clf()
+        outputFile = hashtagsImagesLocationClosenessFolder+'%s.png'%getLatticeLid([point[1], point[0]], ACCURACY); FileIO.createDirectoryForFile(outputFile)
+        if not os.path.exists(outputFile):
+            print outputFile
+            plt.subplot(211)
+            plt.title(locationObject['id'].replace('_', ' '))
+            plotPoints(locationObject['graphs'][sharingProbabilityId], xlabel = 'Hashtag sharing probability')
+            plt.subplot(212)
+            plotPoints(locationObject['graphs'][temporalClosenessId], xlabel = 'Temporal closeness')
+#            plt.show()
+            plt.savefig(outputFile); plt.clf()
     locationsMap = defaultdict(dict)
     for node in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder, '%s_%s'%timeRange)): 
         if 'graphs' not in locationsMap[node['id']]: locationsMap[node['id']] = {'id': node['id'], 'graphs': {}}
@@ -216,8 +211,8 @@ if __name__ == '__main__':
 
 #    tempAnalysis(timeRange, outputFolder)
 #    plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder)
-#    plotGraphs(timeRange, outputFolder)
-    plotNodeObject(timeRange, outputFolder)
+    plotGraphs(timeRange, outputFolder)
+#    plotNodeObject(timeRange, outputFolder)
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
