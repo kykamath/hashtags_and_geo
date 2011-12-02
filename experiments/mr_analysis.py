@@ -251,6 +251,7 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def buildHashtagSharingProbabilityGraphMap(self, key, hashtagObject):
 #        lattices = list(set([getLatticeLid(l, accuracy=ACCURACY) for l in zip(*hashtagObject['oc'])[0]]))
+        hashtagObject['oc']=getOccuranesInHighestActiveRegion(hashtagObject)
         lattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
         for lattice in lattices: 
             yield lattice, ['h', [hashtagObject['h']]]
@@ -284,6 +285,7 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def buildLocationTemporalClosenessGraphMap(self, key, hashtagObject):
         occuranesInHighestActiveRegion, latticesToOccranceTimeMap = getOccuranesInHighestActiveRegion(hashtagObject), {}
+        hashtagObject['oc']=occuranesInHighestActiveRegion
         validLattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
         for k, v in occuranesInHighestActiveRegion:
             lid = getLatticeLid(k, ACCURACY)
@@ -428,8 +430,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHashtagDisplacementStats()
 #        return self.jobsToAnalayzeLocalityIndexAtK()
 #        return self.jobsToGetHashtagWithGuranteedSource()
-#        return self.jobsToBuildHashtagSharingProbabilityGraph()
-        return self.jobToBuildLocationTemporalClosenessGraph()
+        return self.jobsToBuildHashtagSharingProbabilityGraph()
+#        return self.jobToBuildLocationTemporalClosenessGraph()
 #        return self.jobToBuildLocationInAndOutTemporalClosenessGraph()
     
 if __name__ == '__main__':
