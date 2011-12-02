@@ -98,13 +98,14 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         plt.clf()
         if i==10: exit()
 
-def plotNodeObject(nodeObject):
-    ax = plt.subplot(111)
-    cm = matplotlib.cm.get_cmap('cool')
-    point = getLocationFromLid(nodeObject['id'].replace('_', ' '))
-    outputFile = hashtagsImagesNodeFolder+'%s.png'%getLatticeLid([point[1], point[0]], ACCURACY); FileIO.createDirectoryForFile(outputFile)
-    if not os.path.exists(outputFile):
-        print outputFile
+def plotNodeObject(timeRange, outputFolder):
+    for nodeObject in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder, '%s_%s'%timeRange)): 
+        ax = plt.subplot(111)
+        cm = matplotlib.cm.get_cmap('cool')
+#        point = getLocationFromLid(nodeObject['id'].replace('_', ' '))
+#        outputFile = hashtagsImagesNodeFolder+'%s.png'%getLatticeLid([point[1], point[0]], ACCURACY); FileIO.createDirectoryForFile(outputFile)
+#        if not os.path.exists(outputFile):
+#            print outputFile
         points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()], key=itemgetter(1)))
         sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
         plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='k', s=20, lw=0)
@@ -112,8 +113,8 @@ def plotNodeObject(nodeObject):
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         plt.colorbar(sc, cax=cax)
-    #    plt.show()
-        plt.savefig(outputFile); plt.clf()
+        plt.show()
+#            plt.savefig(outputFile); plt.clf()
 def plotGraphs(timeRange, outputFolder):
     sharingProbabilityId = 'sharing_probability'
     temporalClosenessId = 'temporal_closeness'
@@ -215,7 +216,8 @@ if __name__ == '__main__':
 
 #    tempAnalysis(timeRange, outputFolder)
 #    plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder)
-    plotGraphs(timeRange, outputFolder)
+#    plotGraphs(timeRange, outputFolder)
+    plotNodeObject(timeRange, outputFolder)
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
