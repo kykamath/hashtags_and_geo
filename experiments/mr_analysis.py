@@ -339,7 +339,7 @@ class MRAnalysis(ModifiedMRJob):
         for h, linkType, (l, v) in values: observedHashtags.add(h), latticesScoreMap[linkType][l].append(v)
         if len(observedHashtags)>=MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE:
             for linkType in latticesScoreMap:
-                for l in latticesScoreMap[linkType]: nodeObject[linkType][l]=np.mean(latticesScoreMap[l])
+                for l in latticesScoreMap[linkType]: nodeObject[linkType][l]=np.mean(latticesScoreMap[linkType][l])
             yield lattice, nodeObject
     ''' End: Methods to get in and out link temporal closeness among lattices.
     '''
