@@ -300,14 +300,18 @@ class MRAnalysis(ModifiedMRJob):
                 for l1, l2 in combinations(latticesOccranceTimeList, 2):
                     score = temporalScore(np.abs(l1[1]-l2[1]),hashtagTimePeriod)
                     if score>=MIN_TEMPORAL_CLOSENESS_SCORE:
-                        yield l1[0], [hashtagObject['h'], [l2[0], score]]
-                        yield l2[0], [hashtagObject['h'], [l1[0], score]]
+#                        yield l1[0], [hashtagObject['h'], [l2[0], score]]
+#                        yield l2[0], [hashtagObject['h'], [l1[0], score]]
+                        yield l1[0], [hashtagObject['h'], [l2[0], [hashtagObject['h'], score]]]
+                        yield l2[0], [hashtagObject['h'], [l1[0], [hashtagObject['h'], score]]]
     def buildLocationTemporalClosenessGraphReduce(self, lattice, values):
         nodeObject, latticesScoreMap, observedHashtags = {'links':{}, 'id': lattice}, defaultdict(list), set()
         for h, (l, v) in values: observedHashtags.add(h), latticesScoreMap[l].append(v)
         if len(observedHashtags)>=MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE:
             for l in latticesScoreMap: 
-                if len(latticesScoreMap[l])>=MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE: nodeObject['links'][l]=np.mean(latticesScoreMap[l])
+                if len(latticesScoreMap[l])>=MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE: 
+                    hashtags, scores = zip(*latticesScoreMap[l])
+                    nodeObject['links'][l]= [hashtags, np.mean(scores)]
             if nodeObject['links']:  yield lattice, nodeObject
     ''' End: Methods to get temporal closeness among lattices.
     '''

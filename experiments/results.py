@@ -242,11 +242,12 @@ class GraphAnalysis:
                     outputFile=imagesOutputFolder+'%s.png'%i;i+=1;FileIO.createDirectoryForFile(outputFile)
                     print outputFile
                     points = [getLocationFromLid(c.replace('_', ' ')) for c in component]
+                    print points
                     plotPointsOnWorldMap(points, c='m', lw=0)
-#                    plt.show()
-                    plt.savefig(outputFile); plt.clf()
-        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 0.005)
-        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.001)
+                    plt.show()
+#                    plt.savefig(outputFile); plt.clf()
+#        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 0.005)
+        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.005)
     @staticmethod
     def me(): pass    
     
