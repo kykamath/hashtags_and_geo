@@ -119,7 +119,7 @@ def plotNodeObject(timeRange, outputFolder):
         plt.show()
 #            plt.savefig(outputFile); plt.clf()
 
-def plotInOutGraphs(timeRange, outputFolder):
+def plotHashtagsInOutGraphs(timeRange, outputFolder):
     def plotPoints(links, xlabel):
         cm = matplotlib.cm.get_cmap('cool')
         points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in links.iteritems()], key=itemgetter(1)))
@@ -215,11 +215,16 @@ def plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder):
         print counter; counter+=1
         plotTimeSeries(object)
 
-def getDiGraph(graphFile):
+def getHashtagsInOutGraph(timeRange, outputFolder):
     graph = nx.DiGraph()
-    for n in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange)):
-        for dest, w in n['links'].iteritems(): graph.add_edge(n['id'], dest, {'w':w})
-    return graph
+    for n in FileIO.iterateJsonFromFile(hashtagLocationInAndOutTemporalClosenessGraphFile%(outputFolder,'%s_%s'%timeRange)):
+        print n.keys()
+        for source, w in n['in_link'].iteritems(): graph.add_edge(source, n['id'], {'w':w})
+        for dest, w in n['out_link'].iteritems(): graph.add_edge(n['id'], dest, {'w':w})
+        plot(graph)
+        plt.show()
+        exit()
+#    return graph
 
 
 #def getOccurencesFilteredByDistributionInTimeUnits(occ, TIME_UNIT_IN_SECONDS = 60*60, MIN_OBSERVATIONS_PER_TIME_UNIT=5): 
@@ -239,8 +244,8 @@ if __name__ == '__main__':
 #    plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder)
 #    plotGraphs(timeRange, outputFolder)
 #    plotNodeObject(timeRange, outputFolder)
-    
-    plotInOutGraphs(timeRange, outputFolder)
+#    plotHashtagsInOutGraphs(timeRange, outputFolder)
+    getHashtagsInOutGraph(timeRange, outputFolder)
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
