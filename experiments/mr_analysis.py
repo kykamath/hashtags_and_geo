@@ -325,7 +325,7 @@ class MRAnalysis(ModifiedMRJob):
             hastagStartTime, hastagEndTime = latticesToOccranceTimeMap[sourceLattice][1], max(latticesOccranceTimeList, key=itemgetter(1))[1]
             hashtagTimePeriod = hastagEndTime - hastagStartTime
             if hashtagTimePeriod:
-                latticesOccranceTimeList = [(t[0], temporalScore(t[1]-hastagStartTime,hashtagTimePeriod)) for t in latticesOccranceTimeList if t[1]>hastagStartTime]
+                latticesOccranceTimeList = [(t[0], temporalScore(t[1]-hastagStartTime, hashtagTimePeriod)) for t in latticesOccranceTimeList if t[1]>hastagStartTime]
                 for lattice, score in latticesOccranceTimeList:
                     if score>=MIN_TEMPORAL_CLOSENESS_SCORE:
                         yield sourceLattice, [hashtagObject['h'], 'out_link', [lattice, score]]
@@ -429,8 +429,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToAnalayzeLocalityIndexAtK()
 #        return self.jobsToGetHashtagWithGuranteedSource()
 #        return self.jobsToBuildHashtagSharingProbabilityGraph()
-        return self.jobToBuildLocationTemporalClosenessGraph()
-#        return self.jobToBuildLocationInAndOutTemporalClosenessGraph()
+#        return self.jobToBuildLocationTemporalClosenessGraph()
+        return self.jobToBuildLocationInAndOutTemporalClosenessGraph()
     
 if __name__ == '__main__':
     MRAnalysis.run()
