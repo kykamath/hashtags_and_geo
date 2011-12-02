@@ -19,7 +19,8 @@ from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
     hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile,\
     hashtagLocationTemporalClosenessGraphFile,\
     hashtagsImagesLocationClosenessFolder,\
-    hashtagLocationInAndOutTemporalClosenessGraphFile
+    hashtagLocationInAndOutTemporalClosenessGraphFile,\
+    hashtagsImagesLocationInfluencersFolder
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy import fft, array
 from collections import defaultdict
@@ -122,18 +123,24 @@ def plotInOutGraphs(timeRange, outputFolder):
     def plotPoints(links, xlabel):
         cm = matplotlib.cm.get_cmap('cool')
         points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in links.iteritems()], key=itemgetter(1)))
-        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
-        plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='k', s=20, lw=0)
+        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0, vmin=0, vmax=1)
+        plotPointsOnWorldMap([getLocationFromLid(locationObject['id'].replace('_', ' '))], c='k', s=20, lw=0)
         plt.xlabel(xlabel), plt.colorbar(sc)
-        
-    for nodeObject in FileIO.iterateJsonFromFile(hashtagLocationInAndOutTemporalClosenessGraphFile%(outputFolder, '%s_%s'%timeRange)): 
-        plt.subplot(211)
-        plt.title(nodeObject['id'])
-        plotPoints(nodeObject['in_link'], 'in links')
-        plt.subplot(212)
-        plotPoints(nodeObject['out_link'], 'out links')
-        plt.show()
-#        exit()
+    counter=1
+    for locationObject in FileIO.iterateJsonFromFile(hashtagLocationInAndOutTemporalClosenessGraphFile%(outputFolder, '%s_%s'%timeRange)): 
+        point = getLocationFromLid(locationObject['id'].replace('_', ' '))
+        outputFile = hashtagsImagesLocationInfluencersFolder+'%s.png'%getLatticeLid([point[1], point[0]], ACCURACY); FileIO.createDirectoryForFile(outputFile)
+        print counter;counter+=1
+        if not os.path.exists(outputFile):
+            if locationObject['in_link'] and locationObject['out_link']:
+                print outputFile
+                plt.subplot(211)
+                plt.title(locationObject['id'])
+                plotPoints(locationObject['in_link'], 'Gets hashtags from these locations')
+                plt.subplot(212)
+                plotPoints(locationObject['out_link'], 'Sends hashtags to these locations')
+#                plt.show()
+                plt.savefig(outputFile); plt.clf()
         
 def plotGraphs(timeRange, outputFolder):
     sharingProbabilityId = 'sharing_probability'
