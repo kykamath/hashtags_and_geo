@@ -19,11 +19,10 @@ from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
     getOccuranesInHighestActiveRegion
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
-    hashtagsFile, hashtagsImagesTimeVsDistanceFolder,\
+    hashtagsFile, \
     hashtagsWithoutEndingWindowFile, \
-    tempInputFile, inputFolder, hashtagsImagesCenterOfMassFolder,\
-    hashtagsDisplacementStatsFile, hashtagsImagesDisplacementStatsInTime,\
-    hashtagsImagesHashtagsDistributionInLid,\
+    tempInputFile, inputFolder, \
+    hashtagsDisplacementStatsFile, \
     hashtagsAnalayzeLocalityIndexAtKFile, hashtagWithGuranteedSourceFile,\
     hashtagsBoundarySpecificStatsFile, hashtagSharingProbabilityGraphFile,\
     hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile,\
@@ -251,8 +250,8 @@ def mr_analysis(timeRange, outputFolder):
 #    runMRJob(MRAnalysis, hashtagWithGuranteedSourceFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1)), jobconf={'mapred.reduce.tasks':300})
 #    runMRJob(MRAnalysis, hashtagsBoundarySpecificStatsFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':600})
 #    runMRJob(MRAnalysis, hashtagSharingProbabilityGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
-#    runMRJob(MRAnalysis, hashtagLocationTemporalClosenessGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
-    runMRJob(MRAnalysis, hashtagLocationInAndOutTemporalClosenessGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
+    runMRJob(MRAnalysis, hashtagLocationTemporalClosenessGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
+#    runMRJob(MRAnalysis, hashtagLocationInAndOutTemporalClosenessGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
 
 if __name__ == '__main__':
 #    timeRange = (2,5)

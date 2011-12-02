@@ -31,13 +31,13 @@ hashtagLocationInAndOutTemporalClosenessGraphFile = hashtagsAnalysisFolder+'%s/%
 
 # Images
 hashtagsImagesFolder = '/data/geo/hashtags/images/'
-hashtagsImagesTimeVsDistanceFolder = hashtagsImagesFolder+'time_vs_distance/'
-hashtagsImagesCenterOfMassFolder = hashtagsImagesFolder+'center_of_mass/'
+#hashtagsImagesTimeVsDistanceFolder = hashtagsImagesFolder+'time_vs_distance/'
+#hashtagsImagesCenterOfMassFolder = hashtagsImagesFolder+'center_of_mass/'
 #hashtagsImagesSpreadInTime = hashtagsImagesFolder+'spread_in_time/'
 #hashtagsImagesMeanDistanceInTime = hashtagsImagesFolder+'mean_distance/'
-hashtagsImagesDisplacementStatsInTime = hashtagsImagesFolder+'displacement_stats/'
-hashtagsImagesHashtagsDistributionInLid = hashtagsImagesFolder+'hashtag_dist/%s/'
-hashtagsImagesHastagsSharingProbabilitiesFolder = hashtagsImagesFolder+'hashtags_sharing/%s/'
+#hashtagsImagesDisplacementStatsInTime = hashtagsImagesFolder+'displacement_stats/'
+#hashtagsImagesHashtagsDistributionInLid = hashtagsImagesFolder+'hashtag_dist/%s/'
+#hashtagsImagesHastagsSharingProbabilitiesFolder = hashtagsImagesFolder+'hashtags_sharing/%s/'
 hashtagsImagesFlowInTimeForFirstNLocationsFolder = hashtagsImagesFolder+'fit_first_n_locations/%s/'
 hashtagsImagesFlowInTimeForFirstNOccurrencesFolder = hashtagsImagesFolder+'fit_first_n_occ/%s/'
 hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder = hashtagsImagesFolder+'fit_window_of_n_occ/%s/'
@@ -45,3 +45,4 @@ hashtagsImagesFlowInTimeForWindowOfNLocationsFolder = hashtagsImagesFolder+'fit_
 hashtagsImagesLocationClosenessFolder = hashtagsImagesFolder + 'location_closeness/'
 hashtagsImagesLocationInfluencersFolder = hashtagsImagesFolder + 'location_influencers/'
 hashtagsImagesTimeSeriesAnalysisFolder = hashtagsImagesFolder + 'time_series/'
+hashtagsImagesGraphAnalysisFolder = hashtagsImagesFolder + 'graph_analysis/'

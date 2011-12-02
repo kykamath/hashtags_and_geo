@@ -25,21 +25,21 @@ MIN_OCCUREANCES_PER_TIME_UNIT = 5
 MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
 MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS = 0.0
 
+MIN_HASHTAG_SHARING_PROBABILITY = 0.1
+MIN_TEMPORAL_CLOSENESS_SCORE = 0.4
+MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE = 3
+
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
 #HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
 #MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 4
 #MIN_HASHTAG_OCCURENCES_PER_LATTICE = 1
-#MIN_HASHTAG_SHARING_PROBABILITY = 0.1
-#MIN_TEMPORAL_CLOSENESS_SCORE = 0.4
 
 MIN_HASHTAG_OCCURENCES = 500 # Min no. of hashtags observed in the dataset. For example: h1 is valid if it is seen atleast 5 times in the dataset
 HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 1).timetuple())
 MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25 # Min no. of unique hashtags a lattice should have observed. For example: l1 is valid of it produces [h1, h2, h3] >= 3 (min)
 MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10 # Min no. hashtags lattice should have observed. For example: l1 is valid of it produces [h1, h1, h1] >= 3 (min)
-MIN_HASHTAG_SHARING_PROBABILITY = 0.1
-MIN_TEMPORAL_CLOSENESS_SCORE = 0.4
 
 US_BOUNDARY = ('us', (100, [[24.527135,-127.792969], [49.61071,-59.765625]]))
 CONTINENT_BOUNDARIES_DICT = dict([
@@ -306,8 +306,9 @@ class MRAnalysis(ModifiedMRJob):
         nodeObject, latticesScoreMap, observedHashtags = {'links':{}, 'id': lattice}, defaultdict(list), set()
         for h, (l, v) in values: observedHashtags.add(h), latticesScoreMap[l].append(v)
         if len(observedHashtags)>=MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE:
-            for l in latticesScoreMap: nodeObject['links'][l]=np.mean(latticesScoreMap[l])
-            yield lattice, nodeObject
+            for l in latticesScoreMap: 
+                if len(latticesScoreMap[l])>=MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE: nodeObject['links'][l]=np.mean(latticesScoreMap[l])
+            if nodeObject['links']:  yield lattice, nodeObject
     ''' End: Methods to get temporal closeness among lattices.
     '''
             
@@ -340,7 +341,8 @@ class MRAnalysis(ModifiedMRJob):
         for h, linkType, (l, v) in values: observedHashtags.add(h), latticesScoreMap[linkType][l].append(v)
         if len(observedHashtags)>=MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE:
             for linkType in latticesScoreMap:
-                for l in latticesScoreMap[linkType]: nodeObject[linkType][l]=np.mean(latticesScoreMap[linkType][l])
+                for l in latticesScoreMap[linkType]: 
+                    if len(latticesScoreMap[linkType][l])>=MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE: nodeObject[linkType][l]=np.mean(latticesScoreMap[linkType][l])
             yield lattice, nodeObject
     ''' End: Methods to get in and out link temporal closeness among lattices.
     '''
@@ -434,8 +436,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToAnalayzeLocalityIndexAtK()
 #        return self.jobsToGetHashtagWithGuranteedSource()
 #        return self.jobsToBuildHashtagSharingProbabilityGraph()
-#        return self.jobToBuildLocationTemporalClosenessGraph()
-        return self.jobToBuildLocationInAndOutTemporalClosenessGraph()
+        return self.jobToBuildLocationTemporalClosenessGraph()
+#        return self.jobToBuildLocationInAndOutTemporalClosenessGraph()
     
 if __name__ == '__main__':
     MRAnalysis.run()
