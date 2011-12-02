@@ -99,14 +99,14 @@ def plotHashtagFlowOnUSMap(sourceLattice, outputFolder):
         if i==10: exit()
 
 def plotNodeObject(timeRange, outputFolder):
-    for nodeObject in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder, '%s_%s'%timeRange)): 
+    for nodeObject in FileIO.iterateJsonFromFile(hashtagLocationTemporalClosenessGraphFile%(outputFolder, '%s_%s'%timeRange)): 
         ax = plt.subplot(111)
         cm = matplotlib.cm.get_cmap('cool')
 #        point = getLocationFromLid(nodeObject['id'].replace('_', ' '))
 #        outputFile = hashtagsImagesNodeFolder+'%s.png'%getLatticeLid([point[1], point[0]], ACCURACY); FileIO.createDirectoryForFile(outputFile)
 #        if not os.path.exists(outputFile):
 #            print outputFile
-        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()], key=itemgetter(1)))
+        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems() if v>=0.4], key=itemgetter(1)))
         sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
         plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='k', s=20, lw=0)
         plt.xlabel('Measure of closeness'), plt.title(nodeObject['id'].replace('_', ' '))
