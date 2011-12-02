@@ -225,7 +225,6 @@ class MRAnalysis(ModifiedMRJob):
         if hashtagObject: 
             hashtagObject['oc'] = getOccurencesFilteredByDistributionInTimeUnits(hashtagObject['oc'])
             yield key, hashtagObject 
-        
     ''' End: Methods to get hashtag objects
     '''
             
@@ -296,7 +295,7 @@ class MRAnalysis(ModifiedMRJob):
             hashtagTimePeriod = hastagEndTime - hastagStartTime
             if hashtagTimePeriod:
                 for l1, l2 in combinations(latticesOccranceTimeList, 2):
-                    score = temporalScore(np.abs((l1[1]-l2[1]),hashtagTimePeriod))
+                    score = temporalScore(np.abs(l1[1]-l2[1]),hashtagTimePeriod)
                     if score>=MIN_TEMPORAL_CLOSENESS_SCORE:
                         yield l1[0], [hashtagObject['h'], [l2[0], score]]
                         yield l2[0], [hashtagObject['h'], [l1[0], score]]
@@ -326,7 +325,7 @@ class MRAnalysis(ModifiedMRJob):
             hastagStartTime, hastagEndTime = latticesToOccranceTimeMap[sourceLattice][1], max(latticesOccranceTimeList, key=itemgetter(1))[1]
             hashtagTimePeriod = hastagEndTime - hastagStartTime
             if hashtagTimePeriod:
-                latticesOccranceTimeList = [(t[0], (1-(t[1]-hastagStartTime)/hashtagTimePeriod)) for t in latticesOccranceTimeList if t[1]>hastagStartTime]
+                latticesOccranceTimeList = [(t[0], temporalScore(t[1]-hastagStartTime,hashtagTimePeriod)) for t in latticesOccranceTimeList if t[1]>hastagStartTime]
                 for lattice, score in latticesOccranceTimeList:
                     if score>=MIN_TEMPORAL_CLOSENESS_SCORE:
                         yield sourceLattice, [hashtagObject['h'], 'out_link', [lattice, score]]
