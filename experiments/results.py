@@ -119,8 +119,10 @@ def plotGraphs(timeRange, outputFolder):
     temporalClosenessId = 'temporal_closeness'
     def plotPoints(nodeObject, xlabel):
         cm = matplotlib.cm.get_cmap('cool')
-        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()], key=itemgetter(1)))
-        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0, vmax=1.0, vmin=0.0)
+        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems() if v >=0.9], key=itemgetter(1)))
+        plt.hist(colors, bins=100)
+        plt.show()
+        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
         plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='k', s=20, lw=0)
         plt.xlabel(xlabel), plt.colorbar(sc)
     def plotLocationObject(locationObject):
@@ -132,15 +134,15 @@ def plotGraphs(timeRange, outputFolder):
 #        for graphId, nodeObject in locationObject['graphs'].iteritems():
 #            print point, graphId, nodeObject.keys()
         plt.subplot(211)
-        plt.title(locationObject['id'].replace('_', ' '))
-        plotPoints(locationObject['graphs'][sharingProbabilityId], xlabel = 'Hashtag sharing probability')
+#        plt.title(locationObject['id'].replace('_', ' '))
+#        plotPoints(locationObject['graphs'][sharingProbabilityId], xlabel = 'Hashtag sharing probability')
         plt.subplot(212)
         plotPoints(locationObject['graphs'][temporalClosenessId], xlabel = 'Temporal closeness')
 #            plt.xlabel('Measure of closeness'), plt.title(nodeObject['id'].replace('_', ' '))
 #            divider = make_axes_locatable(ax)
 #            cax = divider.append_axes("right", size="5%", pad=0.05)
 #            plt.colorbar(sc, cax=cax)
-        plt.show()
+#        plt.show()
 #            plt.savefig(outputFile); plt.clf()
     locationsMap = defaultdict(dict)
     for node in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder, '%s_%s'%timeRange)): 

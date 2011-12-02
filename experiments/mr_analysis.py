@@ -30,6 +30,7 @@ MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
 #MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 4
 #MIN_HASHTAG_OCCURENCES_PER_LATTICE = 1
 #MIN_HASHTAG_SHARING_PROBABILITY = 0.1
+#MIN_TEMPORAL_CLOSENESS_SCORE = 0.9
 
 MIN_HASHTAG_OCCURENCES = 500 # Min no. of hashtags observed in the dataset. For example: h1 is valid if it is seen atleast 5 times in the dataset
 HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
@@ -37,6 +38,7 @@ HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 1).timetuple())
 MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25 # Min no. of unique hashtags a lattice should have observed. For example: l1 is valid of it produces [h1, h2, h3] >= 3 (min)
 MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10 # Min no. hashtags lattice should have observed. For example: l1 is valid of it produces [h1, h1, h1] >= 3 (min)
 MIN_HASHTAG_SHARING_PROBABILITY = 0.1
+MIN_TEMPORAL_CLOSENESS_SCORE = 0.9
 
 US_BOUNDARY = ('us', (100, [[24.527135,-127.792969], [49.61071,-59.765625]]))
 CONTINENT_BOUNDARIES_DICT = dict([
@@ -294,8 +296,9 @@ class MRAnalysis(ModifiedMRJob):
 #                    yield l1[0], [hashtagObject['h'], l2]
 #                    yield l2[0], [hashtagObject['h'], l1]
                     score = 1-np.abs((l1[1]-l2[1])/hashtagTimePeriod)
-                    yield l1[0], [hashtagObject['h'], [l2[0], score]]
-                    yield l2[0], [hashtagObject['h'], [l1[0], score]]
+                    if score>=MIN_TEMPORAL_CLOSENESS_SCORE:
+                        yield l1[0], [hashtagObject['h'], [l2[0], score]]
+                        yield l2[0], [hashtagObject['h'], [l1[0], score]]
     def buildLocationTemporalClosenessGraphReduce(self, lattice, values):
         nodeObject, latticesScoreMap, observedHashtags = {'links':{}, 'id': lattice}, defaultdict(list), set()
         for h, (l, v) in values: observedHashtags.add(h), latticesScoreMap[l].append(v)
@@ -305,6 +308,30 @@ class MRAnalysis(ModifiedMRJob):
     ''' End: Methods to get temporal closeness among lattices.
     '''
             
+    ''' Start: Methods to get in and out link temporal closeness among lattices.
+    '''
+    def buildLocationInAndOutTemporalClosenessGraphMap(self, key, hashtagObject):
+        occuranesInHighestActiveRegion, latticesToOccranceTimeMap = getOccuranesInHighestActiveRegion(hashtagObject), {}
+        validLattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
+        for k, v in occuranesInHighestActiveRegion:
+            lid = getLatticeLid(k, ACCURACY)
+            if lid in validLattices:
+                if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
+#        if latticesToOccranceTimeMap:
+#            latticesOccranceTimeList = latticesToOccranceTimeMap.items()
+#            hastagStartTime, hastagEndTime = min(latticesOccranceTimeList, key=itemgetter(1))[1], max(latticesOccranceTimeList, key=itemgetter(1))[1]
+#            hashtagTimePeriod = hastagEndTime - hastagStartTime
+#            if hashtagTimePeriod:
+##                latticesOccranceTimeList = [(t[0], (1-(t[1]-hastagStartTime)/hashtagTimePeriod)) for t in latticesOccranceTimeList]
+#                for l1, l2 in combinations(latticesOccranceTimeList, 2):
+##                    yield l1[0], [hashtagObject['h'], l2]
+##                    yield l2[0], [hashtagObject['h'], l1]
+#                    score = 1-np.abs((l1[1]-l2[1])/hashtagTimePeriod)
+#                    yield l1[0], [hashtagObject['h'], [l2[0], score]]
+#                    yield l2[0], [hashtagObject['h'], [l1[0], score]]
+    
+    ''' End: Methods to get in and out link temporal closeness among lattices.
+    '''        
     def addSourceLatticeToHashTagObject(self, key, hashtagObject):
         addSourceLatticeToHashTagObject(hashtagObject)
         yield key, hashtagObject
