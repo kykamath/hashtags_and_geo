@@ -50,6 +50,9 @@ CONTINENT_BOUNDARIES_DICT = dict([
         ('ap', (25, [[-46.55886,54.492188], [59.175928,176.835938]]))
 ])
 
+# (Bounding box, MIN_HASHTAG_OCCURENCES)
+AREA_DETAILS = ([[40.491, -74.356], [41.181, -72.612]], 50) # New York
+
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
     l = None
@@ -144,9 +147,14 @@ def addHashtagLocalityIndexInTime(hashtagObject):
     for currentTime, oc in occurencesDistribution.iteritems(): liInTime.append([currentTime, getLocalityIndexAtK(zip(*oc)[0], K_VALUE_FOR_LOCALITY_INDEX)])
     hashtagObject['liInTime'] = liInTime
 
-def getHashtagWithoutEndingWindow(key, values):
+def getHashtagWithoutEndingWindow(key, values, specificToArea=False):
     occurences = []
-    for instances in values: occurences+=instances['oc']
+    for instances in values: 
+        if not specificToArea: occurences+=instances['oc']
+        else:
+            MIN_HASHTAG_OCCURENCES = AREA_DETAILS[1]
+            for oc in instances['oc']:
+                if isWithinBoundingBox(oc[0], AREA_DETAILS[0]): occurences.append(oc)
     e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
     numberOfInstances=len(occurences)
     if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
@@ -220,6 +228,9 @@ class MRAnalysis(ModifiedMRJob):
                 yield key, {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
     def combine_hashtag_instances_without_ending_window(self, key, values):
         hashtagObject = getHashtagWithoutEndingWindow(key, values)
+        if hashtagObject: yield key, hashtagObject 
+    def combine_hashtag_instances_without_ending_window_specific_to_an_area(self, key, values):
+        hashtagObject = getHashtagWithoutEndingWindow(key, values, specificToArea=True)
         if hashtagObject: yield key, hashtagObject 
     def combine_hashtag_instances_without_ending_window_and_occurences_filtered_by_distribution_in_time_units(self, key, values):
         hashtagObject = getHashtagWithoutEndingWindow(key, values)
@@ -406,6 +417,7 @@ class MRAnalysis(ModifiedMRJob):
     def jobsToGetHastagObjects(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
     def jobsToGetHastagObjectsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnits(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window_and_occurences_filtered_by_distribution_in_time_units)]
+    def jobsToGetHastagObjectsWithoutEndingWindowAndSpecificToAnArea(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window_specific_to_an_area)]
     def jobsToGetBoundarySpecificStats(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.mapBoundarySpecificStats),
                                                       self.mr(self.emptyMapper, self.reduceBoundarySpecificStats), 
                                                       self.mr(self.emptyMapper, self.combineBoundarySpecificStats)]
@@ -430,6 +442,7 @@ class MRAnalysis(ModifiedMRJob):
     def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
+        return self.jobsToGetHastagObjectsWithoutEndingWindowAndSpecificToAnArea()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnits()
 #        return self.jobsToGetBoundarySpecificStats()
 #        return self.jobsToGetHashtagDistributionInTime()
@@ -442,7 +455,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHashtagWithGuranteedSource()
 #        return self.jobsToBuildHashtagSharingProbabilityGraph()
 #        return self.jobToBuildLocationTemporalClosenessGraph()
-        return self.jobToBuildLocationInAndOutTemporalClosenessGraph()
+#        return self.jobToBuildLocationInAndOutTemporalClosenessGraph()
     
 if __name__ == '__main__':
     MRAnalysis.run()
