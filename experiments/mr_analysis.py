@@ -434,7 +434,7 @@ class MRAnalysis(ModifiedMRJob):
 #    def jobsToAnalayzeLocalityIndexAtK(self): return self.jobsToGetHashtagWithGuranteedSource() + [(self.analayzeLocalityIndexAtK, None)]
 #    def jobsToGetHashtagWithGuranteedSource(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
 #                                                        [(self.getHashtagWithGuranteedSource, None)]
-    def jobsToBuildHashtagSharingProbabilityGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+\
+    def jobsToBuildHashtagSharingProbabilityGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindowAndSpecificToAnArea()+\
              [(self.buildHashtagSharingProbabilityGraphMap, self.buildHashtagSharingProbabilityGraphReduce1), 
               (self.emptyMapper, self.buildHashtagSharingProbabilityGraphReduce2)
                 ]
@@ -459,7 +459,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobToBuildLocationInAndOutTemporalClosenessGraph()
 
     def steps(self):
-        return self.jobsToGetHastagObjectsWithoutEndingWindowAndSpecificToAnArea()
+#        return self.jobsToGetHastagObjectsWithoutEndingWindowAndSpecificToAnArea()
+        return self.jobsToBuildHashtagSharingProbabilityGraph()
     
 if __name__ == '__main__':
     MRAnalysis.run()
