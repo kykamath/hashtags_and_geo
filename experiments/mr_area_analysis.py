@@ -119,7 +119,7 @@ class MRAreaAnalysis(ModifiedMRJob):
         for h, instances in self.hashtags.iteritems(): # e = earliest, l = latest
             yield h, {'oc': instances, 'e': min(instances, key=lambda t: t[1]), 'l': max(instances, key=lambda t: t[1])}
     def combine_hashtag_instances_without_ending_window(self, key, values):
-        hashtagObject = getHashtagWithoutEndingWindow(key, values, specificToArea=True)
+        hashtagObject = getHashtagWithoutEndingWindow(key, values)
         if hashtagObject: yield key, hashtagObject 
     ''' End: Methods to get hashtag objects
     '''
