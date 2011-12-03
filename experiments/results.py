@@ -252,7 +252,7 @@ class GraphAnalysis:
                     plt.show()
 #                    plt.savefig(outputFile); plt.clf()
 #        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 0.005)
-        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.003)
+        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.001)
     @staticmethod
     def me(): pass    
     

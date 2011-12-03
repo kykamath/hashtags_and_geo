@@ -27,7 +27,7 @@ MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS = 0.0
 
 MIN_HASHTAG_SHARING_PROBABILITY = 0.1
 MIN_TEMPORAL_CLOSENESS_SCORE = 0.4
-MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE = 0
+MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE = 5
 
 #MIN_HASHTAG_OCCURENCES = 1
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
@@ -268,16 +268,17 @@ class MRAnalysis(ModifiedMRJob):
             yield lattice, ['o', latticeObject]
             for no in neighborLatticeIds: yield no, ['no', [lattice, latticeObject['h']]]
     def buildHashtagSharingProbabilityGraphReduce2(self, lattice, values):
-        nodeObject, latticeObject, neighborObjects = {'links':{}, 'id': lattice}, None, []
+        nodeObject, latticeObject, neighborObjects = {'links':{}, 'id': lattice, 'hashtags': []}, None, []
         for type, value in values:
             if type=='o': latticeObject = value
             else: neighborObjects.append(value)
         if latticeObject:
             currentObjectHashtags = set(latticeObject['h'])
+            nodeObject['hashtags'] = list(currentObjectHashtags)
             for no, neighborHashtags in neighborObjects:
                 neighborHashtags=set(neighborHashtags)
                 prob = len(currentObjectHashtags.intersection(neighborHashtags))/float(len(currentObjectHashtags))
-                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: nodeObject['links'][no] =  prob
+                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: nodeObject['links'][no] =  [list(neighborHashtags), prob]
             yield lattice, nodeObject
     ''' End: Methods to get hashtag co-occurence probabilities among lattices.
     '''
@@ -300,13 +301,11 @@ class MRAnalysis(ModifiedMRJob):
                 for l1, l2 in combinations(latticesOccranceTimeList, 2):
                     score = temporalScore(np.abs(l1[1]-l2[1]),hashtagTimePeriod)
                     if score>=MIN_TEMPORAL_CLOSENESS_SCORE:
-#                        yield l1[0], [hashtagObject['h'], [l2[0], score]]
-#                        yield l2[0], [hashtagObject['h'], [l1[0], score]]
-                        yield l1[0], [hashtagObject['h'], [l2[0], [hashtagObject['h'], score]]]
-                        yield l2[0], [hashtagObject['h'], [l1[0], [hashtagObject['h'], score]]]
+                        yield l1[0], [hashtagObject['h'], [l2[0], score]]
+                        yield l2[0], [hashtagObject['h'], [l1[0], score]]
     def buildLocationTemporalClosenessGraphReduce(self, lattice, values):
         nodeObject, latticesScoreMap, observedHashtags = {'links':{}, 'id': lattice}, defaultdict(list), set()
-        for h, (l, v) in values: observedHashtags.add(h), latticesScoreMap[l].append(v)
+        for h, (l, v) in values: observedHashtags.add(h), latticesScoreMap[l].append([h, v])
         if len(observedHashtags)>=MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE:
             for l in latticesScoreMap: 
                 if len(latticesScoreMap[l])>=MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE: 
@@ -342,11 +341,13 @@ class MRAnalysis(ModifiedMRJob):
                             yield lattice, [hashtagObject['h'], 'in_link', [sourceLattice, score]]
     def buildLocationInAndOutTemporalClosenessGraphReduce(self, lattice, values):
         nodeObject, latticesScoreMap, observedHashtags = {'in_link':{}, 'out_link':{}, 'id': lattice}, {'in_link': defaultdict(list), 'out_link': defaultdict(list)}, set()
-        for h, linkType, (l, v) in values: observedHashtags.add(h), latticesScoreMap[linkType][l].append(v)
+        for h, linkType, (l, v) in values: observedHashtags.add(h), latticesScoreMap[linkType][l].append([h,v])
         if len(observedHashtags)>=MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE:
             for linkType in latticesScoreMap:
                 for l in latticesScoreMap[linkType]: 
-                    if len(latticesScoreMap[linkType][l])>=MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE: nodeObject[linkType][l]=np.mean(latticesScoreMap[linkType][l])
+                    if len(latticesScoreMap[linkType][l])>=MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE: 
+                        hashtags, scores = zip(*latticesScoreMap[linkType][l])
+                        nodeObject[linkType][l]=[hashtags, np.mean(scores)]
             yield lattice, nodeObject
     ''' End: Methods to get in and out link temporal closeness among lattices.
     '''
