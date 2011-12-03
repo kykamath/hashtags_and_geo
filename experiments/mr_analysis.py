@@ -438,7 +438,7 @@ class MRAnalysis(ModifiedMRJob):
              [(self.buildHashtagSharingProbabilityGraphMap, self.buildHashtagSharingProbabilityGraphReduce1), 
               (self.emptyMapper, self.buildHashtagSharingProbabilityGraphReduce2)
                 ]
-    def jobToBuildLocationTemporalClosenessGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+[(self.buildLocationTemporalClosenessGraphMap, self.buildLocationTemporalClosenessGraphReduce)] 
+    def jobToBuildLocationTemporalClosenessGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindowAndSpecificToAnArea()+[(self.buildLocationTemporalClosenessGraphMap, self.buildLocationTemporalClosenessGraphReduce)] 
     def jobToBuildLocationInAndOutTemporalClosenessGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+[(self.buildLocationInAndOutTemporalClosenessGraphMap, self.buildLocationInAndOutTemporalClosenessGraphReduce)] 
     
 #    def steps(self):
@@ -460,7 +460,8 @@ class MRAnalysis(ModifiedMRJob):
 
     def steps(self):
 #        return self.jobsToGetHastagObjectsWithoutEndingWindowAndSpecificToAnArea()
-        return self.jobsToBuildHashtagSharingProbabilityGraph()
+#        return self.jobsToBuildHashtagSharingProbabilityGraph()
+        return self.jobToBuildLocationTemporalClosenessGraph()
     
 if __name__ == '__main__':
     MRAnalysis.run()
