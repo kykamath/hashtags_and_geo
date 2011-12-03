@@ -5,6 +5,7 @@ Created on Nov 19, 2011
 '''
 import sys, datetime
 from library.classes import GeneralMethods
+from experiments.mr_area_analysis import MRAreaAnalysis
 sys.path.append('../')
 from library.geo import getHaversineDistance, getLatticeLid, getLattice,\
     getCenterOfMass, getLocationFromLid, plotPointsOnUSMap
@@ -97,10 +98,10 @@ def mr_analysis(timeRange, outputFolder):
 #    runMRJob(MRAnalysis, hashtagLocationTemporalClosenessGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
     runMRJob(MRAnalysis, hashtagLocationInAndOutTemporalClosenessGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
 
-def area_specific_mr_analysis(timeRange, folderType, mrOutputFolder):
-#    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
-#    runMRJob(MRAnalysis, hashtagSharingProbabilityGraphFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
-    runMRJob(MRAnalysis, hashtagLocationTemporalClosenessGraphFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
+def mr_area_analysis(timeRange, folderType, mrOutputFolder):
+    runMRJob(MRAreaAnalysis, hashtagsWithoutEndingWindowFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
+##    runMRJob(MRAnalysis, hashtagSharingProbabilityGraphFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
+#    runMRJob(MRAnalysis, hashtagLocationTemporalClosenessGraphFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
 
 
 if __name__ == '__main__':
@@ -111,5 +112,5 @@ if __name__ == '__main__':
     
     folderType = 'world'
     mrOutputFolder = 'ny'
-    area_specific_mr_analysis(timeRange, folderType, mrOutputFolder)
+    mr_area_analysis(timeRange, folderType, mrOutputFolder)
     
