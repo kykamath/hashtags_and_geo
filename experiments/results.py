@@ -244,15 +244,16 @@ class GraphAnalysis:
                     print outputFile
                     points = [getLocationFromLid(c.replace('_', ' ')) for c in component]
 #                    plot(graph.subgraph(component))
-                    for e in graph.subgraph(component).edges(data=True):
-                        print e
+#                    for e in graph.subgraph(component).edges(data=True):
+#                        print e
 #                    exit()
 #                    print points
-                    plotPointsOnWorldMap(points, c='m', lw=0)
+#                    plotPointsOnWorldMap(points, c='m', lw=0)
+                    plotPointsOnUSMap(points, c='m', lw=0)
                     plt.show()
 #                    plt.savefig(outputFile); plt.clf()
-        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 0.005)
-        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.0025)
+        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 1)
+#        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.0025)
     @staticmethod
     def me(): pass    
     
@@ -269,7 +270,8 @@ class GraphAnalysis:
     
 if __name__ == '__main__':
     timeRange = (2,11)
-    outputFolder = 'world'
+#    outputFolder = 'world'
+    outputFolder='ny'
 #    outputFolder='/'
 #    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
 
