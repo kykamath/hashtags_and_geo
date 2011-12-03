@@ -4,9 +4,9 @@ Created on Nov 19, 2011
 @author: kykamath
 '''
 import sys, datetime
+sys.path.append('../')
 from library.classes import GeneralMethods
 from experiments.mr_area_analysis import MRAreaAnalysis
-sys.path.append('../')
 from library.geo import getHaversineDistance, getLatticeLid, getLattice,\
     getCenterOfMass, getLocationFromLid, plotPointsOnUSMap
 from operator import itemgetter
