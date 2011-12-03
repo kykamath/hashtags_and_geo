@@ -16,7 +16,7 @@ from itertools import combinations
 from operator import itemgetter
 import math
 
-ACCURACY = 0.145
+#ACCURACY = 0.145
 PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
 HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS = 24*60*60
 K_VALUE_FOR_LOCALITY_INDEX = 0.5
@@ -41,16 +41,17 @@ HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 1).timetuple())
 MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25 # Min no. of unique hashtags a lattice should have observed. For example: l1 is valid of it produces [h1, h2, h3] >= 3 (min)
 MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10 # Min no. hashtags lattice should have observed. For example: l1 is valid of it produces [h1, h1, h1] >= 3 (min)
 
-US_BOUNDARY = ('us', (100, [[24.527135,-127.792969], [49.61071,-59.765625]]))
-CONTINENT_BOUNDARIES_DICT = dict([
-        ('na', (100, [[8.05923,-170.859375], [72.395706,-53.789062]])),
-        ('sa', (25, [[-58.447733,-120.585937], [13.239945,-35.15625]])),
-        ('eu', (25, [[32.842674,-16.523437], [71.856229,50.625]])),
-        ('mea', (25, [[-38.272689,-24.257812], [38.548165,63.984375]])),
-        ('ap', (25, [[-46.55886,54.492188], [59.175928,176.835938]]))
-])
+#US_BOUNDARY = ('us', (100, [[24.527135,-127.792969], [49.61071,-59.765625]]))
+#CONTINENT_BOUNDARIES_DICT = dict([
+#        ('na', (100, [[8.05923,-170.859375], [72.395706,-53.789062]])),
+#        ('sa', (25, [[-58.447733,-120.585937], [13.239945,-35.15625]])),
+#        ('eu', (25, [[32.842674,-16.523437], [71.856229,50.625]])),
+#        ('mea', (25, [[-38.272689,-24.257812], [38.548165,63.984375]])),
+#        ('ap', (25, [[-46.55886,54.492188], [59.175928,176.835938]]))
+#])
 
 # (Bounding box, MIN_HASHTAG_OCCURENCES)
+ACCURACY = 0.0145
 AREA_DETAILS = ([[40.491, -74.356], [41.181, -72.612]], 50) # New York
 
 def iterateHashtagObjectInstances(line):
@@ -61,9 +62,9 @@ def iterateHashtagObjectInstances(line):
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
     for h in data['h']: yield h.lower(), [getLattice(l, ACCURACY), t]
 
-def getLocationBoundaryId(point):
-    for id, (_, boundingBox) in CONTINENT_BOUNDARIES_DICT.iteritems():
-        if isWithinBoundingBox(point, boundingBox): return id
+#def getLocationBoundaryId(point):
+#    for id, (_, boundingBox) in CONTINENT_BOUNDARIES_DICT.iteritems():
+#        if isWithinBoundingBox(point, boundingBox): return id
 
 def filterLatticesByMinHashtagOccurencesPerLattice(h):
     latticesToOccurancesMap = defaultdict(list)
@@ -241,23 +242,23 @@ class MRAnalysis(ModifiedMRJob):
     ''' End: Methods to get hashtag objects
     '''
             
-    ''' Start: Methods to get boundary specific stats
-    '''
-    def mapBoundarySpecificStats(self, key, values):
-        occurences = []
-        for instances in values: occurences+=instances['oc']
-        if min(occurences, key=lambda t: t[1])[1]>=HASHTAG_STARTING_WINDOW:
-            for occurence in occurences: 
-                bid = getLocationBoundaryId(occurence[0])
-                if bid: yield bid+':ilab:'+key, 1
-    def reduceBoundarySpecificStats(self, key, values):
-        bid, hashTag = key.split(':ilab:')
-        noOfHashtags = sum(list(values))
-        if noOfHashtags>=4: yield bid, [hashTag, noOfHashtags]
-    def combineBoundarySpecificStats(self, bid, hashTags):
-        yield bid, {'bid': bid, 'hashTags': list(hashTags)}
-    ''' End: Methods to get boundary specific stats
-    '''
+#    ''' Start: Methods to get boundary specific stats
+#    '''
+#    def mapBoundarySpecificStats(self, key, values):
+#        occurences = []
+#        for instances in values: occurences+=instances['oc']
+#        if min(occurences, key=lambda t: t[1])[1]>=HASHTAG_STARTING_WINDOW:
+#            for occurence in occurences: 
+#                bid = getLocationBoundaryId(occurence[0])
+#                if bid: yield bid+':ilab:'+key, 1
+#    def reduceBoundarySpecificStats(self, key, values):
+#        bid, hashTag = key.split(':ilab:')
+#        noOfHashtags = sum(list(values))
+#        if noOfHashtags>=4: yield bid, [hashTag, noOfHashtags]
+#    def combineBoundarySpecificStats(self, bid, hashTags):
+#        yield bid, {'bid': bid, 'hashTags': list(hashTags)}
+#    ''' End: Methods to get boundary specific stats
+#    '''
         
     ''' Start: Methods to get hashtag co-occurence probabilities among lattices.
         E(Place_a, Place_b) = len(Hastags(Place_a) and Hastags(Place_b)) / len(Hastags(Place_a))
@@ -419,20 +420,20 @@ class MRAnalysis(ModifiedMRJob):
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
     def jobsToGetHastagObjectsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnits(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window_and_occurences_filtered_by_distribution_in_time_units)]
     def jobsToGetHastagObjectsWithoutEndingWindowAndSpecificToAnArea(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window_specific_to_an_area)]
-    def jobsToGetBoundarySpecificStats(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.mapBoundarySpecificStats),
-                                                      self.mr(self.emptyMapper, self.reduceBoundarySpecificStats), 
-                                                      self.mr(self.emptyMapper, self.combineBoundarySpecificStats)]
+#    def jobsToGetBoundarySpecificStats(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.mapBoundarySpecificStats),
+#                                                      self.mr(self.emptyMapper, self.reduceBoundarySpecificStats), 
+#                                                      self.mr(self.emptyMapper, self.combineBoundarySpecificStats)]
     def jobsToAddSourceLatticeToHashTagObject(self): return [(self.addSourceLatticeToHashTagObject, None)]
     def jobsToGetHashtagDistributionInTime(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInTime, None)]
     def jobsToGetHashtagDistributionInLattice(self): return self.jobsToGetHastagObjects() + [(self.getHashtagDistributionInLattice, None)]
 #    def jobsToGetHastagDisplacementInTime(self, method): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
 #                                                    [(method, None)]
-    def jobsToGetHashtagDisplacementStats(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getHashtagDisplacementStats, None)]
+#    def jobsToGetHashtagDisplacementStats(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getHashtagDisplacementStats, None)]
 #    def jobsToGetAverageHaversineDistance(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.getAverageHaversineDistance, None)]
 #    def jobsToDoHashtagCenterOfMassAnalysisWithoutEndingWindow(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + [(self.doHashtagCenterOfMassAnalysis, None)] 
-    def jobsToAnalayzeLocalityIndexAtK(self): return self.jobsToGetHashtagWithGuranteedSource() + [(self.analayzeLocalityIndexAtK, None)]
-    def jobsToGetHashtagWithGuranteedSource(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
-                                                        [(self.getHashtagWithGuranteedSource, None)]
+#    def jobsToAnalayzeLocalityIndexAtK(self): return self.jobsToGetHashtagWithGuranteedSource() + [(self.analayzeLocalityIndexAtK, None)]
+#    def jobsToGetHashtagWithGuranteedSource(self): return self.jobsToGetHastagObjectsWithoutEndingWindow() + self.jobsToAddSourceLatticeToHashTagObject() + \
+#                                                        [(self.getHashtagWithGuranteedSource, None)]
     def jobsToBuildHashtagSharingProbabilityGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+\
              [(self.buildHashtagSharingProbabilityGraphMap, self.buildHashtagSharingProbabilityGraphReduce1), 
               (self.emptyMapper, self.buildHashtagSharingProbabilityGraphReduce2)
@@ -440,10 +441,9 @@ class MRAnalysis(ModifiedMRJob):
     def jobToBuildLocationTemporalClosenessGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+[(self.buildLocationTemporalClosenessGraphMap, self.buildLocationTemporalClosenessGraphReduce)] 
     def jobToBuildLocationInAndOutTemporalClosenessGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+[(self.buildLocationInAndOutTemporalClosenessGraphMap, self.buildLocationInAndOutTemporalClosenessGraphReduce)] 
     
-    def steps(self):
+#    def steps(self):
 #        return self.jobsToGetHastagObjects() #+ self.jobsToCountNumberOfKeys()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow() #+ self.jobsToAddSourceLatticeToHashTagObject()
-        return self.jobsToGetHastagObjectsWithoutEndingWindowAndSpecificToAnArea()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnits()
 #        return self.jobsToGetBoundarySpecificStats()
 #        return self.jobsToGetHashtagDistributionInTime()
@@ -457,6 +457,9 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToBuildHashtagSharingProbabilityGraph()
 #        return self.jobToBuildLocationTemporalClosenessGraph()
 #        return self.jobToBuildLocationInAndOutTemporalClosenessGraph()
+
+    def steps(self):
+        return self.jobsToGetHastagObjectsWithoutEndingWindowAndSpecificToAnArea()
     
 if __name__ == '__main__':
     MRAnalysis.run()
