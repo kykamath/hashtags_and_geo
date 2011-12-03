@@ -230,7 +230,8 @@ class GraphAnalysis:
         def plotFor(id, graphFile, PERCENTAGE_OF_EDGES):
             graph = GraphAnalysis.loadGraph(graphFile, timeRange, outputFolder)
             imagesOutputFolder = hashtagsImagesGraphAnalysisFolder+'%s/connected_components/'%id
-            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=itemgetter(2))[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
+#            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=itemgetter(2))[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
+            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=lambda t: t[2][1])[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
             print graph.number_of_nodes(), int(PERCENTAGE_OF_EDGES*graph.number_of_edges()), len(edgesToRemove)
             for u,v,_ in edgesToRemove: graph.remove_edge(u, v)
             print graph.number_of_nodes()
@@ -242,12 +243,16 @@ class GraphAnalysis:
                     outputFile=imagesOutputFolder+'%s.png'%i;i+=1;FileIO.createDirectoryForFile(outputFile)
                     print outputFile
                     points = [getLocationFromLid(c.replace('_', ' ')) for c in component]
-                    print points
+#                    plot(graph.subgraph(component))
+                    for e in graph.subgraph(component).edges(data=True):
+                        print e
+#                    exit()
+#                    print points
                     plotPointsOnWorldMap(points, c='m', lw=0)
                     plt.show()
 #                    plt.savefig(outputFile); plt.clf()
 #        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 0.005)
-        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.005)
+        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.003)
     @staticmethod
     def me(): pass    
     
