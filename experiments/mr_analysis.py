@@ -155,10 +155,11 @@ def getHashtagWithoutEndingWindow(key, values, specificToArea=False):
             MIN_HASHTAG_OCCURENCES = AREA_DETAILS[1]
             for oc in instances['oc']:
                 if isWithinBoundingBox(oc[0], AREA_DETAILS[0]): occurences.append(oc)
-    e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
-    numberOfInstances=len(occurences)
-    if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
-        e[1]>=HASHTAG_STARTING_WINDOW: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
+    if occurences:
+        e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
+        numberOfInstances=len(occurences)
+        if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
+            e[1]>=HASHTAG_STARTING_WINDOW: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
 
 def getOccurranceDistributionInEpochs(occ): return [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
 def getOccurencesFilteredByDistributionInTimeUnits(occ): 
