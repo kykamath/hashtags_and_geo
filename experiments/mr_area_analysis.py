@@ -35,6 +35,7 @@ AREAS = {
 
 CURRENT_AREA = AREAS['ny']
 MIN_HASHTAG_OCCURENCES = CURRENT_AREA['min_hashtag_occurenes']
+BOUNDING_BOX = CURRENT_AREA['boundary']
 
 
 
@@ -44,13 +45,14 @@ def iterateHashtagObjectInstances(line):
     if 'geo' in data: l = data['geo']
     else: l = data['bb']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
-    for h in data['h']: yield h.lower(), [getLattice(l, AREA_ACCURACY), t]
+    point = getLattice(l, AREA_ACCURACY)
+    if isWithinBoundingBox(point, BOUNDING_BOX):
+        for h in data['h']: yield h.lower(), [point, t]
 
 def getHashtagWithoutEndingWindow(key, values):
     occurences = []
     for instances in values: 
-        for oc in instances['oc']:
-            if isWithinBoundingBox(oc[0], CURRENT_AREA[0]): occurences.append(oc)
+        for oc in instances['oc']: occurences.append(oc)
     if occurences:
         e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
         numberOfInstances=len(occurences)
