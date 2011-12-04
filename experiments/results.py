@@ -6,6 +6,7 @@ Created on Nov 24, 2011
 import sys, os
 import datetime
 from library.plotting import smooth, CurveFit
+from library.kml import KML
 sys.path.append('../')
 from library.file_io import FileIO
 import matplotlib
@@ -229,31 +230,36 @@ class GraphAnalysis:
     def plotConnectedComponents(timeRange, outputFolder):
         def plotFor(id, graphFile, PERCENTAGE_OF_EDGES):
             graph = GraphAnalysis.loadGraph(graphFile, timeRange, outputFolder)
+#            plt.hist([data['w'][1] for u,v, data in graph.edges(data=True)])
+#            plt.show()
+#            exit()
             imagesOutputFolder = hashtagsImagesGraphAnalysisFolder+'%s/connected_components/'%id
-#            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=itemgetter(2))[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
+            GeneralMethods.runCommand('rm -rf %s'%imagesOutputFolder)
             edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=lambda t: t[2][1])[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
-            print graph.number_of_nodes(), int(PERCENTAGE_OF_EDGES*graph.number_of_edges()), len(edgesToRemove)
+#            edgesToRemove = [(u,v,data['w']) for u,v,data in graph.edges(data=True) if data['w'][1]>0.25]
+            print graph.number_of_edges(), int(PERCENTAGE_OF_EDGES*graph.number_of_edges()), len(edgesToRemove)
             for u,v,_ in edgesToRemove: graph.remove_edge(u, v)
-            print graph.number_of_nodes()
-            components = [c for c in nx.connected_components(graph) if len(c)>3]
+            print graph.number_of_edges()
+            components = [c for c in nx.connected_components(graph) if len(c)>2]
             print len(components)
             i = 0
             for component in components:
                 if len(component)>2:
-                    outputFile=imagesOutputFolder+'%s.png'%i;i+=1;FileIO.createDirectoryForFile(outputFile)
+                    outputFile=imagesOutputFolder+'%s.kml'%i;i+=1;FileIO.createDirectoryForFile(outputFile)
                     print outputFile
                     points = [getLocationFromLid(c.replace('_', ' ')) for c in component]
+                    KML.drawKMLsForPoints(points, outputFile, color=GeneralMethods.getRandomColor())
 #                    plot(graph.subgraph(component))
 #                    for e in graph.subgraph(component).edges(data=True):
 #                        print e
 #                    exit()
 #                    print points
 #                    plotPointsOnWorldMap(points, c='m', lw=0)
-                    plotPointsOnUSMap(points, c='m', lw=0)
-                    plt.show()
+#                    plotPointsOnUSMap(points, c='m', lw=0)
+#                    plt.show()
 #                    plt.savefig(outputFile); plt.clf()
-        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 1)
-#        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.0025)
+#        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 1)
+        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.01)
     @staticmethod
     def me(): pass    
     

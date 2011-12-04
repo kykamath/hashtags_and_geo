@@ -5,7 +5,8 @@ Created on Nov 19, 2011
 '''
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from library.mrjobwrapper import ModifiedMRJob
-from library.geo import getLatticeLid, getLattice, isWithinBoundingBox
+from library.geo import getLatticeLid, getLattice, isWithinBoundingBox,\
+    getLocationFromLid
 import cjson, time, datetime
 from collections import defaultdict
 from itertools import groupby
@@ -46,8 +47,11 @@ def iterateHashtagObjectInstances(line):
     else: l = data['bb']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
     point = getLattice(l, AREA_ACCURACY)
-    if isWithinBoundingBox(point, BOUNDING_BOX):
-        for h in data['h']: yield h.lower(), [point, t]
+#    if isWithinBoundingBox(point, BOUNDING_BOX):
+    for h in data['h']: yield h.lower(), [point, t]
+
+def latticeIdInValidAreas(latticeId):
+    return isWithinBoundingBox(getLocationFromLid(latticeId.replace('_', ' ')), BOUNDING_BOX)
 
 def getHashtagWithoutEndingWindow(key, values):
     occurences = []
@@ -60,9 +64,7 @@ def getHashtagWithoutEndingWindow(key, values):
             e[1]>=HASHTAG_STARTING_WINDOW: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
 
 def getOccurranceDistributionInEpochs(occ): return [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
-#def getOccurencesFilteredByDistributionInTimeUnits(occ): 
-#    validTimeUnits = [t[0] for t in getOccurranceDistributionInEpochs(occ) if t[1]>=MIN_OCCUREANCES_PER_TIME_UNIT]
-#    return [(p,t) for p,t in occ if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
+
 def getOccuranesInHighestActiveRegion(hashtagObject):
     def getActiveRegions(timeSeries):
         noOfZerosObserved, activeRegions = 0, []
@@ -142,7 +144,7 @@ class MRAreaAnalysis(ModifiedMRJob):
         for k in latticeObject.keys()[:]: latticeObject[k]=list(set(latticeObject[k]))
         latticeObject['n'].remove(lattice)
         neighborLatticeIds = latticeObject['n']; del latticeObject['n']
-        if neighborLatticeIds and len(latticeObject['h'])>=MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE:
+        if neighborLatticeIds and len(latticeObject['h'])>=MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE and latticeIdInValidAreas(lattice):
             latticeObject['id'] = lattice
             yield lattice, ['o', latticeObject]
             for no in neighborLatticeIds: yield no, ['no', [lattice, latticeObject['h']]]
@@ -177,6 +179,7 @@ class MRAreaAnalysis(ModifiedMRJob):
             hastagStartTime, hastagEndTime = min(latticesOccranceTimeList, key=itemgetter(1))[1], max(latticesOccranceTimeList, key=itemgetter(1))[1]
             hashtagTimePeriod = hastagEndTime - hastagStartTime
             if hashtagTimePeriod:
+                latticesOccranceTimeList = [l for l in latticesOccranceTimeList if latticeIdInValidAreas(l[0])]
                 for l1, l2 in combinations(latticesOccranceTimeList, 2):
                     score = temporalScore(np.abs(l1[1]-l2[1]),hashtagTimePeriod)
                     if score>=MIN_TEMPORAL_CLOSENESS_SCORE:
@@ -241,9 +244,9 @@ class MRAreaAnalysis(ModifiedMRJob):
     
 
     def steps(self):
-#        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToBuildHashtagSharingProbabilityGraph()
-        return self.jobToBuildLocationTemporalClosenessGraph()
+#        return self.jobToBuildLocationTemporalClosenessGraph()
     
 if __name__ == '__main__':
     MRAreaAnalysis.run()
