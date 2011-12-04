@@ -16,6 +16,7 @@ from itertools import combinations
 from operator import itemgetter
 
 AREA_ACCURACY = 0.0145
+MIN_HASHTAG_OCCURENCES = 500
 HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 1).timetuple())
 TIME_UNIT_IN_SECONDS = 60*60
@@ -31,11 +32,11 @@ MIN_HASHTAG_SHARING_PROBABILITY = 0.1
 PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
 
 AREAS = {
-         'ny': dict(boundary=[[40.491, -74.356], [41.181, -72.612]], min_hashtag_occurenes=50), # New York
+         'ny': dict(boundary=[[40.491, -74.356], [41.181, -72.612]]), # New York
          }
 
 CURRENT_AREA = AREAS['ny']
-MIN_HASHTAG_OCCURENCES = CURRENT_AREA['min_hashtag_occurenes']
+#MIN_HASHTAG_OCCURENCES = CURRENT_AREA['min_hashtag_occurenes']
 BOUNDING_BOX = CURRENT_AREA['boundary']
 
 
@@ -216,7 +217,7 @@ class MRAreaAnalysis(ModifiedMRJob):
                 hastagStartTime, hastagEndTime = latticesToOccranceTimeMap[sourceLattice], max(latticesOccranceTimeList, key=itemgetter(1))[1]
                 hashtagTimePeriod = hastagEndTime - hastagStartTime
                 if hashtagTimePeriod:
-                    latticesOccranceTimeList = [(t[0], temporalScore(t[1]-hastagStartTime, hashtagTimePeriod)) for t in latticesOccranceTimeList if t[1]>hastagStartTime]
+                    latticesOccranceTimeList = [(t[0], temporalScore(t[1]-hastagStartTime, hashtagTimePeriod)) for t in latticesOccranceTimeList if t[1]>hastagStartTime and latticeIdInValidAreas(t[0])]
                     for lattice, score in latticesOccranceTimeList:
                         if score>=MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS:
                             yield sourceLattice, [hashtagObject['h'], 'out_link', [lattice, score]]
