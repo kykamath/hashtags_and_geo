@@ -24,7 +24,7 @@ from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy import fft, array
 from collections import defaultdict
-from library.graphs import plot
+from library.graphs import plot, clusterUsingMCLClustering
 import matplotlib.pyplot as plt
 from operator import itemgetter
 from library.geo import getHaversineDistance, plotPointsOnUSMap, getLatticeLid,\
@@ -230,17 +230,27 @@ class GraphAnalysis:
     def plotConnectedComponents(timeRange, outputFolder):
         def plotFor(id, graphFile, PERCENTAGE_OF_EDGES):
             graph = GraphAnalysis.loadGraph(graphFile, timeRange, outputFolder)
+            plt.hist([graph[u][v]['w'][1] for u,v in graph.edges()], 100)
+            plt.show()
+            exit()
+#            for u,v in graph.edges()[:]: print graph[u][v]    
+#            exit()
+            plot(graph)
+            graph.show()
+            exit()
+            print len(clusterUsingMCLClustering(graph, inflation=7.0))
+            exit()
 #            plt.hist([data['w'][1] for u,v, data in graph.edges(data=True)])
 #            plt.show()
 #            exit()
             imagesOutputFolder = hashtagsImagesGraphAnalysisFolder+'%s/connected_components/'%id
             GeneralMethods.runCommand('rm -rf %s'%imagesOutputFolder)
-            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=lambda t: t[2][1])[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
-#            edgesToRemove = [(u,v,data['w']) for u,v,data in graph.edges(data=True) if data['w'][1]>0.25]
+#            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=lambda t: t[2][1])[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
+            edgesToRemove = [(u,v,data['w']) for u,v,data in graph.edges(data=True) if data['w'][1]>0.25]
             print graph.number_of_edges(), int(PERCENTAGE_OF_EDGES*graph.number_of_edges()), len(edgesToRemove)
             for u,v,_ in edgesToRemove: graph.remove_edge(u, v)
             print graph.number_of_edges()
-            components = [c for c in nx.connected_components(graph) if len(c)>2]
+#            components = [c for c in nx.connected_components(graph) if len(c)>2]
             print len(components)
             i = 0
             for component in components:
@@ -258,8 +268,8 @@ class GraphAnalysis:
 #                    plotPointsOnUSMap(points, c='m', lw=0)
 #                    plt.show()
 #                    plt.savefig(outputFile); plt.clf()
-#        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 1)
-        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.01)
+        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 0.1)
+#        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.1)
     @staticmethod
     def me(): pass    
     
