@@ -253,8 +253,8 @@ class MRAreaAnalysis(ModifiedMRJob):
     
 
     def steps(self):
-        return self.jobsToGetHastagObjectsWithoutEndingWindow()
-#        return self.jobsToBuildHashtagSharingProbabilityGraph()
+#        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+        return self.jobsToBuildHashtagSharingProbabilityGraph()
 #        return self.jobToBuildLocationTemporalClosenessGraph()
     
 if __name__ == '__main__':
