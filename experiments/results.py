@@ -228,23 +228,40 @@ class GraphAnalysis:
         return graph
     @staticmethod
     def plotConnectedComponents(timeRange, outputFolder):
+        numberOfEdgesPerNode = 1
+        def getEdgeId(u,v): return ':ilab:'.join(sorted([u,v]))
         def plotFor(id, graphFile, PERCENTAGE_OF_EDGES):
             graph = GraphAnalysis.loadGraph(graphFile, timeRange, outputFolder)
-            plt.hist([graph[u][v]['w'][1] for u,v in graph.edges()], 100)
-            plt.show()
-            exit()
-#            for u,v in graph.edges()[:]: print graph[u][v]    
+            edgesToKeep = []
+            for node in graph.nodes():
+#                print node, 
+                edgesToKeep+=zip(*sorted([(getEdgeId(u,v),d['w'][1]) for u,v,d in graph.edges(node, data=True)], key=itemgetter(1)))[0][-numberOfEdgesPerNode:]
+            edgesToKeep = set(edgesToKeep)
+#            plt.hist([graph[u][v]['w'][1] for u,v in graph.edges()], 100)
+#            plt.show()
 #            exit()
-            plot(graph)
-            graph.show()
-            exit()
-            print len(clusterUsingMCLClustering(graph, inflation=7.0))
+            for u,v in graph.edges()[:]: 
+                if getEdgeId(u,v) not in edgesToKeep: graph.remove_edge(u, v)
+                else: graph.edge[u][v]['w']=graph.edge[u][v]['w'][1]
+#            exit()
+#            plot(graph)
+#            graph.show()
+#            exit()
+#            for com in clusterUsingMCLClustering(graph):
+#                print len(com)
+            imagesOutputFolder = hashtagsImagesGraphAnalysisFolder+'%s/connected_components/'%id
+            GeneralMethods.runCommand('rm -rf %s'%imagesOutputFolder)
+            i = 0
+            for component in clusterUsingMCLClustering(graph):
+                if len(component)>2:
+                    outputFile=imagesOutputFolder+'%s.kml'%i;i+=1;FileIO.createDirectoryForFile(outputFile)
+                    print outputFile
+                    points = [getLocationFromLid(c.replace('_', ' ')) for c in component]
+                    KML.drawKMLsForPoints(points, outputFile, color=GeneralMethods.getRandomColor())
             exit()
 #            plt.hist([data['w'][1] for u,v, data in graph.edges(data=True)])
 #            plt.show()
 #            exit()
-            imagesOutputFolder = hashtagsImagesGraphAnalysisFolder+'%s/connected_components/'%id
-            GeneralMethods.runCommand('rm -rf %s'%imagesOutputFolder)
 #            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=lambda t: t[2][1])[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
             edgesToRemove = [(u,v,data['w']) for u,v,data in graph.edges(data=True) if data['w'][1]>0.25]
             print graph.number_of_edges(), int(PERCENTAGE_OF_EDGES*graph.number_of_edges()), len(edgesToRemove)

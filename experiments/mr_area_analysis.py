@@ -15,7 +15,7 @@ from library.classes import GeneralMethods
 from itertools import combinations
 from operator import itemgetter
 
-AREA_ACCURACY = 0.0145
+AREA_ACCURACY = 0.145
 MIN_HASHTAG_OCCURENCES = 500
 HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 1).timetuple())
@@ -32,14 +32,17 @@ MIN_HASHTAG_SHARING_PROBABILITY = 0.1
 PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
 
 AREAS = {
-         'ny': dict(boundary=[[40.491, -74.356], [41.181, -72.612]]), # New York
+#         'ny': dict(boundary=[[40.491, -74.356], [41.181, -72.612]]), # New York
+#         'north_cal': dict(boundary=[[37.068328,-122.640381], [37.924701,-122.178955]]), # North Cal
+#         'austin': dict(boundary=[[30.097613,-97.971954], [30.486551,-97.535248]]),
+#         'dallas': dict(boundary=[[32.735307,-96.862335], [32.886507,-96.723633]]),
+         'us': dict(boundary=[[24.527135,-127.792969], [49.61071,-59.765625]]),
          }
 
-CURRENT_AREA = AREAS['ny']
+#CURRENT_AREA = AREAS['ny']
 #MIN_HASHTAG_OCCURENCES = CURRENT_AREA['min_hashtag_occurenes']
-BOUNDING_BOX = CURRENT_AREA['boundary']
-
-
+#BOUNDING_BOX = CURRENT_AREA['boundary']
+BOUNDARIES  = [v['boundary'] for v in AREAS.itervalues()]
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
@@ -51,8 +54,13 @@ def iterateHashtagObjectInstances(line):
 #    if isWithinBoundingBox(point, BOUNDING_BOX):
     for h in data['h']: yield h.lower(), [point, t]
 
+#def latticeIdInValidAreas(latticeId):
+#    return isWithinBoundingBox(getLocationFromLid(latticeId.replace('_', ' ')), BOUNDING_BOX)
+
 def latticeIdInValidAreas(latticeId):
-    return isWithinBoundingBox(getLocationFromLid(latticeId.replace('_', ' ')), BOUNDING_BOX)
+    point = latticeId.replace('_', ' ')
+    for boundary in BOUNDARIES:
+        if isWithinBoundingBox(point, boundary): return True
 
 def getHashtagWithoutEndingWindow(key, values):
     occurences = []
@@ -246,8 +254,8 @@ class MRAreaAnalysis(ModifiedMRJob):
 
     def steps(self):
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
-#        return self.jobsToBuildHashtagSharingProbabilityGraph()
-        return self.jobToBuildLocationTemporalClosenessGraph()
+        return self.jobsToBuildHashtagSharingProbabilityGraph()
+#        return self.jobToBuildLocationTemporalClosenessGraph()
     
 if __name__ == '__main__':
     MRAreaAnalysis.run()
