@@ -6,7 +6,7 @@ Created on Nov 19, 2011
 import sys, datetime
 sys.path.append('../')
 from library.classes import GeneralMethods
-from experiments.mr_area_analysis import MRAreaAnalysis
+from experiments.mr_area_analysis import MRAreaAnalysis, latticeIdInValidAreas
 from library.geo import getHaversineDistance, getLatticeLid, getLattice,\
     getCenterOfMass, getLocationFromLid, plotPointsOnUSMap
 from operator import itemgetter
@@ -105,7 +105,7 @@ def mr_area_analysis(timeRange, folderType, mrOutputFolder):
 
 
 if __name__ == '__main__':
-    timeRange = (2,4)    
+    timeRange = (2,11)
 #    outputFolder = '/'
 #    outputFolder = 'world'
 #    mr_analysis(timeRange, outputFolder)

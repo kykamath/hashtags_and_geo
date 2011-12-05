@@ -58,7 +58,7 @@ def iterateHashtagObjectInstances(line):
 #    return isWithinBoundingBox(getLocationFromLid(latticeId.replace('_', ' ')), BOUNDING_BOX)
 
 def latticeIdInValidAreas(latticeId):
-    point = latticeId.replace('_', ' ')
+    point = getLocationFromLid(latticeId.replace('_', ' '))
     for boundary in BOUNDARIES:
         if isWithinBoundingBox(point, boundary): return True
 
