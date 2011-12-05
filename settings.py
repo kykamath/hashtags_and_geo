@@ -30,7 +30,7 @@ hashtagLocationTemporalClosenessGraphFile = hashtagsAnalysisFolder+'%s/%s/locati
 hashtagLocationInAndOutTemporalClosenessGraphFile = hashtagsAnalysisFolder+'%s/%s/locationInAndOutTemporalClosenessGraph'
 
 # Images
-hashtagsImagesFolder = '/data/geo/hashtags/images/'
+hashtagsImagesFolder = '/data/geo/hashtags/images/%s/'
 #hashtagsImagesTimeVsDistanceFolder = hashtagsImagesFolder+'time_vs_distance/'
 #hashtagsImagesCenterOfMassFolder = hashtagsImagesFolder+'center_of_mass/'
 #hashtagsImagesSpreadInTime = hashtagsImagesFolder+'spread_in_time/'

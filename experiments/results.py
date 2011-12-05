@@ -231,12 +231,16 @@ class GraphAnalysis:
         numberOfEdgesPerNode = 1
         def getEdgeId(u,v): return ':ilab:'.join(sorted([u,v]))
         def plotFor(id, graphFile, PERCENTAGE_OF_EDGES):
+            print 'comes here'
+            print graphFile%(outputFolder,'%s_%s'%timeRange)
             graph = GraphAnalysis.loadGraph(graphFile, timeRange, outputFolder)
+            print 'comes here'
             edgesToKeep = []
             for node in graph.nodes():
-#                print node, 
+#                print node
                 edgesToKeep+=zip(*sorted([(getEdgeId(u,v),d['w'][1]) for u,v,d in graph.edges(node, data=True)], key=itemgetter(1)))[0][-numberOfEdgesPerNode:]
             edgesToKeep = set(edgesToKeep)
+            print len(edgesToKeep)
 #            plt.hist([graph[u][v]['w'][1] for u,v in graph.edges()], 100)
 #            plt.show()
 #            exit()
@@ -249,13 +253,13 @@ class GraphAnalysis:
 #            exit()
 #            for com in clusterUsingMCLClustering(graph):
 #                print len(com)
-            imagesOutputFolder = hashtagsImagesGraphAnalysisFolder+'%s/connected_components/'%id
+            imagesOutputFolder = hashtagsImagesGraphAnalysisFolder%outputFolder+'%s/connected_components/'%id
             GeneralMethods.runCommand('rm -rf %s'%imagesOutputFolder)
             i = 0
             for component in clusterUsingMCLClustering(graph):
-                if len(component)>2:
-                    outputFile=imagesOutputFolder+'%s.kml'%i;i+=1;FileIO.createDirectoryForFile(outputFile)
-                    print outputFile
+                if len(component)>3:
+                    outputFile=imagesOutputFolder+'%s_%s.kml'%(id,i);i+=1;FileIO.createDirectoryForFile(outputFile)
+                    print outputFile, len(component)
                     points = [getLocationFromLid(c.replace('_', ' ')) for c in component]
                     KML.drawKMLsForPoints(points, outputFile, color=GeneralMethods.getRandomColor())
             exit()
@@ -303,8 +307,8 @@ class GraphAnalysis:
     
 if __name__ == '__main__':
     timeRange = (2,11)
-#    outputFolder = 'world'
-    outputFolder='ny'
+    outputFolder = 'us'
+#    outputFolder='ny'
 #    outputFolder='/'
 #    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
 

@@ -26,8 +26,8 @@ MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS = 0.0
 MIN_TEMPORAL_CLOSENESS_SCORE = 0.1
 MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE = 3
 
-MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 5
-MIN_HASHTAG_OCCURENCES_PER_LATTICE = 5
+MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25
+MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10
 MIN_HASHTAG_SHARING_PROBABILITY = 0.1
 PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
 
@@ -254,8 +254,8 @@ class MRAreaAnalysis(ModifiedMRJob):
 
     def steps(self):
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
-#        return self.jobsToBuildHashtagSharingProbabilityGraph()
-        return self.jobToBuildLocationTemporalClosenessGraph()
+        return self.jobsToBuildHashtagSharingProbabilityGraph()
+#        return self.jobToBuildLocationTemporalClosenessGraph()
     
 if __name__ == '__main__':
     MRAreaAnalysis.run()
