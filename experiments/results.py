@@ -235,18 +235,25 @@ class GraphAnalysis:
             print graphFile%(outputFolder,'%s_%s'%timeRange)
             graph = GraphAnalysis.loadGraph(graphFile, timeRange, outputFolder)
             print 'comes here'
-            edgesToKeep = []
-            for node in graph.nodes():
-#                print node
-                edgesToKeep+=zip(*sorted([(getEdgeId(u,v),d['w'][1]) for u,v,d in graph.edges(node, data=True)], key=itemgetter(1)))[0][-numberOfEdgesPerNode:]
-            edgesToKeep = set(edgesToKeep)
-            print len(edgesToKeep)
+            
+#            edgesToKeep = []
+#            for node in graph.nodes(): edgesToKeep+=zip(*sorted([(getEdgeId(u,v),d['w'][1]) for u,v,d in graph.edges(node, data=True)], key=itemgetter(1)))[0][-numberOfEdgesPerNode:]
+#            edgesToKeep = set(edgesToKeep)
+#            print len(edgesToKeep)
+            
 #            plt.hist([graph[u][v]['w'][1] for u,v in graph.edges()], 100)
 #            plt.show()
 #            exit()
+
+            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=lambda t: t[2][1])[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
+#            edgesToRemove = [(u,v,data['w']) for u,v,data in graph.edges(data=True) if data['w'][1]>0.25]
+            for u,v,_ in edgesToRemove: graph.remove_edge(u, v)
+
             for u,v in graph.edges()[:]: 
-                if getEdgeId(u,v) not in edgesToKeep: graph.remove_edge(u, v)
-                else: graph.edge[u][v]['w']=graph.edge[u][v]['w'][1]
+#                if getEdgeId(u,v) not in edgesToKeep: graph.remove_edge(u, v)
+#                else: 
+                graph.edge[u][v]['w']=graph.edge[u][v]['w'][1]
+                
 #            exit()
 #            plot(graph)
 #            graph.show()
@@ -256,30 +263,33 @@ class GraphAnalysis:
             imagesOutputFolder = hashtagsImagesGraphAnalysisFolder%outputFolder+'%s/connected_components/'%id
             GeneralMethods.runCommand('rm -rf %s'%imagesOutputFolder)
             i = 0
-            for component in clusterUsingMCLClustering(graph):
+            for component in clusterUsingMCLClustering(graph, inflation=3):
                 if len(component)>3:
-                    outputFile=imagesOutputFolder+'%s_%s.kml'%(id,i);i+=1;FileIO.createDirectoryForFile(outputFile)
+                    outputFile=imagesOutputFolder+'%s_%s.png'%(id,i);i+=1;FileIO.createDirectoryForFile(outputFile)
                     print outputFile, len(component)
                     points = [getLocationFromLid(c.replace('_', ' ')) for c in component]
-                    KML.drawKMLsForPoints(points, outputFile, color=GeneralMethods.getRandomColor())
+                    plotPointsOnWorldMap(points, c='m', lw=0)
+                    plt.show()
+#                    plt.savefig(outputFile); plt.clf()
+#                    KML.drawKMLsForPoints(points, outputFile, color=GeneralMethods.getRandomColor())
             exit()
 #            plt.hist([data['w'][1] for u,v, data in graph.edges(data=True)])
 #            plt.show()
 #            exit()
 #            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=lambda t: t[2][1])[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
-            edgesToRemove = [(u,v,data['w']) for u,v,data in graph.edges(data=True) if data['w'][1]>0.25]
-            print graph.number_of_edges(), int(PERCENTAGE_OF_EDGES*graph.number_of_edges()), len(edgesToRemove)
-            for u,v,_ in edgesToRemove: graph.remove_edge(u, v)
-            print graph.number_of_edges()
-#            components = [c for c in nx.connected_components(graph) if len(c)>2]
-            print len(components)
-            i = 0
-            for component in components:
-                if len(component)>2:
-                    outputFile=imagesOutputFolder+'%s.kml'%i;i+=1;FileIO.createDirectoryForFile(outputFile)
-                    print outputFile
-                    points = [getLocationFromLid(c.replace('_', ' ')) for c in component]
-                    KML.drawKMLsForPoints(points, outputFile, color=GeneralMethods.getRandomColor())
+#            edgesToRemove = [(u,v,data['w']) for u,v,data in graph.edges(data=True) if data['w'][1]>0.25]
+#            print graph.number_of_edges(), int(PERCENTAGE_OF_EDGES*graph.number_of_edges()), len(edgesToRemove)
+#            for u,v,_ in edgesToRemove: graph.remove_edge(u, v)
+#            print graph.number_of_edges()
+##            components = [c for c in nx.connected_components(graph) if len(c)>2]
+#            print len(components)
+#            i = 0
+#            for component in components:
+#                if len(component)>2:
+#                    outputFile=imagesOutputFolder+'%s.kml'%i;i+=1;FileIO.createDirectoryForFile(outputFile)
+#                    print outputFile
+#                    points = [getLocationFromLid(c.replace('_', ' ')) for c in component]
+#                    KML.drawKMLsForPoints(points, outputFile, color=GeneralMethods.getRandomColor())
 #                    plot(graph.subgraph(component))
 #                    for e in graph.subgraph(component).edges(data=True):
 #                        print e
@@ -307,7 +317,7 @@ class GraphAnalysis:
     
 if __name__ == '__main__':
     timeRange = (2,11)
-    outputFolder = 'us'
+    outputFolder = 'world'
 #    outputFolder='ny'
 #    outputFolder='/'
 #    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
