@@ -110,8 +110,8 @@ if __name__ == '__main__':
 #    outputFolder = 'world'
 #    mr_analysis(timeRange, outputFolder)
     
-#    folderType = 'world'
-    folderType = '/'
+    folderType = 'world'
+#    folderType = '/'
     mrOutputFolder = 'us'
     mr_area_analysis(timeRange, folderType, mrOutputFolder)
     
