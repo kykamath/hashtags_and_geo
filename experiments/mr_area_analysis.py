@@ -221,7 +221,8 @@ class MRAreaAnalysis(ModifiedMRJob):
                 neighborHashtags=set(neighborHashtagsDict.keys())
                 commonHashtags = currentObjectHashtags.intersection(neighborHashtags)
                 prob = len(commonHashtags)/float(len(currentObjectHashtags))
-                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: nodeObject['links'][no] =  [list(neighborHashtags), prob, [np.abs(neighborHashtagsDict[h]-currentObjectHashtagsDict[h]) for h in commonHashtags]]
+#                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: nodeObject['links'][no] =  [list(neighborHashtags), prob, [np.abs(neighborHashtagsDict[h]-currentObjectHashtagsDict[h]) for h in commonHashtags]]
+                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: nodeObject['links'][no] =  [list(neighborHashtags), prob, [(neighborHashtagsDict[h],currentObjectHashtagsDict[h]) for h in commonHashtags]]
             yield lattice, nodeObject
     ''' End: Methods to get hashtag co-occurence probabilities among lattices.
     '''
@@ -303,11 +304,9 @@ class MRAreaAnalysis(ModifiedMRJob):
               (self.emptyMapper, self.buildHashtagSharingProbabilityGraphReduce2)
                 ]
     def jobsToBuildHashtagSharingProbabilityGraphWithTemporalCloseness(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+\
-            [(self.buildHashtagSharingProbabilityGraphWithTemporalClosenessMap, None), 
+             [(self.buildHashtagSharingProbabilityGraphWithTemporalClosenessMap, self.buildHashtagSharingProbabilityGraphWithTemporalClosenessReduce1), 
+              (self.emptyMapper, self.buildHashtagSharingProbabilityGraphWithTemporalClosenessReduce2)
                 ]
-#             [(self.buildHashtagSharingProbabilityGraphWithTemporalClosenessMap, self.buildHashtagSharingProbabilityGraphWithTemporalClosenessReduce1), 
-#              (self.emptyMapper, self.buildHashtagSharingProbabilityGraphWithTemporalClosenessReduce2)
-#                ]
     def jobToBuildLocationTemporalClosenessGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+[(self.buildLocationTemporalClosenessGraphMap, self.buildLocationTemporalClosenessGraphReduce)] 
     def jobToBuildLocationInAndOutTemporalClosenessGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+[(self.buildLocationInAndOutTemporalClosenessGraphMap, self.buildLocationInAndOutTemporalClosenessGraphReduce)] 
     
