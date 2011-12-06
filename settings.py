@@ -26,6 +26,7 @@ hashtagsDistributionInLatticeFile = hashtagsAnalysisFolder+'hashtagsDistribution
 hashtagsAnalayzeLocalityIndexAtKFile = hashtagsAnalysisFolder+'%s/%s/hashtagsAnalayzeLocalityIndexAtK'
 hashtagWithGuranteedSourceFile = hashtagsAnalysisFolder+'%s/%s/hashtagWithGuranteedSource'
 hashtagSharingProbabilityGraphFile = hashtagsAnalysisFolder+'%s/%s/hashtagSharingProbabilityGraph'
+hashtagSharingProbabilityGraphWithTemporalClosenessFile = hashtagsAnalysisFolder+'%s/%s/hashtagSharingProbabilityGraphWithTemporalCloseness'
 hashtagLocationTemporalClosenessGraphFile = hashtagsAnalysisFolder+'%s/%s/locationTemporalClosenessGraph'
 hashtagLocationInAndOutTemporalClosenessGraphFile = hashtagsAnalysisFolder+'%s/%s/locationInAndOutTemporalClosenessGraph'
 
