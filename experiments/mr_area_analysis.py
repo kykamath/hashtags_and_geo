@@ -23,13 +23,15 @@ TIME_UNIT_IN_SECONDS = 60*60
 MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
 
 MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS = 0.0
-MIN_TEMPORAL_CLOSENESS_SCORE = 0.1
-MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE = 3
 
 MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25
 MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10
-MIN_HASHTAG_SHARING_PROBABILITY = 0.4
+MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS = 25
+#MIN_HASHTAG_SHARING_PROBABILITY = 0.4
+
 PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
+#MIN_TEMPORAL_CLOSENESS_SCORE = 0.1
+MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE = 3
 
 AREAS = {
 #         'ny': dict(boundary=[[40.491, -74.356], [41.181, -72.612]]), # New York
@@ -217,9 +219,12 @@ class MRAreaAnalysis(ModifiedMRJob):
                 neighborHashtagsDict=dict(neighborHashtags)
                 neighborHashtags=set(neighborHashtagsDict.keys())
                 commonHashtags = currentObjectHashtags.intersection(neighborHashtags)
-                prob = len(commonHashtags)/float(len(currentObjectHashtags))
-                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: nodeObject['links'][no] =  [list(neighborHashtags), prob, [(neighborHashtagsDict[h][0],currentObjectHashtagsDict[h][0],currentObjectHashtagsDict[h][1]) for h in commonHashtags]]
-            yield lattice, nodeObject
+                if len(commonHashtags)>=MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS:
+                    prob = len(commonHashtags)/float(len(currentObjectHashtags))
+#                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: 
+#                                                [neigbor hashtags, porb, [[hashtag, [neighbor occurrence time, current occurence time, hashtag time period]]]]
+                    nodeObject['links'][no] =  [list(neighborHashtags), prob, [[h, [neighborHashtagsDict[h][0],currentObjectHashtagsDict[h][0],currentObjectHashtagsDict[h][1]]] for h in commonHashtags]]
+            if nodeObject['links']: yield lattice, nodeObject
     ''' End: Methods to get hashtag co-occurence probabilities among lattices.
     '''
     
