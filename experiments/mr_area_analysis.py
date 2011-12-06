@@ -190,7 +190,7 @@ class MRAreaAnalysis(ModifiedMRJob):
             hastagStartTime, hastagEndTime = min(lattices, key=itemgetter(1))[1], max(lattices, key=itemgetter(1))[1]
             hashtagTimePeriod = hastagEndTime - hastagStartTime
             for lattice in lattices: 
-                yield lattice[0], ['h', [[hashtagObject['h'], hashtagTimePeriod]]]
+                yield lattice[0], ['h', [[hashtagObject['h'], [lattice[1], hashtagTimePeriod]]]]
                 yield lattice[0], ['n', lattices]
     def buildHashtagSharingProbabilityGraphWithTemporalClosenessReduce1(self, lattice, values):
         latticeObject = {'h': [], 'n': []}
