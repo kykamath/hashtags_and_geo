@@ -19,26 +19,27 @@ from operator import itemgetter
 LATTICE_ACCURACY = 0.145
 TIME_UNIT_IN_SECONDS = 60*60
 
-# Paramters for local run
+## Paramters for local run
+## Paramters to filter hashtags.
+#MIN_HASHTAG_OCCURENCES = 1
+#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 1, 1).timetuple())
+#
+## Paramters to construct lattice graph.
+#MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 1
+#MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS = 3
+#MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 1
+#MIN_HASHTAG_OCCURENCES_PER_LATTICE = 1
+
 # Paramters to filter hashtags.
-MIN_HASHTAG_OCCURENCES = 1
-HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 1, 1).timetuple())
+MIN_HASHTAG_OCCURENCES = 500
+HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
 
 # Paramters to construct lattice graph.
 MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
 MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS = 25
-MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25
-MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10
+MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25 # Min no. of unique hashtags a lattice should have observed. For example: l1 is valid of it produces [h1, h2, h3] >= 3 (min)
+MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10 # Min no. hashtags lattice should have observed. For example: l1 is valid of it produces [h1, h1, h1] >= 3 (min)
 
-# Paramters to filter hashtags.
-#MIN_HASHTAG_OCCURENCES = 500
-#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
-
-# Paramters to construct lattice graph.
-#MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
-#MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS = 25
-#MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25
-#MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10
 
 #MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS = 0.0
 #PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
@@ -185,10 +186,10 @@ class MRAreaAnalysis(ModifiedMRJob):
 #    ''' End: Methods to get hashtag co-occurence probabilities among lattices.
 #    '''
     
-    ''' Start: Methods to get hashtag co-occurence probabilities among lattices.
+    ''' Start: Methods to build lattice graph.
         E(Place_a, Place_b) = len(Hastags(Place_a) and Hastags(Place_b)) / len(Hastags(Place_a))
     '''
-    def buildHashtagSharingProbabilityGraphWithTemporalClosenessMap(self, key, hashtagObject):
+    def buildLatticeGraphMap(self, key, hashtagObject):
 #        lattices = list(set([getLatticeLid(l, accuracy=LATTICE_ACCURACY) for l in zip(*hashtagObject['oc'])[0]]))
         hashtagObject['oc']=getOccuranesInHighestActiveRegion(hashtagObject)
         lattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
@@ -204,7 +205,7 @@ class MRAreaAnalysis(ModifiedMRJob):
             for lattice in lattices: 
                 yield lattice[0], ['h', [[hashtagObject['h'], [lattice[1], hashtagTimePeriod]]]]
                 yield lattice[0], ['n', lattices]
-    def buildHashtagSharingProbabilityGraphWithTemporalClosenessReduce1(self, lattice, values):
+    def buildLatticeGraphReduce1(self, lattice, values):
         latticeObject = {'h': [], 'n': []}
         for type, value in values: latticeObject[type]+=value
         for k in latticeObject.keys()[:]: latticeObject[k]=dict(latticeObject[k])
@@ -215,42 +216,21 @@ class MRAreaAnalysis(ModifiedMRJob):
             latticeObject['id'] = lattice
             yield lattice, ['o', latticeObject]
             for no,_ in neighborLatticeIds: yield no, ['no', [lattice, latticeObject['h']]]
-    def buildHashtagSharingProbabilityGraphWithTemporalClosenessReduce2(self, lattice, values):
+    def buildLatticeGraphReduce2(self, lattice, values):
         nodeObject, latticeObject, neighborObjects = {'links':{}, 'id': lattice, 'hashtags': []}, None, []
         for type, value in values:
             if type=='o': latticeObject = value
             else: neighborObjects.append(value)
         if latticeObject:
-#            currentObjectHashtagsDict = dict(latticeObject['h'])
-#            currentObjectHashtags = set(currentObjectHashtagsDict.keys())
-#            nodeObject['hashtags'] = list(currentObjectHashtags)
-#            for no, neighborHashtags in neighborObjects:
-#                neighborHashtagsDict=dict(neighborHashtags)
-#                neighborHashtags=set(neighborHashtagsDict.keys())
-#                commonHashtags = currentObjectHashtags.intersection(neighborHashtags)
-#                if len(commonHashtags)>=MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS:
-##                    prob = len(commonHashtags)/float(len(currentObjectHashtags))
-##                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: 
-##                                                [neigbor hashtags, porb, [[hashtag, [neighbor occurrence time, current occurence time, hashtag time period]]]]
-##                    nodeObject['links'][no] =  [list(neighborHashtags), prob, [[h, [neighborHashtagsDict[h][0],currentObjectHashtagsDict[h][0],currentObjectHashtagsDict[h][1]]] for h in commonHashtags]]
-#                    nodeObject['links'][no] =  [list(neighborHashtags), prob, [[h, [neighborHashtagsDict[h][0],currentObjectHashtagsDict[h][0],currentObjectHashtagsDict[h][1]]] for h in commonHashtags]]
-#            if nodeObject['links']: yield lattice, nodeObject
             currentObjectHashtagsDict = dict(latticeObject['h'])
             currentObjectHashtags = set(currentObjectHashtagsDict.keys())
-            nodeObject['hashtags'] = list(currentObjectHashtags)
+            nodeObject['hashtags'] = currentObjectHashtagsDict
             for no, neighborHashtags in neighborObjects:
                 neighborHashtagsDict=dict(neighborHashtags)
-                neighborHashtags=set(neighborHashtagsDict.keys())
-                commonHashtags = currentObjectHashtags.intersection(neighborHashtags)
-                if len(commonHashtags)>=MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS:
-#                    prob = len(commonHashtags)/float(len(currentObjectHashtags))
-#                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: 
-#                                                [neigbor hashtags, porb, [[hashtag, [neighbor occurrence time, current occurence time, hashtag time period]]]]
-#                    nodeObject['links'][no] =  [list(neighborHashtags), prob, [[h, [neighborHashtagsDict[h][0],currentObjectHashtagsDict[h][0],currentObjectHashtagsDict[h][1]]] for h in commonHashtags]]
-                    nodeObject['links'][no] =  [list(neighborHashtags), prob, [[h, [neighborHashtagsDict[h][0],currentObjectHashtagsDict[h][0],currentObjectHashtagsDict[h][1]]] for h in commonHashtags]]
+                commonHashtags = currentObjectHashtags.intersection(set(neighborHashtagsDict.keys()))
+                if len(commonHashtags)>=MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS: nodeObject['links'][no] = neighborHashtagsDict
             if nodeObject['links']: yield lattice, nodeObject
-
-    ''' End: Methods to get hashtag co-occurence probabilities among lattices.
+    ''' End: Methods to build lattice graph..
     '''
     
 #    ''' Start: Methods to get temporal closeness among lattices.
@@ -328,9 +308,9 @@ class MRAreaAnalysis(ModifiedMRJob):
 #             [(self.buildHashtagSharingProbabilityGraphMap, self.buildHashtagSharingProbabilityGraphReduce1), 
 #              (self.emptyMapper, self.buildHashtagSharingProbabilityGraphReduce2)
 #                ]
-    def jobsToBuildHashtagSharingProbabilityGraphWithTemporalCloseness(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+\
-             [(self.buildHashtagSharingProbabilityGraphWithTemporalClosenessMap, self.buildHashtagSharingProbabilityGraphWithTemporalClosenessReduce1), 
-              (self.emptyMapper, self.buildHashtagSharingProbabilityGraphWithTemporalClosenessReduce2)
+    def jobsToBuildLatticeGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+\
+             [(self.buildLatticeGraphMap, self.buildLatticeGraphReduce1), 
+              (self.emptyMapper, self.buildLatticeGraphReduce2)
                 ]
 #    def jobToBuildLocationTemporalClosenessGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+[(self.buildLocationTemporalClosenessGraphMap, self.buildLocationTemporalClosenessGraphReduce)] 
     def jobToBuildLocationInAndOutTemporalClosenessGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+[(self.buildLocationInAndOutTemporalClosenessGraphMap, self.buildLocationInAndOutTemporalClosenessGraphReduce)] 
@@ -339,7 +319,7 @@ class MRAreaAnalysis(ModifiedMRJob):
     def steps(self):
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToBuildHashtagSharingProbabilityGraph()
-        return self.jobsToBuildHashtagSharingProbabilityGraphWithTemporalCloseness() 
+        return self.jobsToBuildLatticeGraph() 
 #        return self.jobToBuildLocationTemporalClosenessGraph()
     
 if __name__ == '__main__':
