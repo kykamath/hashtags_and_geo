@@ -100,20 +100,20 @@ def mr_analysis(timeRange, outputFolder):
     runMRJob(MRAnalysis, hashtagLocationInAndOutTemporalClosenessGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
 
 def mr_area_analysis(timeRange, folderType, mrOutputFolder):
-#    runMRJob(MRAreaAnalysis, hashtagsWithoutEndingWindowFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
+    runMRJob(MRAreaAnalysis, hashtagsWithoutEndingWindowFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
 #    runMRJob(MRAreaAnalysis, hashtagSharingProbabilityGraphFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
-    runMRJob(MRAreaAnalysis, hashtagSharingProbabilityGraphWithTemporalClosenessFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
+#    runMRJob(MRAreaAnalysis, hashtagSharingProbabilityGraphWithTemporalClosenessFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
 #    runMRJob(MRAreaAnalysis, hashtagLocationTemporalClosenessGraphFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
 
 
 if __name__ == '__main__':
-    timeRange = (2,3)
+    timeRange = (2,11)
 #    outputFolder = '/'
 #    outputFolder = 'world'
 #    mr_analysis(timeRange, outputFolder)
     
     folderType = 'world'
 #    folderType = '/'
-    mrOutputFolder = 'us'
+    mrOutputFolder = 'world'
     mr_area_analysis(timeRange, folderType, mrOutputFolder)
     
