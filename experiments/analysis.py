@@ -107,7 +107,7 @@ def mr_area_analysis(timeRange, folderType, mrOutputFolder):
 
 
 if __name__ == '__main__':
-    timeRange = (2,4)
+    timeRange = (2,3)
 #    outputFolder = '/'
 #    outputFolder = 'world'
 #    mr_analysis(timeRange, outputFolder)
