@@ -5,6 +5,7 @@ Created on Nov 24, 2011
 '''
 import sys, os
 import datetime
+import numpy as np
 from library.plotting import smooth, CurveFit
 from library.kml import KML
 sys.path.append('../')
@@ -239,20 +240,22 @@ class GraphAnalysis:
 #            edgesToKeep = []
 #            for node in graph.nodes(): edgesToKeep+=zip(*sorted([(getEdgeId(u,v),d['w'][1]) for u,v,d in graph.edges(node, data=True)], key=itemgetter(1)))[0][-numberOfEdgesPerNode:]
 #            edgesToKeep = set(edgesToKeep)
-#            print len(edgesToKeep)
-            
-#            plt.hist([graph[u][v]['w'][1] for u,v in graph.edges()], 100)
-#            plt.show()
-#            exit()
-
-            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=lambda t: t[2][1])[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
-#            edgesToRemove = [(u,v,data['w']) for u,v,data in graph.edges(data=True) if data['w'][1]>0.25]
-            for u,v,_ in edgesToRemove: graph.remove_edge(u, v)
-
-            for u,v in graph.edges()[:]: 
+#            for u,v in graph.edges()[:]: 
 #                if getEdgeId(u,v) not in edgesToKeep: graph.remove_edge(u, v)
-#                else: 
-                graph.edge[u][v]['w']=graph.edge[u][v]['w'][1]
+#                else: graph.edge[u][v]['w']=graph.edge[u][v]['w'][1]
+            
+            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=lambda t: t[2][1])[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
+#            edgesToRemove = [(u,v,data['w']) for u,v,data in graph.edges(data=True) if data['w'][1]<0.60]
+            for u,v,_ in edgesToRemove: graph.remove_edge(u, v)
+            totalEdgeWeight = sum([graph.edge[u][v]['w'][1] for u,v in graph.edges()])
+            hashtags = defaultdict(dict)
+            for u,v in graph.edges()[:]: 
+                hashtags[u][v] = graph.edge[u][v]['w'][0]
+                graph.edge[u][v]['w']=graph.edge[u][v]['w'][1]/totalEdgeWeight
+
+#            plt.hist([graph.edge[u][v]['w'] for u,v in graph.edges()], bins=100)
+#            plt.show()
+#            return
                 
 #            exit()
 #            plot(graph)
@@ -263,47 +266,111 @@ class GraphAnalysis:
             imagesOutputFolder = hashtagsImagesGraphAnalysisFolder%outputFolder+'%s/connected_components/'%id
             GeneralMethods.runCommand('rm -rf %s'%imagesOutputFolder)
             i = 0
-            for component in clusterUsingMCLClustering(graph, inflation=3):
-                if len(component)>3:
+#            for component in clusterUsingMCLClustering(graph, inflation=3):
+            for component in clusterUsingMCLClustering(graph, inflation=1.4):
+#            for component in nx.connected_components(graph):
+                if len(component)>0:
                     outputFile=imagesOutputFolder+'%s_%s.png'%(id,i);i+=1;FileIO.createDirectoryForFile(outputFile)
                     print outputFile, len(component)
+                    for u,v in graph.subgraph(component).edges():
+                        try:
+                            print u,v, hashtags[u][v]
+                        except: print hashtags[v][u]
                     points = [getLocationFromLid(c.replace('_', ' ')) for c in component]
                     plotPointsOnWorldMap(points, c='m', lw=0)
                     plt.show()
 #                    plt.savefig(outputFile); plt.clf()
 #                    KML.drawKMLsForPoints(points, outputFile, color=GeneralMethods.getRandomColor())
             exit()
-#            plt.hist([data['w'][1] for u,v, data in graph.edges(data=True)])
-#            plt.show()
-#            exit()
-#            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=lambda t: t[2][1])[:-int(PERCENTAGE_OF_EDGES*graph.number_of_edges())]
-#            edgesToRemove = [(u,v,data['w']) for u,v,data in graph.edges(data=True) if data['w'][1]>0.25]
-#            print graph.number_of_edges(), int(PERCENTAGE_OF_EDGES*graph.number_of_edges()), len(edgesToRemove)
-#            for u,v,_ in edgesToRemove: graph.remove_edge(u, v)
-#            print graph.number_of_edges()
-##            components = [c for c in nx.connected_components(graph) if len(c)>2]
-#            print len(components)
-#            i = 0
-#            for component in components:
-#                if len(component)>2:
-#                    outputFile=imagesOutputFolder+'%s.kml'%i;i+=1;FileIO.createDirectoryForFile(outputFile)
-#                    print outputFile
-#                    points = [getLocationFromLid(c.replace('_', ' ')) for c in component]
-#                    KML.drawKMLsForPoints(points, outputFile, color=GeneralMethods.getRandomColor())
-#                    plot(graph.subgraph(component))
-#                    for e in graph.subgraph(component).edges(data=True):
-#                        print e
-#                    exit()
-#                    print points
-#                    plotPointsOnWorldMap(points, c='m', lw=0)
-#                    plotPointsOnUSMap(points, c='m', lw=0)
-#                    plt.show()
-#                    plt.savefig(outputFile); plt.clf()
-        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 0.1)
-#        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.1)
+
+#        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 0.005)
+#        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.001)
+
+#        plotFor(GraphAnalysis.hastagSharingId, hashtagSharingProbabilityGraphFile, 0.005)
+        plotFor(GraphAnalysis.temporalClosenessId, hashtagLocationTemporalClosenessGraphFile, 0.05)
+        
     @staticmethod
-    def me(): pass    
-    
+    def me(timeRange, outputFolder):
+        def getEdgeId(u,v): return ':ilab:'.join(sorted([u,v]))
+        distanceBetweenMetrics = {}
+        temporalClosenessGraph = GraphAnalysis.loadGraph(hashtagLocationTemporalClosenessGraphFile, timeRange, outputFolder)
+        sharingClosenessGraph = GraphAnalysis.loadGraph(hashtagSharingProbabilityGraphFile, timeRange, outputFolder)
+        
+        for u,v in temporalClosenessGraph.edges()[:]: temporalClosenessGraph.edge[u][v]['w']=temporalClosenessGraph.edge[u][v]['w'][1]
+        for u,v in sharingClosenessGraph.edges()[:]: sharingClosenessGraph.edge[u][v]['w']=sharingClosenessGraph.edge[u][v]['w'][1]
+        
+        meanTemporalClosenessScore = np.mean([ temporalClosenessGraph[u][v]['w'] for u, v in temporalClosenessGraph.edges()])
+        meanSharingClosenessScore = np.mean([ sharingClosenessGraph[u][v]['w'] for u, v in sharingClosenessGraph.edges()])
+        
+        for u,v in temporalClosenessGraph.edges()[:]: 
+#            distanceBetweenMetrics[getEdgeId(u, v)] = [temporalClosenessGraph.edge[u][v]['w']-meanTemporalClosenessScore]
+            distanceBetweenMetrics[getEdgeId(u, v)] = [temporalClosenessGraph.edge[u][v]['w']]
+        for u,v in sharingClosenessGraph.edges()[:]: 
+            edge = getEdgeId(u, v)
+            if edge in distanceBetweenMetrics: 
+#                distanceBetweenMetrics[edge].append(sharingClosenessGraph.edge[u][v]['w']-meanSharingClosenessScore)
+                distanceBetweenMetrics[edge].append(sharingClosenessGraph.edge[u][v]['w'])
+            
+#        for k, v in distanceBetweenMetrics.iteritems(): 
+#            if len(v)==2:
+#                print k, v, np.abs(v[0]-v[1])
+                
+#        plt.hist([np.abs(v[0]-v[1]) for k, v in distanceBetweenMetrics.iteritems() if len(v)==2], bins=100)
+#        plt.show()
+
+#        sortedScoreDifferences = sorted([(k, v, np.abs(v[0]-v[1])) for k, v in distanceBetweenMetrics.iteritems() if len(v)==2], key=itemgetter(2))
+#        print sortedScoreDifferences[:3]
+#        print sortedScoreDifferences[-3:]
+#        dataX, dataY = [], []
+#        for k, v in distanceBetweenMetrics.iteritems(): 
+#            if len(v)==2: dataX.append(v[0]),dataY.append(v[1])
+##                plt.scatter(v[0], v[1])
+##                plt.show()
+#        print len(dataX)
+#        plt.scatter(dataX, dataY)
+#        plt.show()
+        
+        temporal, sharing = [], []
+        for k, v in distanceBetweenMetrics.iteritems(): 
+            if len(v)==2: temporal.append((k, v[0])), sharing.append((k, v[1]))
+        
+        temporal = zip(*sorted(temporal, key=itemgetter(1))[:int(0.1*len(temporal))])[0]
+        sharing = zip(*sorted(sharing, key=itemgetter(1), reverse=True)[:int(0.1*len(sharing))])[0]
+        interestedVertices = []
+        for e in set(temporal).intersection(set(sharing)):
+            interestedVertices+=e.split(':ilab:') 
+        interestedVertices=list(set(interestedVertices))
+        temporalGraph = temporalClosenessGraph.subgraph(interestedVertices)
+        sharingGraph = sharingClosenessGraph.subgraph(interestedVertices)
+
+        print temporalClosenessGraph.number_of_nodes(), sharingClosenessGraph.number_of_nodes()
+        print meanTemporalClosenessScore, meanSharingClosenessScore
+        
+        def plotGraph(graph):
+#            for u,v,data in graph.edges(data=True):
+#                print u, v, data
+#            exit()
+            edgesToRemove = sorted([(u,v,data['w']) for u,v,data in graph.edges(data=True)], key=lambda t: t[2])[:-int(0.5*graph.number_of_edges())]
+            for u,v,_ in edgesToRemove: graph.remove_edge(u,v)
+            totalEdgeWeight = sum([graph.edge[u][v]['w'] for u,v in graph.edges()[:]])
+            for u,v in graph.edges()[:]: graph.edge[u][v]['w'] = graph.edge[u][v]['w']/float(totalEdgeWeight)
+#            plot(graph)
+            for component in clusterUsingMCLClustering(graph, inflation=3.0):
+#            for component in nx.connected_components(graph):
+                if len(component)>0:
+#                    outputFile=imagesOutputFolder+'%s_%s.png'%(id,i);i+=1;FileIO.createDirectoryForFile(outputFile)
+#                    print outputFile, len(component)
+#                    for u,v in graph.subgraph(component).edges():
+#                        try:
+#                            print u,v, hashtags[u][v]
+#                        except: print hashtags[v][u]
+                    points = [getLocationFromLid(c.replace('_', ' ')) for c in component]
+                    plotPointsOnWorldMap(points, c='m', lw=0)
+                    plt.show()
+            
+        plotGraph(sharingGraph)
+        print 'sharing done'
+        plotGraph(temporalGraph)
 
 #    plt.hist([e[2]['w'] for e in graph.edges(data=True)], bins=10)
 #    plt.show()
@@ -329,6 +396,7 @@ if __name__ == '__main__':
 #    plotHashtagsInOutGraphs(timeRange, outputFolder)
 
     GraphAnalysis.plotConnectedComponents(timeRange, outputFolder)
+#    GraphAnalysis.me(timeRange, outputFolder)
 
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
