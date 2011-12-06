@@ -15,23 +15,35 @@ from library.classes import GeneralMethods
 from itertools import combinations
 from operator import itemgetter
 
-AREA_ACCURACY = 0.145
-MIN_HASHTAG_OCCURENCES = 500
-HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
-HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 1).timetuple())
+# General parameters
+LATTICE_ACCURACY = 0.145
 TIME_UNIT_IN_SECONDS = 60*60
+
+# Paramters for local run
+# Paramters to filter hashtags.
+MIN_HASHTAG_OCCURENCES = 1
+HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 1, 1).timetuple())
+
+# Paramters to construct lattice graph.
 MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
-
-MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS = 0.0
-
+MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS = 25
 MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25
 MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10
-MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS = 25
-#MIN_HASHTAG_SHARING_PROBABILITY = 0.4
 
-PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
+# Paramters to filter hashtags.
+#MIN_HASHTAG_OCCURENCES = 500
+#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
+
+# Paramters to construct lattice graph.
+#MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
+#MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS = 25
+#MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25
+#MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10
+
+#MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS = 0.0
+#PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
 #MIN_TEMPORAL_CLOSENESS_SCORE = 0.1
-MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE = 3
+#MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE = 3
 
 AREAS = {
 #         'ny': dict(boundary=[[40.491, -74.356], [41.181, -72.612]]), # New York
@@ -42,9 +54,6 @@ AREAS = {
         'world': dict(boundary=[[-90,-180], [90, 180]]),  
          }
 
-#CURRENT_AREA = AREAS['ny']
-#MIN_HASHTAG_OCCURENCES = CURRENT_AREA['min_hashtag_occurenes']
-#BOUNDING_BOX = CURRENT_AREA['boundary']
 BOUNDARIES  = [v['boundary'] for v in AREAS.itervalues()]
 
 def iterateHashtagObjectInstances(line):
@@ -53,7 +62,7 @@ def iterateHashtagObjectInstances(line):
     if 'geo' in data: l = data['geo']
     else: l = data['bb']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
-    point = getLattice(l, AREA_ACCURACY)
+    point = getLattice(l, LATTICE_ACCURACY)
 #    if isWithinBoundingBox(point, BOUNDING_BOX):
     for h in data['h']: yield h.lower(), [point, t]
 
@@ -113,7 +122,7 @@ def getOccuranesInHighestActiveRegion(hashtagObject):
 
 def filterLatticesByMinHashtagOccurencesPerLattice(h):
     latticesToOccurancesMap = defaultdict(list)
-    for l, oc in h['oc']:latticesToOccurancesMap[getLatticeLid(l, AREA_ACCURACY)].append(oc)
+    for l, oc in h['oc']:latticesToOccurancesMap[getLatticeLid(l, LATTICE_ACCURACY)].append(oc)
     return dict([(k,v) for k, v in latticesToOccurancesMap.iteritems() if len(v)>=MIN_HASHTAG_OCCURENCES_PER_LATTICE])
 
 def temporalScore(lag, width):
@@ -144,7 +153,7 @@ class MRAreaAnalysis(ModifiedMRJob):
 #        E(Place_a, Place_b) = len(Hastags(Place_a) and Hastags(Place_b)) / len(Hastags(Place_a))
 #    '''
 #    def buildHashtagSharingProbabilityGraphMap(self, key, hashtagObject):
-##        lattices = list(set([getLatticeLid(l, accuracy=AREA_ACCURACY) for l in zip(*hashtagObject['oc'])[0]]))
+##        lattices = list(set([getLatticeLid(l, accuracy=LATTICE_ACCURACY) for l in zip(*hashtagObject['oc'])[0]]))
 #        hashtagObject['oc']=getOccuranesInHighestActiveRegion(hashtagObject)
 #        lattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
 #        for lattice in lattices: 
@@ -180,12 +189,12 @@ class MRAreaAnalysis(ModifiedMRJob):
         E(Place_a, Place_b) = len(Hastags(Place_a) and Hastags(Place_b)) / len(Hastags(Place_a))
     '''
     def buildHashtagSharingProbabilityGraphWithTemporalClosenessMap(self, key, hashtagObject):
-#        lattices = list(set([getLatticeLid(l, accuracy=AREA_ACCURACY) for l in zip(*hashtagObject['oc'])[0]]))
+#        lattices = list(set([getLatticeLid(l, accuracy=LATTICE_ACCURACY) for l in zip(*hashtagObject['oc'])[0]]))
         hashtagObject['oc']=getOccuranesInHighestActiveRegion(hashtagObject)
         lattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
         latticesToOccranceTimeMap = {}
         for k, v in hashtagObject['oc']:
-            lid = getLatticeLid(k, AREA_ACCURACY)
+            lid = getLatticeLid(k, LATTICE_ACCURACY)
             if lid in lattices:
                 if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
         lattices = latticesToOccranceTimeMap.items()
@@ -212,6 +221,20 @@ class MRAreaAnalysis(ModifiedMRJob):
             if type=='o': latticeObject = value
             else: neighborObjects.append(value)
         if latticeObject:
+#            currentObjectHashtagsDict = dict(latticeObject['h'])
+#            currentObjectHashtags = set(currentObjectHashtagsDict.keys())
+#            nodeObject['hashtags'] = list(currentObjectHashtags)
+#            for no, neighborHashtags in neighborObjects:
+#                neighborHashtagsDict=dict(neighborHashtags)
+#                neighborHashtags=set(neighborHashtagsDict.keys())
+#                commonHashtags = currentObjectHashtags.intersection(neighborHashtags)
+#                if len(commonHashtags)>=MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS:
+##                    prob = len(commonHashtags)/float(len(currentObjectHashtags))
+##                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: 
+##                                                [neigbor hashtags, porb, [[hashtag, [neighbor occurrence time, current occurence time, hashtag time period]]]]
+##                    nodeObject['links'][no] =  [list(neighborHashtags), prob, [[h, [neighborHashtagsDict[h][0],currentObjectHashtagsDict[h][0],currentObjectHashtagsDict[h][1]]] for h in commonHashtags]]
+#                    nodeObject['links'][no] =  [list(neighborHashtags), prob, [[h, [neighborHashtagsDict[h][0],currentObjectHashtagsDict[h][0],currentObjectHashtagsDict[h][1]]] for h in commonHashtags]]
+#            if nodeObject['links']: yield lattice, nodeObject
             currentObjectHashtagsDict = dict(latticeObject['h'])
             currentObjectHashtags = set(currentObjectHashtagsDict.keys())
             nodeObject['hashtags'] = list(currentObjectHashtags)
@@ -220,11 +243,13 @@ class MRAreaAnalysis(ModifiedMRJob):
                 neighborHashtags=set(neighborHashtagsDict.keys())
                 commonHashtags = currentObjectHashtags.intersection(neighborHashtags)
                 if len(commonHashtags)>=MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS:
-                    prob = len(commonHashtags)/float(len(currentObjectHashtags))
+#                    prob = len(commonHashtags)/float(len(currentObjectHashtags))
 #                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: 
 #                                                [neigbor hashtags, porb, [[hashtag, [neighbor occurrence time, current occurence time, hashtag time period]]]]
+#                    nodeObject['links'][no] =  [list(neighborHashtags), prob, [[h, [neighborHashtagsDict[h][0],currentObjectHashtagsDict[h][0],currentObjectHashtagsDict[h][1]]] for h in commonHashtags]]
                     nodeObject['links'][no] =  [list(neighborHashtags), prob, [[h, [neighborHashtagsDict[h][0],currentObjectHashtagsDict[h][0],currentObjectHashtagsDict[h][1]]] for h in commonHashtags]]
             if nodeObject['links']: yield lattice, nodeObject
+
     ''' End: Methods to get hashtag co-occurence probabilities among lattices.
     '''
     
@@ -235,7 +260,7 @@ class MRAreaAnalysis(ModifiedMRJob):
 #        hashtagObject['oc']=occuranesInHighestActiveRegion
 #        validLattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
 #        for k, v in occuranesInHighestActiveRegion:
-#            lid = getLatticeLid(k, AREA_ACCURACY)
+#            lid = getLatticeLid(k, LATTICE_ACCURACY)
 #            if lid in validLattices:
 #                if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
 #        if latticesToOccranceTimeMap:
@@ -269,7 +294,7 @@ class MRAreaAnalysis(ModifiedMRJob):
             if sortedOcc: return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
         occuranesInHighestActiveRegion, latticesToOccranceTimeMap = getOccuranesInHighestActiveRegion(hashtagObject), {}
         validLattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
-        occuranesInHighestActiveRegion = [(getLatticeLid(k, AREA_ACCURACY), v) for k, v in occuranesInHighestActiveRegion if getLatticeLid(k, AREA_ACCURACY) in validLattices]
+        occuranesInHighestActiveRegion = [(getLatticeLid(k, LATTICE_ACCURACY), v) for k, v in occuranesInHighestActiveRegion if getLatticeLid(k, LATTICE_ACCURACY) in validLattices]
         if occuranesInHighestActiveRegion:
             sourceLattice = getSourceLattice(occuranesInHighestActiveRegion)
             if sourceLattice:
