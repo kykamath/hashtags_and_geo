@@ -164,8 +164,13 @@ class LatticeGraph:
         LatticeGraph.plotSharingProbabilityAndTemporalDistanceInHoursGraphsOnMap(timeRange, outputFolder)
 
 def tempAnalysis(timeRange, mrOutputFolder):
+    i = 1
     for latticeObject in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%(mrOutputFolder,'%s_%s'%timeRange)):
-        print latticeObject['id']
+        print i, latticeObject['id']; i+=1
+        for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+            print  filterOutNeighborHashtagsAbove75Percentile(latticeObject['hashtags'], neighborHashtags)
+        if i==10: break
+        
 #    mra = MRAnalysis()
 #    for h in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/2_11/hashtagsWithoutEndingWindow'):
 #        mra.buildHashtagTemporalClosenessGraphMap(None, h)
