@@ -126,10 +126,6 @@ def filterLatticesByMinHashtagOccurencesPerLattice(h):
     for l, oc in h['oc']:latticesToOccurancesMap[getLatticeLid(l, LATTICE_ACCURACY)].append(oc)
     return dict([(k,v) for k, v in latticesToOccurancesMap.iteritems() if len(v)>=MIN_HASHTAG_OCCURENCES_PER_LATTICE])
 
-def temporalScore(lag, width):
-    if lag==0: return 1.0
-    return 1-np.log(lag)/np.log(width)
-
 class MRAreaAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
