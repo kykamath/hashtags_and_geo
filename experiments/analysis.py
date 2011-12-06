@@ -4,11 +4,12 @@ Created on Nov 19, 2011
 @author: kykamath
 '''
 import sys, datetime, matplotlib
+from scipy import stats
 from library.graphs import plot
 sys.path.append('../')
 from library.classes import GeneralMethods
 from experiments.mr_area_analysis import MRAreaAnalysis, latticeIdInValidAreas,\
-    LATTICE_ACCURACY
+    LATTICE_ACCURACY, TIME_UNIT_IN_SECONDS
 from library.geo import getHaversineDistance, getLatticeLid, getLattice,\
     getCenterOfMass, getLocationFromLid, plotPointsOnUSMap, plotPointsOnWorldMap
 from operator import itemgetter
@@ -81,16 +82,29 @@ class HashtagClass:
         hashtags = sorted(HashtagClass.iterateHashtagsWithClass(), key=itemgetter(1))
         return dict((cls, list(h[0] for h in hashtags)) for cls, hashtags in groupby(hashtags, key=itemgetter(1)))
 
+def filterOutNeighborHashtagsAbove75Percentile(latticeHashtags, neighborHashtags):
+    dataToReturn = [(hashtag, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
+    scoreAt75Percentile = stats.scoreatpercentile(zip(*(dataToReturn))[1], 75)
+    return dict(filter(lambda t: t[1]<=scoreAt75Percentile, dataToReturn))
+    
 def latticeNodeBySharingProbability(latticeObject):
-    latticeHashtagsSet = set(latticeObject['hashtags'])
     dataToReturn = {'id': latticeObject['id'], 'links': {}}
+    latticeHashtagsSet = set(latticeObject['hashtags'])
     for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+        neighborHashtags = filterOutNeighborHashtagsAbove75Percentile(latticeObject['hashtags'], neighborHashtags)
         neighborHashtagsSet = set(neighborHashtags)
         dataToReturn['links'][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
     return dataToReturn
-    
+def latticeNodeByTemporalDistanceInHours(latticeObject):
+    dataToReturn = {'id': latticeObject['id'], 'links': {}}
+    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+        neighborHashtags = filterOutNeighborHashtagsAbove75Percentile(latticeObject['hashtags'], neighborHashtags)
+        dataX = zip(*neighborHashtags.iteritems())[1]
+        dataToReturn['links'][neighborLattice]=np.mean(dataX)
+    return dataToReturn
 class LatticeGraph:
     typeSharingProbability = {'id': 'sharing_probability', 'method': latticeNodeBySharingProbability, 'title': 'Probability of sharing hastags'}
+    typeTemporalDistanceInHours = {'id': 'temporal_distance_in_hours', 'method': latticeNodeByTemporalDistanceInHours, 'title': 'Temporal distance in hours'}
     def __init__(self, graphFile, latticeGraphType, graphType=nx.Graph):
         self.graphFile = graphFile
         self.latticeGraphType = latticeGraphType
@@ -104,22 +118,40 @@ class LatticeGraph:
 #            print i; i+=1; 
 #            if i==10: break
         return self.graph
-    def plotSharingProbabilityGraphsOnMap(self):
-        for latticeObject in FileIO.iterateJsonFromFile(self.graphFile):
-            latticeObject = self.latticeGraphType['method'](latticeObject)
-            points, colors = zip(*sorted([(getLocationFromLid(neighborId.replace('_', ' ')), val) for neighborId, val in latticeObject['links'].iteritems()], key=itemgetter(1)))
-            ax = plt.subplot(111)
-            cm = matplotlib.cm.get_cmap('YlOrRd')
-            sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, vmin=0, vmax=1)
+    @staticmethod
+    def getLatticeSharingProbabilityOnMap(latticeGraphType, latticeObject):
+        latticeObject = latticeGraphType['method'](latticeObject)
+        points, colors = zip(*sorted([(getLocationFromLid(neighborId.replace('_', ' ')), val) for neighborId, val in latticeObject['links'].iteritems()], key=itemgetter(1)))
+        cm = matplotlib.cm.get_cmap('YlOrRd')
+        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, vmin=0, vmax=1)
+        plotPointsOnWorldMap([getLocationFromLid(latticeObject['id'].replace('_', ' '))], c='#00FF00', lw = 0)
+        plt.xlabel(latticeGraphType['title'])
+        plt.colorbar(sc)
+        return sc
+    @staticmethod
+    def getLatticeTemporalDistanceInHoursOnMap(latticeGraphType, latticeObject):
+        latticeObject = latticeGraphType['method'](latticeObject)
+        points, colors = zip(*sorted([(getLocationFromLid(neighborId.replace('_', ' ')), val) for neighborId, val in latticeObject['links'].iteritems()], key=itemgetter(1), reverse=True))
+        cm = matplotlib.cm.get_cmap('autumn')
+        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, vmin=0)
+        plotPointsOnWorldMap([getLocationFromLid(latticeObject['id'].replace('_', ' '))], c='#00FF00', lw = 0)
+        plt.xlabel(latticeGraphType['title'])
+        plt.colorbar(sc)
+        return sc
+    @staticmethod
+    def plotSharingProbabilityAndTemporalDistanceInHoursGraphsOnMap(timeRange, outputFolder):
+        i = 1
+        for latticeObject in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%(outputFolder,'%s_%s'%timeRange)):
             latticePoint = getLocationFromLid(latticeObject['id'].replace('_', ' '))
-            plotPointsOnWorldMap([latticePoint], c='#00FF00', lw = 0)
-            plt.xlabel(self.typeSharingProbability['title'])
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes("right", size="5%", pad=0.05)
-            plt.colorbar(sc, cax=cax)
+            latticeId = getLatticeLid([latticePoint[1], latticePoint[0]], LATTICE_ACCURACY)
+            plt.subplot(211)
+            plt.title(latticeId)
+            LatticeGraph.getLatticeSharingProbabilityOnMap(LatticeGraph.typeSharingProbability, latticeObject)
+            plt.subplot(212)
+            LatticeGraph.getLatticeTemporalDistanceInHoursOnMap(LatticeGraph.typeTemporalDistanceInHours, latticeObject)
 #            plt.show()
-            outputFile = hashtagsImagesGraphAnalysisFolder%self.graphFile.split('/')[-3]+'%s/%s.png'%(getLatticeLid([latticePoint[1], latticePoint[0]], LATTICE_ACCURACY), self.latticeGraphType['id']); FileIO.createDirectoryForFile(outputFile)
-            print outputFile
+            outputFile = hashtagsImagesGraphAnalysisFolder%outputFolder+'%s_and_%s/%s.png'%(LatticeGraph.typeSharingProbability['id'], LatticeGraph.typeTemporalDistanceInHours['id'], latticeId); FileIO.createDirectoryForFile(outputFile)
+            print i, outputFile; i+=1
             plt.savefig(outputFile); plt.clf()
     @staticmethod
     def plotLatticesOnMap(timeRange, outputFolder):
@@ -127,11 +159,13 @@ class LatticeGraph:
         plotPointsOnWorldMap(points, c='m', lw=0)
         plt.show()
     @staticmethod
-    def plotGraphsOnMap(timeRange, outputFolder):
-        LatticeGraph(hashtagsLatticeGraphFile%(outputFolder,'%s_%s'%timeRange), LatticeGraph.typeSharingProbability).plotSharingProbabilityGraphsOnMap()
+    def run(timeRange, outputFolder):
+#        LatticeGraph.plotLatticesOnMap(timeRange, mrOutputFolder)
+        LatticeGraph.plotSharingProbabilityAndTemporalDistanceInHoursGraphsOnMap(timeRange, outputFolder)
 
 def tempAnalysis(timeRange, mrOutputFolder):
-    LatticeGraph(hashtagsLatticeGraphFile%(mrOutputFolder,'%s_%s'%timeRange), LatticeGraph.typeSharingProbability).plotSharingProbabilityGraphsOnMap()
+    for latticeObject in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%(mrOutputFolder,'%s_%s'%timeRange)):
+        print latticeObject['id']
 #    mra = MRAnalysis()
 #    for h in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/2_11/hashtagsWithoutEndingWindow'):
 #        mra.buildHashtagTemporalClosenessGraphMap(None, h)
@@ -170,8 +204,7 @@ if __name__ == '__main__':
     mrOutputFolder = 'world'
 #    mr_area_analysis(timeRange, folderType, mrOutputFolder)
 
-#    tempAnalysis(timeRange, mrOutputFolder)
-#    LatticeGraph.plotLatticesOnMap(timeRange, mrOutputFolder)
-    LatticeGraph.plotGraphsOnMap(timeRange, mrOutputFolder)
+    tempAnalysis(timeRange, mrOutputFolder)
+#    LatticeGraph.run(timeRange, mrOutputFolder)
     
     
