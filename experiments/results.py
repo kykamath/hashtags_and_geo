@@ -21,7 +21,8 @@ from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
     hashtagLocationTemporalClosenessGraphFile,\
     hashtagsImagesLocationClosenessFolder,\
     hashtagLocationInAndOutTemporalClosenessGraphFile,\
-    hashtagsImagesLocationInfluencersFolder, hashtagsImagesGraphAnalysisFolder
+    hashtagsImagesLocationInfluencersFolder, hashtagsImagesGraphAnalysisFolder,\
+    hashtagSharingProbabilityGraphWithTemporalClosenessFile
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy import fft, array
 from collections import defaultdict
@@ -33,7 +34,7 @@ from library.geo import getHaversineDistance, plotPointsOnUSMap, getLatticeLid,\
 from itertools import groupby
 from experiments.analysis import HashtagClass, HashtagObject
 from experiments.mr_analysis import ACCURACY, getOccurranceDistributionInEpochs,\
-    TIME_UNIT_IN_SECONDS, getOccuranesInHighestActiveRegion
+    TIME_UNIT_IN_SECONDS, getOccuranesInHighestActiveRegion, temporalScore
 from library.classes import GeneralMethods
 import networkx as nx
 
@@ -382,6 +383,29 @@ class GraphAnalysis:
 #    validTimeUnits = getValidTimeUnits(occ)
 #    return [(p,t) for p,t in occ if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
     
+
+def tempAnalysis(timeRange, outputFolder):  
+    i,j=0,0
+    distribution = defaultdict(int)
+    for data in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphWithTemporalClosenessFile%(outputFolder,'%s_%s'%timeRange)):
+#        print data.keys()
+        i+=1
+        linksData = [len(data['links'][k][2]) for k in data['links'] if len(data['links'][k][2])>20]
+        print i, len(linksData), data['id']
+        if len(linksData)==0: j+=1
+#            print k, data['links'][k][1], len(data['links'][k][2])#, np.mean([temporalScore(np.abs(v[1]-v[0]), v[2]) for v in data['links'][k][2]]) #temporalScore(lag, width)
+#            dataX.append(len(data['links'][k][2]))
+#            distribution[len(data['links'][k][2])]+=1
+#            linksData
+#        break
+    print j, len(distribution)
+    exit()
+    dataX = sorted(distribution)
+#    plt.hist(dataX, bins=50)
+    plt.plot(dataX, [distribution[x] for x in dataX]) 
+    plt.show()
+#        exit()
+
 if __name__ == '__main__':
     timeRange = (2,11)
     outputFolder = 'world'
@@ -395,9 +419,9 @@ if __name__ == '__main__':
 #    plotNodeObject(timeRange, outputFolder)
 #    plotHashtagsInOutGraphs(timeRange, outputFolder)
 
-    GraphAnalysis.plotConnectedComponents(timeRange, outputFolder)
+#    GraphAnalysis.plotConnectedComponents(timeRange, outputFolder)
 #    GraphAnalysis.me(timeRange, outputFolder)
-
+    tempAnalysis(timeRange, outputFolder)
     
 #    AnalyzeLocalityIndexAtK.LIForOccupy(timeRange)
 #    AnalyzeLocalityIndexAtK.rankHashtagsBYLIScore(timeRange)
