@@ -222,7 +222,7 @@ class MRAreaAnalysis(ModifiedMRJob):
                 commonHashtags = currentObjectHashtags.intersection(neighborHashtags)
                 prob = len(commonHashtags)/float(len(currentObjectHashtags))
 #                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: nodeObject['links'][no] =  [list(neighborHashtags), prob, [np.abs(neighborHashtagsDict[h]-currentObjectHashtagsDict[h]) for h in commonHashtags]]
-                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: nodeObject['links'][no] =  [list(neighborHashtags), prob, [(neighborHashtagsDict[h],currentObjectHashtagsDict[h]) for h in commonHashtags]]
+                if prob>=MIN_HASHTAG_SHARING_PROBABILITY: nodeObject['links'][no] =  [list(neighborHashtags), prob, [(neighborHashtagsDict[h][0],currentObjectHashtagsDict[h][0],currentObjectHashtagsDict[h][1]) for h in commonHashtags]]
             yield lattice, nodeObject
     ''' End: Methods to get hashtag co-occurence probabilities among lattices.
     '''
