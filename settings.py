@@ -47,4 +47,5 @@ hashtagsImagesFlowInTimeForWindowOfNLocationsFolder = hashtagsImagesFolder+'fit_
 hashtagsImagesLocationClosenessFolder = hashtagsImagesFolder + 'location_closeness/'
 hashtagsImagesLocationInfluencersFolder = hashtagsImagesFolder + 'location_influencers/'
 hashtagsImagesTimeSeriesAnalysisFolder = hashtagsImagesFolder + 'time_series/'
+hashtagsImagesFirstActiveTimeSeriesAnalysisFolder = hashtagsImagesFolder + 'first_active_time_series/'
 hashtagsImagesGraphAnalysisFolder = hashtagsImagesFolder + 'graph_analysis/'
