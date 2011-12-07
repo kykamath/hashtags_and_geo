@@ -23,7 +23,7 @@ from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
     HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS, ACCURACY,\
     HASHTAG_STARTING_WINDOW,\
     getOccuranesInHighestActiveRegion
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+#from mpl_toolkits.axes_grid1 import make_axes_locatable
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
     hashtagsFile, \
