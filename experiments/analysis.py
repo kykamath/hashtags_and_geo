@@ -289,8 +289,8 @@ def getInputFiles(months, folderType='/'): return [inputFolder+folderType+'/'+st
 #    runMRJob(MRAnalysis, hashtagLocationInAndOutTemporalClosenessGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
 
 def mr_area_analysis(timeRange, folderType, mrOutputFolder):
-#    runMRJob(MRAreaAnalysis, hashtagsWithoutEndingWindowFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
-    runMRJob(MRAreaAnalysis, hashtagsLatticeGraphFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
+    runMRJob(MRAreaAnalysis, hashtagsWithoutEndingWindowFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
+#    runMRJob(MRAreaAnalysis, hashtagsLatticeGraphFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
 #    runMRJob(MRAreaAnalysis, hashtagLocationTemporalClosenessGraphFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
 
 
@@ -303,9 +303,9 @@ if __name__ == '__main__':
     folderType = 'world'
 #    folderType = '/'
     mrOutputFolder = 'world'
-#    mr_area_analysis(timeRange, folderType, mrOutputFolder)
+    mr_area_analysis(timeRange, folderType, mrOutputFolder)
 
 #    tempAnalysis(timeRange, mrOutputFolder)
-    LatticeGraph.run(timeRange, mrOutputFolder)
+#    LatticeGraph.run(timeRange, mrOutputFolder)
     
     

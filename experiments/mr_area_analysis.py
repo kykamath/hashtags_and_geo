@@ -244,8 +244,8 @@ class MRAreaAnalysis(ModifiedMRJob):
     
 
     def steps(self):
-#        return self.jobsToGetHastagObjectsWithoutEndingWindow()
-        return self.jobsToBuildLatticeGraph() 
+        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+#        return self.jobsToBuildLatticeGraph() 
 #        return self.jobToBuildLocationTemporalClosenessGraph()
     
 if __name__ == '__main__':
