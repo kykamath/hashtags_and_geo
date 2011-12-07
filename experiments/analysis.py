@@ -166,7 +166,7 @@ class LatticeGraph:
         latticeObject = latticeGraphType['method'](latticeObject)
         points, colors = zip(*sorted([(getLocationFromLid(neighborId.replace('_', ' ')), val) for neighborId, val in latticeObject['links'].iteritems()], key=itemgetter(1)))
         cm = matplotlib.cm.get_cmap('YlOrRd')
-        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, vmin=0)
+        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, vmin=0, vmax=1)
         plotPointsOnWorldMap([getLocationFromLid(latticeObject['id'].replace('_', ' '))], c='#00FF00', lw = 0)
         plt.xlabel(latticeGraphType['title'])
         plt.colorbar(sc)
@@ -218,6 +218,10 @@ class LatticeGraph:
         print getOutliersRangeUsingIRQ(temporalDistancesForAllLattices)[1]
     @staticmethod
     def measureCorrelations(timeRange, outputFolder):
+        '''
+        ['haversine_distance', 'temporal_distance_in_hours', 0.20147108648121248]
+        ['haversine_distance', 'sharing_probability', -0.19587239643328627]
+        '''
         measures = [
                     (LatticeGraph.typeHaversineDistance, LatticeGraph.typeTemporalDistanceInHours),
                     (LatticeGraph.typeHaversineDistance, LatticeGraph.typeSharingProbability),
@@ -243,8 +247,8 @@ class LatticeGraph:
 #        LatticeGraph.plotLatticesOnMap(timeRange, mrOutputFolder)
 #        LatticeGraph.determineUpperRangeForTemporalDistanceScores(timeRange, outputFolder)
 #        LatticeGraph.plotSharingProbabilityAndTemporalDistanceInHoursOnMap(timeRange, outputFolder)
-#        LatticeGraph.plotSharingProbabilityAndTemporalClosenessScoresOnMap(timeRange, outputFolder)
-        LatticeGraph.measureCorrelations(timeRange, outputFolder)
+        LatticeGraph.plotSharingProbabilityAndTemporalClosenessScoresOnMap(timeRange, outputFolder)
+#        LatticeGraph.measureCorrelations(timeRange, outputFolder)
 
 def tempAnalysis(timeRange, mrOutputFolder):
     i = 1
