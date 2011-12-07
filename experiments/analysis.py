@@ -229,7 +229,7 @@ class LatticeGraph:
                 print i, latticeObject['id']; i+=1
                 xdata+=zip(*xMeasure['method'](latticeObject)['links'].iteritems())[1]
                 ydata+=zip(*yMeasure['method'](latticeObject)['links'].iteritems())[1]
-                if i==200: break
+#                if i==200: break
             preasonsCorrelation, _ = stats.pearsonr(xdata, ydata)
 #            plt.scatter(xdata[:5000], ydata[:5000])
 #            plt.title('Pearson\'s co-efficient %0.3f'%preasonsCorrelation)
