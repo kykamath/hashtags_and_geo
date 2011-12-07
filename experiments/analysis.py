@@ -10,10 +10,11 @@ from library.stats import getOutliersRangeUsingIRQ
 sys.path.append('../')
 from library.classes import GeneralMethods
 from experiments.mr_area_analysis import MRAreaAnalysis, latticeIdInValidAreas,\
-    LATTICE_ACCURACY, TIME_UNIT_IN_SECONDS
+    LATTICE_ACCURACY, TIME_UNIT_IN_SECONDS, getSourceLattice,\
+    getOccuranesInHighestActiveRegion
 from library.geo import getHaversineDistance, getLatticeLid, getLattice,\
     getCenterOfMass, getLocationFromLid, plotPointsOnUSMap, plotPointsOnWorldMap,\
-    getHaversineDistanceForLids
+    getHaversineDistanceForLids, getLidFromLocation
 from operator import itemgetter
 from experiments.mr_wc import MRWC
 from library.file_io import FileIO
@@ -21,8 +22,7 @@ from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
     getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK,\
     addSourceLatticeToHashTagObject, addHashtagLocalityIndexInTime,\
     HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS, ACCURACY,\
-    HASHTAG_STARTING_WINDOW,\
-    getOccuranesInHighestActiveRegion
+    HASHTAG_STARTING_WINDOW
 #from mpl_toolkits.axes_grid1 import make_axes_locatable
 from library.mrjobwrapper import runMRJob
 from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatticeFile,\
@@ -251,6 +251,22 @@ class LatticeGraph:
         LatticeGraph.plotSharingProbabilityAndTemporalClosenessScoresOnMap(timeRange, outputFolder)
 #        LatticeGraph.measureCorrelations(timeRange, outputFolder)
 
+def plotHashtagSourcesOnMap(timeRange, outputFolder):
+    i = 1
+    distribution = defaultdict(int)
+    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsWithKnownSourceFile%(outputFolder,'%s_%s'%timeRange)):
+        occuranesInHighestActiveRegion, isFirstActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject, True)
+        source, count = getSourceLattice(occuranesInHighestActiveRegion)
+        print i, source;i+=1
+        distribution[getLidFromLocation(source)]+=1
+#        if i==10: break
+    points, colors = zip(*[(getLocationFromLid(k),v) for k, v in sorted(distribution.iteritems(), key=itemgetter(1))])
+    cm = matplotlib.cm.get_cmap('Paired')
+    sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0)
+    plt.colorbar(sc)
+    plt.show()
+
+
 def tempAnalysis(timeRange, mrOutputFolder):
     i = 1
 #    temporalDistancesForAllLattices = []
@@ -261,7 +277,7 @@ def tempAnalysis(timeRange, mrOutputFolder):
             print i, latticeObject['id']; i+=1
             xdata+=zip(*xMeasure['method'](latticeObject)['links'].iteritems())[1]
             ydata+=zip(*yMeasure['method'](latticeObject)['links'].iteritems())[1]
-            if i==10: break
+#            if i==10: break
         preasonsCorrelation, _ = stats.pearsonr(xdata, ydata)
         plt.scatter(xdata[:2000], ydata[:2000])
         plt.title('Pearson\'s co-efficient %0.3f'%preasonsCorrelation)
@@ -305,9 +321,11 @@ if __name__ == '__main__':
     folderType = 'world'
 #    folderType = '/'
     mrOutputFolder = 'world'
-    mr_area_analysis(timeRange, folderType, mrOutputFolder)
+#    mr_area_analysis(timeRange, folderType, mrOutputFolder)
 
 #    tempAnalysis(timeRange, mrOutputFolder)
+
+    plotHashtagSourcesOnMap(timeRange, mrOutputFolder)
 #    LatticeGraph.run(timeRange, mrOutputFolder)
     
     

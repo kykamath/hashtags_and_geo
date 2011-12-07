@@ -51,3 +51,4 @@ hashtagsImagesLocationInfluencersFolder = hashtagsImagesFolder + 'location_influ
 hashtagsImagesTimeSeriesAnalysisFolder = hashtagsImagesFolder + 'time_series/'
 hashtagsImagesFirstActiveTimeSeriesAnalysisFolder = hashtagsImagesFolder + 'first_active_time_series/'
 hashtagsImagesGraphAnalysisFolder = hashtagsImagesFolder + 'graph_analysis/'
+hashtagsImagesHastagEvolutionFolder = hashtagsImagesFolder + 'hashtag_evolution/'
