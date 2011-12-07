@@ -12,7 +12,8 @@ from library.classes import GeneralMethods
 from experiments.mr_area_analysis import MRAreaAnalysis, latticeIdInValidAreas,\
     LATTICE_ACCURACY, TIME_UNIT_IN_SECONDS
 from library.geo import getHaversineDistance, getLatticeLid, getLattice,\
-    getCenterOfMass, getLocationFromLid, plotPointsOnUSMap, plotPointsOnWorldMap
+    getCenterOfMass, getLocationFromLid, plotPointsOnUSMap, plotPointsOnWorldMap,\
+    getHaversineDistanceForLids
 from operator import itemgetter
 from experiments.mr_wc import MRWC
 from library.file_io import FileIO
@@ -88,6 +89,10 @@ def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, ne
     _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[1])
     return dict(filter(lambda t: t[1]<=upperRangeForTemporalDistance, dataToReturn))
     
+def latticeNodeByHaversineDistance(latticeObject):
+    dataToReturn = {'id': latticeObject['id'], 'links': {}}
+    for neighborLattice, _ in latticeObject['links'].iteritems(): dataToReturn['links'][neighborLattice]=getHaversineDistanceForLids(latticeObject['id'].replace('_', ' '), neighborLattice.replace('_', ' '))
+    return dataToReturn
 def latticeNodeBySharingProbability(latticeObject):
     dataToReturn = {'id': latticeObject['id'], 'links': {}}
     latticeHashtagsSet = set(latticeObject['hashtags'])
@@ -114,7 +119,8 @@ class LatticeGraph:
     upperRangeForTemporalDistances = 8.24972222222
     typeSharingProbability = {'id': 'sharing_probability', 'method': latticeNodeBySharingProbability, 'title': 'Probability of sharing hastags'}
     typeTemporalCloseness = {'id': 'temporal_closeness', 'method': latticeNodeByTemporalClosenessScore, 'title': 'Temporal closeness'}
-    typeTemporalDistanceInHours = {'id': 'temporal_distance_in_hours', 'method': latticeNodeByTemporalDistanceInHours, 'title': 'Temporal distance in hours'}
+    typeTemporalDistanceInHours = {'id': 'temporal_distance_in_hours', 'method': latticeNodeByTemporalDistanceInHours, 'title': 'Temporal distance (hours)'}
+    typeHaversineDistance = {'id': 'haversine_distance', 'method': latticeNodeByHaversineDistance, 'title': 'Distance (miles)'}
     def __init__(self, graphFile, latticeGraphType, graphType=nx.Graph):
         self.graphFile = graphFile
         self.latticeGraphType = latticeGraphType
@@ -211,23 +217,51 @@ class LatticeGraph:
 #            if i==10: break
         print getOutliersRangeUsingIRQ(temporalDistancesForAllLattices)[1]
     @staticmethod
+    def measureCorrelations(timeRange, outputFolder):
+        measures = [
+                    (LatticeGraph.typeHaversineDistance, LatticeGraph.typeTemporalDistanceInHours),
+                    (LatticeGraph.typeHaversineDistance, LatticeGraph.typeSharingProbability),
+                    ]
+        runData = []
+        for xMeasure, yMeasure in measures:
+            i, xdata, ydata = 1, [], []
+            for latticeObject in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%(outputFolder,'%s_%s'%timeRange)):
+                print i, latticeObject['id']; i+=1
+                xdata+=zip(*xMeasure['method'](latticeObject)['links'].iteritems())[1]
+                ydata+=zip(*yMeasure['method'](latticeObject)['links'].iteritems())[1]
+                if i==200: break
+            preasonsCorrelation, _ = stats.pearsonr(xdata, ydata)
+#            plt.scatter(xdata[:5000], ydata[:5000])
+#            plt.title('Pearson\'s co-efficient %0.3f'%preasonsCorrelation)
+#            plt.xlabel(xMeasure['title']), plt.ylabel(yMeasure['title'])
+#            plt.show()
+            runData.append([xMeasure['id'], yMeasure['id'], preasonsCorrelation])
+        for i in runData:
+            print i
+    @staticmethod
     def run(timeRange, outputFolder):
 #        LatticeGraph.plotLatticesOnMap(timeRange, mrOutputFolder)
 #        LatticeGraph.determineUpperRangeForTemporalDistanceScores(timeRange, outputFolder)
 #        LatticeGraph.plotSharingProbabilityAndTemporalDistanceInHoursOnMap(timeRange, outputFolder)
-        LatticeGraph.plotSharingProbabilityAndTemporalClosenessScoresOnMap(timeRange, outputFolder)
+#        LatticeGraph.plotSharingProbabilityAndTemporalClosenessScoresOnMap(timeRange, outputFolder)
+        LatticeGraph.measureCorrelations(timeRange, outputFolder)
 
 def tempAnalysis(timeRange, mrOutputFolder):
     i = 1
 #    temporalDistancesForAllLattices = []
-    sharingProbabilities, temporalDistances = [], []
-    for latticeObject in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%(mrOutputFolder,'%s_%s'%timeRange)):
-        print i, latticeObject['id']; i+=1
-        sharingProbabilities+=zip(*LatticeGraph.typeSharingProbability['method'](latticeObject)['links'].iteritems())[1]
-        temporalDistances+=zip(*LatticeGraph.typeTemporalDistanceInHours['method'](latticeObject)['links'].iteritems())[1]
-        if i==200: break
-#    plt.scatter(sharingProbabilities, temporalDistances)
-#    plt.show()
+    measures = [(LatticeGraph.typeSharingProbability, LatticeGraph.typeTemporalDistanceInHours)]
+    for xMeasure, yMeasure in measures:
+        xdata, ydata = [], []
+        for latticeObject in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%(mrOutputFolder,'%s_%s'%timeRange)):
+            print i, latticeObject['id']; i+=1
+            xdata+=zip(*xMeasure['method'](latticeObject)['links'].iteritems())[1]
+            ydata+=zip(*yMeasure['method'](latticeObject)['links'].iteritems())[1]
+            if i==10: break
+        preasonsCorrelation, _ = stats.pearsonr(xdata, ydata)
+        plt.scatter(xdata[:2000], ydata[:2000])
+        plt.title('Pearson\'s co-efficient %0.3f'%preasonsCorrelation)
+        plt.xlabel(xMeasure['title']), plt.ylabel(yMeasure['title'])
+        plt.show()
         
 #    mra = MRAnalysis()
 #    for h in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/2_11/hashtagsWithoutEndingWindow'):
@@ -267,7 +301,7 @@ if __name__ == '__main__':
     mrOutputFolder = 'world'
 #    mr_area_analysis(timeRange, folderType, mrOutputFolder)
 
-    tempAnalysis(timeRange, mrOutputFolder)
-#    LatticeGraph.run(timeRange, mrOutputFolder)
+#    tempAnalysis(timeRange, mrOutputFolder)
+    LatticeGraph.run(timeRange, mrOutputFolder)
     
     
