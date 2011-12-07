@@ -154,6 +154,12 @@ class MRAreaAnalysis(ModifiedMRJob):
     def combine_hashtag_instances_without_ending_window(self, key, values):
         hashtagObject = getHashtagWithoutEndingWindow(key, values)
         if hashtagObject: yield key, hashtagObject 
+    def add_source_to_hashtag_objects(self, key, hashtagObject):
+        _, isFirstActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject, True)
+        lid, count = getSourceLattice(hashtagObject['oc'])
+        if isFirstActiveRegion and count>=MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE: 
+            hashtagObject['source'] = lid
+            yield hashtagObject['h'], hashtagObject
     ''' End: Methods to get hashtag objects
     '''
             
@@ -239,6 +245,8 @@ class MRAreaAnalysis(ModifiedMRJob):
     '''
     
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
+    def jobsToGetHastagObjectsWithKnownSource(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)] + \
+                                                            [(self.emptyMapper, self.add_source_to_hashtag_objects)]
     def jobsToBuildLatticeGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+\
              [(self.buildLatticeGraphMap, self.buildLatticeGraphReduce1), 
               (self.emptyMapper, self.buildLatticeGraphReduce2)
@@ -247,7 +255,8 @@ class MRAreaAnalysis(ModifiedMRJob):
     
 
     def steps(self):
-        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+#        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+        return self.jobsToGetHastagObjectsWithKnownSource()
 #        return self.jobsToBuildLatticeGraph() 
 #        return self.jobToBuildLocationTemporalClosenessGraph()
     
