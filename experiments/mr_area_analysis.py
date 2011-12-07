@@ -246,7 +246,7 @@ class MRAreaAnalysis(ModifiedMRJob):
     
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
     def jobsToGetHastagObjectsWithKnownSource(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)] + \
-                                                            [(self.emptyMapper, self.add_source_to_hashtag_objects)]
+                                                            [(self.add_source_to_hashtag_objects, None)]
     def jobsToBuildLatticeGraph(self): return self.jobsToGetHastagObjectsWithoutEndingWindow()+\
              [(self.buildLatticeGraphMap, self.buildLatticeGraphReduce1), 
               (self.emptyMapper, self.buildLatticeGraphReduce2)
