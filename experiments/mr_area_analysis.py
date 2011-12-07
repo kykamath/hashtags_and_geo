@@ -155,8 +155,8 @@ class MRAreaAnalysis(ModifiedMRJob):
         hashtagObject = getHashtagWithoutEndingWindow(key, values)
         if hashtagObject: yield key, hashtagObject 
     def add_source_to_hashtag_objects(self, key, hashtagObject):
-        _, isFirstActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject, True)
-        lid, count = getSourceLattice(hashtagObject['oc'])
+        occuranesInHighestActiveRegion, isFirstActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject, True)
+        lid, count = getSourceLattice(occuranesInHighestActiveRegion)
         if isFirstActiveRegion and count>=MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE: 
             hashtagObject['source'] = lid
             yield hashtagObject['h'], hashtagObject
