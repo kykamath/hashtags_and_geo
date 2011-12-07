@@ -96,6 +96,12 @@ def plotHashtagsInOutGraphs(timeRange, outputFolder):
 #            plotLocationObject(locationsMap[l])
 
 def plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder):
+    NO_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE=10
+    MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE=5
+    def getSourceLattice(occ):
+        def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
+        occs = occ[:NO_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE]
+        if occs: return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in occs]))], key=lambda t: t[1])
     def plotTimeSeries(hashtagObject):
         def getDataToPlot(occ):
             occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(occ)
@@ -112,23 +118,24 @@ def plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder):
         timeUnits, timeSeries = getDataToPlot(hashtagObject['oc'])
         occurencesInActiveRegion, isFirstActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject, True)
         timeUnitsForActiveRegion, timeSeriesForActiveRegion = getDataToPlot(occurencesInActiveRegion)
-        
-    #    ax=plt.subplot(311)
-    #    plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
-    #    plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-        ax=plt.subplot(211)
-        plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
-        if not isFirstActiveRegion: plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnitsForActiveRegion), timeSeriesForActiveRegion, 'o', c='r')
-        else: plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnitsForActiveRegion), timeSeriesForActiveRegion, 'o', c='k')
-        plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-        plt.title(hashtagObject['h'])
-        ax=plt.subplot(212)
-        plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnitsForActiveRegion), timeSeriesForActiveRegion, '-')
-        plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
-        if isFirstActiveRegion:
+        lid, count = getSourceLattice(hashtagObject['oc'])
+        if isFirstActiveRegion and count>=MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE: 
+            ax=plt.subplot(211)
+            plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnits), timeSeries, '-')
+            if not isFirstActiveRegion: plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnitsForActiveRegion), timeSeriesForActiveRegion, 'o', c='r')
+            else: plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnitsForActiveRegion), timeSeriesForActiveRegion, 'o', c='k')
+            plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
+            plt.title(hashtagObject['h'] + '(%s)'%count)
+            ax=plt.subplot(212)
+            plt.plot_date(map(datetime.datetime.fromtimestamp, timeUnitsForActiveRegion), timeSeriesForActiveRegion, '-')
+            plt.setp(ax.get_xticklabels(), rotation=30, fontsize=10)
+    #        if isFirstActiveRegion:
+    #            lid, count = getSourceLattice(hashtagObject['oc'])
+    #            if count>=MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE:
+    #                print lid, count
 #            plt.show()
             plt.savefig(outputFile); 
-        plt.clf()
+            plt.clf()
     counter=1
     for object in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange)):
 #        if object['h']=='beatohio':

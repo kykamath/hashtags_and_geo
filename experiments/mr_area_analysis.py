@@ -6,7 +6,7 @@ Created on Nov 19, 2011
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from library.mrjobwrapper import ModifiedMRJob
 from library.geo import getLatticeLid, getLattice, isWithinBoundingBox,\
-    getLocationFromLid
+    getLocationFromLid, getHaversineDistance
 import cjson, time, datetime
 from collections import defaultdict
 from itertools import groupby
@@ -18,6 +18,7 @@ from operator import itemgetter
 # General parameters
 LATTICE_ACCURACY = 0.145
 TIME_UNIT_IN_SECONDS = 60*60
+NO_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 5
 
 ## Paramters for local run
 ## Paramters to filter hashtags.
@@ -131,6 +132,12 @@ def filterLatticesByMinHashtagOccurencesPerLattice(h):
     for l, oc in h['oc']:latticesToOccurancesMap[getLatticeLid(l, LATTICE_ACCURACY)].append(oc)
     return dict([(k,v) for k, v in latticesToOccurancesMap.iteritems() if len(v)>=MIN_HASHTAG_OCCURENCES_PER_LATTICE])
 
+def getSourceLattice(occ):
+    def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
+    occs = occ[:NO_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE]
+#    if occs: return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in occs]))], key=lambda t: t[1])
+    if occs: return min([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in occs]))], key=lambda t: t[1])
+
 class MRAreaAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
@@ -201,9 +208,6 @@ class MRAreaAnalysis(ModifiedMRJob):
     ''' Start: Methods to get in and out link temporal closeness among lattices.
     '''
     def buildLocationInAndOutTemporalClosenessGraphMap(self, key, hashtagObject):
-        def getSourceLattice(occ):
-            sortedOcc = occ[:int(PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE*len(occ))]
-            if sortedOcc: return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in sortedOcc]))], key=lambda t: t[1])
         occuranesInHighestActiveRegion, latticesToOccranceTimeMap = getOccuranesInHighestActiveRegion(hashtagObject), {}
         validLattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
         occuranesInHighestActiveRegion = [(getLatticeLid(k, LATTICE_ACCURACY), v) for k, v in occuranesInHighestActiveRegion if getLatticeLid(k, LATTICE_ACCURACY) in validLattices]
