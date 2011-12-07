@@ -18,7 +18,6 @@ from operator import itemgetter
 # General parameters
 LATTICE_ACCURACY = 0.145
 TIME_UNIT_IN_SECONDS = 60*60
-NO_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 5
 
 ## Paramters for local run
 ## Paramters to filter hashtags.
@@ -41,6 +40,8 @@ MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS = 25
 MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25 # Min no. of unique hashtags a lattice should have observed. For example: l1 is valid of it produces [h1, h2, h3] >= 3 (min)
 MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10 # Min no. hashtags lattice should have observed. For example: l1 is valid of it produces [h1, h1, h1] >= 3 (min)
 
+NO_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 10
+MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE = 5
 
 #MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS = 0.0
 #PERCENTAGE_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 0.01
@@ -133,10 +134,8 @@ def filterLatticesByMinHashtagOccurencesPerLattice(h):
     return dict([(k,v) for k, v in latticesToOccurancesMap.iteritems() if len(v)>=MIN_HASHTAG_OCCURENCES_PER_LATTICE])
 
 def getSourceLattice(occ):
-    def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
     occs = occ[:NO_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE]
-#    if occs: return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in occs]))], key=lambda t: t[1])
-    if occs: return min([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in occs]))], key=lambda t: t[1])
+    if occs: return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in occs]))], key=lambda t: t[1])
 
 class MRAreaAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'

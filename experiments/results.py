@@ -9,7 +9,8 @@ import numpy as np
 from library.plotting import smooth, CurveFit
 from library.kml import KML
 sys.path.append('../')
-from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion
+from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
+    getSourceLattice, MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE
 from library.file_io import FileIO
 import matplotlib
 from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
@@ -96,12 +97,6 @@ def plotHashtagsInOutGraphs(timeRange, outputFolder):
 #            plotLocationObject(locationsMap[l])
 
 def plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder):
-    NO_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE=10
-    MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE=5
-    def getSourceLattice(occ):
-        def getMeanDistanceFromSource(source, llids): return np.mean([getHaversineDistance(source, p) for p in llids])
-        occs = occ[:NO_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE]
-        if occs: return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in occs]))], key=lambda t: t[1])
     def plotTimeSeries(hashtagObject):
         def getDataToPlot(occ):
             occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(occ)
