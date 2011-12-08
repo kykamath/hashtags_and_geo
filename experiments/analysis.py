@@ -84,6 +84,26 @@ class HashtagClass:
     def getHashtagClasses():
         hashtags = sorted(HashtagClass.iterateHashtagsWithClass(), key=itemgetter(1))
         return dict((cls, list(h[0] for h in hashtags)) for cls, hashtags in groupby(hashtags, key=itemgetter(1)))
+    
+class Parameters:
+    @staticmethod
+    def estimateUpperRangeForTimePeriod(timeRange, outputFolder):
+        dataX = []
+        i=1
+        for hashtagObject in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder,'%s_%s'%timeRange)):
+            print i;i+=1
+            occuranesInHighestActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject)
+            dataX.append((occuranesInHighestActiveRegion[-1][1]-occuranesInHighestActiveRegion[0][1])/TIME_UNIT_IN_SECONDS)
+        print getOutliersRangeUsingIRQ(dataX)
+        plt.hist(dataX, bins=10)
+        plt.show()
+    @staticmethod
+    def run():
+        timeRange = (2,11)
+        folderType = 'world'
+        Parameters.estimateUpperRangeForTimePeriod(timeRange, folderType)
+            
+
 
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
@@ -94,7 +114,6 @@ def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, ne
         dataToReturn = [(hashtag, timeTuple, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
         _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[2])
         return dict([(t[0], t[1]) for t in dataToReturn if t[2]<=upperRangeForTemporalDistance])
-    
 def latticeNodeByHaversineDistance(latticeObject):
     dataToReturn = {'id': latticeObject['id'], 'links': {}}
     for neighborLattice, _ in latticeObject['links'].iteritems(): dataToReturn['links'][neighborLattice]=getHaversineDistanceForLids(latticeObject['id'].replace('_', ' '), neighborLattice.replace('_', ' '))
@@ -357,6 +376,7 @@ if __name__ == '__main__':
 #    tempAnalysis(timeRange, mrOutputFolder)
 
 #    plotHashtagSourcesOnMap(timeRange, mrOutputFolder)
-    LatticeGraph.run(timeRange, mrOutputFolder)
+#    LatticeGraph.run(timeRange, mrOutputFolder)
+    Parameters.run()
     
     
