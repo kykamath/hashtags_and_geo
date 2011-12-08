@@ -121,7 +121,7 @@ def latticeNodeByTemporalClosenessScore(latticeObject):
         dataX = map(lambda lag: LatticeGraph.temporalScore(lag, LatticeGraph.upperRangeForTemporalDistances), zip(*neighborHashtags.iteritems())[1])
         dataToReturn['links'][neighborLattice]=np.mean(dataX)
     return dataToReturn
-def latticeNodeByHashtagDiffusionLocationVisitation(latticeObject):
+def latticeNodeByHashtagDiffusionLocationVisitation(latticeObject, generateTemporalClosenessScore=False):
     def updateHashtagDistribution(latticeObj, hashtagDistribution): 
         for h, (t, _) in latticeObj['hashtags'].iteritems(): hashtagDistribution[h].append([latticeObj['id'], t])
     dataToReturn = {'id': latticeObject['id'], 'links': {}}
@@ -134,8 +134,12 @@ def latticeNodeByHashtagDiffusionLocationVisitation(latticeObject):
     for hashtag in hashtagDistribution.keys()[:]: 
         hashtagOccurences = sorted(hashtagDistribution[hashtag], key=itemgetter(1))
         for neighborLattice, lag in [(t[0], (t[1]-latticeObject['hashtags'][hashtag][0])/TIME_UNIT_IN_SECONDS) for t in hashtagOccurences if t[0]!=latticeObject['id']]:
-            if lag<0: latticeEdges['in'][neighborLattice]+=-lag/numberOfHastagsAtCurrentLattice
-            else: latticeEdges['out'][neighborLattice]+=lag/numberOfHastagsAtCurrentLattice
+            if not generateTemporalClosenessScore:
+                if lag<0: latticeEdges['in'][neighborLattice]+=-lag/numberOfHastagsAtCurrentLattice
+                else: latticeEdges['out'][neighborLattice]+=lag/numberOfHastagsAtCurrentLattice
+            else: 
+                if lag<0: latticeEdges['in'][neighborLattice]+=LatticeGraph.temporalScore(-lag, LatticeGraph.upperRangeForTemporalDistances)/numberOfHastagsAtCurrentLattice
+                else: latticeEdges['out'][neighborLattice]+=LatticeGraph.temporalScore(lag, LatticeGraph.upperRangeForTemporalDistances)/numberOfHastagsAtCurrentLattice
     dataToReturn['links']=latticeEdges
     return dataToReturn
 class LatticeGraph:
@@ -158,6 +162,15 @@ class LatticeGraph:
 #            if i==10: break
         return self.graph
     @staticmethod
+    def normalizeNode(latticeNodeObject):
+        if 'in' in latticeNodeObject['links']:
+            for edgeType, edges in latticeNodeObject['links'].iteritems():
+                totalEdgeWeight = sum(edges.values())
+                for lattice, score in edges.items()[:]: latticeNodeObject['links'][edgeType][lattice] = score/totalEdgeWeight
+        else:
+            totalEdgeWeight = sum(latticeNodeObject['links'].values())
+            for lattice, score in latticeNodeObject['links'].items()[:]: latticeNodeObject['links'][lattice]=score/totalEdgeWeight
+    @staticmethod
     def temporalScore(lag, width):
         lag=int(lag*TIME_UNIT_IN_SECONDS)
         width=int(width*TIME_UNIT_IN_SECONDS)
@@ -167,9 +180,10 @@ class LatticeGraph:
     @staticmethod
     def plotLatticeSharingProbabilityOnMap(latticeGraphType, latticeObject):
         latticeObject = latticeGraphType['method'](latticeObject)
+        LatticeGraph.normalizeNode(latticeObject)
         points, colors = zip(*sorted([(getLocationFromLid(neighborId.replace('_', ' ')), val) for neighborId, val in latticeObject['links'].iteritems()], key=itemgetter(1)))
         cm = matplotlib.cm.get_cmap('YlOrRd')
-        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, vmin=0, vmax=1)
+        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, vmin=0)
         plotPointsOnWorldMap([getLocationFromLid(latticeObject['id'].replace('_', ' '))], c='#00FF00', lw = 0)
         plt.xlabel(latticeGraphType['title'])
         plt.colorbar(sc)
@@ -187,9 +201,10 @@ class LatticeGraph:
     @staticmethod
     def plotLatticeTemporalClosenessScoresOnMap(latticeGraphType, latticeObject):
         latticeObject = latticeGraphType['method'](latticeObject)
+        LatticeGraph.normalizeNode(latticeObject)
         points, colors = zip(*sorted([(getLocationFromLid(neighborId.replace('_', ' ')), val) for neighborId, val in latticeObject['links'].iteritems()], key=itemgetter(1)))
         cm = matplotlib.cm.get_cmap('YlOrRd')
-        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, vmin=0, vmax=1)
+        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, vmin=0)
         plotPointsOnWorldMap([getLocationFromLid(latticeObject['id'].replace('_', ' '))], c='#00FF00', lw = 0)
         plt.xlabel(latticeGraphType['title'])
         plt.colorbar(sc)
@@ -220,10 +235,10 @@ class LatticeGraph:
             LatticeGraph.plotLatticeSharingProbabilityOnMap(LatticeGraph.typeSharingProbability, latticeObject)
             plt.subplot(212)
             LatticeGraph.plotLatticeTemporalClosenessScoresOnMap(LatticeGraph.typeTemporalCloseness, latticeObject)
-#            plt.show()
+            plt.show()
             outputFile = hashtagsImagesGraphAnalysisFolder%outputFolder+'%s_and_%s/%s.png'%(LatticeGraph.typeSharingProbability['id'], LatticeGraph.typeTemporalCloseness['id'], latticeId); FileIO.createDirectoryForFile(outputFile)
             print i, outputFile; i+=1
-            plt.savefig(outputFile); plt.clf()
+#            plt.savefig(outputFile); plt.clf()
     @staticmethod
     def plotLatticesOnMap(timeRange, outputFolder):
         points = [getLocationFromLid(latticeObject['id'].replace('_', ' ')) for latticeObject in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%(outputFolder,'%s_%s'%timeRange))]
@@ -294,7 +309,10 @@ def tempAnalysis(timeRange, mrOutputFolder):
 #    temporalDistancesForAllLattices = []
     measures = [(LatticeGraph.typeSharingProbability, LatticeGraph.typeTemporalDistanceInHours)]
     for latticeObject in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%(mrOutputFolder,'%s_%s'%timeRange)):
-        latticeNodeByHashtagDiffusionLocationVisitation(latticeObject)
+        latticeObject = latticeNodeByHashtagDiffusionLocationVisitation(latticeObject, generateTemporalClosenessScore=True)
+        print sum(latticeObject['links']['out'].values())
+        LatticeGraph.normalizeNode(latticeObject)
+        print sum(latticeObject['links']['out'].values())
         exit()
         
 #    mra = MRAnalysis()
@@ -336,9 +354,9 @@ if __name__ == '__main__':
     mrOutputFolder = 'world'
 #    mr_area_analysis(timeRange, folderType, mrOutputFolder)
 
-    tempAnalysis(timeRange, mrOutputFolder)
+#    tempAnalysis(timeRange, mrOutputFolder)
 
 #    plotHashtagSourcesOnMap(timeRange, mrOutputFolder)
-#    LatticeGraph.run(timeRange, mrOutputFolder)
+    LatticeGraph.run(timeRange, mrOutputFolder)
     
     
