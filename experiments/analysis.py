@@ -85,10 +85,15 @@ class HashtagClass:
         hashtags = sorted(HashtagClass.iterateHashtagsWithClass(), key=itemgetter(1))
         return dict((cls, list(h[0] for h in hashtags)) for cls, hashtags in groupby(hashtags, key=itemgetter(1)))
 
-def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags):
-    dataToReturn = [(hashtag, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
-    _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[1])
-    return dict(filter(lambda t: t[1]<=upperRangeForTemporalDistance, dataToReturn))
+def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
+    if findLag: 
+        dataToReturn = [(hashtag, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
+        _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[1])
+        return dict(filter(lambda t: t[1]<=upperRangeForTemporalDistance, dataToReturn))
+    else: 
+        dataToReturn = [(hashtag, timeTuple, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
+        _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[2])
+        return dict([(t[0], t[1]) for t in dataToReturn if t[2]<=upperRangeForTemporalDistance])
     
 def latticeNodeByHaversineDistance(latticeObject):
     dataToReturn = {'id': latticeObject['id'], 'links': {}}
@@ -115,6 +120,23 @@ def latticeNodeByTemporalClosenessScore(latticeObject):
         neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
         dataX = map(lambda lag: LatticeGraph.temporalScore(lag, LatticeGraph.upperRangeForTemporalDistances), zip(*neighborHashtags.iteritems())[1])
         dataToReturn['links'][neighborLattice]=np.mean(dataX)
+    return dataToReturn
+def latticeNodeByHashtagDiffusionLocationVisitation(latticeObject):
+    def updateHashtagDistribution(latticeObj, hashtagDistribution): 
+        for h, (t, _) in latticeObj['hashtags'].iteritems(): hashtagDistribution[h].append([latticeObj['id'], t])
+    dataToReturn = {'id': latticeObject['id'], 'links': {}}
+    hashtagDistribution, numberOfHastagsAtCurrentLattice = defaultdict(list), float(len(latticeObject['hashtags']))
+    updateHashtagDistribution(latticeObject, hashtagDistribution)
+    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems(): 
+        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags, findLag=False)
+        updateHashtagDistribution({'id':neighborLattice, 'hashtags': neighborHashtags}, hashtagDistribution)
+    latticeEdges = {'in': defaultdict(float), 'out': defaultdict(float)}
+    for hashtag in hashtagDistribution.keys()[:]: 
+        hashtagOccurences = sorted(hashtagDistribution[hashtag], key=itemgetter(1))
+        for neighborLattice, lag in [(t[0], (t[1]-latticeObject['hashtags'][hashtag][0])/TIME_UNIT_IN_SECONDS) for t in hashtagOccurences if t[0]!=latticeObject['id']]:
+            if lag<0: latticeEdges['in'][neighborLattice]+=-lag/numberOfHastagsAtCurrentLattice
+            else: latticeEdges['out'][neighborLattice]+=lag/numberOfHastagsAtCurrentLattice
+    dataToReturn['links']=latticeEdges
     return dataToReturn
 class LatticeGraph:
     upperRangeForTemporalDistances = 8.24972222222
@@ -271,18 +293,9 @@ def tempAnalysis(timeRange, mrOutputFolder):
     i = 1
 #    temporalDistancesForAllLattices = []
     measures = [(LatticeGraph.typeSharingProbability, LatticeGraph.typeTemporalDistanceInHours)]
-    for xMeasure, yMeasure in measures:
-        xdata, ydata = [], []
-        for latticeObject in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%(mrOutputFolder,'%s_%s'%timeRange)):
-            print i, latticeObject['id']; i+=1
-            xdata+=zip(*xMeasure['method'](latticeObject)['links'].iteritems())[1]
-            ydata+=zip(*yMeasure['method'](latticeObject)['links'].iteritems())[1]
-#            if i==10: break
-        preasonsCorrelation, _ = stats.pearsonr(xdata, ydata)
-        plt.scatter(xdata[:2000], ydata[:2000])
-        plt.title('Pearson\'s co-efficient %0.3f'%preasonsCorrelation)
-        plt.xlabel(xMeasure['title']), plt.ylabel(yMeasure['title'])
-        plt.show()
+    for latticeObject in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%(mrOutputFolder,'%s_%s'%timeRange)):
+        latticeNodeByHashtagDiffusionLocationVisitation(latticeObject)
+        exit()
         
 #    mra = MRAnalysis()
 #    for h in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/world/2_11/hashtagsWithoutEndingWindow'):
@@ -323,9 +336,9 @@ if __name__ == '__main__':
     mrOutputFolder = 'world'
 #    mr_area_analysis(timeRange, folderType, mrOutputFolder)
 
-#    tempAnalysis(timeRange, mrOutputFolder)
+    tempAnalysis(timeRange, mrOutputFolder)
 
-    plotHashtagSourcesOnMap(timeRange, mrOutputFolder)
+#    plotHashtagSourcesOnMap(timeRange, mrOutputFolder)
 #    LatticeGraph.run(timeRange, mrOutputFolder)
     
     
