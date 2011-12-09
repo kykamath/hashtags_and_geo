@@ -66,37 +66,6 @@ def plotHashtagsInOutGraphs(timeRange, outputFolder):
 #                plt.show()
                 plt.savefig(outputFile); plt.clf()
         
-#def plotGraphs(timeRange, outputFolder):
-#    sharingProbabilityId = 'sharing_probability'
-#    temporalClosenessId = 'temporal_closeness'
-#    def plotPoints(nodeObject, xlabel):
-#        cm = matplotlib.cm.get_cmap('cool')
-#        points, colors = zip(*sorted([(getLocationFromLid(k.replace('_', ' ')), v)for k, v in nodeObject['links'].iteritems()], key=itemgetter(1)))
-#        sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0)
-#        plotPointsOnWorldMap([getLocationFromLid(nodeObject['id'].replace('_', ' '))], c='k', s=20, lw=0)
-#        plt.xlabel(xlabel), plt.colorbar(sc)
-#    def plotLocationObject(locationObject):
-#        point = getLocationFromLid(locationObject['id'].replace('_', ' '))
-#        outputFile = hashtagsImagesLocationClosenessFolder+'%s.png'%getLatticeLid([point[1], point[0]], ACCURACY); FileIO.createDirectoryForFile(outputFile)
-#        if not os.path.exists(outputFile):
-#            print outputFile
-#            plt.subplot(211)
-#            plt.title(locationObject['id'].replace('_', ' '))
-#            plotPoints(locationObject['graphs'][sharingProbabilityId], xlabel = 'Hashtag sharing probability')
-#            plt.subplot(212)
-#            plotPoints(locationObject['graphs'][temporalClosenessId], xlabel = 'Temporal closeness')
-##            plt.show()
-#            plt.savefig(outputFile); plt.clf()
-#    locationsMap = defaultdict(dict)
-#    for node in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphFile%(outputFolder, '%s_%s'%timeRange)): 
-#        if 'graphs' not in locationsMap[node['id']]: locationsMap[node['id']] = {'id': node['id'], 'graphs': {}}
-#        locationsMap[node['id']]['graphs'][sharingProbabilityId] = node
-#    for node in FileIO.iterateJsonFromFile(hashtagLocationTemporalClosenessGraphFile%(outputFolder, '%s_%s'%timeRange)): 
-#        if 'graphs' not in locationsMap[node['id']]: locationsMap[node['id']] = {'id': node['id'], 'graphs': {}}
-#        locationsMap[node['id']]['graphs'][temporalClosenessId] = node
-#    for l in locationsMap:
-#        if len(locationsMap[l]['graphs'])==2:
-#            plotLocationObject(locationsMap[l])
 
 def plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder):
     def plotTimeSeries(hashtagObject):
@@ -145,22 +114,22 @@ def plotHastagClasses(timeRange, folderType):
     count=1
     for hashtagObject in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)):
 #        HashtagsClassifier.classify(hashtagObject)
-#        if hashtagObject['h']=='ripamywinehouse':
         print count; count+=1
+#        if hashtagObject['h']=='ripamy':
         classId = HashtagsClassifier.classify(hashtagObject)
         if classId:
-            outputFolder = hashtagsImagesHashtagsClassFolder%folderType+'%s/%s/'%(classId, hashtagObject['h'])
+            outputFile = hashtagsImagesHashtagsClassFolder%folderType+'%s/%s.png'%(classId, hashtagObject['h']); FileIO.createDirectoryForFile(outputFile)
             fileNameIterator = getFileName()
             timeUnits, timeSeries = getTimeUnitsAndTimeSeries(hashtagObject['oc'])
-            occurancesInActivityRegions = []
-            for hashtagPropagatingRegion in HashtagsClassifier._getActivityRegionsWithActivityAboveThreshold(hashtagObject):
-                validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
-                occurancesInActiveRegion = [(p,t) for p,t in hashtagObject['oc'] if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
-                occurancesInActivityRegions.append([occurancesInActiveRegion, GeneralMethods.getRandomColor()])
+            occurancesInActivityRegions = [[getOccuranesInHighestActiveRegion(hashtagObject), 'm']]
+#            for hashtagPropagatingRegion in HashtagsClassifier._getActivityRegionsWithActivityAboveThreshold(hashtagObject):
+#                validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
+#                occurancesInActiveRegion = [(p,t) for p,t in hashtagObject['oc'] if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
+#                occurancesInActivityRegions.append([occurancesInActiveRegion, GeneralMethods.getRandomColor()])
             
             currentMainRangeId = 0
             for occurances1, color1 in occurancesInActivityRegions:
-                outputFile=outputFolder+fileNameIterator.next();FileIO.createDirectoryForFile(outputFile)
+#                outputFile=outputFolder+fileNameIterator.next();FileIO.createDirectoryForFile(outputFile)
                 print outputFile
                 ax = plt.subplot(312)
                 subRangeId = 0
@@ -194,9 +163,10 @@ def plotHastagClasses(timeRange, folderType):
                     plt.colorbar(sc)
                 else: sc = plotPointsOnWorldMap(points, c='m', lw=0)
                 plt.title(hashtagObject['h'])
-    #            plt.show()
+#                plt.show()
                 plt.savefig(outputFile); plt.clf()
-                currentMainRangeId+=1    
+                currentMainRangeId+=1
+#                exit()
 
 def tempAnalysis(timeRange, outputFolder):
     i = 1
@@ -211,9 +181,9 @@ if __name__ == '__main__':
 #    outputFolder='/'
 #    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
 
-    tempAnalysis(timeRange, outputFolder)
+#    tempAnalysis(timeRange, outputFolder)
 #    plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder)
-#    plotHastagClasses(timeRange, outputFolder)
+    plotHastagClasses(timeRange, outputFolder)
 #    plotGraphs(timeRange, outputFolder)
 #    plotNodeObject(timeRange, outputFolder)
 #    plotHashtagsInOutGraphs(timeRange, outputFolder)

@@ -152,22 +152,23 @@ def getTimeUnitsAndTimeSeries(occurences):
 class HashtagsClassifier:
     PERIODICITY_ID_SLOW_BURST = 'slow_burst'
     PERIODICITY_ID_SUDDEN_BURST = 'sudden_burst'
-    PERIODICITY_ID_PERIODIC = 'periodic' 
-
+    PERIODICITY_ID_PERIODIC_SLOW_BURST = 'periodic_slow_burst' 
+    PERIODICITY_ID_PERIODIC_SUDDEN_BURST = 'periodic_sudden_burst' 
+    
     LOCALITY_ID_LOCAL = 'local'
     LOCALITY_ID_LOCAL_SAME_PLACE = 'local_same_place'
     LOCALITY_ID_LOCAL_DIFF_PLACE = 'local_diff_place'
     LOCALITY_ID_NON_LOCAL = 'non_local'
     
     RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES=500
-    PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION=0.60
+    PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION=1.0
     @staticmethod
     def getId(locality, periodicity): return '%s_::_%s'%(periodicity, locality)
     @staticmethod
     def classify(hashtagObject): 
         periodicityId = HashtagsClassifier.getPeriodicityClass(hashtagObject)
         if not periodicityId: return None
-        if periodicityId!=HashtagsClassifier.PERIODICITY_ID_PERIODIC: return HashtagsClassifier.getId(HashtagsClassifier.getHastagLocalityClassForHighestActivityPeriod(hashtagObject), periodicityId)
+        if periodicityId!=HashtagsClassifier.PERIODICITY_ID_PERIODIC_SLOW_BURST and periodicityId!=HashtagsClassifier.PERIODICITY_ID_PERIODIC_SUDDEN_BURST: return HashtagsClassifier.getId(HashtagsClassifier.getHastagLocalityClassForHighestActivityPeriod(hashtagObject), periodicityId)
         else: return HashtagsClassifier.getId(HashtagsClassifier.getHastagLocalityClassForAllActivityPeriod(hashtagObject), periodicityId)
     @staticmethod
     def getHastagLocalityClassForHighestActivityPeriod(hashtagObject): 
@@ -226,12 +227,17 @@ class HashtagsClassifier:
             activityRegionsWithActivityAboveThreshold=[]
             for start, end, size in getActiveRegions(timeSeries):
                 if size>=HashtagsClassifier.PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION*sizeOfMaxActivityRegion: activityRegionsWithActivityAboveThreshold.append([start, end, size]) 
-            if len(activityRegionsWithActivityAboveThreshold)>1: return HashtagsClassifier.PERIODICITY_ID_PERIODIC
-            else:
-                hashtagPropagatingRegion = activityRegionsWithActivityAboveThreshold[0]
-                validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
-                if timeUnits[0]==validTimeUnits[0]: return HashtagsClassifier.PERIODICITY_ID_SUDDEN_BURST
-                return HashtagsClassifier.PERIODICITY_ID_SLOW_BURST
+#            if len(activityRegionsWithActivityAboveThreshold)>1: return HashtagsClassifier.PERIODICITY_ID_PERIODIC
+#            else:
+            hashtagPropagatingRegion = activityRegionsWithActivityAboveThreshold[0]
+            validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
+#                if timeUnits[0]==validTimeUnits[0]: return HashtagsClassifier.PERIODICITY_ID_SUDDEN_BURST
+#                if sum(timeSeries[:list(timeUnits).index(validTimeUnits[0])])<10: return HashtagsClassifier.PERIODICITY_ID_SUDDEN_BURST
+            if timeSeries[list(timeUnits).index(validTimeUnits[0])]>10: 
+#                if len(activityRegionsWithActivityAboveThreshold)>1: return HashtagsClassifier.PERIODICITY_ID_PERIODIC_SUDDEN_BURST
+                return HashtagsClassifier.PERIODICITY_ID_SUDDEN_BURST
+#            if len(activityRegionsWithActivityAboveThreshold)>1: return HashtagsClassifier.PERIODICITY_ID_PERIODIC_SLOW_BURST
+            return HashtagsClassifier.PERIODICITY_ID_SLOW_BURST
 
 class MRAreaAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
