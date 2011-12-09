@@ -114,16 +114,18 @@ def getActiveRegions(timeSeries):
         activeRegions.append(currentRegion)
     return activeRegions
 def getOccuranesInHighestActiveRegion(hashtagObject, checkIfItFirstActiveRegion=False):
+    occurancesInActiveRegion = []
     occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
-    startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
-    dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
-    occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
-    for x in dataX: 
-        if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
-    timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
-    hashtagPropagatingRegion = max(getActiveRegions(timeSeries), key=itemgetter(2))
-    validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
-    occurancesInActiveRegion = [(p,t) for p,t in hashtagObject['oc'] if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
+    if occurranceDistributionInEpochs:
+        startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
+        dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
+        occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
+        for x in dataX: 
+            if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
+        timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
+        hashtagPropagatingRegion = max(getActiveRegions(timeSeries), key=itemgetter(2))
+        validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
+        occurancesInActiveRegion = [(p,t) for p,t in hashtagObject['oc'] if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
     if not checkIfItFirstActiveRegion: return occurancesInActiveRegion
     else:
         isFirstActiveRegion=False
@@ -250,10 +252,11 @@ class MRAreaAnalysis(ModifiedMRJob):
         if hashtagObject: yield key, hashtagObject 
     def add_source_to_hashtag_objects(self, key, hashtagObject):
         occuranesInHighestActiveRegion, isFirstActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject, True)
-        lid, count = getSourceLattice(occuranesInHighestActiveRegion)
-        if isFirstActiveRegion and count>=MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE: 
-            hashtagObject['source'] = lid
-            yield hashtagObject['h'], hashtagObject
+        if occuranesInHighestActiveRegion:
+            lid, count = getSourceLattice(occuranesInHighestActiveRegion)
+            if isFirstActiveRegion and count>=MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE: 
+                hashtagObject['source'] = lid
+                yield hashtagObject['h'], hashtagObject
     ''' End: Methods to get hashtag objects
     '''
             
