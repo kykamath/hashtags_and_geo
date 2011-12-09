@@ -371,12 +371,12 @@ if __name__ == '__main__':
     folderType = 'world'
 #    folderType = '/'
     mrOutputFolder = 'world'
-#    mr_area_analysis(timeRange, folderType, mrOutputFolder)
+    mr_area_analysis(timeRange, folderType, mrOutputFolder)
 
 #    tempAnalysis(timeRange, mrOutputFolder)
 
 #    plotHashtagSourcesOnMap(timeRange, mrOutputFolder)
 #    LatticeGraph.run(timeRange, mrOutputFolder)
-    Parameters.run()
+#    Parameters.run()
     
     

@@ -6,7 +6,7 @@ Created on Nov 19, 2011
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from library.mrjobwrapper import ModifiedMRJob
 from library.geo import getLatticeLid, getLattice, isWithinBoundingBox,\
-    getLocationFromLid, getHaversineDistance
+    getLocationFromLid, getHaversineDistance, getCenterOfMass
 import cjson, time, datetime
 from collections import defaultdict
 from itertools import groupby
@@ -14,6 +14,7 @@ import numpy as np
 from library.classes import GeneralMethods
 from itertools import combinations
 from operator import itemgetter
+from library.stats import getOutliersRangeUsingIRQ
 
 # General parameters
 LATTICE_ACCURACY = 0.145
@@ -87,7 +88,8 @@ def getHashtagWithoutEndingWindow(key, values):
         if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
             e[1]>=HASHTAG_STARTING_WINDOW: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
 
-def getOccurranceDistributionInEpochs(occ): return [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
+#def getOccurranceDistributionInEpochs(occ): return [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
+def getOccurranceDistributionInEpochs(occ): return filter(lambda t:t[1]>2, [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))])
 
 def getActiveRegions(timeSeries):
     noOfZerosObserved, activeRegions = 0, []
@@ -125,7 +127,7 @@ def getOccuranesInHighestActiveRegion(hashtagObject, checkIfItFirstActiveRegion=
     if not checkIfItFirstActiveRegion: return occurancesInActiveRegion
     else:
         isFirstActiveRegion=False
-        if GeneralMethods.approximateEpoch(hashtagObject['oc'][0][1], TIME_UNIT_IN_SECONDS)==validTimeUnits[0]: isFirstActiveRegion=True
+        if timeUnits[0]==validTimeUnits[0]: isFirstActiveRegion=True
         return (occurancesInActiveRegion, isFirstActiveRegion)
         
 def filterLatticesByMinHashtagOccurencesPerLattice(h):
@@ -136,6 +138,98 @@ def filterLatticesByMinHashtagOccurencesPerLattice(h):
 def getSourceLattice(occ):
     occs = occ[:NO_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE]
     if occs: return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in occs]))], key=lambda t: t[1])
+    
+def getTimeUnitsAndTimeSeries(occurences):
+    occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(occurences)
+    startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
+    dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
+    occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
+    for x in dataX: 
+        if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
+    return zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
+class HashtagsClassifier:
+    PERIODICITY_ID_SLOW_BURST = 'slow_burst'
+    PERIODICITY_ID_SUDDEN_BURST = 'sudden_burst'
+    PERIODICITY_ID_PERIODIC = 'periodic' 
+
+    LOCALITY_ID_LOCAL = 'local'
+    LOCALITY_ID_LOCAL_SAME_PLACE = 'local_same_place'
+    LOCALITY_ID_LOCAL_DIFF_PLACE = 'local_diff_place'
+    LOCALITY_ID_NON_LOCAL = 'non_local'
+    
+    RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES=500
+    PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION=0.60
+    @staticmethod
+    def getId(locality, periodicity): return '%s_::_%s'%(periodicity, locality)
+    @staticmethod
+    def classify(hashtagObject): 
+        periodicityId = HashtagsClassifier.getPeriodicityClass(hashtagObject)
+        if not periodicityId: return None
+        if periodicityId!=HashtagsClassifier.PERIODICITY_ID_PERIODIC: return HashtagsClassifier.getId(HashtagsClassifier.getHastagLocalityClassForHighestActivityPeriod(hashtagObject), periodicityId)
+        else: return HashtagsClassifier.getId(HashtagsClassifier.getHastagLocalityClassForAllActivityPeriod(hashtagObject), periodicityId)
+    @staticmethod
+    def getHastagLocalityClassForHighestActivityPeriod(hashtagObject): 
+        occuranesInHighestActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject)
+        locations = zip(*occuranesInHighestActiveRegion)[0]
+        meanLid = getCenterOfMass(locations,accuracy=LATTICE_ACCURACY)
+        distances = [getHaversineDistance(meanLid, p) for p in locations]
+        _, upperBoundForDistance = getOutliersRangeUsingIRQ(distances)
+        if np.mean(filter(lambda d: d<=upperBoundForDistance, distances)) >= HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_NON_LOCAL
+        else: return HashtagsClassifier.LOCALITY_ID_LOCAL
+    @staticmethod
+    def getHastagLocalityClassForAllActivityPeriod(hashtagObject):
+        timeUnits, timeSeries = getTimeUnitsAndTimeSeries(hashtagObject['oc'])
+        occurancesInActivityRegions = []
+        for hashtagPropagatingRegion in HashtagsClassifier._getActivityRegionsWithActivityAboveThreshold(hashtagObject):
+            validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
+            occurancesInActiveRegion = [(p,t) for p,t in hashtagObject['oc'] if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
+            occurancesInActivityRegions.append(occurancesInActiveRegion)
+        activityPeriodSpecificMean = []
+        for currentOccurences in occurancesInActivityRegions:
+            locations = zip(*currentOccurences)[0]
+            meanLid = getCenterOfMass(locations,accuracy=LATTICE_ACCURACY)
+            distances = [getHaversineDistance(meanLid, p) for p in locations]
+            _, upperBoundForDistance = getOutliersRangeUsingIRQ(distances)
+            if np.mean(filter(lambda d: d<=upperBoundForDistance, distances)) >= HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_NON_LOCAL
+            else: activityPeriodSpecificMean.append(meanLid)
+        meanLid = getCenterOfMass(activityPeriodSpecificMean,accuracy=LATTICE_ACCURACY)
+        distances = [getHaversineDistance(meanLid, p) for p in activityPeriodSpecificMean]
+        if np.mean(filter(lambda d: d<=upperBoundForDistance, distances)) >= HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_LOCAL_DIFF_PLACE
+        else: return HashtagsClassifier.LOCALITY_ID_LOCAL_SAME_PLACE
+    @staticmethod
+    def _getActivityRegionsWithActivityAboveThreshold(hashtagObject):
+        occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
+        startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
+        dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
+        occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
+        for x in dataX: 
+            if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
+        timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
+        _, _, sizeOfMaxActivityRegion = max(getActiveRegions(timeSeries), key=itemgetter(2))
+        activityRegionsWithActivityAboveThreshold=[]
+        for start, end, size in getActiveRegions(timeSeries):
+            if size>=HashtagsClassifier.PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION*sizeOfMaxActivityRegion: activityRegionsWithActivityAboveThreshold.append([start, end, size])
+        return activityRegionsWithActivityAboveThreshold
+    @staticmethod
+    def getPeriodicityClass(hashtagObject):
+        occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
+        if occurranceDistributionInEpochs:
+            startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
+            dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
+            occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
+            for x in dataX: 
+                if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
+            timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
+            _, _, sizeOfMaxActivityRegion = max(getActiveRegions(timeSeries), key=itemgetter(2))
+            activityRegionsWithActivityAboveThreshold=[]
+            for start, end, size in getActiveRegions(timeSeries):
+                if size>=HashtagsClassifier.PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION*sizeOfMaxActivityRegion: activityRegionsWithActivityAboveThreshold.append([start, end, size]) 
+            if len(activityRegionsWithActivityAboveThreshold)>1: return HashtagsClassifier.PERIODICITY_ID_PERIODIC
+            else:
+                hashtagPropagatingRegion = activityRegionsWithActivityAboveThreshold[0]
+                validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
+                if timeUnits[0]==validTimeUnits[0]: return HashtagsClassifier.PERIODICITY_ID_SUDDEN_BURST
+                return HashtagsClassifier.PERIODICITY_ID_SLOW_BURST
 
 class MRAreaAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -210,39 +304,39 @@ class MRAreaAnalysis(ModifiedMRJob):
     ''' End: Methods to build lattice graph..
     '''
     
-    ''' Start: Methods to get in and out link temporal closeness among lattices.
-    '''
-    def buildLocationInAndOutTemporalClosenessGraphMap(self, key, hashtagObject):
-        occuranesInHighestActiveRegion, latticesToOccranceTimeMap = getOccuranesInHighestActiveRegion(hashtagObject), {}
-        validLattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
-        occuranesInHighestActiveRegion = [(getLatticeLid(k, LATTICE_ACCURACY), v) for k, v in occuranesInHighestActiveRegion if getLatticeLid(k, LATTICE_ACCURACY) in validLattices]
-        if occuranesInHighestActiveRegion:
-            sourceLattice = getSourceLattice(occuranesInHighestActiveRegion)
-            if sourceLattice:
-                sourceLattice = sourceLattice[0]
-                for lid, v in occuranesInHighestActiveRegion:
-                    if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
-                latticesOccranceTimeList = latticesToOccranceTimeMap.items()
-                hastagStartTime, hastagEndTime = latticesToOccranceTimeMap[sourceLattice], max(latticesOccranceTimeList, key=itemgetter(1))[1]
-                hashtagTimePeriod = hastagEndTime - hastagStartTime
-                if hashtagTimePeriod:
-                    latticesOccranceTimeList = [(t[0], temporalScore(t[1]-hastagStartTime, hashtagTimePeriod)) for t in latticesOccranceTimeList if t[1]>hastagStartTime and latticeIdInValidAreas(t[0])]
-                    for lattice, score in latticesOccranceTimeList:
-                        if score>=MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS:
-                            yield sourceLattice, [hashtagObject['h'], 'out_link', [lattice, score]]
-                            yield lattice, [hashtagObject['h'], 'in_link', [sourceLattice, score]]
-    def buildLocationInAndOutTemporalClosenessGraphReduce(self, lattice, values):
-        nodeObject, latticesScoreMap, observedHashtags = {'in_link':{}, 'out_link':{}, 'id': lattice}, {'in_link': defaultdict(list), 'out_link': defaultdict(list)}, set()
-        for h, linkType, (l, v) in values: observedHashtags.add(h), latticesScoreMap[linkType][l].append([h,v])
-        if len(observedHashtags)>=MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE:
-            for linkType in latticesScoreMap:
-                for l in latticesScoreMap[linkType]: 
-                    if len(latticesScoreMap[linkType][l])>=MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE: 
-                        hashtags, scores = zip(*latticesScoreMap[linkType][l])
-                        nodeObject[linkType][l]=[hashtags, np.mean(scores)]
-            yield lattice, nodeObject
-    ''' End: Methods to get in and out link temporal closeness among lattices.
-    '''
+#    ''' Start: Methods to get in and out link temporal closeness among lattices.
+#    '''
+#    def buildLocationInAndOutTemporalClosenessGraphMap(self, key, hashtagObject):
+#        occuranesInHighestActiveRegion, latticesToOccranceTimeMap = getOccuranesInHighestActiveRegion(hashtagObject), {}
+#        validLattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
+#        occuranesInHighestActiveRegion = [(getLatticeLid(k, LATTICE_ACCURACY), v) for k, v in occuranesInHighestActiveRegion if getLatticeLid(k, LATTICE_ACCURACY) in validLattices]
+#        if occuranesInHighestActiveRegion:
+#            sourceLattice = getSourceLattice(occuranesInHighestActiveRegion)
+#            if sourceLattice:
+#                sourceLattice = sourceLattice[0]
+#                for lid, v in occuranesInHighestActiveRegion:
+#                    if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
+#                latticesOccranceTimeList = latticesToOccranceTimeMap.items()
+#                hastagStartTime, hastagEndTime = latticesToOccranceTimeMap[sourceLattice], max(latticesOccranceTimeList, key=itemgetter(1))[1]
+#                hashtagTimePeriod = hastagEndTime - hastagStartTime
+#                if hashtagTimePeriod:
+#                    latticesOccranceTimeList = [(t[0], temporalScore(t[1]-hastagStartTime, hashtagTimePeriod)) for t in latticesOccranceTimeList if t[1]>hastagStartTime and latticeIdInValidAreas(t[0])]
+#                    for lattice, score in latticesOccranceTimeList:
+#                        if score>=MIN_TEMPORAL_CLOSENESS_SCORE_FOR_IN_OUT_LINKS:
+#                            yield sourceLattice, [hashtagObject['h'], 'out_link', [lattice, score]]
+#                            yield lattice, [hashtagObject['h'], 'in_link', [sourceLattice, score]]
+#    def buildLocationInAndOutTemporalClosenessGraphReduce(self, lattice, values):
+#        nodeObject, latticesScoreMap, observedHashtags = {'in_link':{}, 'out_link':{}, 'id': lattice}, {'in_link': defaultdict(list), 'out_link': defaultdict(list)}, set()
+#        for h, linkType, (l, v) in values: observedHashtags.add(h), latticesScoreMap[linkType][l].append([h,v])
+#        if len(observedHashtags)>=MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE:
+#            for linkType in latticesScoreMap:
+#                for l in latticesScoreMap[linkType]: 
+#                    if len(latticesScoreMap[linkType][l])>=MIN_OBSERVATIONS_GREATER_THAN_MIN_TEMPORAL_CLOSENESS_SCORE: 
+#                        hashtags, scores = zip(*latticesScoreMap[linkType][l])
+#                        nodeObject[linkType][l]=[hashtags, np.mean(scores)]
+#            yield lattice, nodeObject
+#    ''' End: Methods to get in and out link temporal closeness among lattices.
+#    '''
     
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
     def jobsToGetHastagObjectsWithKnownSource(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)] + \
