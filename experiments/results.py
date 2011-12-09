@@ -198,28 +198,12 @@ def plotHastagClasses(timeRange, folderType):
                 plt.savefig(outputFile); plt.clf()
                 currentMainRangeId+=1    
 
-def tempAnalysis(timeRange, outputFolder):  
-    i,j=0,0
-    distribution = defaultdict(int)
-    for data in FileIO.iterateJsonFromFile(hashtagSharingProbabilityGraphWithTemporalClosenessFile%(outputFolder,'%s_%s'%timeRange)):
-#        print data.keys()
-        i+=1
-        linksData = [len(data['links'][k][2]) for k in data['links'] if len(data['links'][k][2])>20]
-        print i, len(linksData), data['id']
-        if len(linksData)==0: j+=1
-#            print k, data['links'][k][1], len(data['links'][k][2])#, np.mean([temporalScore(np.abs(v[1]-v[0]), v[2]) for v in data['links'][k][2]]) #temporalScore(lag, width)
-#            dataX.append(len(data['links'][k][2]))
-#            distribution[len(data['links'][k][2])]+=1
-#            linksData
-#        break
-    print j, len(distribution)
-    exit()
-    dataX = sorted(distribution)
-#    plt.hist(dataX, bins=50)
-    plt.plot(dataX, [distribution[x] for x in dataX]) 
-    plt.show()
-#        exit()
-
+def tempAnalysis(timeRange, outputFolder):
+    i = 1
+    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder,'%s_%s'%timeRange)):
+        print i, HashtagsClassifier.classify(hashtagObject); i+=1
+    
+    
 if __name__ == '__main__':
     timeRange = (2,11)
     outputFolder = 'world'
@@ -227,9 +211,9 @@ if __name__ == '__main__':
 #    outputFolder='/'
 #    plotHashtagFlowOnUSMap([41.046217,-73.652344], outputFolder)
 
-#    tempAnalysis(timeRange, outputFolder)
+    tempAnalysis(timeRange, outputFolder)
 #    plotTimeSeriesWithHighestActiveRegion(timeRange, outputFolder)
-    plotHastagClasses(timeRange, outputFolder)
+#    plotHastagClasses(timeRange, outputFolder)
 #    plotGraphs(timeRange, outputFolder)
 #    plotNodeObject(timeRange, outputFolder)
 #    plotHashtagsInOutGraphs(timeRange, outputFolder)

@@ -114,7 +114,7 @@ def getActiveRegions(timeSeries):
         activeRegions.append(currentRegion)
     return activeRegions
 def getOccuranesInHighestActiveRegion(hashtagObject, checkIfItFirstActiveRegion=False):
-    occurancesInActiveRegion = []
+    occurancesInActiveRegion, timeUnits = [], []
     occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
     if occurranceDistributionInEpochs:
         startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
@@ -129,7 +129,7 @@ def getOccuranesInHighestActiveRegion(hashtagObject, checkIfItFirstActiveRegion=
     if not checkIfItFirstActiveRegion: return occurancesInActiveRegion
     else:
         isFirstActiveRegion=False
-        if timeUnits[0]==validTimeUnits[0]: isFirstActiveRegion=True
+        if timeUnits and timeUnits[0]==validTimeUnits[0]: isFirstActiveRegion=True
         return (occurancesInActiveRegion, isFirstActiveRegion)
         
 def filterLatticesByMinHashtagOccurencesPerLattice(h):
