@@ -89,29 +89,29 @@ def getHashtagWithoutEndingWindow(key, values):
 
 def getOccurranceDistributionInEpochs(occ): return [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
 
-def getOccuranesInHighestActiveRegion(hashtagObject, checkIfItFirstActiveRegion=False):
-    def getActiveRegions(timeSeries):
-        noOfZerosObserved, activeRegions = 0, []
-        currentRegion, occurancesForRegion = None, 0
-        for index, l in zip(range(len(timeSeries)),timeSeries):
-            if l>0: 
-                if noOfZerosObserved>MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION or index==0:
-                    currentRegion = [None, None, None]
-                    currentRegion[0] = index
-                    occurancesForRegion = 0
-                noOfZerosObserved = 0
-                occurancesForRegion+=l
-            else: 
-                noOfZerosObserved+=1
-                if noOfZerosObserved>MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION and currentRegion and currentRegion[1]==None:
-                    currentRegion[1] = index-MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION-1
-                    currentRegion[2] = occurancesForRegion
-                    activeRegions.append(currentRegion)
-        if not activeRegions: activeRegions.append([0, len(timeSeries)-1, sum(timeSeries)])
+def getActiveRegions(timeSeries):
+    noOfZerosObserved, activeRegions = 0, []
+    currentRegion, occurancesForRegion = None, 0
+    for index, l in zip(range(len(timeSeries)),timeSeries):
+        if l>0: 
+            if noOfZerosObserved>MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION or index==0:
+                currentRegion = [None, None, None]
+                currentRegion[0] = index
+                occurancesForRegion = 0
+            noOfZerosObserved = 0
+            occurancesForRegion+=l
         else: 
-            currentRegion[1], currentRegion[2] = index, occurancesForRegion
-            activeRegions.append(currentRegion)
-        return activeRegions
+            noOfZerosObserved+=1
+            if noOfZerosObserved>MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION and currentRegion and currentRegion[1]==None:
+                currentRegion[1] = index-MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION-1
+                currentRegion[2] = occurancesForRegion
+                activeRegions.append(currentRegion)
+    if not activeRegions: activeRegions.append([0, len(timeSeries)-1, sum(timeSeries)])
+    else: 
+        currentRegion[1], currentRegion[2] = index, occurancesForRegion
+        activeRegions.append(currentRegion)
+    return activeRegions
+def getOccuranesInHighestActiveRegion(hashtagObject, checkIfItFirstActiveRegion=False):
     occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
     startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
     dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
