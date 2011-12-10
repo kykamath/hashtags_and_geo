@@ -123,22 +123,36 @@ class Hashtag:
     def __init__(self, hashtagObject): 
         self.hashtagObject = hashtagObject
         self.occuranceDistributionInLattices = defaultdict(list)
+        self.latestObservedOccuranceTime, self.latestObservedWindow = None, None
+        self.nextOccurenceIterator = self.getNextOccurance()
     def getNextOccurance(self):
-        for oc in getOccuranesInHighestActiveRegion(self.hashtagObject): yield [getLatticeLid(oc[0], accuracy=LATTICE_ACCURACY), oc[1]]
+        for oc in getOccuranesInHighestActiveRegion(self.hashtagObject): 
+            latestObservedOccurance = [getLatticeLid(oc[0], accuracy=LATTICE_ACCURACY), oc[1]]
+            self.latestObservedOccuranceTime = latestObservedOccurance[1]
+            yield latestObservedOccurance
+#            yield self.currentOccurance
     def getOccrancesForNextTimeWindow(self, timeWindowInSeconds):
-        pass
+        occurancesToReturn = []
+        if not self.latestObservedWindow: 
+            occurancesToReturn.append(self.nextOccurenceIterator.next())
+            self.latestObservedWindow = occurancesToReturn[0][1]
+#        occurancesToReturn = [self.currentOccurance]
+        self.latestObservedWindow+=timeWindowInSeconds
+        while self.latestObservedOccuranceTime<=self.latestObservedWindow: occurancesToReturn.append(self.nextOccurenceIterator.next())
+        return occurancesToReturn
     def updateOccuranceDistributionInLattices(self, occurrances): [self.occuranceDistributionInLattices[oc[0]].append(oc[1]) for oc in occurrances]
     @staticmethod
     def iterateHashtags(timeRange, folderType):
         for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)): yield Hashtag(h)
 
 class Simulation:
+    TIME_WINDOW_IN_SECONDS = 5*60
     @staticmethod
     def runModel(customerModel, latticeGraph, hashtagsIterator):
         currentLattices = latticeGraph.nodes()
         for hashtag in hashtagsIterator:
-            for h in [h for h in hashtag.getNextOccurance() if h[0] in currentLattices]:
-                print h
+            print [h for h in hashtag.getOccrancesForNextTimeWindow(Simulation.TIME_WINDOW_IN_SECONDS) if h[0] in currentLattices]
+#                print h
             exit()
 #            print len(list(hashtag.getNextOccurance()))
     @staticmethod
