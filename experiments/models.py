@@ -120,9 +120,14 @@ class Customer:
     pass
 
 class Hashtag:
-    def __init__(self, hashtagObject): self.hashtagObject = hashtagObject
+    def __init__(self, hashtagObject): 
+        self.hashtagObject = hashtagObject
+        self.occuranceDistributionInLattices = defaultdict(list)
     def getNextOccurance(self):
         for oc in getOccuranesInHighestActiveRegion(self.hashtagObject): yield [getLatticeLid(oc[0], accuracy=LATTICE_ACCURACY), oc[1]]
+    def getOccrancesForNextTimeWindow(self, timeWindowInSeconds):
+        pass
+    def updateOccuranceDistributionInLattices(self, occurrances): [self.occuranceDistributionInLattices[oc[0]].append(oc[1]) for oc in occurrances]
     @staticmethod
     def iterateHashtags(timeRange, folderType):
         for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)): yield Hashtag(h)
@@ -132,7 +137,8 @@ class Simulation:
     def runModel(customerModel, latticeGraph, hashtagsIterator):
         currentLattices = latticeGraph.nodes()
         for hashtag in hashtagsIterator:
-            print len([h for h in hashtag.getNextOccurance()])
+            for h in [h for h in hashtag.getNextOccurance() if h[0] in currentLattices]:
+                print h
             exit()
 #            print len(list(hashtag.getNextOccurance()))
     @staticmethod
