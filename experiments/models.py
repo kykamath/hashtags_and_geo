@@ -14,6 +14,7 @@ from collections import defaultdict
 from operator import itemgetter
 import networkx as nx
 from library.graphs import plot
+import datetime
 
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
@@ -124,35 +125,36 @@ class Hashtag:
         self.hashtagObject = hashtagObject
         self.occuranceDistributionInLattices = defaultdict(list)
         self.latestObservedOccuranceTime, self.latestObservedWindow = None, None
-        self.nextOccurenceIterator = self.getNextOccurance()
-    def getNextOccurance(self):
+        self.nextOccurenceIterator = self._getNextOccurance()
+    def _getNextOccurance(self):
         for oc in getOccuranesInHighestActiveRegion(self.hashtagObject): 
             latestObservedOccurance = [getLatticeLid(oc[0], accuracy=LATTICE_ACCURACY), oc[1]]
             self.latestObservedOccuranceTime = latestObservedOccurance[1]
             yield latestObservedOccurance
 #            yield self.currentOccurance
-    def getOccrancesForNextTimeWindow(self, timeWindowInSeconds):
-        occurancesToReturn = []
-        if not self.latestObservedWindow: 
-            occurancesToReturn.append(self.nextOccurenceIterator.next())
-            self.latestObservedWindow = occurancesToReturn[0][1]
-#        occurancesToReturn = [self.currentOccurance]
-        self.latestObservedWindow+=timeWindowInSeconds
-        while self.latestObservedOccuranceTime<=self.latestObservedWindow: occurancesToReturn.append(self.nextOccurenceIterator.next())
-        return occurancesToReturn
+    def getOccrancesEveryTimeWindowIterator(self, timeWindowInSeconds):
+        while True:
+            occurancesToReturn = []
+            if not self.latestObservedWindow: 
+                occurancesToReturn.append(self.nextOccurenceIterator.next())
+                self.latestObservedWindow = occurancesToReturn[0][1]
+            self.latestObservedWindow+=timeWindowInSeconds
+            print datetime.datetime.fromtimestamp(self.latestObservedWindow),
+            while self.latestObservedOccuranceTime<=self.latestObservedWindow: occurancesToReturn.append(self.nextOccurenceIterator.next())
+            yield occurancesToReturn
     def updateOccuranceDistributionInLattices(self, occurrances): [self.occuranceDistributionInLattices[oc[0]].append(oc[1]) for oc in occurrances]
     @staticmethod
     def iterateHashtags(timeRange, folderType):
         for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)): yield Hashtag(h)
 
 class Simulation:
-    TIME_WINDOW_IN_SECONDS = 5*60
+    TIME_WINDOW_IN_SECONDS = 10*60
     @staticmethod
     def runModel(customerModel, latticeGraph, hashtagsIterator):
         currentLattices = latticeGraph.nodes()
         for hashtag in hashtagsIterator:
-            print [h for h in hashtag.getOccrancesForNextTimeWindow(Simulation.TIME_WINDOW_IN_SECONDS) if h[0] in currentLattices]
-#                print h
+            for occs in hashtag.getOccrancesEveryTimeWindowIterator(Simulation.TIME_WINDOW_IN_SECONDS):
+                print unicode(hashtag.hashtagObject['h']).encode('utf-8'), len([h for h in occs if h[0] in currentLattices])
             exit()
 #            print len(list(hashtag.getNextOccurance()))
     @staticmethod
