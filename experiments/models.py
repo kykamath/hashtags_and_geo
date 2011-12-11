@@ -6,7 +6,9 @@ Created on Dec 8, 2011
 from library.file_io import FileIO
 from settings import hashtagsWithoutEndingWindowFile, hashtagsLatticeGraphFile
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
-    TIME_UNIT_IN_SECONDS, LATTICE_ACCURACY, HashtagsClassifier
+    TIME_UNIT_IN_SECONDS, LATTICE_ACCURACY, HashtagsClassifier,\
+    getOccurranceDistributionInEpochs, CLASSIFIER_TIME_UNIT_IN_SECONDS,\
+    getRadius
 import numpy as np
 from library.stats import getOutliersRangeUsingIRQ
 from library.geo import getHaversineDistanceForLids, getLatticeLid
@@ -14,7 +16,7 @@ from collections import defaultdict
 from operator import itemgetter
 import networkx as nx
 from library.graphs import plot
-import datetime
+import datetime, math
 
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
@@ -119,9 +121,12 @@ class LatticeGraph:
         
 class Customer:
     pass
-
+def normalize(data):
+    total = math.sqrt(float(sum([d**2 for d in data])))
+    if total==0: return map(lambda d: 0, data)
+    return map(lambda d: d/total, data)
 class Hashtag:
-    def __init__(self, hashtagObject): 
+    def __init__(self, hashtagObject, dataStructuresToBuildClassifier=False): 
         self.hashtagObject = hashtagObject
         self.occuranceDistributionInLattices = defaultdict(list)
         self.latestObservedOccuranceTime, self.latestObservedWindow = None, None
@@ -130,6 +135,17 @@ class Hashtag:
         if self.hashtagObject['oc']: 
             self.timePeriod = (self.hashtagObject['oc'][-1][1]-self.hashtagObject['oc'][0][1])/TIME_UNIT_IN_SECONDS
             self.hashtagClassId = HashtagsClassifier.classify(self.hashtagObject)
+        # Data structures for building classifier.
+        if dataStructuresToBuildClassifier and self.isValidObject():
+            occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(self.hashtagObject), timeUnit=CLASSIFIER_TIME_UNIT_IN_SECONDS, fillInGaps=True, occurancesCount=False)
+            print unicode(self.hashtagObject['h']).encode('utf-8'), occurranceDistributionInEpochs
+            self.occurances = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))[1]
+            self.occuranceCountVector = map(lambda t: len(t), self.occurances)
+            self.occuranceLatticesVector = []
+            for t in self.occurances:
+                if t: self.occuranceLatticesVector.append(getRadius(zip(*t)[0]))
+                else: self.occuranceLatticesVector.append(0)
+    def getVector(self, length): return [normalize(self.occuranceCountVector[:length]) + self.occuranceLatticesVector[:length], self.hashtagClassId]
     def isValidObject(self):
         if not self.hashtagObject['oc']: return False
         if not self.hashtagClassId: return False

@@ -19,6 +19,7 @@ from library.stats import getOutliersRangeUsingIRQ
 # General parameters
 LATTICE_ACCURACY = 0.145
 TIME_UNIT_IN_SECONDS = 60*60
+CLASSIFIER_TIME_UNIT_IN_SECONDS = 5*60
 
 ## Paramters for local run
 ## Paramters to filter hashtags.
@@ -91,12 +92,7 @@ def getHashtagWithoutEndingWindow(key, values):
 #def getOccurranceDistributionInEpochs(occ): return [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
 def getOccurranceDistributionInEpochs(occ, timeUnit=TIME_UNIT_IN_SECONDS, fillInGaps=False, occurancesCount=True): 
     if occurancesCount: occurranceDistributionInEpochs = filter(lambda t:t[1]>2, [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, timeUnit) for t in zip(*occ)[1]]))])
-    else: 
-        occurranceDistributionInEpochs = filter(lambda t:len(t[1])>2, [(k[0], [t[1] for t in k[1]]) for k in groupby(sorted([(GeneralMethods.approximateEpoch(t[1], timeUnit), t) for t in occ], key=itemgetter(0)), key=itemgetter(0))])
-#        for k in groupby(sorted([(GeneralMethods.approximateEpoch(t[1], timeUnit), t) for t in occ], key=itemgetter(0)), key=itemgetter(0)):
-#            print k[0], len(list(k[1]))
-#        exit()
-   
+    else: occurranceDistributionInEpochs = filter(lambda t:len(t[1])>2, [(k[0], [t[1] for t in k[1]]) for k in groupby(sorted([(GeneralMethods.approximateEpoch(t[1], timeUnit), t) for t in occ], key=itemgetter(0)), key=itemgetter(0))])
     if not fillInGaps: return occurranceDistributionInEpochs
     else:
         if occurranceDistributionInEpochs:
