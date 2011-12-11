@@ -15,7 +15,7 @@ sys.path.append('../')
 from library.classes import GeneralMethods
 from experiments.mr_area_analysis import MRAreaAnalysis, latticeIdInValidAreas,\
     LATTICE_ACCURACY, TIME_UNIT_IN_SECONDS, getSourceLattice,\
-    getOccuranesInHighestActiveRegion
+    getOccuranesInHighestActiveRegion, HashtagsClassifier
 from library.geo import getHaversineDistance, getLatticeLid, getLattice,\
     getCenterOfMass, getLocationFromLid, plotPointsOnUSMap, plotPointsOnWorldMap,\
     getHaversineDistanceForLids, getLidFromLocation
@@ -106,9 +106,33 @@ class Parameters:
         timeRange = (2,11)
         folderType = 'world'
         Parameters.estimateUpperRangeForTimePeriod(timeRange, folderType)
-            
 
-
+class HashtagsClassifierAnalysis:
+    @staticmethod
+    def timePeriods(timeRange, folderType):
+        distribution = defaultdict(list)
+#        i = 1
+#        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)):
+##            if h['h']=='jartic':
+#            classId = HashtagsClassifier.classify(h)
+#            if classId:
+#                print i, unicode(h['h']).encode('utf-8'), classId;i+=1
+#                occs = getOccuranesInHighestActiveRegion(h)
+#                distribution[classId].append((occs[-1][1]-occs[0][1])/TIME_UNIT_IN_SECONDS)
+#        for k,v in distribution.iteritems():
+#            FileIO.writeToFileAsJson({'id':k, 'dist': v}, '../data/hashtagsClassTimePeriods.txt')
+        i = 1
+        for data in FileIO.iterateJsonFromFile('../data/hashtagsClassTimePeriods.txt'):
+#            print data.keys()
+            plt.subplot(220+i);i+=1
+            plt.hist(data['dist'], bins=100)
+            boundary = getOutliersRangeUsingIRQ(data['dist'])[1]
+            actualHashtags = filter(lambda t:t<=boundary, data['dist'])
+            meanTimePeriod = np.mean(actualHashtags)
+            print {data['id'] : {'meanTimePeriod': meanTimePeriod, 'outlierBoundary': boundary}}
+            plt.title(data['id']+' %0.2f %0.2f %d'%(meanTimePeriod, boundary, len(actualHashtags)))
+            plt.xlim(xmax=200)
+        plt.show()
 class LatticeGraphPlots:
     upperRangeForTemporalDistances = 8.24972222222
     @staticmethod
@@ -293,7 +317,8 @@ if __name__ == '__main__':
     folderType = 'world'
 #    folderType = '/'
     mrOutputFolder = 'world'
-    mr_area_analysis(timeRange, folderType, mrOutputFolder)
+#    mr_area_analysis(timeRange, folderType, mrOutputFolder)
+    HashtagsClassifierAnalysis.timePeriods(timeRange, folderType)
 
 #    tempAnalysis(timeRange, mrOutputFolder)
 

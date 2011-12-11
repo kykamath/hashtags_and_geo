@@ -152,24 +152,19 @@ def getTimeUnitsAndTimeSeries(occurences):
 class HashtagsClassifier:
     PERIODICITY_ID_SLOW_BURST = 'slow_burst'
     PERIODICITY_ID_SUDDEN_BURST = 'sudden_burst'
-    PERIODICITY_ID_PERIODIC_SLOW_BURST = 'periodic_slow_burst' 
-    PERIODICITY_ID_PERIODIC_SUDDEN_BURST = 'periodic_sudden_burst' 
-    
     LOCALITY_ID_LOCAL = 'local'
-    LOCALITY_ID_LOCAL_SAME_PLACE = 'local_same_place'
-    LOCALITY_ID_LOCAL_DIFF_PLACE = 'local_diff_place'
     LOCALITY_ID_NON_LOCAL = 'non_local'
     
     RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES=500
     PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION=1.0
+    
     @staticmethod
     def getId(locality, periodicity): return '%s_::_%s'%(periodicity, locality)
     @staticmethod
     def classify(hashtagObject): 
         periodicityId = HashtagsClassifier.getPeriodicityClass(hashtagObject)
-        if not periodicityId: return None
-        if periodicityId!=HashtagsClassifier.PERIODICITY_ID_PERIODIC_SLOW_BURST and periodicityId!=HashtagsClassifier.PERIODICITY_ID_PERIODIC_SUDDEN_BURST: return HashtagsClassifier.getId(HashtagsClassifier.getHastagLocalityClassForHighestActivityPeriod(hashtagObject), periodicityId)
-        else: return HashtagsClassifier.getId(HashtagsClassifier.getHastagLocalityClassForAllActivityPeriod(hashtagObject), periodicityId)
+        if periodicityId: return HashtagsClassifier.getId(HashtagsClassifier.getHastagLocalityClassForHighestActivityPeriod(hashtagObject), periodicityId)
+#        else: return HashtagsClassifier.getId(HashtagsClassifier.getHastagLocalityClassForAllActivityPeriod(hashtagObject), periodicityId)
     @staticmethod
     def getHastagLocalityClassForHighestActivityPeriod(hashtagObject): 
         occuranesInHighestActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject)
@@ -179,40 +174,6 @@ class HashtagsClassifier:
         _, upperBoundForDistance = getOutliersRangeUsingIRQ(distances)
         if np.mean(filter(lambda d: d<=upperBoundForDistance, distances)) >= HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_NON_LOCAL
         else: return HashtagsClassifier.LOCALITY_ID_LOCAL
-    @staticmethod
-    def getHastagLocalityClassForAllActivityPeriod(hashtagObject):
-        timeUnits, timeSeries = getTimeUnitsAndTimeSeries(hashtagObject['oc'])
-        occurancesInActivityRegions = []
-        for hashtagPropagatingRegion in HashtagsClassifier._getActivityRegionsWithActivityAboveThreshold(hashtagObject):
-            validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
-            occurancesInActiveRegion = [(p,t) for p,t in hashtagObject['oc'] if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
-            occurancesInActivityRegions.append(occurancesInActiveRegion)
-        activityPeriodSpecificMean = []
-        for currentOccurences in occurancesInActivityRegions:
-            locations = zip(*currentOccurences)[0]
-            meanLid = getCenterOfMass(locations,accuracy=LATTICE_ACCURACY)
-            distances = [getHaversineDistance(meanLid, p) for p in locations]
-            _, upperBoundForDistance = getOutliersRangeUsingIRQ(distances)
-            if np.mean(filter(lambda d: d<=upperBoundForDistance, distances)) >= HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_NON_LOCAL
-            else: activityPeriodSpecificMean.append(meanLid)
-        meanLid = getCenterOfMass(activityPeriodSpecificMean,accuracy=LATTICE_ACCURACY)
-        distances = [getHaversineDistance(meanLid, p) for p in activityPeriodSpecificMean]
-        if np.mean(filter(lambda d: d<=upperBoundForDistance, distances)) >= HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_LOCAL_DIFF_PLACE
-        else: return HashtagsClassifier.LOCALITY_ID_LOCAL_SAME_PLACE
-    @staticmethod
-    def _getActivityRegionsWithActivityAboveThreshold(hashtagObject):
-        occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
-        startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
-        dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
-        occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
-        for x in dataX: 
-            if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
-        timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
-        _, _, sizeOfMaxActivityRegion = max(getActiveRegions(timeSeries), key=itemgetter(2))
-        activityRegionsWithActivityAboveThreshold=[]
-        for start, end, size in getActiveRegions(timeSeries):
-            if size>=HashtagsClassifier.PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION*sizeOfMaxActivityRegion: activityRegionsWithActivityAboveThreshold.append([start, end, size])
-        return activityRegionsWithActivityAboveThreshold
     @staticmethod
     def getPeriodicityClass(hashtagObject):
         occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
@@ -227,17 +188,16 @@ class HashtagsClassifier:
             activityRegionsWithActivityAboveThreshold=[]
             for start, end, size in getActiveRegions(timeSeries):
                 if size>=HashtagsClassifier.PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION*sizeOfMaxActivityRegion: activityRegionsWithActivityAboveThreshold.append([start, end, size]) 
-#            if len(activityRegionsWithActivityAboveThreshold)>1: return HashtagsClassifier.PERIODICITY_ID_PERIODIC
-#            else:
             hashtagPropagatingRegion = activityRegionsWithActivityAboveThreshold[0]
             validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
-#                if timeUnits[0]==validTimeUnits[0]: return HashtagsClassifier.PERIODICITY_ID_SUDDEN_BURST
-#                if sum(timeSeries[:list(timeUnits).index(validTimeUnits[0])])<10: return HashtagsClassifier.PERIODICITY_ID_SUDDEN_BURST
-            if timeSeries[list(timeUnits).index(validTimeUnits[0])]>10: 
-#                if len(activityRegionsWithActivityAboveThreshold)>1: return HashtagsClassifier.PERIODICITY_ID_PERIODIC_SUDDEN_BURST
-                return HashtagsClassifier.PERIODICITY_ID_SUDDEN_BURST
-#            if len(activityRegionsWithActivityAboveThreshold)>1: return HashtagsClassifier.PERIODICITY_ID_PERIODIC_SLOW_BURST
+            if timeSeries[list(timeUnits).index(validTimeUnits[0])]>10: return HashtagsClassifier.PERIODICITY_ID_SUDDEN_BURST
             return HashtagsClassifier.PERIODICITY_ID_SLOW_BURST
+    stats = {
+             'slow_burst_::_local': {'meanTimePeriod': 35.482895038953899, 'outlierBoundary': 124.91611111114999},
+             'sudden_burst_::_local': {'meanTimePeriod': 24.213369648318182, 'outlierBoundary': 84.581805555495009},
+             'sudden_burst_::_non_local': {'meanTimePeriod': 37.167267115601007, 'outlierBoundary': 104.53444444447501},
+             'slow_burst_::_non_local': {'meanTimePeriod': 43.219448991971397, 'outlierBoundary': 125.008194444525}
+             }
 
 class MRAreaAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'

@@ -6,7 +6,7 @@ Created on Dec 8, 2011
 from library.file_io import FileIO
 from settings import hashtagsWithoutEndingWindowFile, hashtagsLatticeGraphFile
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
-    TIME_UNIT_IN_SECONDS, LATTICE_ACCURACY
+    TIME_UNIT_IN_SECONDS, LATTICE_ACCURACY, HashtagsClassifier
 import numpy as np
 from library.stats import getOutliersRangeUsingIRQ
 from library.geo import getHaversineDistanceForLids, getLatticeLid
@@ -126,12 +126,20 @@ class Hashtag:
         self.occuranceDistributionInLattices = defaultdict(list)
         self.latestObservedOccuranceTime, self.latestObservedWindow = None, None
         self.nextOccurenceIterator = self._getNextOccurance()
+        self.hashtagObject['oc'] = getOccuranesInHighestActiveRegion(self.hashtagObject)
+        if self.hashtagObject['oc']: 
+            self.timePeriod = (self.hashtagObject['oc'][-1][1]-self.hashtagObject['oc'][0][1])/TIME_UNIT_IN_SECONDS
+            self.hashtagClassId = HashtagsClassifier.classify(self.hashtagObject)
+    def isValidObject(self):
+        if not self.hashtagObject['oc']: return False
+        if not self.hashtagClassId: return False
+        if self.timePeriod>HashtagsClassifier.stats[self.hashtagClassId]['outlierBoundary']: return False
+        return True
     def _getNextOccurance(self):
-        for oc in getOccuranesInHighestActiveRegion(self.hashtagObject): 
+        for oc in self.hashtagObject['oc']: 
             latestObservedOccurance = [getLatticeLid(oc[0], accuracy=LATTICE_ACCURACY), oc[1]]
             self.latestObservedOccuranceTime = latestObservedOccurance[1]
             yield latestObservedOccurance
-#            yield self.currentOccurance
     def getOccrancesEveryTimeWindowIterator(self, timeWindowInSeconds):
         while True:
             occurancesToReturn = []
@@ -145,18 +153,21 @@ class Hashtag:
     def updateOccuranceDistributionInLattices(self, occurrances): [self.occuranceDistributionInLattices[oc[0]].append(oc[1]) for oc in occurrances]
     @staticmethod
     def iterateHashtags(timeRange, folderType):
-        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)): yield Hashtag(h)
+        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)): 
+            hashtagObject = Hashtag(h)
+            if hashtagObject.isValidObject(): yield hashtagObject
 
 class Simulation:
     TIME_WINDOW_IN_SECONDS = 10*60
     @staticmethod
     def runModel(customerModel, latticeGraph, hashtagsIterator):
         currentLattices = latticeGraph.nodes()
+        i = 1
         for hashtag in hashtagsIterator:
             for occs in hashtag.getOccrancesEveryTimeWindowIterator(Simulation.TIME_WINDOW_IN_SECONDS):
-                print unicode(hashtag.hashtagObject['h']).encode('utf-8'), len([h for h in occs if h[0] in currentLattices])
+                hashtag.updateOccuranceDistributionInLattices(occs)
+                print datetime.datetime.fromtimestamp(hashtag.latestObservedWindow), hashtag.occuranceDistributionInLattices
             exit()
-#            print len(list(hashtag.getNextOccurance()))
     @staticmethod
     def run():
         timeRange, folderType = (2,11), 'world'
