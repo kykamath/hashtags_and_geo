@@ -89,8 +89,28 @@ def getHashtagWithoutEndingWindow(key, values):
             e[1]>=HASHTAG_STARTING_WINDOW: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
 
 #def getOccurranceDistributionInEpochs(occ): return [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
-def getOccurranceDistributionInEpochs(occ): return filter(lambda t:t[1]>2, [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))])
-
+def getOccurranceDistributionInEpochs(occ, timeUnit=TIME_UNIT_IN_SECONDS, fillInGaps=False, occurancesCount=True): 
+    if occurancesCount: occurranceDistributionInEpochs = filter(lambda t:t[1]>2, [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, timeUnit) for t in zip(*occ)[1]]))])
+    else: 
+        occurranceDistributionInEpochs = filter(lambda t:len(t[1])>2, [(k[0], [t[1] for t in k[1]]) for k in groupby(sorted([(GeneralMethods.approximateEpoch(t[1], timeUnit), t) for t in occ], key=itemgetter(0)), key=itemgetter(0))])
+#        for k in groupby(sorted([(GeneralMethods.approximateEpoch(t[1], timeUnit), t) for t in occ], key=itemgetter(0)), key=itemgetter(0)):
+#            print k[0], len(list(k[1]))
+#        exit()
+   
+    if not fillInGaps: return occurranceDistributionInEpochs
+    else:
+        if occurranceDistributionInEpochs:
+            startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
+#            if not occurancesCount: startEpoch, endEpoch = startEpoch[0], endEpoch[0]
+            dataX = range(startEpoch, endEpoch, timeUnit)
+            occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
+            for x in dataX: 
+                if x not in occurranceDistributionInEpochs: 
+                    if occurancesCount: occurranceDistributionInEpochs[x]=0
+                    else: occurranceDistributionInEpochs[x]=[]
+        return occurranceDistributionInEpochs
+    
+    
 def getActiveRegions(timeSeries):
     noOfZerosObserved, activeRegions = 0, []
     currentRegion, occurancesForRegion = None, 0
@@ -115,13 +135,13 @@ def getActiveRegions(timeSeries):
     return activeRegions
 def getOccuranesInHighestActiveRegion(hashtagObject, checkIfItFirstActiveRegion=False):
     occurancesInActiveRegion, timeUnits = [], []
-    occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
+    occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'], fillInGaps=True)
     if occurranceDistributionInEpochs:
-        startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
-        dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
-        occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
-        for x in dataX: 
-            if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
+#        startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
+#        dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
+#        occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
+#        for x in dataX: 
+#            if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
         timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
         hashtagPropagatingRegion = max(getActiveRegions(timeSeries), key=itemgetter(2))
         validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
@@ -142,13 +162,20 @@ def getSourceLattice(occ):
     if occs: return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in occs]))], key=lambda t: t[1])
     
 def getTimeUnitsAndTimeSeries(occurences):
-    occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(occurences)
-    startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
-    dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
-    occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
-    for x in dataX: 
-        if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
+    occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(occurences, fillInGaps=True)
+#    startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
+#    dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
+#    occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
+#    for x in dataX: 
+#        if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
     return zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
+
+def getRadius(locations):
+    meanLid = getCenterOfMass(locations,accuracy=LATTICE_ACCURACY)
+    distances = [getHaversineDistance(meanLid, p) for p in locations]
+    _, upperBoundForDistance = getOutliersRangeUsingIRQ(distances)
+    return np.mean(filter(lambda d: d<=upperBoundForDistance, distances))
+
 class HashtagsClassifier:
     PERIODICITY_ID_SLOW_BURST = 'slow_burst'
     PERIODICITY_ID_SUDDEN_BURST = 'sudden_burst'
@@ -168,11 +195,12 @@ class HashtagsClassifier:
     @staticmethod
     def getHastagLocalityClassForHighestActivityPeriod(hashtagObject): 
         occuranesInHighestActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject)
-        locations = zip(*occuranesInHighestActiveRegion)[0]
-        meanLid = getCenterOfMass(locations,accuracy=LATTICE_ACCURACY)
-        distances = [getHaversineDistance(meanLid, p) for p in locations]
-        _, upperBoundForDistance = getOutliersRangeUsingIRQ(distances)
-        if np.mean(filter(lambda d: d<=upperBoundForDistance, distances)) >= HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_NON_LOCAL
+#        locations = zip(*occuranesInHighestActiveRegion)[0]
+#        meanLid = getCenterOfMass(locations,accuracy=LATTICE_ACCURACY)
+#        distances = [getHaversineDistance(meanLid, p) for p in locations]
+#        _, upperBoundForDistance = getOutliersRangeUsingIRQ(distances)
+#        if np.mean(filter(lambda d: d<=upperBoundForDistance, distances)) >= HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_NON_LOCAL
+        if getRadius(zip(*occuranesInHighestActiveRegion)[0])>=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_NON_LOCAL
         else: return HashtagsClassifier.LOCALITY_ID_LOCAL
     @staticmethod
     def getPeriodicityClass(hashtagObject):
