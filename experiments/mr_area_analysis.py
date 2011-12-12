@@ -182,8 +182,15 @@ class HashtagsClassifier:
     RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES=500
     PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION=1.0
     
+    classes = {
+               'slow_burst_::_local':0,
+               'slow_burst_::_non_local':1,
+               'sudden_burst_::_local':2,
+               'sudden_burst_::_non_local':3
+               }
+    
     @staticmethod
-    def getId(locality, periodicity): return '%s_::_%s'%(periodicity, locality)
+    def getId(locality, periodicity): return HashtagsClassifier.classes['%s_::_%s'%(periodicity, locality)]
     @staticmethod
     def classify(hashtagObject): 
         periodicityId = HashtagsClassifier.getPeriodicityClass(hashtagObject)
@@ -218,10 +225,10 @@ class HashtagsClassifier:
             if timeSeries[list(timeUnits).index(validTimeUnits[0])]>10: return HashtagsClassifier.PERIODICITY_ID_SUDDEN_BURST
             return HashtagsClassifier.PERIODICITY_ID_SLOW_BURST
     stats = {
-             'slow_burst_::_local': {'meanTimePeriod': 35.482895038953899, 'outlierBoundary': 124.91611111114999},
-             'sudden_burst_::_local': {'meanTimePeriod': 24.213369648318182, 'outlierBoundary': 84.581805555495009},
-             'sudden_burst_::_non_local': {'meanTimePeriod': 37.167267115601007, 'outlierBoundary': 104.53444444447501},
-             'slow_burst_::_non_local': {'meanTimePeriod': 43.219448991971397, 'outlierBoundary': 125.008194444525}
+             0: {'meanTimePeriod': 35.482895038953899, 'outlierBoundary': 124.91611111114999},
+             1: {'meanTimePeriod': 43.219448991971397, 'outlierBoundary': 125.008194444525},
+             2: {'meanTimePeriod': 24.213369648318182, 'outlierBoundary': 84.581805555495009},
+             3: {'meanTimePeriod': 37.167267115601007, 'outlierBoundary': 104.53444444447501}
              }
 
 class MRAreaAnalysis(ModifiedMRJob):
