@@ -34,10 +34,10 @@ CLASSIFIER_TIME_UNIT_IN_SECONDS = 5*60
 
 # Paramters to filter hashtags.
 MIN_HASHTAG_OCCURENCES = 500
-HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
-HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 7, 31).timetuple())
-#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 7, 1).timetuple())
-#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
+#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
+#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 7, 31).timetuple())
+HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 8, 1).timetuple())
+HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
 
 # Paramters to construct lattice graph.
 MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12

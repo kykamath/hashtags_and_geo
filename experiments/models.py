@@ -16,7 +16,7 @@ from collections import defaultdict
 from operator import itemgetter
 import networkx as nx
 from library.graphs import plot
-import datetime, math
+import datetime, math, random
 
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
@@ -80,21 +80,29 @@ class LatticeGraph:
     typeTemporalCloseness = {'id': 'temporal_closeness', 'method': latticeNodeByTemporalClosenessScore, 'title': 'Temporal closeness'}
     typeTemporalDistanceInHours = {'id': 'temporal_distance_in_hours', 'method': latticeNodeByTemporalDistanceInHours, 'title': 'Temporal distance (hours)'}
     typeHaversineDistance = {'id': 'haversine_distance', 'method': latticeNodeByHaversineDistance, 'title': 'Distance (miles)'}
-    def __init__(self, graphFile, latticeGraphType):
+    def __init__(self, graphFile, latticeGraphType, graphType=nx.Graph):
         self.graphFile = graphFile
         self.latticeGraphType = latticeGraphType
+#        self.graphType = graphType
     def load(self):
         i = 1
         self.graph = nx.DiGraph()
         for latticeObject in FileIO.iterateJsonFromFile(self.graphFile):
             print i; i+=1
             latticeObject = self.latticeGraphType['method'](latticeObject)
-            LatticeGraph.normalizeNode(latticeObject)
+#            LatticeGraph.normalizeNode(latticeObject)
             if 'in' in latticeObject['links']:
-                for no, w in latticeObject['links']['in'].iteritems(): self.graph.add_edge(no, latticeObject['id'], {'w': w})
-                for no, w in latticeObject['links']['out'].iteritems(): self.graph.add_edge(latticeObject['id'], no, {'w': w})
+#                for no, w in latticeObject['links']['in'].iteritems(): self.graph.add_edge(no, latticeObject['id'], {'w': w})
+#                for no, w in latticeObject['links']['out'].iteritems(): self.graph.add_edge(latticeObject['id'], no, {'w': w})
+                no, w = max(latticeObject['links']['in'].iteritems(), key=itemgetter(1))
+                self.graph.add_edge(no, latticeObject['id'], {'w': w})
+                no, w = max(latticeObject['links']['out'].iteritems(), key=itemgetter(1))
+                self.graph.add_edge(latticeObject['id'], no, {'w': w})
             else:
-                for no, w in latticeObject['links'].iteritems(): self.graph.add_edge(latticeObject['id'], no, {'w': w}), self.graph.add_edge(no, latticeObject['id'], {'w': w})
+#                for no, w in latticeObject['links'].iteritems(): self.graph.add_edge(latticeObject['id'], no, {'w': w}), self.graph.add_edge(no, latticeObject['id'], {'w': w})
+                no, w = max(latticeObject['links'].iteritems(), key=itemgetter(1))
+                if not self.graph.has_edge(latticeObject['id'], no) or self.graph.edge[latticeObject['id']][no]['w']<w: 
+                    self.graph.add_edge(latticeObject['id'], no, {'w': w}), self.graph.add_edge(no, latticeObject['id'], {'w': w})
             if i==100: break
 #        plot(self.graph)
         return self.graph
@@ -119,13 +127,42 @@ class LatticeGraph:
         latticeGraph = LatticeGraph(hashtagsLatticeGraphFile%(folderType,'%s_%s'%timeRange), LatticeGraph.typeTemporalCloseness)
         latticeGraph.load()
         print latticeGraph.graph.number_of_nodes()
-        
+
+class Metrics:
+    @staticmethod
+    def overallOccurancesHitRate(occuranceDistributionInLattices, occuranceDistributionInTargetLattices):
+        totalOccurances, occurancesObserved = 0., 0.
+        for k,v in occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v)
+        for k, v in occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
+        return occurancesObserved/totalOccurances
+    @staticmethod
+    def occurancesHitRateAfterTargetSelection(occuranceDistributionInLattices, occuranceDistributionInTargetLattices):
+        totalOccurances, occurancesObserved = 0., 0.
+        targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in occuranceDistributionInTargetLattices.values())
+        for k,v in occuranceDistributionInLattices.iteritems(): totalOccurances+=len([i for i in v if i>targetSelectionTimeUnit])
+        for k, v in occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
+        return occurancesObserved/totalOccurances
+    @staticmethod
+    def occurancesMissRateBeforeTargetSelection(occuranceDistributionInLattices, occuranceDistributionInTargetLattices):
+        totalOccurances, occurancesBeforeTimeUnit = 0., 0.
+        targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in occuranceDistributionInTargetLattices.values())
+        for k,v in occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v); occurancesBeforeTimeUnit+=len([i for i in v if i<=targetSelectionTimeUnit])
+        return occurancesBeforeTimeUnit/totalOccurances
+EvaluationMetrics = {
+                     'overall_hit_rate': Metrics.overallOccurancesHitRate,
+                     'hit_rate_after_target_selection': Metrics.occurancesHitRateAfterTargetSelection,
+                     'miss_rate_before_target_selection': Metrics.occurancesMissRateBeforeTargetSelection
+                     }
+
 class Customer:
-    def __init__(self):
-        pass
-    def defaultAction(self, graph, occuranceDistributionInLattices):
-        print 'x'
-        pass
+    def __init__(self, budget=3, timeUnitToPickTargetLattices=6):
+        self.budget = budget
+        self.timeUnitToPickTargetLattices = timeUnitToPickTargetLattices
+    def selectNextLatticesRandomly(self, currentTimeUnit, hashtag, graph, occuranceDistributionInLattices):
+        if self.timeUnitToPickTargetLattices==currentTimeUnit:
+            print currentTimeUnit, len(occuranceDistributionInLattices)
+            hashtag._initializeTargetLattices(currentTimeUnit, random.sample(occuranceDistributionInLattices, min([self.budget, len(occuranceDistributionInLattices)])))
+                
 def normalize(data):
     total = math.sqrt(float(sum([d**2 for d in data])))
     if total==0: return map(lambda d: 0, data)
@@ -137,6 +174,7 @@ class Hashtag:
         self.latestObservedOccuranceTime, self.latestObservedWindow = None, None
         self.nextOccurenceIterator = self._getNextOccurance()
         self.hashtagObject['oc'] = getOccuranesInHighestActiveRegion(self.hashtagObject)
+        self.targetLattices = {}
         if self.hashtagObject['oc']: 
             self.timePeriod = (self.hashtagObject['oc'][-1][1]-self.hashtagObject['oc'][0][1])/TIME_UNIT_IN_SECONDS
             self.hashtagClassId = HashtagsClassifier.classify(self.hashtagObject)
@@ -176,10 +214,18 @@ class Hashtag:
                 occurancesToReturn.append(self.nextOccurenceIterator.next())
                 self.latestObservedWindow = occurancesToReturn[0][1]
             self.latestObservedWindow+=timeWindowInSeconds
-            print datetime.datetime.fromtimestamp(self.latestObservedWindow),
             while self.latestObservedOccuranceTime<=self.latestObservedWindow: occurancesToReturn.append(self.nextOccurenceIterator.next())
             yield occurancesToReturn
-    def updateOccuranceDistributionInLattices(self, occurrances): [self.occuranceDistributionInLattices[oc[0]].append(oc[1]) for oc in occurrances]
+    def updateOccuranceDistributionInLattices(self, currentTimeUnit, occurrances): [self.occuranceDistributionInLattices[oc[0]].append(currentTimeUnit) for oc in occurrances]
+    def _initializeTargetLattices(self, currentTimeUnit, targetLattices):
+        for lattice in targetLattices: 
+            self.targetLattices[lattice] = {'selectedTimeUnit': None,'occurances':defaultdict(int)}
+            self.targetLattices[lattice]['selectedTimeUnit'] = currentTimeUnit 
+    def updateOccurancesInTargetLattices(self, currentTimeUnit, occuranceDistributionInLattices):
+        for targetLattice in self.targetLattices:
+            for occuranceTimeUnit in occuranceDistributionInLattices[targetLattice]: 
+                if occuranceTimeUnit==currentTimeUnit: 
+                    self.targetLattices[targetLattice]['occurances'][currentTimeUnit]+=1
     @staticmethod
     def iterateHashtags(timeRange, folderType):
         for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)): 
@@ -191,12 +237,12 @@ class Simulation:
     @staticmethod
     def runModel(customerModel, latticeGraph, hashtagsIterator):
         currentLattices = latticeGraph.nodes()
-        i = 1
         for hashtag in hashtagsIterator:
-            for occs in hashtag.getOccrancesEveryTimeWindowIterator(Simulation.TIME_WINDOW_IN_SECONDS):
-                hashtag.updateOccuranceDistributionInLattices(occs)
-                customerModel.defaultAction(latticeGraph, hashtag.occuranceDistributionInLattices)
-                print datetime.datetime.fromtimestamp(hashtag.latestObservedWindow), len(hashtag.occuranceDistributionInLattices)
+            for timeUnit, occs in enumerate(hashtag.getOccrancesEveryTimeWindowIterator(Simulation.TIME_WINDOW_IN_SECONDS)):
+                hashtag.updateOccuranceDistributionInLattices(timeUnit, occs)
+                hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
+                customerModel.selectNextLatticesRandomly(timeUnit, hashtag, latticeGraph, hashtag.occuranceDistributionInLattices)
+            for k,method in EvaluationMetrics.iteritems(): print k, method(hashtag.occuranceDistributionInLattices, hashtag.targetLattices )
             exit()
     @staticmethod
     def run():
