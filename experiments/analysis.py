@@ -41,7 +41,7 @@ from settings import hashtagsDistributionInTimeFile, hashtagsDistributionInLatti
     hashtagLocationInAndOutTemporalClosenessGraphFile,\
     hashtagSharingProbabilityGraphWithTemporalClosenessFile,\
     hashtagsLatticeGraphFile, hashtagsImagesGraphAnalysisFolder,\
-    hashtagsWithKnownSourceFile
+    hashtagsWithKnownSourceFile, hashtagsTrainingDataFile
 import matplotlib.pyplot as plt
 from itertools import combinations, groupby 
 import numpy as np
@@ -302,8 +302,9 @@ def getInputFiles(months, folderType='/'): return [inputFolder+folderType+'/'+st
 #    runMRJob(MRAnalysis, hashtagLocationInAndOutTemporalClosenessGraphFile%(outputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
 
 def mr_area_analysis(timeRange, folderType, mrOutputFolder):
+    runMRJob(MRAreaAnalysis, hashtagsTrainingDataFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
 #    runMRJob(MRAreaAnalysis, hashtagsWithoutEndingWindowFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
-    runMRJob(MRAreaAnalysis, hashtagsWithKnownSourceFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
+#    runMRJob(MRAreaAnalysis, hashtagsWithKnownSourceFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
 #    runMRJob(MRAreaAnalysis, hashtagsLatticeGraphFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
 #    runMRJob(MRAreaAnalysis, hashtagLocationTemporalClosenessGraphFile%(mrOutputFolder,'%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
 
@@ -317,8 +318,8 @@ if __name__ == '__main__':
     folderType = 'world'
 #    folderType = '/'
     mrOutputFolder = 'world'
-#    mr_area_analysis(timeRange, folderType, mrOutputFolder)
-    HashtagsClassifierAnalysis.timePeriods(timeRange, folderType)
+    mr_area_analysis(timeRange, folderType, mrOutputFolder)
+#    HashtagsClassifierAnalysis.timePeriods(timeRange, folderType)
 
 #    tempAnalysis(timeRange, mrOutputFolder)
 

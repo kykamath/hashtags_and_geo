@@ -14,6 +14,7 @@ inputFolder = 'hdfs:///user/kykamath/geo/hashtags/'
 # Analysis
 hashtagsAnalysisFolder = '/mnt/chevron/kykamath/data/geo/hashtags/analysis/'
 hashtagsFile = hashtagsAnalysisFolder+'%s/%s/hashtags'
+hashtagsTrainingDataFile = hashtagsAnalysisFolder+'%s/%s/hashtagsTrainingData'
 hashtagsWithoutEndingWindowFile = hashtagsAnalysisFolder+'%s/%s/hashtagsWithoutEndingWindow'
 hashtagsWithKnownSourceFile = hashtagsAnalysisFolder+'%s/%s/hashtagsWithKnownSource'
 hashtagsLatticeGraphFile = hashtagsAnalysisFolder+'%s/%s/latticeGraph'

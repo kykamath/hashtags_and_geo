@@ -35,6 +35,7 @@ CLASSIFIER_TIME_UNIT_IN_SECONDS = 5*60
 # Paramters to filter hashtags.
 MIN_HASHTAG_OCCURENCES = 500
 HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
+HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 6, 30).timetuple())
 
 # Paramters to construct lattice graph.
 MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
@@ -88,6 +89,16 @@ def getHashtagWithoutEndingWindow(key, values):
         numberOfInstances=len(occurences)
         if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
             e[1]>=HASHTAG_STARTING_WINDOW: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
+
+def getHashtagWithEndingWindow(key, values):
+    occurences = []
+    for instances in values: 
+        for oc in instances['oc']: occurences.append(oc)
+    if occurences:
+        e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
+        numberOfInstances=len(occurences)
+        if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
+            e[1]>=HASHTAG_STARTING_WINDOW and l[1]<=HASHTAG_ENDING_WINDOW: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
 
 #def getOccurranceDistributionInEpochs(occ): return [(k[0], len(list(k[1]))) for k in groupby(sorted([GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) for t in zip(*occ)[1]]))]
 def getOccurranceDistributionInEpochs(occ, timeUnit=TIME_UNIT_IN_SECONDS, fillInGaps=False, occurancesCount=True): 
@@ -248,6 +259,9 @@ class MRAreaAnalysis(ModifiedMRJob):
     def combine_hashtag_instances_without_ending_window(self, key, values):
         hashtagObject = getHashtagWithoutEndingWindow(key, values)
         if hashtagObject: yield key, hashtagObject 
+    def combine_hashtag_instances_with_ending_window(self, key, values):
+        hashtagObject = getHashtagWithEndingWindow(key, values)
+        if hashtagObject: yield key, hashtagObject 
     def add_source_to_hashtag_objects(self, key, hashtagObject):
         occuranesInHighestActiveRegion, isFirstActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject, True)
         if occuranesInHighestActiveRegion:
@@ -338,7 +352,8 @@ class MRAreaAnalysis(ModifiedMRJob):
 #            yield lattice, nodeObject
 #    ''' End: Methods to get in and out link temporal closeness among lattices.
 #    '''
-    
+
+    def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_with_ending_window)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
     def jobsToGetHastagObjectsWithKnownSource(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)] + \
                                                             [(self.add_source_to_hashtag_objects, None)]
@@ -350,8 +365,9 @@ class MRAreaAnalysis(ModifiedMRJob):
     
 
     def steps(self):
+        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
-        return self.jobsToGetHastagObjectsWithKnownSource()
+#        return self.jobsToGetHastagObjectsWithKnownSource()
 #        return self.jobsToBuildLatticeGraph() 
 #        return self.jobToBuildLocationTemporalClosenessGraph()
     
