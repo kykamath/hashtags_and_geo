@@ -90,7 +90,6 @@ class LatticeGraph:
         for latticeObject in FileIO.iterateJsonFromFile(self.graphFile):
             print i; i+=1
             latticeObject = self.latticeGraphType['method'](latticeObject)
-#            LatticeGraph.normalizeNode(latticeObject)
             if 'in' in latticeObject['links']:
 #                for no, w in latticeObject['links']['in'].iteritems(): self.graph.add_edge(no, latticeObject['id'], {'w': w})
 #                for no, w in latticeObject['links']['out'].iteritems(): self.graph.add_edge(latticeObject['id'], no, {'w': w})
