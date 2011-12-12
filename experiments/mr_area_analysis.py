@@ -104,7 +104,8 @@ def getOccurranceDistributionInEpochs(occ, timeUnit=TIME_UNIT_IN_SECONDS, fillIn
                 if x not in occurranceDistributionInEpochs: 
                     if occurancesCount: occurranceDistributionInEpochs[x]=0
                     else: occurranceDistributionInEpochs[x]=[]
-        return occurranceDistributionInEpochs
+            return occurranceDistributionInEpochs
+        else: return dict(occurranceDistributionInEpochs)
     
     
 def getActiveRegions(timeSeries):

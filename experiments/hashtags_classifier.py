@@ -36,10 +36,10 @@ documents = []
 for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)):
 #    occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(h), timeUnit=CLASSIFIER_TIME_UNIT_IN_SECONDS, fillInGaps=True)
 #    occuranceVector = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))[1]
-    if h['h']=='rocklake':
-        ov = Hashtag(h, dataStructuresToBuildClassifier=True)
-        if ov.isValidObject(): documents.append(ov.getVector(5))
-        print i
-        i+=1
-        if i==200: exit()
+#    if h['h']=='rocklake':
+    ov = Hashtag(h, dataStructuresToBuildClassifier=True)
+    if ov.isValidObject() and ov.classifiable: documents.append(ov.getVector(5))
+    print i
+    i+=1
+    if i==200: exit()
 print len(documents)
