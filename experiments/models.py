@@ -89,6 +89,7 @@ class LatticeGraph:
         for latticeObject in FileIO.iterateJsonFromFile(self.graphFile):
             print i; i+=1
             latticeObject = self.latticeGraphType['method'](latticeObject)
+            LatticeGraph.normalizeNode(latticeObject)
             if 'in' in latticeObject['links']:
                 for no, w in latticeObject['links']['in'].iteritems(): self.graph.add_edge(no, latticeObject['id'], {'w': w})
                 for no, w in latticeObject['links']['out'].iteritems(): self.graph.add_edge(latticeObject['id'], no, {'w': w})
@@ -120,7 +121,11 @@ class LatticeGraph:
         print latticeGraph.graph.number_of_nodes()
         
 class Customer:
-    pass
+    def __init__(self):
+        pass
+    def defaultAction(self, graph, occuranceDistributionInLattices):
+        print 'x'
+        pass
 def normalize(data):
     total = math.sqrt(float(sum([d**2 for d in data])))
     if total==0: return map(lambda d: 0, data)
@@ -182,7 +187,7 @@ class Hashtag:
             if hashtagObject.isValidObject(): yield hashtagObject
 
 class Simulation:
-    TIME_WINDOW_IN_SECONDS = 10*60
+    TIME_WINDOW_IN_SECONDS = 5*60
     @staticmethod
     def runModel(customerModel, latticeGraph, hashtagsIterator):
         currentLattices = latticeGraph.nodes()
@@ -190,12 +195,13 @@ class Simulation:
         for hashtag in hashtagsIterator:
             for occs in hashtag.getOccrancesEveryTimeWindowIterator(Simulation.TIME_WINDOW_IN_SECONDS):
                 hashtag.updateOccuranceDistributionInLattices(occs)
-                print datetime.datetime.fromtimestamp(hashtag.latestObservedWindow), hashtag.occuranceDistributionInLattices
+                customerModel.defaultAction(latticeGraph, hashtag.occuranceDistributionInLattices)
+                print datetime.datetime.fromtimestamp(hashtag.latestObservedWindow), len(hashtag.occuranceDistributionInLattices)
             exit()
     @staticmethod
     def run():
         timeRange, folderType = (2,11), 'world'
-        graph = LatticeGraph(hashtagsLatticeGraphFile%(folderType,'%s_%s'%timeRange), LatticeGraph.typeTemporalCloseness).load()
+        graph = LatticeGraph(hashtagsLatticeGraphFile%(folderType,'%s_%s'%timeRange), LatticeGraph.typeSharingProbability).load()
         Simulation.runModel(Customer(), graph, Hashtag.iterateHashtags(timeRange, folderType))
 
 if __name__ == '__main__':
