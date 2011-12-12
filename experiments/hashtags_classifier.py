@@ -14,6 +14,7 @@ from sklearn.cross_validation import KFold
 from sklearn.svm import SVC, LinearSVC
 from experiments.models import Hashtag
 from sklearn.externals import joblib
+from library.classes import GeneralMethods
 
 
 timeRange, folderType = (2,11), 'world'
@@ -21,18 +22,23 @@ timeRange, folderType = (2,11), 'world'
 class Classifier:
     def __init__(self, numberOfTimeUnits, folderType='world'):
         self.classfierFile = hashtagsClassifiersFolder%(folderType, numberOfTimeUnits)+'model.pkl'
-        print self.classfierFile
+    def build(self, documents):
+        X, y = zip(*documents)
+        clf = SVC(probability=True)
+        clf.fit(X, y)
+        GeneralMethods.runCommand('rm -rf %s*'%self.classfierFile)
+        FileIO.createDirectoryForFile(self.classfierFile)
+        joblib.dump(clf, self.classfierFile)
+    def load(self): return joblib.load(self.classfierFile)
+        
 i = 1
-#documents = []
-#for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)):
-##    occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(h), timeUnit=CLASSIFIER_TIME_UNIT_IN_SECONDS, fillInGaps=True)
-##    occuranceVector = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))[1]
-##    if h['h']=='rocklake':
-#    ov = Hashtag(h, dataStructuresToBuildClassifier=True)
-#    if ov.isValidObject() and ov.classifiable: documents.append(ov.getVector(5))
-#    print i
-#    i+=1
-#    if i==200: break
+documents = []
+for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)):
+    ov = Hashtag(h, dataStructuresToBuildClassifier=True)
+    if ov.isValidObject() and ov.classifiable: documents.append(ov.getVector(5))
+    print i
+    i+=1
+    if i==200: break
     
 
 #X, y = zip(*documents)
@@ -46,10 +52,10 @@ i = 1
 #    clf.fit(X_train, y_train)
 #    print clf.score(X_test, y_test)
 
-#trainDocuments = documents[:int(len(documents)*0.80)]
-#testDocuments = documents[:int(len(documents)*0.20)]
+trainDocuments = documents[:int(len(documents)*0.80)]
+testDocuments = documents[:int(len(documents)*0.20)]
 #trainX, trainy = zip(*trainDocuments)
-#testX, testy = zip(*testDocuments)
+testX, testy = zip(*testDocuments)
 ##clf = SVC(probability=True)
 ##clf.fit(trainX, trainy)
 #FileIO.createDirectoryForFile('classifiers/abc.pkl')
@@ -58,4 +64,6 @@ i = 1
 #print clf.score(testX, testy)
 
 
-Classifier(10)
+#Classifier(5).build(trainDocuments)
+clf = Classifier(5).load()
+print clf.score(testX, testy)
