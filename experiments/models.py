@@ -18,6 +18,8 @@ import networkx as nx
 from library.graphs import plot
 import datetime, math, random
 
+GREEDY_LATTICE_SELECTION_MODEL = 'greedy'
+
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
         dataToReturn = [(hashtag, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
@@ -153,14 +155,19 @@ EvaluationMetrics = {
                      'miss_rate_before_target_selection': Metrics.occurancesMissRateBeforeTargetSelection
                      }
 
-class Customer:
-    def __init__(self, budget=3, timeUnitToPickTargetLattices=6):
+class LatticeSelectionModel:
+    def __init__(self, id='random', budget=3, timeUnitToPickTargetLattices=6):
         self.budget = budget
         self.timeUnitToPickTargetLattices = timeUnitToPickTargetLattices
     def selectNextLatticesRandomly(self, currentTimeUnit, hashtag, graph, occuranceDistributionInLattices):
-        if self.timeUnitToPickTargetLattices==currentTimeUnit:
-            print currentTimeUnit, len(occuranceDistributionInLattices)
-            hashtag._initializeTargetLattices(currentTimeUnit, random.sample(occuranceDistributionInLattices, min([self.budget, len(occuranceDistributionInLattices)])))
+        if self.timeUnitToPickTargetLattices==currentTimeUnit: hashtag._initializeTargetLattices(currentTimeUnit, random.sample(occuranceDistributionInLattices, min([self.budget, len(occuranceDistributionInLattices)])))
+class GreedyLatticeSelectionModel(LatticeSelectionModel):
+    ''' Pick the location with maximum observations till that time.
+    '''
+    def __init__(self, budget=3, timeUnitToPickTargetLattices=6):
+        super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, budget, timeUnitToPickTargetLattices)
+    def selectNextLatticesRandomly(self, currentTimeUnit, hashtag, graph, occuranceDistributionInLattices):
+        if self.timeUnitToPickTargetLattices==currentTimeUnit: hashtag._initializeTargetLattices(currentTimeUnit, random.sample(occuranceDistributionInLattices, min([self.budget, len(occuranceDistributionInLattices)])))
                 
 def normalize(data):
     total = math.sqrt(float(sum([d**2 for d in data])))
@@ -234,20 +241,20 @@ class Hashtag:
 class Simulation:
     TIME_WINDOW_IN_SECONDS = 5*60
     @staticmethod
-    def runModel(customerModel, latticeGraph, hashtagsIterator):
+    def runModel(latticeSelectionModel, latticeGraph, hashtagsIterator):
         currentLattices = latticeGraph.nodes()
         for hashtag in hashtagsIterator:
             for timeUnit, occs in enumerate(hashtag.getOccrancesEveryTimeWindowIterator(Simulation.TIME_WINDOW_IN_SECONDS)):
                 hashtag.updateOccuranceDistributionInLattices(timeUnit, occs)
                 hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
-                customerModel.selectNextLatticesRandomly(timeUnit, hashtag, latticeGraph, hashtag.occuranceDistributionInLattices)
+                latticeSelectionModel.selectNextLatticesRandomly(timeUnit, hashtag, latticeGraph, hashtag.occuranceDistributionInLattices)
             for k,method in EvaluationMetrics.iteritems(): print k, method(hashtag.occuranceDistributionInLattices, hashtag.targetLattices )
             exit()
     @staticmethod
     def run():
         timeRange, folderType = (2,11), 'world'
         graph = LatticeGraph(hashtagsLatticeGraphFile%(folderType,'%s_%s'%timeRange), LatticeGraph.typeSharingProbability).load()
-        Simulation.runModel(Customer(), graph, Hashtag.iterateHashtags(timeRange, folderType))
+        Simulation.runModel(LatticeSelectionModel(), graph, Hashtag.iterateHashtags(timeRange, folderType))
 
 if __name__ == '__main__':
     Simulation.run()
