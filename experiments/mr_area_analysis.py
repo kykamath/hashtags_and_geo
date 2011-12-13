@@ -33,7 +33,7 @@ CLASSIFIER_TIME_UNIT_IN_SECONDS = 5*60
 #MIN_HASHTAG_OCCURENCES_PER_LATTICE = 1
 
 # Paramters to filter hashtags.
-MIN_HASHTAG_OCCURENCES = 500
+MIN_HASHTAG_OCCURENCES = 250
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
 #HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 8, 31).timetuple())
 HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 9, 1).timetuple())
@@ -41,9 +41,13 @@ HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
 
 # Paramters to construct lattice graph.
 MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
-MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS = 25
-MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25 # Min no. of unique hashtags a lattice should have observed. For example: l1 is valid of it produces [h1, h2, h3] >= 3 (min)
-MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10 # Min no. hashtags lattice should have observed. For example: l1 is valid of it produces [h1, h1, h1] >= 3 (min)
+#MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS = 25
+#MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 25 # Min no. of unique hashtags a lattice should have observed. For example: l1 is valid of it produces [h1, h2, h3] >= 3 (min)
+#MIN_HASHTAG_OCCURENCES_PER_LATTICE = 10 # Min no. hashtags lattice should have observed. For example: l1 is valid of it produces [h1, h1, h1] >= 3 (min)
+
+MIN_COMMON_HASHTAG_OCCURENCES_BETWEEN_LATTICE_PAIRS = 5
+MIN_UNIQUE_HASHTAG_OCCURENCES_PER_LATTICE = 5 # Min no. of unique hashtags a lattice should have observed. For example: l1 is valid of it produces [h1, h2, h3] >= 3 (min)
+MIN_HASHTAG_OCCURENCES_PER_LATTICE = 5 # Min no. hashtags lattice should have observed. For example: l1 is valid of it produces [h1, h1, h1] >= 3 (min)
 
 NO_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE = 10
 MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE = 5
