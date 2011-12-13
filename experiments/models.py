@@ -174,7 +174,7 @@ class LatticeSelectionModel(object):
                     hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
                     self.selectNextLatticesRandomly(timeUnit, hashtag)
                 print dict([(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()])
-                exit()
+                break
                 
 class GreedyLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
@@ -182,9 +182,9 @@ class GreedyLatticeSelectionModel(LatticeSelectionModel):
     def __init__(self, budget=3, timeUnitToPickTargetLattices=6, **kwargs): 
         super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, budget, timeUnitToPickTargetLattices, **kwargs)
         #load data structures
-    def selectNextLatticesRandomly(self, currentTimeUnit, hashtag, graph, occuranceDistributionInLattices):
+    def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
         if self.timeUnitToPickTargetLattices==currentTimeUnit: 
-            lattices = zip(*sorted(occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0]
+            lattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0]
             hashtag._initializeTargetLattices(currentTimeUnit, lattices[:self.budget])
 
 def normalize(data):
@@ -198,7 +198,7 @@ class Hashtag:
         self.latestObservedOccuranceTime, self.latestObservedWindow = None, None
         self.nextOccurenceIterator = self._getNextOccurance()
         self.hashtagObject['oc'] = getOccuranesInHighestActiveRegion(self.hashtagObject)
-        self.targetLattices = {}
+        self.occuranceDistributionInTargetLattices = {}
         if self.hashtagObject['oc']: 
             self.timePeriod = (self.hashtagObject['oc'][-1][1]-self.hashtagObject['oc'][0][1])/TIME_UNIT_IN_SECONDS
             self.hashtagClassId = HashtagsClassifier.classify(self.hashtagObject)
@@ -243,18 +243,18 @@ class Hashtag:
     def updateOccuranceDistributionInLattices(self, currentTimeUnit, occurrances): [self.occuranceDistributionInLattices[oc[0]].append(currentTimeUnit) for oc in occurrances]
     def _initializeTargetLattices(self, currentTimeUnit, targetLattices):
         for lattice in targetLattices: 
-            self.targetLattices[lattice] = {'selectedTimeUnit': None,'occurances':defaultdict(int)}
-            self.targetLattices[lattice]['selectedTimeUnit'] = currentTimeUnit 
+            self.occuranceDistributionInTargetLattices[lattice] = {'selectedTimeUnit': None,'occurances':defaultdict(int)}
+            self.occuranceDistributionInTargetLattices[lattice]['selectedTimeUnit'] = currentTimeUnit 
     def updateOccurancesInTargetLattices(self, currentTimeUnit, occuranceDistributionInLattices):
-        for targetLattice in self.targetLattices:
+        for targetLattice in self.occuranceDistributionInTargetLattices:
             for occuranceTimeUnit in occuranceDistributionInLattices[targetLattice]: 
                 if occuranceTimeUnit==currentTimeUnit: 
-                    self.targetLattices[targetLattice]['occurances'][currentTimeUnit]+=1
-    @staticmethod
-    def iterateHashtags(timeRange, folderType):
-        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)): 
-            hashtagObject = Hashtag(h)
-            if hashtagObject.isValidObject(): yield hashtagObject
+                    self.occuranceDistributionInTargetLattices[targetLattice]['occurances'][currentTimeUnit]+=1
+#    @staticmethod
+#    def iterateHashtags(timeRange, folderType):
+#        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)): 
+#            hashtagObject = Hashtag(h)
+#            if hashtagObject.isValidObject(): yield hashtagObject
 
 class Simulation:
     TIME_WINDOW_IN_SECONDS = 5*60
@@ -278,4 +278,8 @@ if __name__ == '__main__':
 #    Simulation.run()
     trainingHashtagsFile = hashtagsFile%('training_world','%s_%s'%(2,11))
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
-    LatticeSelectionModel(3, 6, testingHashtagsFile=testingHashtagsFile).evaluateModel()
+    model = LatticeSelectionModel(3, 6, testingHashtagsFile=testingHashtagsFile)
+    for i in range(24):
+        model.timeUnitToPickTargetLattices = i; 
+        print i
+        model.evaluateModel()
