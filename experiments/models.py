@@ -5,7 +5,7 @@ Created on Dec 8, 2011
 '''
 from library.file_io import FileIO
 from settings import hashtagsWithoutEndingWindowFile, hashtagsLatticeGraphFile,\
-    hashtagsFile
+    hashtagsFile, hashtagsModelsFolder
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     TIME_UNIT_IN_SECONDS, LATTICE_ACCURACY, HashtagsClassifier,\
     getOccurranceDistributionInEpochs, CLASSIFIER_TIME_UNIT_IN_SECONDS,\
@@ -161,12 +161,14 @@ EvaluationMetrics = {
 
 class LatticeSelectionModel(object):
     TIME_WINDOW_IN_SECONDS = 5*60
-    def __init__(self, id='random', budget=3, timeUnitToPickTargetLattices=6, **kwargs):
+    def __init__(self, id='random', **kwargs):
         self.id = id
-        self.budget = budget
-        self.timeUnitToPickTargetLattices = timeUnitToPickTargetLattices
+        self.params = kwargs['params']
+        self.budget = self.params['budget']
+        self.timeUnitToPickTargetLattices = self.params['timeUnitToPickTargetLattices']
         self.trainingHashtagsFile = kwargs.get('trainingHashtagsFile', None)
         self.testingHashtagsFile = kwargs.get('testingHashtagsFile', None)
+        self.evaluationName = kwargs.get('evaluationName', '')
     def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
         if self.timeUnitToPickTargetLattices==currentTimeUnit: hashtag._initializeTargetLattices(currentTimeUnit, random.sample(hashtag.occuranceDistributionInLattices, min([self.budget, len(hashtag.occuranceDistributionInLattices)])))
     def evaluateModel(self):
@@ -179,16 +181,15 @@ class LatticeSelectionModel(object):
                     hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
                     self.selectNextLatticesRandomly(timeUnit, hashtag)
                 hashtags[hashtag.hashtagObject['h']] = {'model': self.id ,'metrics': [(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()]}
-#                print  dict([(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()])
         for k, v in hashtags.iteritems():
             print k, v
+    def saveModelSimulation(self):
+        print hashtagsModelsFolder%('world', self.id)+'/%s/'%self.evaluationName
                 
 class GreedyLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
     '''
-    def __init__(self, budget=3, timeUnitToPickTargetLattices=6, **kwargs): 
-        super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, budget, timeUnitToPickTargetLattices, **kwargs)
-        #load data structures
+    def __init__(self, **kwargs): super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, **kwargs)
     def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
         if self.timeUnitToPickTargetLattices==currentTimeUnit: 
             lattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0]
@@ -283,10 +284,12 @@ class Simulation:
 
 if __name__ == '__main__':
 #    Simulation.run()
+    params = dict(budget=3, timeUnitToPickTargetLattices=6)
     trainingHashtagsFile = hashtagsFile%('training_world','%s_%s'%(2,11))
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
-    model = GreedyLatticeSelectionModel(3, 6, testingHashtagsFile=testingHashtagsFile)
-    for i in range(24):
-        model.timeUnitToPickTargetLattices = i; 
-        print i
-        model.evaluateModel()
+    model = GreedyLatticeSelectionModel(params=params, testingHashtagsFile=testingHashtagsFile)
+#    for i in range(24):
+#        model.timeUnitToPickTargetLattices = i; 
+#        print i
+#        model.evaluateModel()
+    model.saveModelSimulation()

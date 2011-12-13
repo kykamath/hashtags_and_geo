@@ -22,9 +22,6 @@ hashtagsLatticeGraphFile = hashtagsAnalysisFolder+'%s/%s/latticeGraph'
 
 hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnitsFile = hashtagsAnalysisFolder+'%s/%s/hashtagsWithoutEndingWindowAndOcccurencesFilteredByDistributionInTimeUnits'
 hashtagsBoundarySpecificStatsFile = hashtagsAnalysisFolder+'%s/%s/hashtagsBoundarySpecificStats'
-#hashtagsCenterOfMassAnalysisWithoutEndingWindowFile = hashtagsAnalysisFolder+'%s/hashtagsCenterOfMassAnalysisWithoutEndingWindow'
-#hashtagsSpreadInTimeFile = hashtagsAnalysisFolder+'%s/hashtagsSpreadInTime'
-#hashtagsMeanDistanceInTimeFile = hashtagsAnalysisFolder + '%s/hashtagsMeanDistanceInTime'
 hashtagsDisplacementStatsFile = hashtagsAnalysisFolder+'%s/%s/hashtagsDisplacementStats'
 hashtagsDistributionInTimeFile = hashtagsAnalysisFolder+'hashtagsDistributionInTime'
 hashtagsDistributionInLatticeFile = hashtagsAnalysisFolder+'hashtagsDistributionInLattice'
@@ -37,13 +34,6 @@ hashtagLocationInAndOutTemporalClosenessGraphFile = hashtagsAnalysisFolder+'%s/%
 
 # Images
 hashtagsImagesFolder = '/data/geo/hashtags/images/%s/'
-#hashtagsImagesTimeVsDistanceFolder = hashtagsImagesFolder+'time_vs_distance/'
-#hashtagsImagesCenterOfMassFolder = hashtagsImagesFolder+'center_of_mass/'
-#hashtagsImagesSpreadInTime = hashtagsImagesFolder+'spread_in_time/'
-#hashtagsImagesMeanDistanceInTime = hashtagsImagesFolder+'mean_distance/'
-#hashtagsImagesDisplacementStatsInTime = hashtagsImagesFolder+'displacement_stats/'
-#hashtagsImagesHashtagsDistributionInLid = hashtagsImagesFolder+'hashtag_dist/%s/'
-#hashtagsImagesHastagsSharingProbabilitiesFolder = hashtagsImagesFolder+'hashtags_sharing/%s/'
 hashtagsImagesFlowInTimeForFirstNLocationsFolder = hashtagsImagesFolder+'fit_first_n_locations/%s/'
 hashtagsImagesFlowInTimeForFirstNOccurrencesFolder = hashtagsImagesFolder+'fit_first_n_occ/%s/'
 hashtagsImagesFlowInTimeForWindowOfNOccurrencesFolder = hashtagsImagesFolder+'fit_window_of_n_occ/%s/'
@@ -59,3 +49,6 @@ hashtagsImagesHastagEvolutionFolder = hashtagsImagesFolder + 'hashtag_evolution/
 
 # Classifiers
 hashtagsClassifiersFolder = hashtagsAnalysisFolder+'/classifiers/%s/%s/'
+
+#Models
+hashtagsModelsFolder = hashtagsAnalysisFolder+'/models/%s/%s/'
