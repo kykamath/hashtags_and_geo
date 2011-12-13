@@ -183,14 +183,19 @@ class LatticeSelectionModel(object):
                     hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
                     self.selectNextLatticesRandomly(timeUnit, hashtag)
                 hashtags[hashtag.hashtagObject['h']] = {'model': self.id ,'metrics': [(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()]}
-    #        FileIO.writeToFileAsJson({'params': self.params, 'hashtags': hashtags}, self.getModelSimulationFile())
+        return hashtags
+    def evaluateModelWithVaryingTimeUnitToPickTargetLattices(self, numberOfTimeUnits = 24):
+        for t in range(numberOfTimeUnits):
+            print 'Evaluating at t=%d'%t
+            self.params['timeUnitToPickTargetLattices'] = t
+            FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
                 
 class GreedyLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
     '''
     def __init__(self, **kwargs): super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, **kwargs)
     def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
-        if self.timeUnitToPickTargetLattices==currentTimeUnit: 
+        if self.params['timeUnitToPickTargetLattices']==currentTimeUnit: 
             lattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0]
             hashtag._initializeTargetLattices(currentTimeUnit, lattices[:self.budget])
 
@@ -286,5 +291,5 @@ if __name__ == '__main__':
     params = dict(budget=3, timeUnitToPickTargetLattices=6)
     trainingHashtagsFile = hashtagsFile%('training_world','%s_%s'%(2,11))
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
-    model = GreedyLatticeSelectionModel(evaluationName='time', params=params, testingHashtagsFile=testingHashtagsFile).evaluateModel()
+    GreedyLatticeSelectionModel(evaluationName='time', params=params, testingHashtagsFile=testingHashtagsFile).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=3)
 #    model.saveModelSimulation()
