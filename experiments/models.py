@@ -4,7 +4,8 @@ Created on Dec 8, 2011
 @author: kykamath
 '''
 from library.file_io import FileIO
-from settings import hashtagsWithoutEndingWindowFile, hashtagsLatticeGraphFile
+from settings import hashtagsWithoutEndingWindowFile, hashtagsLatticeGraphFile,\
+    hashtagsFile
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     TIME_UNIT_IN_SECONDS, LATTICE_ACCURACY, HashtagsClassifier,\
     getOccurranceDistributionInEpochs, CLASSIFIER_TIME_UNIT_IN_SECONDS,\
@@ -131,23 +132,23 @@ class LatticeGraph:
 
 class Metrics:
     @staticmethod
-    def overallOccurancesHitRate(occuranceDistributionInLattices, occuranceDistributionInTargetLattices):
+    def overallOccurancesHitRate(hashtag):
         totalOccurances, occurancesObserved = 0., 0.
-        for k,v in occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v)
-        for k, v in occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
+        for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v)
+        for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
         return occurancesObserved/totalOccurances
     @staticmethod
-    def occurancesHitRateAfterTargetSelection(occuranceDistributionInLattices, occuranceDistributionInTargetLattices):
+    def occurancesHitRateAfterTargetSelection(hashtag):
         totalOccurances, occurancesObserved = 0., 0.
-        targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in occuranceDistributionInTargetLattices.values())
-        for k,v in occuranceDistributionInLattices.iteritems(): totalOccurances+=len([i for i in v if i>targetSelectionTimeUnit])
-        for k, v in occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
+        targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in hashtag.occuranceDistributionInTargetLattices.values())
+        for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len([i for i in v if i>targetSelectionTimeUnit])
+        for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
         return occurancesObserved/totalOccurances
     @staticmethod
-    def occurancesMissRateBeforeTargetSelection(occuranceDistributionInLattices, occuranceDistributionInTargetLattices):
+    def occurancesMissRateBeforeTargetSelection(hashtag):
         totalOccurances, occurancesBeforeTimeUnit = 0., 0.
-        targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in occuranceDistributionInTargetLattices.values())
-        for k,v in occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v); occurancesBeforeTimeUnit+=len([i for i in v if i<=targetSelectionTimeUnit])
+        targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in hashtag.occuranceDistributionInTargetLattices.values())
+        for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v); occurancesBeforeTimeUnit+=len([i for i in v if i<=targetSelectionTimeUnit])
         return occurancesBeforeTimeUnit/totalOccurances
 EvaluationMetrics = {
                      'overall_hit_rate': Metrics.overallOccurancesHitRate,
@@ -155,20 +156,37 @@ EvaluationMetrics = {
                      'miss_rate_before_target_selection': Metrics.occurancesMissRateBeforeTargetSelection
                      }
 
-class LatticeSelectionModel:
-    def __init__(self, id='random', budget=3, timeUnitToPickTargetLattices=6):
+class LatticeSelectionModel(object):
+    TIME_WINDOW_IN_SECONDS = 5*60
+    def __init__(self, id='random', budget=3, timeUnitToPickTargetLattices=6, **kwargs):
         self.budget = budget
         self.timeUnitToPickTargetLattices = timeUnitToPickTargetLattices
-    def selectNextLatticesRandomly(self, currentTimeUnit, hashtag, graph, occuranceDistributionInLattices):
-        if self.timeUnitToPickTargetLattices==currentTimeUnit: hashtag._initializeTargetLattices(currentTimeUnit, random.sample(occuranceDistributionInLattices, min([self.budget, len(occuranceDistributionInLattices)])))
+        self.trainingHashtagsFile = kwargs.get('trainingHashtagsFile', None)
+        self.testingHashtagsFile = kwargs.get('testingHashtagsFile', None)
+    def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
+        if self.timeUnitToPickTargetLattices==currentTimeUnit: hashtag._initializeTargetLattices(currentTimeUnit, random.sample(hashtag.occuranceDistributionInLattices, min([self.budget, len(hashtag.occuranceDistributionInLattices)])))
+    def evaluateModel(self):
+        for h in FileIO.iterateJsonFromFile(self.testingHashtagsFile): 
+            hashtag = Hashtag(h)
+            if hashtag.isValidObject():
+                for timeUnit, occs in enumerate(hashtag.getOccrancesEveryTimeWindowIterator(LatticeSelectionModel.TIME_WINDOW_IN_SECONDS)):
+                    hashtag.updateOccuranceDistributionInLattices(timeUnit, occs)
+                    hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
+                    self.selectNextLatticesRandomly(timeUnit, hashtag)
+                print dict([(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()])
+                exit()
+                
 class GreedyLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
     '''
-    def __init__(self, budget=3, timeUnitToPickTargetLattices=6):
-        super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, budget, timeUnitToPickTargetLattices)
+    def __init__(self, budget=3, timeUnitToPickTargetLattices=6, **kwargs): 
+        super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, budget, timeUnitToPickTargetLattices, **kwargs)
+        #load data structures
     def selectNextLatticesRandomly(self, currentTimeUnit, hashtag, graph, occuranceDistributionInLattices):
-        if self.timeUnitToPickTargetLattices==currentTimeUnit: hashtag._initializeTargetLattices(currentTimeUnit, random.sample(occuranceDistributionInLattices, min([self.budget, len(occuranceDistributionInLattices)])))
-                
+        if self.timeUnitToPickTargetLattices==currentTimeUnit: 
+            lattices = zip(*sorted(occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0]
+            hashtag._initializeTargetLattices(currentTimeUnit, lattices[:self.budget])
+
 def normalize(data):
     total = math.sqrt(float(sum([d**2 for d in data])))
     if total==0: return map(lambda d: 0, data)
@@ -248,13 +266,16 @@ class Simulation:
                 hashtag.updateOccuranceDistributionInLattices(timeUnit, occs)
                 hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
                 latticeSelectionModel.selectNextLatticesRandomly(timeUnit, hashtag, latticeGraph, hashtag.occuranceDistributionInLattices)
-            for k,method in EvaluationMetrics.iteritems(): print k, method(hashtag.occuranceDistributionInLattices, hashtag.targetLattices )
+            print dict([(k, method(hashtag.occuranceDistributionInLattices, hashtag.targetLattices))for k,method in EvaluationMetrics.iteritems()])
             exit()
     @staticmethod
     def run():
         timeRange, folderType = (2,11), 'world'
         graph = LatticeGraph(hashtagsLatticeGraphFile%(folderType,'%s_%s'%timeRange), LatticeGraph.typeSharingProbability).load()
-        Simulation.runModel(LatticeSelectionModel(), graph, Hashtag.iterateHashtags(timeRange, folderType))
+        Simulation.runModel(GreedyLatticeSelectionModel(), graph, Hashtag.iterateHashtags(timeRange, folderType))
 
 if __name__ == '__main__':
-    Simulation.run()
+#    Simulation.run()
+    trainingHashtagsFile = hashtagsFile%('training_world','%s_%s'%(2,11))
+    testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
+    LatticeSelectionModel(3, 6, testingHashtagsFile=testingHashtagsFile).evaluateModel()
