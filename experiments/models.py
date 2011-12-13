@@ -165,12 +165,14 @@ class LatticeSelectionModel(object):
         self.id = id
         self.params = kwargs['params']
         self.budget = self.params['budget']
-        self.timeUnitToPickTargetLattices = self.params['timeUnitToPickTargetLattices']
         self.trainingHashtagsFile = kwargs.get('trainingHashtagsFile', None)
         self.testingHashtagsFile = kwargs.get('testingHashtagsFile', None)
         self.evaluationName = kwargs.get('evaluationName', '')
     def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
-        if self.timeUnitToPickTargetLattices==currentTimeUnit: hashtag._initializeTargetLattices(currentTimeUnit, random.sample(hashtag.occuranceDistributionInLattices, min([self.budget, len(hashtag.occuranceDistributionInLattices)])))
+        if self.params['timeUnitToPickTargetLattices']==currentTimeUnit: hashtag._initializeTargetLattices(currentTimeUnit, random.sample(hashtag.occuranceDistributionInLattices, min([self.budget, len(hashtag.occuranceDistributionInLattices)])))
+    def getModelSimulationFile(self): 
+        file = hashtagsModelsFolder%('world', self.id)+'%s.eva'%self.evaluationName; FileIO.createDirectoryForFile(file)
+        return file
     def evaluateModel(self):
         hashtags = {}
         for h in FileIO.iterateJsonFromFile(self.testingHashtagsFile): 
@@ -181,10 +183,7 @@ class LatticeSelectionModel(object):
                     hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
                     self.selectNextLatticesRandomly(timeUnit, hashtag)
                 hashtags[hashtag.hashtagObject['h']] = {'model': self.id ,'metrics': [(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()]}
-        for k, v in hashtags.iteritems():
-            print k, v
-    def saveModelSimulation(self):
-        print hashtagsModelsFolder%('world', self.id)+'/%s/'%self.evaluationName
+    #        FileIO.writeToFileAsJson({'params': self.params, 'hashtags': hashtags}, self.getModelSimulationFile())
                 
 class GreedyLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
@@ -287,9 +286,5 @@ if __name__ == '__main__':
     params = dict(budget=3, timeUnitToPickTargetLattices=6)
     trainingHashtagsFile = hashtagsFile%('training_world','%s_%s'%(2,11))
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
-    model = GreedyLatticeSelectionModel(params=params, testingHashtagsFile=testingHashtagsFile)
-#    for i in range(24):
-#        model.timeUnitToPickTargetLattices = i; 
-#        print i
-#        model.evaluateModel()
-    model.saveModelSimulation()
+    model = GreedyLatticeSelectionModel(evaluationName='time', params=params, testingHashtagsFile=testingHashtagsFile).evaluateModel()
+#    model.saveModelSimulation()
