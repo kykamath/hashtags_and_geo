@@ -140,16 +140,19 @@ class Metrics:
     @staticmethod
     def occurancesHitRateAfterTargetSelection(hashtag):
         totalOccurances, occurancesObserved = 0., 0.
-        targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in hashtag.occuranceDistributionInTargetLattices.values())
-        for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len([i for i in v if i>targetSelectionTimeUnit])
-        for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
-        return occurancesObserved/totalOccurances
+        if hashtag.occuranceDistributionInTargetLattices:
+            targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in hashtag.occuranceDistributionInTargetLattices.values())
+            for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len([i for i in v if i>targetSelectionTimeUnit])
+            for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
+            if totalOccurances!=0.: return occurancesObserved/totalOccurances
+            return float('infinity')
     @staticmethod
     def occurancesMissRateBeforeTargetSelection(hashtag):
         totalOccurances, occurancesBeforeTimeUnit = 0., 0.
-        targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in hashtag.occuranceDistributionInTargetLattices.values())
-        for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v); occurancesBeforeTimeUnit+=len([i for i in v if i<=targetSelectionTimeUnit])
-        return occurancesBeforeTimeUnit/totalOccurances
+        if hashtag.occuranceDistributionInTargetLattices:
+            targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in hashtag.occuranceDistributionInTargetLattices.values())
+            for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v); occurancesBeforeTimeUnit+=len([i for i in v if i<=targetSelectionTimeUnit])
+            return occurancesBeforeTimeUnit/totalOccurances
 EvaluationMetrics = {
                      'overall_hit_rate': Metrics.overallOccurancesHitRate,
                      'hit_rate_after_target_selection': Metrics.occurancesHitRateAfterTargetSelection,
@@ -159,6 +162,7 @@ EvaluationMetrics = {
 class LatticeSelectionModel(object):
     TIME_WINDOW_IN_SECONDS = 5*60
     def __init__(self, id='random', budget=3, timeUnitToPickTargetLattices=6, **kwargs):
+        self.id = id
         self.budget = budget
         self.timeUnitToPickTargetLattices = timeUnitToPickTargetLattices
         self.trainingHashtagsFile = kwargs.get('trainingHashtagsFile', None)
@@ -166,6 +170,7 @@ class LatticeSelectionModel(object):
     def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
         if self.timeUnitToPickTargetLattices==currentTimeUnit: hashtag._initializeTargetLattices(currentTimeUnit, random.sample(hashtag.occuranceDistributionInLattices, min([self.budget, len(hashtag.occuranceDistributionInLattices)])))
     def evaluateModel(self):
+        hashtags = {}
         for h in FileIO.iterateJsonFromFile(self.testingHashtagsFile): 
             hashtag = Hashtag(h)
             if hashtag.isValidObject():
@@ -173,8 +178,10 @@ class LatticeSelectionModel(object):
                     hashtag.updateOccuranceDistributionInLattices(timeUnit, occs)
                     hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
                     self.selectNextLatticesRandomly(timeUnit, hashtag)
-                print dict([(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()])
-                break
+                hashtags[hashtag.hashtagObject['h']] = {'model': self.id ,'metrics': [(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()]}
+#                print  dict([(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()])
+        for k, v in hashtags.iteritems():
+            print k, v
                 
 class GreedyLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
@@ -278,7 +285,7 @@ if __name__ == '__main__':
 #    Simulation.run()
     trainingHashtagsFile = hashtagsFile%('training_world','%s_%s'%(2,11))
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
-    model = LatticeSelectionModel(3, 6, testingHashtagsFile=testingHashtagsFile)
+    model = GreedyLatticeSelectionModel(3, 6, testingHashtagsFile=testingHashtagsFile)
     for i in range(24):
         model.timeUnitToPickTargetLattices = i; 
         print i
