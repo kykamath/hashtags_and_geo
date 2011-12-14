@@ -3,6 +3,8 @@ Created on Dec 8, 2011
 
 @author: kykamath
 '''
+import sys
+sys.path.append('../')
 from library.file_io import FileIO
 from settings import hashtagsWithoutEndingWindowFile, hashtagsLatticeGraphFile,\
     hashtagsFile, hashtagsModelsFolder
@@ -18,8 +20,12 @@ from operator import itemgetter
 import networkx as nx
 from library.graphs import plot
 import datetime, math, random
+from library.classes import GeneralMethods
+import matplotlib.pyplot as plt
+from library.plotting import plot3D
 
 GREEDY_LATTICE_SELECTION_MODEL = 'greedy'
+SHARING_PROBABILITY_LATTICE_SELECTION_MODEL = 'sharing_probability'
 
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
@@ -119,7 +125,7 @@ class LatticeGraph:
             for lattice, score in latticeNodeObject['links'].items()[:]: latticeNodeObject['links'][lattice]=score/totalEdgeWeight
     @staticmethod
     def temporalScore(lag, width):
-        lag=int(lag*TIME_UNIT_IN_SECONDS)
+        lag=int(lag*TIME_UNIT_IN_SECONDS)   
         width=int(width*TIME_UNIT_IN_SECONDS)
         if lag==0: return 1.0
         elif lag>=width: return 0.0
@@ -145,7 +151,7 @@ class Metrics:
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len([i for i in v if i>targetSelectionTimeUnit])
             for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
             if totalOccurances!=0.: return occurancesObserved/totalOccurances
-            return float('infinity')
+            return None
     @staticmethod
     def occurancesMissRateBeforeTargetSelection(hashtag):
         totalOccurances, occurancesBeforeTimeUnit = 0., 0.
@@ -164,15 +170,14 @@ class LatticeSelectionModel(object):
     def __init__(self, id='random', **kwargs):
         self.id = id
         self.params = kwargs['params']
-        self.budget = self.params['budget']
+        self.budget = self.params.get('budget', None)
         self.trainingHashtagsFile = kwargs.get('trainingHashtagsFile', None)
         self.testingHashtagsFile = kwargs.get('testingHashtagsFile', None)
         self.evaluationName = kwargs.get('evaluationName', '')
     def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
         if self.params['timeUnitToPickTargetLattices']==currentTimeUnit: hashtag._initializeTargetLattices(currentTimeUnit, random.sample(hashtag.occuranceDistributionInLattices, min([self.budget, len(hashtag.occuranceDistributionInLattices)])))
     def getModelSimulationFile(self): 
-        file = hashtagsModelsFolder%('world', self.id)+'%s.eva'%self.evaluationName; FileIO.createDirectoryForFile(file)
-        return file
+        file = hashtagsModelsFolder%('world', self.id)+'%s.eva'%self.params['evaluationName']; FileIO.createDirectoryForFile(file); return file
     def evaluateModel(self):
         hashtags = {}
         for h in FileIO.iterateJsonFromFile(self.testingHashtagsFile): 
@@ -182,14 +187,82 @@ class LatticeSelectionModel(object):
                     hashtag.updateOccuranceDistributionInLattices(timeUnit, occs)
                     hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
                     self.selectNextLatticesRandomly(timeUnit, hashtag)
-                hashtags[hashtag.hashtagObject['h']] = {'model': self.id ,'metrics': [(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()]}
+                hashtags[hashtag.hashtagObject['h']] = {'model': self.id, 'classId': hashtag.hashtagClassId, 'metrics': dict([(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()])}
         return hashtags
     def evaluateModelWithVaryingTimeUnitToPickTargetLattices(self, numberOfTimeUnits = 24):
+        self.params['evaluationName'] = 'time'
+        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
         for t in range(numberOfTimeUnits):
-            print 'Evaluating at t=%d'%t
+            print 'Evaluating at t=%d'%t, self.getModelSimulationFile()
             self.params['timeUnitToPickTargetLattices'] = t
             FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
-                
+    def evaluateModelWithVaryingBudget(self, budgetLimit = 20):
+        self.params['evaluationName'] = 'budget'
+        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
+        for b in range(1, budgetLimit):
+            print 'Evaluating at budget=%d'%b, self.getModelSimulationFile()
+            self.params['budget'] = b
+            FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
+    def evaluateByVaringBudgetAndTimeUnits(self, numberOfTimeUnits=24, budgetLimit = 20):
+        self.params['evaluationName'] = 'budget_time'
+        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
+        for b in range(1, budgetLimit):
+            for t in range(numberOfTimeUnits):
+                print 'Evaluating at budget=%d, numberOfTimeUnits=%d'%(b, t), self.getModelSimulationFile()
+                self.params['budget'] = b
+                self.params['timeUnitToPickTargetLattices'] = t
+                FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
+    
+    def plotModelWithVaryingTimeUnitToPickTargetLattices(self):
+        self.params['evaluationName'] = 'time'
+        metricDistributionInTimeUnits = defaultdict(dict)
+        for data in FileIO.iterateJsonFromFile(self.getModelSimulationFile()):
+            t = data['params']['timeUnitToPickTargetLattices']
+            for h in data['hashtags']:
+#                if data['hashtags'][h]['classId']==3:
+                    for metric in data['hashtags'][h]['metrics']:
+                        if metric not in metricDistributionInTimeUnits: metricDistributionInTimeUnits[metric] = defaultdict(list)
+                        metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
+        for metric, metricValues in metricDistributionInTimeUnits.iteritems():
+            dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
+            plt.plot(dataX, dataY, label=metric)
+        plt.legend()
+        plt.show()
+    def plotModelWithVaryingBudget(self):
+        self.params['evaluationName'] = 'budget'
+        metricDistributionInTimeUnits = defaultdict(dict)
+        for data in FileIO.iterateJsonFromFile(self.getModelSimulationFile()):
+            b = data['params']['budget']
+            for h in data['hashtags']:
+#                if data['hashtags'][h]['classId']==3:
+                    for metric in data['hashtags'][h]['metrics']:
+                        if metric not in metricDistributionInTimeUnits: metricDistributionInTimeUnits[metric] = defaultdict(list)
+                        metricDistributionInTimeUnits[metric][b].append(data['hashtags'][h]['metrics'][metric])
+        for metric, metricValues in metricDistributionInTimeUnits.iteritems():
+            dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
+            plt.plot(dataX, dataY, label=metric)
+        plt.legend()
+        plt.show()
+    def plotVaringBudgetAndTimeUnits(self):
+        # overall_hit_rate, miss_rate_before_target_selection, hit_rate_after_target_selection
+        metrics = ['overall_hit_rate']
+        for metric in metrics:
+            self.params['evaluationName'] = 'budget_time'
+            scoreDistribution = defaultdict(dict)
+    #        print self.getModelSimulationFile()
+            for data in FileIO.iterateJsonFromFile(self.getModelSimulationFile()):
+                timeUnit, budget = data['params']['timeUnitToPickTargetLattices'], data['params']['budget']
+                for h in data['hashtags']: 
+                    if data['hashtags'][h]['metrics'][metric]!=None: 
+                        if budget not in scoreDistribution[timeUnit]: scoreDistribution[timeUnit][budget] = []
+                        scoreDistribution[timeUnit][budget].append(data['hashtags'][h]['metrics'][metric])
+            for timeUnit in scoreDistribution:
+                for budget in scoreDistribution[timeUnit]:
+                    scoreDistribution[timeUnit][budget] = np.mean(scoreDistribution[timeUnit][budget])
+            print metric
+            plot3D(scoreDistribution)
+            plt.show()
+            
 class GreedyLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
     '''
@@ -197,7 +270,33 @@ class GreedyLatticeSelectionModel(LatticeSelectionModel):
     def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
         if self.params['timeUnitToPickTargetLattices']==currentTimeUnit: 
             lattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0]
+            hashtag._initializeTargetLattices(currentTimeUnit, lattices[:self.params['budget']])
+class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
+    ''' Pick the location with high sharing probabilities.
+    '''
+    def __init__(self, folderType, timeRange, **kwargs): 
+        super(SharingProbabilityLatticeSelectionModel, self).__init__(SHARING_PROBABILITY_LATTICE_SELECTION_MODEL, **kwargs)
+        self.graphFile = hashtagsLatticeGraphFile%(folderType,'%s_%s'%timeRange)
+        self.initializeModel()
+    def initializeModel(self):
+        self.model = {'sharingProbaility': defaultdict(dict), 'hashtagObservingProbability': {}}
+        hashtagsObserved = []
+        for latticeObject in FileIO.iterateJsonFromFile(self.graphFile):
+            dataToReturn = {'id': latticeObject['id'], 'links': {}}
+            latticeHashtagsSet = set(latticeObject['hashtags'])
+            hashtagsObserved+=latticeObject['hashtags']
+            self.model['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
+            for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+                neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
+                neighborHashtagsSet = set(neighborHashtags)
+                self.model['sharingProbaility'][latticeObject['id']][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
+        totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
+        for lattice in self.model['hashtagObservingProbability'].keys()[:]: self.model['hashtagObservingProbability'][lattice] = len(self.model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+    def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
+        if self.params['timeUnitToPickTargetLattices']==currentTimeUnit: 
+            lattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0]
             hashtag._initializeTargetLattices(currentTimeUnit, lattices[:self.budget])
+
 
 def normalize(data):
     total = math.sqrt(float(sum([d**2 for d in data])))
@@ -226,7 +325,7 @@ class Hashtag:
                     if t: self.occuranceLatticesVector.append(getRadius(zip(*t)[0]))
                     else: self.occuranceLatticesVector.append(0.0)
             else: self.classifiable=False
-    def getVector(self, length): 
+    def getVector(self, length):
         if len(self.occuranceCountVector)<length: 
             difference = length-len(self.occuranceCountVector)
             self.occuranceCountVector=self.occuranceCountVector+[0 for i in range(difference)]
@@ -269,27 +368,25 @@ class Hashtag:
 #            if hashtagObject.isValidObject(): yield hashtagObject
 
 class Simulation:
-    TIME_WINDOW_IN_SECONDS = 5*60
-    @staticmethod
-    def runModel(latticeSelectionModel, latticeGraph, hashtagsIterator):
-        currentLattices = latticeGraph.nodes()
-        for hashtag in hashtagsIterator:
-            for timeUnit, occs in enumerate(hashtag.getOccrancesEveryTimeWindowIterator(Simulation.TIME_WINDOW_IN_SECONDS)):
-                hashtag.updateOccuranceDistributionInLattices(timeUnit, occs)
-                hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
-                latticeSelectionModel.selectNextLatticesRandomly(timeUnit, hashtag, latticeGraph, hashtag.occuranceDistributionInLattices)
-            print dict([(k, method(hashtag.occuranceDistributionInLattices, hashtag.targetLattices))for k,method in EvaluationMetrics.iteritems()])
-            exit()
-    @staticmethod
-    def run():
-        timeRange, folderType = (2,11), 'world'
-        graph = LatticeGraph(hashtagsLatticeGraphFile%(folderType,'%s_%s'%timeRange), LatticeGraph.typeSharingProbability).load()
-        Simulation.runModel(GreedyLatticeSelectionModel(), graph, Hashtag.iterateHashtags(timeRange, folderType))
-
-if __name__ == '__main__':
-#    Simulation.run()
-    params = dict(budget=3, timeUnitToPickTargetLattices=6)
     trainingHashtagsFile = hashtagsFile%('training_world','%s_%s'%(2,11))
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
-    GreedyLatticeSelectionModel(evaluationName='time', params=params, testingHashtagsFile=testingHashtagsFile).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=3)
+    @staticmethod
+    def varyingTimeUnitToPickTargetLattices():
+        params = dict(budget=3, timeUnitToPickTargetLattices=6)
+#        LatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
+        LatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingTimeUnitToPickTargetLattices()
+    @staticmethod
+    def varyingBudgetToPickTargetLattices():
+        params = dict(budget=3, timeUnitToPickTargetLattices=6)
+#        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).evaluateModelWithVaryingBudget(budgetLimit=20)
+        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingBudget()
+    @staticmethod
+    def varyingBudgetAndTime():
+        params = {}
+        GreedyLatticeSelectionModel(testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
+#        GreedyLatticeSelectionModel(testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotVaringBudgetAndTimeUnits()
+        
+if __name__ == '__main__':
+#    Simulation.varyingBudgetAndTime()
+    SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), params={})
 #    model.saveModelSimulation()
