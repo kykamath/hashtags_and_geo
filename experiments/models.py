@@ -290,14 +290,13 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
         for lattice in self.model['hashtagObservingProbability'].keys()[:]: self.model['hashtagObservingProbability'][lattice] = len(self.model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
     def selectTargetLattices(self, currentTimeUnit, hashtag): 
         latticeScores = defaultdict(float)
+        print hashtag.occuranceDistributionInLattices
+        if hashtag.occuranceDistributionInLattices:
+            print 'x'
         for currentLattice in hashtag.occuranceDistributionInLattices:
             for neighborLattice in self.model['sharingProbaility'][currentLattice]: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['sharingProbaility'][currentLattice][neighborLattice])
-        print hashtag.occuranceDistributionInLattices.keys()
-        print sorted(latticeScores.iteritems(), key=lambda t: itemgetter(1), reverse=True)
-#        return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0][:self.params['budget']]
-        print 'x'
-        exit()
-        return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0][:self.params['budget']]
+        print zip(*sorted(latticeScores.iteritems(), key=lambda t: itemgetter(1), reverse=True))[0]
+        return zip(*sorted(latticeScores.iteritems(), key=lambda t: itemgetter(1), reverse=True))[0][:self.params['budget']]
 
 
 def normalize(data):
