@@ -118,7 +118,7 @@ def plotHastagClasses(timeRange, folderType):
         print count; count+=1
 #        if hashtagObject['h']=='ripamy':
         classId = HashtagsClassifier.classify(hashtagObject)
-        if classId:
+        if classId!=None:
             outputFile = hashtagsImagesHashtagsClassFolder%folderType+'%s/%s.png'%(classId, hashtagObject['h']); FileIO.createDirectoryForFile(outputFile)
             fileNameIterator = getFileName()
             timeUnits, timeSeries = getTimeUnitsAndTimeSeries(hashtagObject['oc'])

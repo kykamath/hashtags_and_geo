@@ -332,7 +332,7 @@ class Hashtag:
         return [vector, self.hashtagClassId]
     def isValidObject(self):
         if not self.hashtagObject['oc']: return False
-        if not self.hashtagClassId: return False
+        if self.hashtagClassId==None: return False
         if self.timePeriod>HashtagsClassifier.stats[self.hashtagClassId]['outlierBoundary']: return False
         return True
     def _getNextOccurance(self):
