@@ -143,7 +143,6 @@ class Metrics:
         if hashtag.occuranceDistributionInTargetLattices:
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v)
             for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
-            print  hashtag.occuranceDistributionInLattices
             return occurancesObserved/totalOccurances
     @staticmethod
     def occurancesHitRateAfterTargetSelection(hashtag):
