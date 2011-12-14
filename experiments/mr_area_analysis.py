@@ -19,7 +19,6 @@ from library.stats import getOutliersRangeUsingIRQ
 # General parameters
 LATTICE_ACCURACY = 0.145
 TIME_UNIT_IN_SECONDS = 60*60
-CLASSIFIER_TIME_UNIT_IN_SECONDS = 5*60
 
 ## Paramters for local run
 ## Paramters to filter hashtags.
@@ -147,19 +146,14 @@ def getActiveRegions(timeSeries):
         currentRegion[1], currentRegion[2] = index, occurancesForRegion
         activeRegions.append(currentRegion)
     return activeRegions
-def getOccuranesInHighestActiveRegion(hashtagObject, checkIfItFirstActiveRegion=False):
+def getOccuranesInHighestActiveRegion(hashtagObject, checkIfItFirstActiveRegion=False, timeUnit=TIME_UNIT_IN_SECONDS):
     occurancesInActiveRegion, timeUnits = [], []
     occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'], fillInGaps=True)
     if occurranceDistributionInEpochs:
-#        startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
-#        dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
-#        occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
-#        for x in dataX: 
-#            if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
         timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
         hashtagPropagatingRegion = max(getActiveRegions(timeSeries), key=itemgetter(2))
         validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
-        occurancesInActiveRegion = [(p,t) for p,t in hashtagObject['oc'] if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
+        occurancesInActiveRegion = [(p,t) for p,t in hashtagObject['oc'] if GeneralMethods.approximateEpoch(t, timeUnit) in validTimeUnits]
     if not checkIfItFirstActiveRegion: return occurancesInActiveRegion
     else:
         isFirstActiveRegion=False
@@ -177,13 +171,10 @@ def getSourceLattice(occ):
     occs = occ[:NO_OF_EARLY_LIDS_TO_DETERMINE_SOURCE_LATTICE]
     if occs: return max([(lid, len(list(l))) for lid, l in groupby(sorted([t[0] for t in occs]))], key=lambda t: t[1])
     
-def getTimeUnitsAndTimeSeries(occurences):
-    occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(occurences, fillInGaps=True)
-#    startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
-#    dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
-#    occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
-#    for x in dataX: 
-#        if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
+def getTimeUnitsAndTimeSeries(occurences, **kwargs):
+    occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(occurences, fillInGaps=True, **kwargs)
+    if not occurranceDistributionInEpochs:
+        print 'x'
     return zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
 
 def getRadius(locations):
@@ -200,6 +191,7 @@ class HashtagsClassifier:
     
     RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES=500
     PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION=1.0
+    CLASSIFIER_TIME_UNIT_IN_SECONDS = 60*60
     
     classes = {
                'slow_burst_::_local':0,
@@ -218,19 +210,14 @@ class HashtagsClassifier:
     @staticmethod
     def getHastagLocalityClassForHighestActivityPeriod(hashtagObject): 
         occuranesInHighestActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject)
-#        locations = zip(*occuranesInHighestActiveRegion)[0]
-#        meanLid = getCenterOfMass(locations,accuracy=LATTICE_ACCURACY)
-#        distances = [getHaversineDistance(meanLid, p) for p in locations]
-#        _, upperBoundForDistance = getOutliersRangeUsingIRQ(distances)
-#        if np.mean(filter(lambda d: d<=upperBoundForDistance, distances)) >= HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_NON_LOCAL
         if getRadius(zip(*occuranesInHighestActiveRegion)[0])>=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_NON_LOCAL
         else: return HashtagsClassifier.LOCALITY_ID_LOCAL
     @staticmethod
     def getPeriodicityClass(hashtagObject):
-        occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'])
+        occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'], timeUnit=HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)
         if occurranceDistributionInEpochs:
             startEpoch, endEpoch = min(occurranceDistributionInEpochs, key=itemgetter(0))[0], max(occurranceDistributionInEpochs, key=itemgetter(0))[0]
-            dataX = range(startEpoch, endEpoch, TIME_UNIT_IN_SECONDS)
+            dataX = range(startEpoch, endEpoch, HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)
             occurranceDistributionInEpochs = dict(occurranceDistributionInEpochs)
             for x in dataX: 
                 if x not in occurranceDistributionInEpochs: occurranceDistributionInEpochs[x]=0
@@ -339,7 +326,8 @@ class MRAreaAnalysis(ModifiedMRJob):
     
 
     def steps(self):
-        return self.jobsToGetHastagObjectsWithEndingWindow()
+        pass
+#        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetHastagObjectsWithKnownSource()
 #        return self.jobsToBuildLatticeGraph() 

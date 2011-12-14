@@ -10,7 +10,7 @@ from settings import hashtagsWithoutEndingWindowFile, hashtagsLatticeGraphFile,\
     hashtagsFile, hashtagsModelsFolder
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     TIME_UNIT_IN_SECONDS, LATTICE_ACCURACY, HashtagsClassifier,\
-    getOccurranceDistributionInEpochs, CLASSIFIER_TIME_UNIT_IN_SECONDS,\
+    getOccurranceDistributionInEpochs,\
     getRadius
 import numpy as np
 from library.stats import getOutliersRangeUsingIRQ
@@ -166,7 +166,7 @@ EvaluationMetrics = {
                      }
 
 class LatticeSelectionModel(object):
-    TIME_WINDOW_IN_SECONDS = 5*60
+#    TIME_WINDOW_IN_SECONDS = 5*60
     def __init__(self, id='random', **kwargs):
         self.id = id
         self.params = kwargs['params']
@@ -182,7 +182,7 @@ class LatticeSelectionModel(object):
         for h in FileIO.iterateJsonFromFile(self.testingHashtagsFile): 
             hashtag = Hashtag(h)
             if hashtag.isValidObject():
-                for timeUnit, occs in enumerate(hashtag.getOccrancesEveryTimeWindowIterator(LatticeSelectionModel.TIME_WINDOW_IN_SECONDS)):
+                for timeUnit, occs in enumerate(hashtag.getOccrancesEveryTimeWindowIterator(HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)):
                     hashtag.updateOccuranceDistributionInLattices(timeUnit, occs)
                     hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
                     if self.params['timeUnitToPickTargetLattices']==timeUnit: hashtag._initializeTargetLattices(timeUnit, self.selectTargetLattices(timeUnit, hashtag))
@@ -314,7 +314,7 @@ class Hashtag:
         # Data structures for building classifier.
         if dataStructuresToBuildClassifier and self.isValidObject():
             self.classifiable = True
-            occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(self.hashtagObject), timeUnit=CLASSIFIER_TIME_UNIT_IN_SECONDS, fillInGaps=True, occurancesCount=False)
+            occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(self.hashtagObject), timeUnit=HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS, fillInGaps=True, occurancesCount=False)
             if occurranceDistributionInEpochs:
                 self.occurances = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))[1]
                 self.occuranceCountVector = map(lambda t: len(t), self.occurances)

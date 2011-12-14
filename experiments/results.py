@@ -11,7 +11,8 @@ from library.kml import KML
 sys.path.append('../')
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     getSourceLattice, MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE,\
-    HashtagsClassifier, getTimeUnitsAndTimeSeries, LATTICE_ACCURACY
+    HashtagsClassifier, getTimeUnitsAndTimeSeries, LATTICE_ACCURACY,\
+    getOccurranceDistributionInEpochs, TIME_UNIT_IN_SECONDS
 from library.file_io import FileIO
 import matplotlib
 from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
@@ -38,8 +39,8 @@ from library.geo import getHaversineDistance, plotPointsOnUSMap, getLatticeLid,\
     getLocationFromLid, plotPointsOnWorldMap
 from itertools import groupby, combinations
 from experiments.analysis import HashtagClass, HashtagObject
-from experiments.mr_analysis import ACCURACY, getOccurranceDistributionInEpochs,\
-    TIME_UNIT_IN_SECONDS, temporalScore
+#from experiments.mr_analysis import ACCURACY, getOccurranceDistributionInEpochs,\
+#    TIME_UNIT_IN_SECONDS, temporalScore
 from library.classes import GeneralMethods
 import networkx as nx
 
@@ -112,8 +113,8 @@ def plotHastagClasses(timeRange, folderType):
     def getFileName():
         for i in combinations('abcedfghijklmnopqrstuvwxyz',2): yield ''.join(i)+'.png'
     count=1
-#    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)):
-    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)):
+#    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
 #        HashtagsClassifier.classify(hashtagObject)
         print count; count+=1
 #        if hashtagObject['h']=='ripamy':
@@ -121,7 +122,7 @@ def plotHastagClasses(timeRange, folderType):
         if classId!=None:
             outputFile = hashtagsImagesHashtagsClassFolder%folderType+'%s/%s.png'%(classId, hashtagObject['h']); FileIO.createDirectoryForFile(outputFile)
             fileNameIterator = getFileName()
-            timeUnits, timeSeries = getTimeUnitsAndTimeSeries(hashtagObject['oc'])
+            timeUnits, timeSeries = getTimeUnitsAndTimeSeries(hashtagObject['oc'], timeUnit=HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)
             occurancesInActivityRegions = [[getOccuranesInHighestActiveRegion(hashtagObject), 'm']]
 #            for hashtagPropagatingRegion in HashtagsClassifier._getActivityRegionsWithActivityAboveThreshold(hashtagObject):
 #                validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
@@ -136,18 +137,18 @@ def plotHastagClasses(timeRange, folderType):
                 subRangeId = 0
                 for occurances, color in occurancesInActivityRegions:
                     if subRangeId==currentMainRangeId: color='m'
-                    timeUnits, timeSeries = getTimeUnitsAndTimeSeries(occurances)
-                    plt.plot_date([datetime.datetime.fromtimestamp(t) for t in timeUnits], timeSeries, '-o', c=color)
+                    timeUnits, timeSeries = getTimeUnitsAndTimeSeries(occurances, timeUnit=HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)
+                    plt.plot_date([datetime.datetime.fromtimestamp(t) for t in timeUnits[:24]], timeSeries[:24], '-o', c=color)
                     subRangeId+=1
                 plt.setp(ax.get_xticklabels(), rotation=10, fontsize=7)
             
                 ax=plt.subplot(313)
                 subRangeId = 0
-                timeUnits, timeSeries = getTimeUnitsAndTimeSeries(hashtagObject['oc'])
+                timeUnits, timeSeries = getTimeUnitsAndTimeSeries(hashtagObject['oc'], timeUnit=HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)
                 plt.plot_date([datetime.datetime.fromtimestamp(t) for t in timeUnits], timeSeries, '-')
                 for occurances, color in occurancesInActivityRegions:
                     if subRangeId==currentMainRangeId: color='m'
-                    timeUnits, timeSeries = getTimeUnitsAndTimeSeries(occurances)
+                    timeUnits, timeSeries = getTimeUnitsAndTimeSeries(occurances, timeUnit=HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)
                     plt.plot_date([datetime.datetime.fromtimestamp(t) for t in timeUnits], timeSeries, '-o', c=color)
                     subRangeId+=1
                 plt.setp(ax.get_xticklabels(), rotation=10, fontsize=7)
@@ -163,16 +164,31 @@ def plotHastagClasses(timeRange, folderType):
                     sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0, alpha=1.0)
                     plt.colorbar(sc)
                 else: sc = plotPointsOnWorldMap(points, c='m', lw=0)
-                plt.title(hashtagObject['h'])
+                plt.title(hashtagObject['h']+ '(%d)'%len(timeUnits))
 #                plt.show()
                 plt.savefig(outputFile); plt.clf()
                 currentMainRangeId+=1
 #                exit()
 
 def tempAnalysis(timeRange, outputFolder):
-    i = 1
-    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(outputFolder,'%s_%s'%timeRange)):
-        print i, HashtagsClassifier.classify(hashtagObject); i+=1
+    for i, hashtagObject in enumerate(FileIO.iterateJsonFromFile(hashtagsFile%(outputFolder,'%s_%s'%timeRange))):
+        
+        occurances = getOccuranesInHighestActiveRegion(hashtagObject)
+        timeUnits, timeSeries = getTimeUnitsAndTimeSeries(occurances, timeUnit=HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)
+        ax = plt.subplot(211)
+        plt.plot_date([datetime.datetime.fromtimestamp(t) for t in timeUnits], timeSeries, '-o')
+        plt.setp(ax.get_xticklabels(), rotation=10, fontsize=7)
+        plt.title(hashtagObject['h']+ ' (%s)'%len(timeUnits))
+        
+        ax = plt.subplot(212)
+        timeUnits1, timeSeries1 = getTimeUnitsAndTimeSeries(hashtagObject['oc'], timeUnit=HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)
+        plt.plot_date([datetime.datetime.fromtimestamp(t) for t in timeUnits1], timeSeries1, '-o')
+        plt.plot_date([datetime.datetime.fromtimestamp(t) for t in timeUnits], timeSeries, '-o', c='m')
+        plt.setp(ax.get_xticklabels(), rotation=10, fontsize=7)
+        
+#        plt.show()
+        plt.savefig('/Users/kykamath/Desktop/hashtags/%s.png'%(hashtagObject['h'])); plt.clf()
+        print i
     
     
 if __name__ == '__main__':
