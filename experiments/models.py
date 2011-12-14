@@ -387,6 +387,6 @@ class Simulation:
 #        GreedyLatticeSelectionModel(testingHashtagsFile=Simulation.testingHashtagsFile, params={}).plotVaringBudgetAndTimeUnits()
         
 if __name__ == '__main__':
-    Simulation.varyingBudgetToPickTargetLattices()
+    Simulation.varyingBudgetAndTime()
 #    SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), params={})
 #    model.saveModelSimulation()
