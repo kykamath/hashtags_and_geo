@@ -174,8 +174,7 @@ class LatticeSelectionModel(object):
         self.trainingHashtagsFile = kwargs.get('trainingHashtagsFile', None)
         self.testingHashtagsFile = kwargs.get('testingHashtagsFile', None)
         self.evaluationName = kwargs.get('evaluationName', '')
-    def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
-        if self.params['timeUnitToPickTargetLattices']==currentTimeUnit: hashtag._initializeTargetLattices(currentTimeUnit, random.sample(hashtag.occuranceDistributionInLattices, min([self.budget, len(hashtag.occuranceDistributionInLattices)])))
+    def selectTargetLattices(self, currentTimeUnit, hashtag): return random.sample(hashtag.occuranceDistributionInLattices, min([self.budget, len(hashtag.occuranceDistributionInLattices)]))
     def getModelSimulationFile(self): 
         file = hashtagsModelsFolder%('world', self.id)+'%s.eva'%self.params['evaluationName']; FileIO.createDirectoryForFile(file); return file
     def evaluateModel(self):
@@ -186,7 +185,7 @@ class LatticeSelectionModel(object):
                 for timeUnit, occs in enumerate(hashtag.getOccrancesEveryTimeWindowIterator(LatticeSelectionModel.TIME_WINDOW_IN_SECONDS)):
                     hashtag.updateOccuranceDistributionInLattices(timeUnit, occs)
                     hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
-                    self.selectNextLatticesRandomly(timeUnit, hashtag)
+                    if self.params['timeUnitToPickTargetLattices']==timeUnit: hashtag._initializeTargetLattices(timeUnit, self.selectTargetLattices(timeUnit, hashtag))
                 hashtags[hashtag.hashtagObject['h']] = {'model': self.id, 'classId': hashtag.hashtagClassId, 'metrics': dict([(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()])}
         return hashtags
     def evaluateModelWithVaryingTimeUnitToPickTargetLattices(self, numberOfTimeUnits = 24):
@@ -245,7 +244,7 @@ class LatticeSelectionModel(object):
         plt.show()
     def plotVaringBudgetAndTimeUnits(self):
         # overall_hit_rate, miss_rate_before_target_selection, hit_rate_after_target_selection
-        metrics = ['overall_hit_rate']
+        metrics = ['hit_rate_after_target_selection']
         for metric in metrics:
             self.params['evaluationName'] = 'budget_time'
             scoreDistribution = defaultdict(dict)
@@ -267,10 +266,7 @@ class GreedyLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
     '''
     def __init__(self, **kwargs): super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, **kwargs)
-    def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
-        if self.params['timeUnitToPickTargetLattices']==currentTimeUnit: 
-            lattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0]
-            hashtag._initializeTargetLattices(currentTimeUnit, lattices[:self.params['budget']])
+    def selectTargetLattices(self, currentTimeUnit, hashtag):return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0][:self.params['budget']]
 class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with high sharing probabilities.
     '''
@@ -292,10 +288,16 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
                 self.model['sharingProbaility'][latticeObject['id']][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in self.model['hashtagObservingProbability'].keys()[:]: self.model['hashtagObservingProbability'][lattice] = len(self.model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
-    def selectNextLatticesRandomly(self, currentTimeUnit, hashtag):
-        if self.params['timeUnitToPickTargetLattices']==currentTimeUnit: 
-            lattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0]
-            hashtag._initializeTargetLattices(currentTimeUnit, lattices[:self.budget])
+    def selectTargetLattices(self, currentTimeUnit, hashtag): 
+        latticeScores = defaultdict(float)
+        for currentLattice in hashtag.occuranceDistributionInLattices:
+            for neighborLattice in self.model['sharingProbaility'][currentLattice]: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['sharingProbaility'][currentLattice][neighborLattice])
+        print hashtag.occuranceDistributionInLattices.keys()
+        print sorted(latticeScores.iteritems(), key=lambda t: itemgetter(1), reverse=True)
+#        return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0][:self.params['budget']]
+        print 'x'
+        exit()
+        return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0][:self.params['budget']]
 
 
 def normalize(data):
@@ -382,11 +384,10 @@ class Simulation:
         GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingBudget()
     @staticmethod
     def varyingBudgetAndTime():
-        params = {}
-        GreedyLatticeSelectionModel(testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
-#        GreedyLatticeSelectionModel(testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotVaringBudgetAndTimeUnits()
+        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params={}).evaluateByVaringBudgetAndTimeUnits()
+#        GreedyLatticeSelectionModel(testingHashtagsFile=Simulation.testingHashtagsFile, params={}).plotVaringBudgetAndTimeUnits()
         
 if __name__ == '__main__':
-#    Simulation.varyingBudgetAndTime()
-    SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), params={})
+    Simulation.varyingBudgetAndTime()
+#    SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), params={})
 #    model.saveModelSimulation()

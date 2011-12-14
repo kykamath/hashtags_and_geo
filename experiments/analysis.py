@@ -321,9 +321,11 @@ if __name__ == '__main__':
 #    mrOutputFolder = 'world'
     mrOutputFolder = 'training_world'
 #    mrOutputFolder = 'testing_world'
-    mr_area_analysis(timeRange, folderType, mrOutputFolder)
+#    mr_area_analysis(timeRange, folderType, mrOutputFolder)
 #    HashtagsClassifierAnalysis.timePeriods(timeRange, folderType)
-
+    
+    runMRJob(MRWC, 'tempf', getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':160})
+    
 #    tempAnalysis(timeRange, mrOutputFolder)
 
 #    plotHashtagSourcesOnMap(timeRange, mrOutputFolder)
