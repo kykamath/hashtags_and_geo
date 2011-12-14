@@ -241,7 +241,7 @@ class HashtagsClassifier:
                 if size>=HashtagsClassifier.PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION*sizeOfMaxActivityRegion: activityRegionsWithActivityAboveThreshold.append([start, end, size]) 
             hashtagPropagatingRegion = activityRegionsWithActivityAboveThreshold[0]
             validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
-            if timeSeries[list(timeUnits).index(validTimeUnits[0])]>10: return HashtagsClassifier.PERIODICITY_ID_SUDDEN_BURST
+            if timeSeries[list(timeUnits).index(validTimeUnits[0])]>50: return HashtagsClassifier.PERIODICITY_ID_SUDDEN_BURST
             return HashtagsClassifier.PERIODICITY_ID_SLOW_BURST
     stats = {
              0: {'meanTimePeriod': 35.482895038953899, 'outlierBoundary': 124.91611111114999},

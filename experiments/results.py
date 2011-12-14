@@ -27,7 +27,7 @@ from settings import hashtagsAnalayzeLocalityIndexAtKFile,\
     hashtagsImagesLocationInfluencersFolder, hashtagsImagesGraphAnalysisFolder,\
     hashtagSharingProbabilityGraphWithTemporalClosenessFile,\
     hashtagsImagesFirstActiveTimeSeriesAnalysisFolder,\
-    hashtagsImagesHashtagsClassFolder, hashtagsTrainingDataFile
+    hashtagsImagesHashtagsClassFolder, hashtagsTrainingDataFile, hashtagsFile
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy import fft, array
 from collections import defaultdict
@@ -113,7 +113,7 @@ def plotHastagClasses(timeRange, folderType):
         for i in combinations('abcedfghijklmnopqrstuvwxyz',2): yield ''.join(i)+'.png'
     count=1
 #    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)):
-    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsTrainingDataFile%(folderType,'%s_%s'%timeRange)):
+    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
 #        HashtagsClassifier.classify(hashtagObject)
         print count; count+=1
 #        if hashtagObject['h']=='ripamy':
