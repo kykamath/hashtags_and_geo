@@ -140,9 +140,11 @@ class Metrics:
     @staticmethod
     def overallOccurancesHitRate(hashtag):
         totalOccurances, occurancesObserved = 0., 0.
-        for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v)
-        for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
-        return occurancesObserved/totalOccurances
+        if hashtag.occuranceDistributionInTargetLattices:
+            for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v)
+            for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
+            print  hashtag.occuranceDistributionInLattices
+            return occurancesObserved/totalOccurances
     @staticmethod
     def occurancesHitRateAfterTargetSelection(hashtag):
         totalOccurances, occurancesObserved = 0., 0.
