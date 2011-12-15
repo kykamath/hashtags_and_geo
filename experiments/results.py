@@ -5,10 +5,11 @@ Created on Nov 24, 2011
 '''
 import sys, os
 import datetime
+sys.path.append('../')
 import numpy as np
 from library.plotting import smooth, CurveFit
 from library.kml import KML
-sys.path.append('../')
+from experiments.models import normalize
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     getSourceLattice, MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE,\
     HashtagsClassifier, getTimeUnitsAndTimeSeries, LATTICE_ACCURACY,\
@@ -113,8 +114,8 @@ def plotHastagClasses(timeRange, folderType):
     def getFileName():
         for i in combinations('abcedfghijklmnopqrstuvwxyz',2): yield ''.join(i)+'.png'
     count=1
-    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)):
-#    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+#    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)):
+    for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
 #        HashtagsClassifier.classify(hashtagObject)
         print count; count+=1
 #        if hashtagObject['h']=='ripamy':
@@ -123,7 +124,7 @@ def plotHastagClasses(timeRange, folderType):
             outputFile = hashtagsImagesHashtagsClassFolder%folderType+'%s/%s.png'%(classId, hashtagObject['h']); FileIO.createDirectoryForFile(outputFile)
             fileNameIterator = getFileName()
             timeUnits, timeSeries = getTimeUnitsAndTimeSeries(hashtagObject['oc'], timeUnit=HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)
-            occurancesInActivityRegions = [[getOccuranesInHighestActiveRegion(hashtagObject), 'm']]
+            occurancesInActivityRegions = [[getOccuranesInHighestActiveRegion(hashtagObject, maxLengthOfHighestActiveRegion=24), 'm']]
 #            for hashtagPropagatingRegion in HashtagsClassifier._getActivityRegionsWithActivityAboveThreshold(hashtagObject):
 #                validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
 #                occurancesInActiveRegion = [(p,t) for p,t in hashtagObject['oc'] if GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS) in validTimeUnits]
@@ -138,8 +139,14 @@ def plotHastagClasses(timeRange, folderType):
                 for occurances, color in occurancesInActivityRegions:
                     if subRangeId==currentMainRangeId: color='m'
                     timeUnits, timeSeries = getTimeUnitsAndTimeSeries(occurances, timeUnit=HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)
-                    plt.plot_date([datetime.datetime.fromtimestamp(t) for t in timeUnits[:24]], timeSeries[:24], '-o', c=color)
+                    if len(timeUnits)<24: 
+                        difference = 24-len(timeUnits)
+                        timeUnits=list(timeUnits)+[timeUnits[-1]+(i+1)*HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS for i in range(difference)]
+                        timeSeries=list(timeSeries)+[0 for i in range(difference)]
+#                    print len(timeUnits[:24]), len(timeSeries[:24])
+                    plt.plot_date([datetime.datetime.fromtimestamp(t) for t in timeUnits[:24]], normalize(timeSeries[:24]), '-o', c=color)
                     subRangeId+=1
+                plt.ylim(ymax=1)
                 plt.setp(ax.get_xticklabels(), rotation=10, fontsize=7)
             
                 ax=plt.subplot(313)
@@ -166,7 +173,9 @@ def plotHastagClasses(timeRange, folderType):
                 else: sc = plotPointsOnWorldMap(points, c='m', lw=0)
                 plt.title(hashtagObject['h']+ '(%d)'%len(timeUnits))
 #                plt.show()
-                plt.savefig(outputFile); plt.clf()
+                try:
+                    plt.savefig(outputFile); plt.clf()
+                except: pass
                 currentMainRangeId+=1
 #                exit()
 

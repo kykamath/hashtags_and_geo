@@ -24,9 +24,6 @@ from library.classes import GeneralMethods
 import matplotlib.pyplot as plt
 from library.plotting import plot3D
 
-GREEDY_LATTICE_SELECTION_MODEL = 'greedy'
-SHARING_PROBABILITY_LATTICE_SELECTION_MODEL = 'sharing_probability'
-
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
         dataToReturn = [(hashtag, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
@@ -36,105 +33,108 @@ def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, ne
         dataToReturn = [(hashtag, timeTuple, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
         _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[2])
         return dict([(t[0], t[1]) for t in dataToReturn if t[2]<=upperRangeForTemporalDistance])
-def latticeNodeByHaversineDistance(latticeObject):
-    dataToReturn = {'id': latticeObject['id'], 'links': {}}
-    for neighborLattice, _ in latticeObject['links'].iteritems(): dataToReturn['links'][neighborLattice]=getHaversineDistanceForLids(latticeObject['id'].replace('_', ' '), neighborLattice.replace('_', ' '))
-    return dataToReturn
-def latticeNodeBySharingProbability(latticeObject):
-    dataToReturn = {'id': latticeObject['id'], 'links': {}}
-    latticeHashtagsSet = set(latticeObject['hashtags'])
-    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
-        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
-        neighborHashtagsSet = set(neighborHashtags)
-        dataToReturn['links'][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
-    return dataToReturn
-def latticeNodeByTemporalDistanceInHours(latticeObject):
-    dataToReturn = {'id': latticeObject['id'], 'links': {}}
-    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
-        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
-        dataX = zip(*neighborHashtags.iteritems())[1]
-        dataToReturn['links'][neighborLattice]=np.mean(dataX)
-    return dataToReturn
-def latticeNodeByTemporalClosenessScore(latticeObject):
-    dataToReturn = {'id': latticeObject['id'], 'links': {}}
-    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
-        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
-        dataX = map(lambda lag: LatticeGraph.temporalScore(lag, LatticeGraph.upperRangeForTemporalDistances), zip(*neighborHashtags.iteritems())[1])
-        dataToReturn['links'][neighborLattice]=np.mean(dataX)
-    return dataToReturn
-def latticeNodeByHashtagDiffusionLocationVisitation(latticeObject, generateTemporalClosenessScore=False):
-    def updateHashtagDistribution(latticeObj, hashtagDistribution): 
-        for h, (t, _) in latticeObj['hashtags'].iteritems(): hashtagDistribution[h].append([latticeObj['id'], t])
-    dataToReturn = {'id': latticeObject['id'], 'links': {}}
-    hashtagDistribution, numberOfHastagsAtCurrentLattice = defaultdict(list), float(len(latticeObject['hashtags']))
-    updateHashtagDistribution(latticeObject, hashtagDistribution)
-    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems(): 
-        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags, findLag=False)
-        updateHashtagDistribution({'id':neighborLattice, 'hashtags': neighborHashtags}, hashtagDistribution)
-    latticeEdges = {'in': defaultdict(float), 'out': defaultdict(float)}
-    for hashtag in hashtagDistribution.keys()[:]: 
-        hashtagOccurences = sorted(hashtagDistribution[hashtag], key=itemgetter(1))
-        for neighborLattice, lag in [(t[0], (t[1]-latticeObject['hashtags'][hashtag][0])/TIME_UNIT_IN_SECONDS) for t in hashtagOccurences if t[0]!=latticeObject['id']]:
-            if not generateTemporalClosenessScore:
-                if lag<0: latticeEdges['in'][neighborLattice]+=-lag/numberOfHastagsAtCurrentLattice
-                else: latticeEdges['out'][neighborLattice]+=lag/numberOfHastagsAtCurrentLattice
-            else: 
-                if lag<0: latticeEdges['in'][neighborLattice]+=LatticeGraph.temporalScore(-lag, LatticeGraph.upperRangeForTemporalDistances)/numberOfHastagsAtCurrentLattice
-                else: latticeEdges['out'][neighborLattice]+=LatticeGraph.temporalScore(lag, LatticeGraph.upperRangeForTemporalDistances)/numberOfHastagsAtCurrentLattice
-    dataToReturn['links']=latticeEdges
-    return dataToReturn
-class LatticeGraph:
-    upperRangeForTemporalDistances = 8.24972222222
-    typeSharingProbability = {'id': 'sharing_probability', 'method': latticeNodeBySharingProbability, 'title': 'Probability of sharing hastags'}
-    typeTemporalCloseness = {'id': 'temporal_closeness', 'method': latticeNodeByTemporalClosenessScore, 'title': 'Temporal closeness'}
-    typeTemporalDistanceInHours = {'id': 'temporal_distance_in_hours', 'method': latticeNodeByTemporalDistanceInHours, 'title': 'Temporal distance (hours)'}
-    typeHaversineDistance = {'id': 'haversine_distance', 'method': latticeNodeByHaversineDistance, 'title': 'Distance (miles)'}
-    def __init__(self, graphFile, latticeGraphType, graphType=nx.Graph):
-        self.graphFile = graphFile
-        self.latticeGraphType = latticeGraphType
-#        self.graphType = graphType
-    def load(self):
-        i = 1
-        self.graph = nx.DiGraph()
-        for latticeObject in FileIO.iterateJsonFromFile(self.graphFile):
-            print i; i+=1
-            latticeObject = self.latticeGraphType['method'](latticeObject)
-            if 'in' in latticeObject['links']:
-#                for no, w in latticeObject['links']['in'].iteritems(): self.graph.add_edge(no, latticeObject['id'], {'w': w})
-#                for no, w in latticeObject['links']['out'].iteritems(): self.graph.add_edge(latticeObject['id'], no, {'w': w})
-                no, w = max(latticeObject['links']['in'].iteritems(), key=itemgetter(1))
-                self.graph.add_edge(no, latticeObject['id'], {'w': w})
-                no, w = max(latticeObject['links']['out'].iteritems(), key=itemgetter(1))
-                self.graph.add_edge(latticeObject['id'], no, {'w': w})
-            else:
-#                for no, w in latticeObject['links'].iteritems(): self.graph.add_edge(latticeObject['id'], no, {'w': w}), self.graph.add_edge(no, latticeObject['id'], {'w': w})
-                no, w = max(latticeObject['links'].iteritems(), key=itemgetter(1))
-                if not self.graph.has_edge(latticeObject['id'], no) or self.graph.edge[latticeObject['id']][no]['w']<w: 
-                    self.graph.add_edge(latticeObject['id'], no, {'w': w}), self.graph.add_edge(no, latticeObject['id'], {'w': w})
-            if i==100: break
-#        plot(self.graph)
-        return self.graph
-    @staticmethod
-    def normalizeNode(latticeNodeObject):
-        if 'in' in latticeNodeObject['links']:
-            for edgeType, edges in latticeNodeObject['links'].iteritems():
-                totalEdgeWeight = sum(edges.values())
-                for lattice, score in edges.items()[:]: latticeNodeObject['links'][edgeType][lattice] = score/totalEdgeWeight
-        else:
-            totalEdgeWeight = sum(latticeNodeObject['links'].values())
-            for lattice, score in latticeNodeObject['links'].items()[:]: latticeNodeObject['links'][lattice]=score/totalEdgeWeight
-    @staticmethod
-    def temporalScore(lag, width):
-        lag=int(lag*TIME_UNIT_IN_SECONDS)   
-        width=int(width*TIME_UNIT_IN_SECONDS)
-        if lag==0: return 1.0
-        elif lag>=width: return 0.0
-        return 1-np.log(lag)/np.log(width)
-    @staticmethod
-    def run(timeRange, folderType):
-        latticeGraph = LatticeGraph(hashtagsLatticeGraphFile%(folderType,'%s_%s'%timeRange), LatticeGraph.typeTemporalCloseness)
-        latticeGraph.load()
-        print latticeGraph.graph.number_of_nodes()
+#def latticeNodeByHaversineDistance(latticeObject):
+#    dataToReturn = {'id': latticeObject['id'], 'links': {}}
+#    for neighborLattice, _ in latticeObject['links'].iteritems(): dataToReturn['links'][neighborLattice]=getHaversineDistanceForLids(latticeObject['id'].replace('_', ' '), neighborLattice.replace('_', ' '))
+#    return dataToReturn
+#def latticeNodeBySharingProbability(latticeObject):
+#    dataToReturn = {'id': latticeObject['id'], 'links': {}}
+#    latticeHashtagsSet = set(latticeObject['hashtags'])
+#    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+#        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
+#        neighborHashtagsSet = set(neighborHashtags)
+#        dataToReturn['links'][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
+#    return dataToReturn
+#def latticeNodeByTemporalDistanceInHours(latticeObject):
+#    dataToReturn = {'id': latticeObject['id'], 'links': {}}
+#    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+#        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
+#        dataX = zip(*neighborHashtags.iteritems())[1]
+#        dataToReturn['links'][neighborLattice]=np.mean(dataX)
+#    return dataToReturn
+#def latticeNodeByTemporalClosenessScore(latticeObject):
+#    dataToReturn = {'id': latticeObject['id'], 'links': {}}
+#    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+#        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
+#        dataX = map(lambda lag: LatticeGraph.temporalScore(lag, LatticeGraph.upperRangeForTemporalDistances), zip(*neighborHashtags.iteritems())[1])
+#        dataToReturn['links'][neighborLattice]=np.mean(dataX)
+#    return dataToReturn
+#def latticeNodeByHashtagDiffusionLocationVisitation(latticeObject, generateTemporalClosenessScore=False):
+#    def updateHashtagDistribution(latticeObj, hashtagDistribution): 
+#        for h, (t, _) in latticeObj['hashtags'].iteritems(): hashtagDistribution[h].append([latticeObj['id'], t])
+#    dataToReturn = {'id': latticeObject['id'], 'links': {}}
+#    hashtagDistribution, numberOfHastagsAtCurrentLattice = defaultdict(list), float(len(latticeObject['hashtags']))
+#    updateHashtagDistribution(latticeObject, hashtagDistribution)
+#    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems(): 
+#        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags, findLag=False)
+#        updateHashtagDistribution({'id':neighborLattice, 'hashtags': neighborHashtags}, hashtagDistribution)
+#    latticeEdges = {'in': defaultdict(float), 'out': defaultdict(float)}
+#    for hashtag in hashtagDistribution.keys()[:]: 
+#        hashtagOccurences = sorted(hashtagDistribution[hashtag], key=itemgetter(1))
+#        for neighborLattice, lag in [(t[0], (t[1]-latticeObject['hashtags'][hashtag][0])/TIME_UNIT_IN_SECONDS) for t in hashtagOccurences if t[0]!=latticeObject['id']]:
+#            if not generateTemporalClosenessScore:
+#                if lag<0: latticeEdges['in'][neighborLattice]+=-lag/numberOfHastagsAtCurrentLattice
+#                else: latticeEdges['out'][neighborLattice]+=lag/numberOfHastagsAtCurrentLattice
+#            else: 
+#                if lag<0: latticeEdges['in'][neighborLattice]+=LatticeGraph.temporalScore(-lag, LatticeGraph.upperRangeForTemporalDistances)/numberOfHastagsAtCurrentLattice
+#                else: latticeEdges['out'][neighborLattice]+=LatticeGraph.temporalScore(lag, LatticeGraph.upperRangeForTemporalDistances)/numberOfHastagsAtCurrentLattice
+#    dataToReturn['links']=latticeEdges
+#    return dataToReturn
+#class LatticeGraph:
+#    upperRangeForTemporalDistances = 8.24972222222
+#    typeSharingProbability = {'id': 'sharing_probability', 'method': latticeNodeBySharingProbability, 'title': 'Probability of sharing hastags'}
+#    typeTemporalCloseness = {'id': 'temporal_closeness', 'method': latticeNodeByTemporalClosenessScore, 'title': 'Temporal closeness'}
+#    typeTemporalDistanceInHours = {'id': 'temporal_distance_in_hours', 'method': latticeNodeByTemporalDistanceInHours, 'title': 'Temporal distance (hours)'}
+#    typeHaversineDistance = {'id': 'haversine_distance', 'method': latticeNodeByHaversineDistance, 'title': 'Distance (miles)'}
+#    def __init__(self, graphFile, latticeGraphType, graphType=nx.Graph):
+#        self.graphFile = graphFile
+#        self.latticeGraphType = latticeGraphType
+##        self.graphType = graphType
+#    def load(self):
+#        i = 1
+#        self.graph = nx.DiGraph()
+#        for latticeObject in FileIO.iterateJsonFromFile(self.graphFile):
+#            print i; i+=1
+#            latticeObject = self.latticeGraphType['method'](latticeObject)
+#            if 'in' in latticeObject['links']:
+##                for no, w in latticeObject['links']['in'].iteritems(): self.graph.add_edge(no, latticeObject['id'], {'w': w})
+##                for no, w in latticeObject['links']['out'].iteritems(): self.graph.add_edge(latticeObject['id'], no, {'w': w})
+#                no, w = max(latticeObject['links']['in'].iteritems(), key=itemgetter(1))
+#                self.graph.add_edge(no, latticeObject['id'], {'w': w})
+#                no, w = max(latticeObject['links']['out'].iteritems(), key=itemgetter(1))
+#                self.graph.add_edge(latticeObject['id'], no, {'w': w})
+#            else:
+##                for no, w in latticeObject['links'].iteritems(): self.graph.add_edge(latticeObject['id'], no, {'w': w}), self.graph.add_edge(no, latticeObject['id'], {'w': w})
+#                no, w = max(latticeObject['links'].iteritems(), key=itemgetter(1))
+#                if not self.graph.has_edge(latticeObject['id'], no) or self.graph.edge[latticeObject['id']][no]['w']<w: 
+#                    self.graph.add_edge(latticeObject['id'], no, {'w': w}), self.graph.add_edge(no, latticeObject['id'], {'w': w})
+#            if i==100: break
+##        plot(self.graph)
+#        return self.graph
+#    @staticmethod
+#    def normalizeNode(latticeNodeObject):
+#        if 'in' in latticeNodeObject['links']:
+#            for edgeType, edges in latticeNodeObject['links'].iteritems():
+#                totalEdgeWeight = sum(edges.values())
+#                for lattice, score in edges.items()[:]: latticeNodeObject['links'][edgeType][lattice] = score/totalEdgeWeight
+#        else:
+#            totalEdgeWeight = sum(latticeNodeObject['links'].values())
+#            for lattice, score in latticeNodeObject['links'].items()[:]: latticeNodeObject['links'][lattice]=score/totalEdgeWeight
+#    @staticmethod
+#    def temporalScore(lag, width):
+#        lag=int(lag*TIME_UNIT_IN_SECONDS)   
+#        width=int(width*TIME_UNIT_IN_SECONDS)
+#        if lag==0: return 1.0
+#        elif lag>=width: return 0.0
+#        return 1-np.log(lag)/np.log(width)
+#    @staticmethod
+#    def run(timeRange, folderType):
+#        latticeGraph = LatticeGraph(hashtagsLatticeGraphFile%(folderType,'%s_%s'%timeRange), LatticeGraph.typeTemporalCloseness)
+#        latticeGraph.load()
+#        print latticeGraph.graph.number_of_nodes()
+
+GREEDY_LATTICE_SELECTION_MODEL = 'greedy'
+SHARING_PROBABILITY_LATTICE_SELECTION_MODEL = 'sharing_probability'
 
 class Metrics:
     @staticmethod
@@ -167,7 +167,6 @@ EvaluationMetrics = {
                      }
 
 class LatticeSelectionModel(object):
-#    TIME_WINDOW_IN_SECONDS = 5*60
     def __init__(self, id='random', **kwargs):
         self.id = id
         self.params = kwargs['params']
@@ -212,7 +211,6 @@ class LatticeSelectionModel(object):
                 self.params['budget'] = b
                 self.params['timeUnitToPickTargetLattices'] = t
                 FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
-    
     def plotModelWithVaryingTimeUnitToPickTargetLattices(self):
         self.params['evaluationName'] = 'time'
         metricDistributionInTimeUnits = defaultdict(dict)
@@ -385,7 +383,7 @@ class Simulation:
 #        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingBudget()
     @staticmethod
     def varyingBudgetAndTime():
-        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params={}).evaluateByVaringBudgetAndTimeUnits()
+        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params={}).evaluateByVaringBudgetAndTimeUnits()
 #        GreedyLatticeSelectionModel(testingHashtagsFile=Simulation.testingHashtagsFile, params={}).plotVaringBudgetAndTimeUnits()
         
 if __name__ == '__main__':

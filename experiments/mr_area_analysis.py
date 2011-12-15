@@ -146,13 +146,14 @@ def getActiveRegions(timeSeries):
         currentRegion[1], currentRegion[2] = index, occurancesForRegion
         activeRegions.append(currentRegion)
     return activeRegions
-def getOccuranesInHighestActiveRegion(hashtagObject, checkIfItFirstActiveRegion=False, timeUnit=TIME_UNIT_IN_SECONDS):
+def getOccuranesInHighestActiveRegion(hashtagObject, checkIfItFirstActiveRegion=False, timeUnit=TIME_UNIT_IN_SECONDS, maxLengthOfHighestActiveRegion=None):
     occurancesInActiveRegion, timeUnits = [], []
     occurranceDistributionInEpochs = getOccurranceDistributionInEpochs(hashtagObject['oc'], fillInGaps=True)
     if occurranceDistributionInEpochs:
         timeUnits, timeSeries = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))
         hashtagPropagatingRegion = max(getActiveRegions(timeSeries), key=itemgetter(2))
-        validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
+        if not maxLengthOfHighestActiveRegion: validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)]
+        else: validTimeUnits = [timeUnits[i] for i in range(hashtagPropagatingRegion[0], hashtagPropagatingRegion[1]+1)][:maxLengthOfHighestActiveRegion]
         occurancesInActiveRegion = [(p,t) for p,t in hashtagObject['oc'] if GeneralMethods.approximateEpoch(t, timeUnit) in validTimeUnits]
     if not checkIfItFirstActiveRegion: return occurancesInActiveRegion
     else:
@@ -209,7 +210,7 @@ class HashtagsClassifier:
 #        else: return HashtagsClassifier.getId(HashtagsClassifier.getHastagLocalityClassForAllActivityPeriod(hashtagObject), periodicityId)
     @staticmethod
     def getHastagLocalityClassForHighestActivityPeriod(hashtagObject): 
-        occuranesInHighestActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject)
+        occuranesInHighestActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject, maxLengthOfHighestActiveRegion=24)
         if getRadius(zip(*occuranesInHighestActiveRegion)[0])>=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_NON_LOCAL
         else: return HashtagsClassifier.LOCALITY_ID_LOCAL
     @staticmethod
