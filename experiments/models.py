@@ -278,7 +278,6 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
         self.model = {'sharingProbaility': defaultdict(dict), 'hashtagObservingProbability': {}}
         hashtagsObserved = []
         for latticeObject in FileIO.iterateJsonFromFile(self.graphFile):
-            dataToReturn = {'id': latticeObject['id'], 'links': {}}
             latticeHashtagsSet = set(latticeObject['hashtags'])
             hashtagsObserved+=latticeObject['hashtags']
             self.model['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
@@ -369,24 +368,24 @@ class Simulation:
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
     @staticmethod
     def varyingTimeUnitToPickTargetLattices():
-        params = dict(budget=3, timeUnitToPickTargetLattices=6)
+        params = dict(budget=100, timeUnitToPickTargetLattices=6)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
         SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotModelWithVaryingTimeUnitToPickTargetLattices()
-#        LatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
-#        LatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingTimeUnitToPickTargetLattices()
+#        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
+#        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingTimeUnitToPickTargetLattices()
     @staticmethod
     def varyingBudgetToPickTargetLattices():
-        params = dict(budget=3, timeUnitToPickTargetLattices=6)
+        params = dict(budget=100, timeUnitToPickTargetLattices=6)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
-        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotModelWithVaryingBudget()
+#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotModelWithVaryingBudget()
 #        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).evaluateModelWithVaryingBudget(budgetLimit=20)
-#        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingBudget()
+        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingBudget()
     @staticmethod
     def varyingBudgetAndTime():
-        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params={}).evaluateByVaringBudgetAndTimeUnits()
-#        GreedyLatticeSelectionModel(testingHashtagsFile=Simulation.testingHashtagsFile, params={}).plotVaringBudgetAndTimeUnits()
+#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params={}).evaluateByVaringBudgetAndTimeUnits()
+        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params={}).plotVaringBudgetAndTimeUnits()
         
 if __name__ == '__main__':
-    Simulation.varyingBudgetAndTime()
+    Simulation.varyingTimeUnitToPickTargetLattices()
 #    SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), params={})
 #    model.saveModelSimulation()

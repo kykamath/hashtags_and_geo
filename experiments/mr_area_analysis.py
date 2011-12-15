@@ -192,7 +192,7 @@ class HashtagsClassifier:
     
     RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES=500
     PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION=1.0
-    CLASSIFIER_TIME_UNIT_IN_SECONDS = 60*60
+    CLASSIFIER_TIME_UNIT_IN_SECONDS = 5*60
     
     classes = {
                'slow_burst_::_local':0,
@@ -210,7 +210,7 @@ class HashtagsClassifier:
 #        else: return HashtagsClassifier.getId(HashtagsClassifier.getHastagLocalityClassForAllActivityPeriod(hashtagObject), periodicityId)
     @staticmethod
     def getHastagLocalityClassForHighestActivityPeriod(hashtagObject): 
-        occuranesInHighestActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject, maxLengthOfHighestActiveRegion=24)
+        occuranesInHighestActiveRegion = getOccuranesInHighestActiveRegion(hashtagObject)
         if getRadius(zip(*occuranesInHighestActiveRegion)[0])>=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: return HashtagsClassifier.LOCALITY_ID_NON_LOCAL
         else: return HashtagsClassifier.LOCALITY_ID_LOCAL
     @staticmethod
