@@ -78,12 +78,11 @@ class MRGraph(ModifiedMRJob):
                 totalEdgeWeight = sum([d['w'] for _,_,d in graph.edges(data=True)])+0.0
                 for u,v in graph.edges()[:]: graph[u][v]['w']/=totalEdgeWeight
                 yield ep, {'ep': ep, 'graph': my_nx.getDictForGraph(graph)}
-    def groupOccurrencesByEpochReduce(self, key, epochObject):
-        yield key, list(epochObject)
+
     # Tasks
     def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
     def jobsToGetEpochGraph(self): return self.jobsToGetHastagObjectsWithEndingWindow() + \
-                                                [self.mr(mapper=self.groupOccurrencesByEpochMap, mapper_final=self.groupOccurrencesByEpochMapFinal, reducer=self.groupOccurrencesByEpochReduce)]
+                                                [self.mr(mapper=self.groupOccurrencesByEpochMap, mapper_final=self.groupOccurrencesByEpochMapFinal, )]
     def steps(self):
 #        return self.jobsToGetHastagObjectsWithEndingWindow()
         return self.jobsToGetEpochGraph()

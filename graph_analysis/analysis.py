@@ -11,8 +11,8 @@ from graph_analysis.mr_modules import MRGraph
 from graph_analysis.settings import hdfsInputFolder, epochGraphsFile
 
 def temp_analysis():
-    for d in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/training_world/2_11/latticeGraph'):
-        print d.keys()
+    for d in FileIO.iterateJsonFromFile(epochGraphsFile%('%s_%s'%timeRange)+'_bak'):
+        print dict(d).keys()
 
 def getInputFiles(months, folderType='/'): return [hdfsInputFolder+folderType+'/'+str(m) for m in months] 
 def mr_task(timeRange, dataType, mrOutputFolder=None):
@@ -22,5 +22,5 @@ def mr_task(timeRange, dataType, mrOutputFolder=None):
 if __name__ == '__main__':
     timeRange = (2,3)
     dataType = 'world'
-    mr_task(timeRange, dataType)
-#    temp_analysis()
+#    mr_task(timeRange, dataType)
+    temp_analysis()
