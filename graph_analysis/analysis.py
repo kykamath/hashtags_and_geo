@@ -22,5 +22,5 @@ def mr_task(timeRange, dataType, mrOutputFolder=None):
 if __name__ == '__main__':
     timeRange = (2,3)
     dataType = 'world'
-#    mr_task(timeRange, dataType)
-    temp_analysis()
+    mr_task(timeRange, dataType)
+#    temp_analysis()
