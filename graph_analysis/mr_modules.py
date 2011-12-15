@@ -7,18 +7,20 @@ from library.mrjobwrapper import ModifiedMRJob
 import cjson, time
 from library.geo import getLattice, getLatticeLid
 from library.twitter import getDateTimeObjectFromTweetTimestamp
+from library.classes import GeneralMethods
 from collections import defaultdict
 
 
 LATTICE_ACCURACY = 0.145
-MIN_HASHTAG_OCCURENCES = 10
+MIN_HASHTAG_OCCURENCES = 25
+TIME_UNIT_IN_SECONDS = 60*60
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
     l = None
     if 'geo' in data: l = data['geo']
     else: l = data['bb']
-    t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
+    t =  GeneralMethods.approximateEpoch(time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple()), TIME_UNIT_IN_SECONDS)
     point = getLatticeLid(l, LATTICE_ACCURACY)
     if point!='0.0000_0.0000':
         for h in data['h']: yield h.lower(), [point, t]
@@ -30,7 +32,8 @@ def getHashtagWithoutEndingWindow(key, values):
     if occurences:
 #        e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
         numberOfInstances=len(occurences)
-        if numberOfInstances>=MIN_HASHTAG_OCCURENCES: return {'h': key, 't': numberOfInstances, 'oc': sorted(occurences, key=lambda t: t[1])}
+        if numberOfInstances>=MIN_HASHTAG_OCCURENCES: 
+            return {'h': key, 't': numberOfInstances, 'oc': sorted(occurences, key=lambda t: t[1])}
 
 class MRGraph(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
