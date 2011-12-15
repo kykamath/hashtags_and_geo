@@ -61,28 +61,36 @@ class MRGraph(ModifiedMRJob):
         if False: yield # I'm a generator!
         for lid, ep in hashtagObject['oc']: self.epochs[ep].append([lid, hashtagObject['h']])
     def groupOccurrencesByEpochMapFinal(self):
+        for ep, instances in self.epochs.iteritems(): 
+            occurances = dict([(h, map(itemgetter(0), occs)) for h, occs in groupby(instances, key=itemgetter(1))])
+            for h in occurances.keys()[:]: 
+                hashtagsMap = [(lid, len(list(l)))for lid, l in groupby(occurances[h])]
+                occurances[h] = hashtagsMap
+            yield ep, occurances
+    def groupOccurrencesByEpochReduceFinal(self, ep, epochObjects):
         def updateNode(graph, u, w):
             if graph.has_node(u): graph.node[u]['w']+=w
             else: graph.add_node(u, {'w': w})
         def updateEdge(graph, u, v, w):
             if graph.has_edge(u,v): graph.edge[u][v]['w']+=w
             else: graph.add_edge(u, v, {'w': w})
-        graph = nx.Graph()
-        for ep, instances in self.epochs.iteritems(): 
-            occurances = dict([(h, map(itemgetter(0), occs)) for h, occs in groupby(instances, key=itemgetter(1))])
-            for h in occurances.keys()[:]: 
-                hashtagsMap = dict(filter(lambda t: t[1]>=MIN_OCCURANCES_TO_ASSIGN_HASHTAG_TO_A_LOCATION, [(lid, len(list(l)))for lid, l in groupby(occurances[h])]))
-                if hashtagsMap and len(hashtagsMap)>1: 
-                    for u, v in combinations(hashtagsMap,2):  updateNode(graph, u, hashtagsMap[u]), updateNode(graph, v, hashtagsMap[v]), updateEdge(graph, u, v, min([hashtagsMap[u], hashtagsMap[v]]))
-            if graph.edges(): 
-                totalEdgeWeight = sum([d['w'] for _,_,d in graph.edges(data=True)])+0.0
-                for u,v in graph.edges()[:]: graph[u][v]['w']/=totalEdgeWeight
-                yield ep, {'ep': ep, 'graph': my_nx.getDictForGraph(graph)}
-
+        graph, occurrences = nx.Graph(), defaultdict(list)
+        for occDict in epochObjects:
+            for h, occs in occDict.iteritems(): occurrences[h]+=occs
+        for h in occurrences.keys()[:]: 
+            hashtagsMap = dict(filter(lambda l: l[1]>=MIN_OCCURANCES_TO_ASSIGN_HASHTAG_TO_A_LOCATION, [(lid, sum(map(itemgetter(1), l)))for lid, l in groupby(occurrences[h], key=itemgetter(0))]))
+            if hashtagsMap and len(hashtagsMap)>1: 
+                for u, v in combinations(hashtagsMap,2): updateNode(graph, u, hashtagsMap[u]), updateNode(graph, v, hashtagsMap[v]), updateEdge(graph, u, v, min([hashtagsMap[u], hashtagsMap[v]]))
+        if graph.edges(): 
+            totalEdgeWeight = sum([d['w'] for _,_,d in graph.edges(data=True)])+0.0
+            for u,v in graph.edges()[:]: graph[u][v]['w']/=totalEdgeWeight
+            yield ep, {'ep': ep, 'graph': my_nx.getDictForGraph(graph)} 
+#            print 'x'
+#        yield ep, occurrences
     # Tasks
     def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
     def jobsToGetEpochGraph(self): return self.jobsToGetHastagObjectsWithEndingWindow() + \
-                                                [self.mr(mapper=self.groupOccurrencesByEpochMap, mapper_final=self.groupOccurrencesByEpochMapFinal, )]
+                                                [self.mr(mapper=self.groupOccurrencesByEpochMap, mapper_final=self.groupOccurrencesByEpochMapFinal, reducer=self.groupOccurrencesByEpochReduceFinal)]
     def steps(self):
 #        return self.jobsToGetHastagObjectsWithEndingWindow()
         return self.jobsToGetEpochGraph()
