@@ -9,11 +9,16 @@ from library.geo import getLattice, getLatticeLid
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from library.classes import GeneralMethods
 from collections import defaultdict
-
+from itertools import groupby, combinations
+from operator import itemgetter
+import networkx as nx
+from library.graphs import Networkx as my_nx
 
 LATTICE_ACCURACY = 0.145
-MIN_HASHTAG_OCCURENCES = 25
 TIME_UNIT_IN_SECONDS = 60*60
+
+MIN_HASHTAG_OCCURENCES = 10
+MIN_OCCURANCES_TO_ASSIGN_HASHTAG_TO_A_LOCATION = 10
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
@@ -40,6 +45,7 @@ class MRGraph(ModifiedMRJob):
     def __init__(self, *args, **kwargs):
         super(MRGraph, self).__init__(*args, **kwargs)
         self.hashtags = defaultdict(list)
+        self.epochs = defaultdict(list)
     def parse_hashtag_objects(self, key, line):
         if False: yield # I'm a generator!
         for h, d in iterateHashtagObjectInstances(line): self.hashtags[h].append(d)
@@ -49,8 +55,30 @@ class MRGraph(ModifiedMRJob):
     def combine_hashtag_instances_without_ending_window(self, key, values):
         hashtagObject = getHashtagWithoutEndingWindow(key, values)
         if hashtagObject: yield key, hashtagObject 
+    ''' Group buy occurrence per epoch.
+    '''
+    def groupOccurrencesByEpochMap(self, key, hashtagObject):
+        if False: yield # I'm a generator!
+        for lid, ep in hashtagObject['oc']: self.epochs[ep].append([lid, hashtagObject['h']])
+    def groupOccurrencesByEpochMapFinal(self):
+        graph = nx.Graph()
+        for ep, instances in self.epochs.iteritems(): 
+            occurances = dict([(h, map(itemgetter(0), occs)) for h, occs in groupby(instances, key=itemgetter(1))])
+            for h in occurances.keys()[:]: 
+                hashtagsMap = dict(filter(lambda t: t[1]>=MIN_OCCURANCES_TO_ASSIGN_HASHTAG_TO_A_LOCATION, [(lid, len(list(l)))for lid, l in groupby(occurances[h])]))
+                if hashtagsMap and len(hashtagsMap)>1: 
+                    for u, v in combinations(hashtagsMap,2): 
+                        graph.add_node(u, {'w': hashtagsMap[u]}), graph.add_node(v, {'w': hashtagsMap[v]})
+                        graph.add_edge(u, v, {'w': min([hashtagsMap[u], hashtagsMap[v]])})
+            if graph.edges(): yield ep, {'ep': ep, 'graph': my_nx.getDictForGraph(graph)}
+    def groupOccurrencesByEpochReduce(self, key, epochObject):
+        yield key, list(epochObject)
+    # Tasks
     def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
+    def jobsToGetEpochGraph(self): return self.jobsToGetHastagObjectsWithEndingWindow() + \
+                                                [self.mr(mapper=self.groupOccurrencesByEpochMap, mapper_final=self.groupOccurrencesByEpochMapFinal, reducer=self.groupOccurrencesByEpochReduce)]
     def steps(self):
-        return self.jobsToGetHastagObjectsWithEndingWindow()
+#        return self.jobsToGetHastagObjectsWithEndingWindow()
+        return self.jobsToGetEpochGraph()
 if __name__ == '__main__':
     MRGraph.run()
