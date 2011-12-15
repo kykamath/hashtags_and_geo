@@ -121,6 +121,7 @@ def plotHastagClasses(timeRange, folderType):
 #        if hashtagObject['h']=='ripamy':
         classId = HashtagsClassifier.classify(hashtagObject)
         if classId!=None:
+            classId = 1
             outputFile = hashtagsImagesHashtagsClassFolder%folderType+'%s/%s.png'%(classId, hashtagObject['h']); FileIO.createDirectoryForFile(outputFile)
             fileNameIterator = getFileName()
             timeUnits, timeSeries = getTimeUnitsAndTimeSeries(hashtagObject['oc'], timeUnit=HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)
@@ -144,9 +145,9 @@ def plotHastagClasses(timeRange, folderType):
 #                        timeUnits=list(timeUnits)+[timeUnits[-1]+(i+1)*HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS for i in range(difference)]
 #                        timeSeries=list(timeSeries)+[0 for i in range(difference)]
 #                    print len(timeUnits[:24]), len(timeSeries[:24])
-                    plt.plot_date([datetime.datetime.fromtimestamp(t) for t in timeUnits], normalize(timeSeries), '-o', c=color)
+                    plt.plot_date([datetime.datetime.fromtimestamp(t) for t in timeUnits], timeSeries, '-o', c=color)
                     subRangeId+=1
-                plt.ylim(ymax=1)
+#                plt.ylim(ymax=1)
                 plt.setp(ax.get_xticklabels(), rotation=10, fontsize=7)
             
                 ax=plt.subplot(313)
@@ -171,8 +172,8 @@ def plotHastagClasses(timeRange, folderType):
                     sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw=0, alpha=1.0)
                     plt.colorbar(sc)
                 else: sc = plotPointsOnWorldMap(points, c='m', lw=0)
-                plt.title(hashtagObject['h']+ '(%d)'%len(timeUnits))
-                plt.show()
+                plt.title(hashtagObject['h']+ '(%d)'%len(occurancesGroupedByLattice))
+#                plt.show()
                 try:
                     plt.savefig(outputFile); plt.clf()
                 except: pass

@@ -266,6 +266,7 @@ class GreedyLatticeSelectionModel(LatticeSelectionModel):
     '''
     def __init__(self, **kwargs): super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, **kwargs)
     def selectTargetLattices(self, currentTimeUnit, hashtag):return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0][:self.params['budget']]
+
 class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with highest probability:
         score(l1) = P(l2)*P(l1|l2) + P(l3)*P(l1|l3) ... (where l2 and l3 are observed).
@@ -285,6 +286,7 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
                 neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
                 neighborHashtagsSet = set(neighborHashtags)
                 self.model['sharingProbaility'][latticeObject['id']][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
+            self.model['sharingProbaility'][latticeObject['id']][latticeObject['id']]=1.0
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in self.model['hashtagObservingProbability'].keys()[:]: self.model['hashtagObservingProbability'][lattice] = len(self.model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
     def selectTargetLattices(self, currentTimeUnit, hashtag): 
@@ -369,8 +371,8 @@ class Simulation:
     @staticmethod
     def varyingTimeUnitToPickTargetLattices():
         params = dict(budget=100, timeUnitToPickTargetLattices=6)
-#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
-        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotModelWithVaryingTimeUnitToPickTargetLattices()
+        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
+#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotModelWithVaryingTimeUnitToPickTargetLattices()
 #        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
 #        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingTimeUnitToPickTargetLattices()
     @staticmethod
