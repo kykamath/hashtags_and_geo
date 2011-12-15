@@ -4,9 +4,9 @@ Created on Dec 15, 2011
 @author: kykamath
 '''
 from library.mrjobwrapper import runMRJob
-from graph_analysis.mr_modules import MRGraph
+from mr_modules import MRGraph
 from settings import hashtagsFile
-from graph_analysis.settings import hdfsInputFolder
+from settings import hdfsInputFolder
 
 def getInputFiles(months, folderType='/'): return [hdfsInputFolder+folderType+'/'+str(m) for m in months] 
 def mr_task(timeRange, dataType, mrOutputFolder=None):
