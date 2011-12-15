@@ -3,7 +3,7 @@ Created on Dec 15, 2011
 
 @author: kykamath
 '''
-import sys
+import sys, datetime
 sys.path.append('../')
 from library.mrjobwrapper import runMRJob
 from library.file_io import FileIO
@@ -11,8 +11,11 @@ from graph_analysis.mr_modules import MRGraph
 from graph_analysis.settings import hdfsInputFolder, epochGraphsFile
 
 def temp_analysis():
+    epochs = []
     for d in FileIO.iterateJsonFromFile(epochGraphsFile%('%s_%s'%timeRange)):
-        print d.keys()
+        epochs.append(d['ep'])
+    for e in sorted(epochs):
+        print datetime.datetime.fromtimestamp(e)
 
 def getInputFiles(months, folderType='/'): return [hdfsInputFolder+folderType+'/'+str(m) for m in months] 
 def mr_task(timeRange, dataType, mrOutputFolder=None):
