@@ -24,6 +24,8 @@ from library.graphs import Networkx as my_nx
 from library.graphs import clusterUsingAffinityPropagation
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import numpy as np
+from library.plotting import splineSmooth
 
 #    n_clusters_ = len(cluster_centers_indices)
 
@@ -142,19 +144,31 @@ class LocationGraphs:
             for j, intervalInSeconds in enumerate(range(0, timeDifference, int(timeDifference/numberOfPoints))):
                 graph, runningTime = LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), intervalInSeconds, linear=linear, returnTimeDifferenceOnly=True)
                 print graphType, linear, j, runningTime
-                dataToReturn.append([intervalInSeconds, runningTime])
+                dataToReturn.append([intervalInSeconds, runningTime, graph.number_of_nodes()])
             return dataToReturn
-#        getRunningTime(graphs, True)
-#        exit()
         graphFile = runningTimesFolder%graphType
         print graphFile
-        GeneralMethods.runCommand(graphFile)
+        GeneralMethods.runCommand('rm -rf %s'%graphFile)
         for linear in [True, False]: FileIO.writeToFileAsJson({'linear': linear, 'running_time': getRunningTime(graphs, linear)}, graphFile)
+    @staticmethod
+    def plotRunningTime(graphType):
+        for data in FileIO.iterateJsonFromFile(runningTimesFolder%graphType):
+            dataX, dataY = zip(*data['running_time'])
+            dataX = map(lambda x: x/(24*60*60), dataX)
+            label, marker = 'linear', 'o'
+            if not data['linear']: label, marker = 'logarithmic', 'x'
+            dataX, dataY = splineSmooth(dataX, dataY)
+            plt.plot(dataX, dataY, marker=marker, label=label, lw=2)
+        plt.legend(loc=2)
+        plt.title('Running time comparison')
+        plt.xlabel('Interval width (days)')
+        plt.ylabel('Running Time (s)')
+        plt.show()
     @staticmethod
     def run():
         timeRange, dataType, area = (5,11), 'world', 'world'
-        graphs = getGraphs(area, timeRange)
-        LocationGraphs.runningTimeAnalysis(graphs, 'location')
+        LocationGraphs.runningTimeAnalysis(getGraphs(area, timeRange), 'location')
+#        LocationGraphs.plotRunningTime('location')
     
     
 def getGraphs(area, timeRange): return sorted([(d['ep'], my_nx.getGraphFromDict(d['graph']))for d in FileIO.iterateJsonFromFile(epochGraphsFile%(area, '%s_%s'%timeRange))])
@@ -183,5 +197,5 @@ if __name__ == '__main__':
     
 #    mr_task(timeRange, dataType, area)
 #    temp_analysis()
-#    LocationGraphs.run()
-    RandomGraphGenerator.run()
+    LocationGraphs.run()
+#    RandomGraphGenerator.run()
