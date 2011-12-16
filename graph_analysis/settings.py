@@ -3,6 +3,11 @@ Created on Dec 15, 2011
 
 @author: kykamath
 '''
+
+# Boundaries
+us_boundary = [[24.527135,-127.792969], [49.61071,-59.765625]]
+
+# HDFS
 hdfsInputFolder = 'hdfs:///user/kykamath/geo/hashtags/'
 
 # Analysis
