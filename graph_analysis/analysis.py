@@ -72,7 +72,7 @@ class RandomGraphGenerator:
         graphsToReturn = []
         for i in range(100): 
             print n, i
-            graphsToReturn.append([i*TIME_UNIT_IN_SECONDS, nx.to_dict_of_dicts(erdos_renyi_graph(n,p))])
+            graphsToReturn.append([i*TIME_UNIT_IN_SECONDS, my_nx.getDictForGraph(erdos_renyi_graph(n,p))])
         return graphsToReturn
     @staticmethod
     def run():
