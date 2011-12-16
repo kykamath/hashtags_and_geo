@@ -45,6 +45,13 @@ def getHashtagWithoutEndingWindow(key, values):
         if numberOfInstances>=MIN_HASHTAG_OCCURENCES: 
             return {'h': key, 't': numberOfInstances, 'oc': sorted(occurences, key=lambda t: t[1])}
 
+def updateNode(graph, u, w):
+    if graph.has_node(u): graph.node[u]['w']+=w
+    else: graph.add_node(u, {'w': w})
+def updateEdge(graph, u, v, w):
+    if graph.has_edge(u,v): graph.edge[u][v]['w']+=w
+    else: graph.add_edge(u, v, {'w': w})
+
 class MRGraph(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
@@ -73,19 +80,17 @@ class MRGraph(ModifiedMRJob):
                 occurances[h] = hashtagsMap
             yield ep, occurances
     def groupOccurrencesByEpochReduceFinal(self, ep, epochObjects):
-        def updateNode(graph, u, w):
-            if graph.has_node(u): graph.node[u]['w']+=w
-            else: graph.add_node(u, {'w': w})
-        def updateEdge(graph, u, v, w):
-            if graph.has_edge(u,v): graph.edge[u][v]['w']+=w
-            else: graph.add_edge(u, v, {'w': w})
         graph, occurrences = nx.Graph(), defaultdict(list)
         for occDict in epochObjects:
             for h, occs in occDict.iteritems(): occurrences[h]+=occs
         for h in occurrences.keys()[:]: 
             hashtagsMap = dict(filter(lambda l: l[1]>=MIN_OCCURANCES_TO_ASSIGN_HASHTAG_TO_A_LOCATION, [(lid, sum(map(itemgetter(1), l)))for lid, l in groupby(occurrences[h], key=itemgetter(0))]))
             if hashtagsMap and len(hashtagsMap)>1: 
-                for u, v in combinations(hashtagsMap,2): updateNode(graph, u, hashtagsMap[u]), updateNode(graph, v, hashtagsMap[v]), updateEdge(graph, u, v, min([hashtagsMap[u], hashtagsMap[v]]))
+                nodesUpdated = set()
+                for u, v in combinations(hashtagsMap,2):
+                    if u not in nodesUpdated: updateNode(graph, u, hashtagsMap[u]), nodesUpdated.add(u)
+                    if v not in nodesUpdated: updateNode(graph, v, hashtagsMap[v]), nodesUpdated.add(v)
+                    updateEdge(graph, u, v, min([hashtagsMap[u], hashtagsMap[v]]))
         if graph.edges(): 
             totalEdgeWeight = sum([d['w'] for _,_,d in graph.edges(data=True)])+0.0
             for u,v in graph.edges()[:]: graph[u][v]['w']/=totalEdgeWeight
