@@ -5,7 +5,8 @@ Created on Dec 15, 2011
 '''
 import sys, datetime
 import math
-from networkx.generators.random_graphs import erdos_renyi_graph
+from networkx.generators.random_graphs import erdos_renyi_graph,\
+    fast_gnp_random_graph
 sys.path.append('../')
 from library.geo import getLocationFromLid, plotPointsOnWorldMap,\
     plotPointsOnUSMap, isWithinBoundingBox
@@ -67,16 +68,25 @@ def combineGraphList(graphs):
 
 class RandomGraphGenerator:
     fast_gnp_random_graph = 'fast_gnp_random_graph'
+    erdos_renyi_graph='erdos_renyi_graph'
     @staticmethod
-    def gnpGraphGenerator(n,p=0.3):
+    def fastGnp(n,p=0.3):
         graphsToReturn = []
         for i in range(100): 
-            print n, i
+            print RandomGraphGenerator.fast_gnp_random_graph, n, i
+            graphsToReturn.append([i*TIME_UNIT_IN_SECONDS, my_nx.getDictForGraph(fast_gnp_random_graph(n,p))])
+        return graphsToReturn
+    @staticmethod
+    def erdosRenyi(n,p=0.3):
+        graphsToReturn = []
+        for i in range(100): 
+            print RandomGraphGenerator.erdos_renyi_graph, n, i
             graphsToReturn.append([i*TIME_UNIT_IN_SECONDS, my_nx.getDictForGraph(erdos_renyi_graph(n,p))])
         return graphsToReturn
     @staticmethod
     def run():
-        for graphType, method in [(RandomGraphGenerator.fast_gnp_random_graph, RandomGraphGenerator.gnpGraphGenerator)]:
+        for graphType, method in [(RandomGraphGenerator.fast_gnp_random_graph, RandomGraphGenerator.fastGnp), \
+                                  (RandomGraphGenerator.erdos_renyi_graph, RandomGraphGenerator.erdosRenyi)]:
             for i in range(1, 11): FileIO.writeToFileAsJson({'n': 100*i, 'graphs': method(100*i)}, randomGraphsFolder%graphType)
 
 class LocationGraphs:
