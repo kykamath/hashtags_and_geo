@@ -78,8 +78,8 @@ def mr_task(timeRange, dataType, area):
     runMRJob(MRGraph, epochGraphsFile%(area, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), dataType), jobconf={'mapred.reduce.tasks':160})   
 
 if __name__ == '__main__':
-#    timeRange, dataType, area = (5,6), 'world', 'us'
-    timeRange, dataType, area = (5,6), 'world', 'world'
+    timeRange, dataType, area = (5,6), 'world', 'us'
+#    timeRange, dataType, area = (5,6), 'world', 'world'
     
     mr_task(timeRange, dataType, area)
 #    temp_analysis()
