@@ -7,5 +7,5 @@ hdfsInputFolder = 'hdfs:///user/kykamath/geo/hashtags/'
 
 # Analysis
 hashtagsAnalysisFolder = '/mnt/chevron/kykamath/data/geo/hashtags/temporal_graphs/analysis/'
-hashtagsFile = hashtagsAnalysisFolder+'%s/hashtags'
-epochGraphsFile = hashtagsAnalysisFolder+'%s/epochGraphs'
+hashtagsFile = hashtagsAnalysisFolder+'%s/%s/hashtags'
+epochGraphsFile = hashtagsAnalysisFolder+'%s/%s/epochGraphs'

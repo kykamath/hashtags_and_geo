@@ -5,7 +5,7 @@ Created on Dec 15, 2011
 '''
 from library.mrjobwrapper import ModifiedMRJob
 import cjson, time
-from library.geo import getLattice, getLatticeLid
+from library.geo import getLattice, getLatticeLid, isWithinBoundingBox
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from library.classes import GeneralMethods
 from collections import defaultdict
@@ -17,8 +17,11 @@ from library.graphs import Networkx as my_nx
 LATTICE_ACCURACY = 0.145
 TIME_UNIT_IN_SECONDS = 24*60*60
 
-MIN_HASHTAG_OCCURENCES = 10
-MIN_OCCURANCES_TO_ASSIGN_HASHTAG_TO_A_LOCATION = 5
+MIN_HASHTAG_OCCURENCES = 1
+MIN_OCCURANCES_TO_ASSIGN_HASHTAG_TO_A_LOCATION = 1
+
+BOUNDARY = [[24.527135,-127.792969], [49.61071,-59.765625]] #US
+#BOUNDARY = [[-90,-180], [90, 180]] # World
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
@@ -26,9 +29,10 @@ def iterateHashtagObjectInstances(line):
     if 'geo' in data: l = data['geo']
     else: l = data['bb']
     t =  GeneralMethods.approximateEpoch(time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple()), TIME_UNIT_IN_SECONDS)
-    point = getLatticeLid(l, LATTICE_ACCURACY)
-    if point!='0.0000_0.0000':
-        for h in data['h']: yield h.lower(), [point, t]
+    if isWithinBoundingBox(l, BOUNDARY):
+        point = getLatticeLid(l, LATTICE_ACCURACY)
+        if point!='0.0000_0.0000':
+            for h in data['h']: yield h.lower(), [point, t]
     
 def getHashtagWithoutEndingWindow(key, values):
     occurences = []
