@@ -4,10 +4,10 @@ Created on Dec 15, 2011
 @author: kykamath
 '''
 import sys, datetime
+sys.path.append('../')
 from library.geo import getLocationFromLid, plotPointsOnWorldMap,\
     plotPointsOnUSMap, isWithinBoundingBox
 from library.classes import GeneralMethods
-sys.path.append('../')
 from library.mrjobwrapper import runMRJob
 from itertools import groupby
 from library.file_io import FileIO
