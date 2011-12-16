@@ -15,3 +15,4 @@ hashtagsAnalysisFolder = '/mnt/chevron/kykamath/data/geo/hashtags/temporal_graph
 hashtagsFile = hashtagsAnalysisFolder+'%s/%s/hashtags'
 epochGraphsFile = hashtagsAnalysisFolder+'%s/%s/epochGraphs'
 runningTimesFolder = hashtagsAnalysisFolder+'runningTimes/%s'
+randomGraphsFolder = hashtagsAnalysisFolder+'random_graphs/%s'

@@ -5,6 +5,7 @@ Created on Dec 15, 2011
 '''
 import sys, datetime
 import math
+from networkx.generators.random_graphs import erdos_renyi_graph
 sys.path.append('../')
 from library.geo import getLocationFromLid, plotPointsOnWorldMap,\
     plotPointsOnUSMap, isWithinBoundingBox
@@ -15,7 +16,7 @@ from library.file_io import FileIO
 from graph_analysis.mr_modules import MRGraph, TIME_UNIT_IN_SECONDS, updateNode,\
     updateEdge
 from graph_analysis.settings import hdfsInputFolder, epochGraphsFile,\
-    hashtagsFile, us_boundary, runningTimesFolder
+    hashtagsFile, us_boundary, runningTimesFolder, randomGraphsFolder
 import networkx as nx
 from operator import itemgetter
 from library.graphs import Networkx as my_nx
@@ -63,6 +64,20 @@ def combineGraphList(graphs):
             updateEdge(graph, u, v, data['w'])
     for g in graphs: addToG(g)
     return graph
+
+class RandomGraphGenerator:
+    fast_gnp_random_graph = 'fast_gnp_random_graph'
+    @staticmethod
+    def gnpGraphGenerator(n,p=0.3):
+        graphsToReturn = []
+        for i in range(100): 
+            print n, i
+            graphsToReturn.append([i*TIME_UNIT_IN_SECONDS, nx.to_dict_of_dicts(erdos_renyi_graph(n,p))])
+        return graphsToReturn
+    @staticmethod
+    def run():
+        for graphType, method in [(RandomGraphGenerator.fast_gnp_random_graph, RandomGraphGenerator.gnpGraphGenerator)]:
+            for i in range(1, 11): FileIO.writeToFileAsJson({'n': 100*i, 'graphs': method(100*i)}, randomGraphsFolder%graphType)
 
 class LocationGraphs:
     @staticmethod
@@ -158,4 +173,5 @@ if __name__ == '__main__':
     
 #    mr_task(timeRange, dataType, area)
 #    temp_analysis()
-    LocationGraphs.run()
+#    LocationGraphs.run()
+    RandomGraphGenerator.run()
