@@ -4,6 +4,7 @@ Created on Dec 15, 2011
 @author: kykamath
 '''
 import sys, datetime
+import math
 sys.path.append('../')
 from library.geo import getLocationFromLid, plotPointsOnWorldMap,\
     plotPointsOnUSMap, isWithinBoundingBox
@@ -60,12 +61,39 @@ def linearCombineGraphs(graphMap, startingTime, intervalInSeconds):
     graphsToCombine = [graphMap[id] for id in graphIdsToCombine if id in graphMap]
     return reduce(combine,graphsToCombine[1:],graphsToCombine[0])
 
+def getLogarithmicGraphId(startingGraphId, graphId): return (graphId-startingGraphId)/TIME_UNIT_IN_SECONDS
+def logarithmicCombineGraphs(graphMap, startingGraphId, startingTime, intervalInSeconds):
+    print startingGraphId, startingTime, intervalInSeconds
+    if intervalInSeconds%TIME_UNIT_IN_SECONDS==0: numberOfGraphs = int(intervalInSeconds/TIME_UNIT_IN_SECONDS)
+    else: numberOfGraphs = int(intervalInSeconds/TIME_UNIT_IN_SECONDS)+1
+    graphId = GeneralMethods.approximateEpoch(GeneralMethods.getEpochFromDateTimeObject(startingTime), TIME_UNIT_IN_SECONDS)
+    print getLogarithmicGraphId(startingGraphId, graphId)
+def updateLogarithmicGraphs(graphMap):
+    print 'Building logarithmic graphs... ',
+    startingGraphId = sorted(graphMap.keys())[0]
+    for id in sorted(graphMap.keys()):
+        i = getLogarithmicGraphId(startingGraphId, id)+1
+        if i%2==0: 
+            indices = map(lambda j: j*2, filter(lambda j: i%(2**j)==0, range(1, int(math.log(i+1,2))+1)))
+            for graphIdsToCombine in [map(lambda j: id-j*TIME_UNIT_IN_SECONDS, range(index)) for index in indices]:
+                graphsToCombine = [graphMap[j] for j in graphIdsToCombine if j in graphMap]
+                graphMap['%s_%s'%(id, len(graphIdsToCombine))] = reduce(combine,graphsToCombine[1:],graphsToCombine[0])
+    print 'Completed!!'
+    return startingGraphId
+    
 def getGraphs(area, timeRange): return sorted([(d['ep'], my_nx.getGraphFromDict(d['graph']))for d in FileIO.iterateJsonFromFile(epochGraphsFile%(area, '%s_%s'%timeRange))])
 def temp_analysis():
     graphMap = dict(getGraphs(area, timeRange))
+    print len(graphMap)
+#    startingGraphId = updateLogarithmicGraphs(graphMap)
+    startingGraphId = sorted(graphMap)[0]
+    print len(graphMap)
     startingTime, intervalInSeconds = datetime.datetime(2011,5,5,6,7,30), 24*TIME_UNIT_IN_SECONDS
-    graph = linearCombineGraphs(graphMap, startingTime, intervalInSeconds)
-    print clusterUsingAffinityPropagation(graph)
+#    graph = linearCombineGraphs(graphMap, startingTime, intervalInSeconds)
+    graph = logarithmicCombineGraphs(graphMap, startingGraphId, startingTime, intervalInSeconds)
+
+#    print clusterUsingAffinityPropagation(graph)
+
 #    for i, (ep, graph) in enumerate(getGraphs(area, timeRange)):
 #        print datetime.datetime.fromtimestamp(ep)
 #        plotLocationClustersOnMap(graph)
@@ -78,8 +106,8 @@ def mr_task(timeRange, dataType, area):
     runMRJob(MRGraph, epochGraphsFile%(area, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), dataType), jobconf={'mapred.reduce.tasks':160})   
 
 if __name__ == '__main__':
-#    timeRange, dataType, area = (5,6), 'world', 'us'
-    timeRange, dataType, area = (5,6), 'world', 'world'
+    timeRange, dataType, area = (5,6), 'world', 'us'
+#    timeRange, dataType, area = (5,6), 'world', 'world'
     
-    mr_task(timeRange, dataType, area)
-#    temp_analysis()
+#    mr_task(timeRange, dataType, area)
+    temp_analysis()
