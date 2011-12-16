@@ -92,8 +92,8 @@ class MRGraph(ModifiedMRJob):
                     if v not in nodesUpdated: updateNode(graph, v, hashtagsMap[v]), nodesUpdated.add(v)
                     updateEdge(graph, u, v, min([hashtagsMap[u], hashtagsMap[v]]))
         if graph.edges(): 
-            totalEdgeWeight = sum([d['w'] for _,_,d in graph.edges(data=True)])+0.0
-            for u,v in graph.edges()[:]: graph[u][v]['w']/=totalEdgeWeight
+#            totalEdgeWeight = sum([d['w'] for _,_,d in graph.edges(data=True)])+0.0
+#            for u,v in graph.edges()[:]: graph[u][v]['w']/=totalEdgeWeight
             yield ep, {'ep': ep, 'graph': my_nx.getDictForGraph(graph)} 
     # Tasks
     def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
