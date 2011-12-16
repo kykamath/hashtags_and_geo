@@ -96,7 +96,7 @@ class LocationGraphs:
         print 'Completed!!'
         return startingGraphId
     @staticmethod
-    def runningTimeAnalysis(graphs, graphType, numberOfPoints=5):
+    def runningTimeAnalysis(graphs, graphType, numberOfPoints=50):
         def getRunningTime(graphs, linear):
             graphMap = dict(graphs)
             startingGraphId, endingGraphId = min(graphMap.keys()), max(graphMap.keys())
