@@ -67,7 +67,21 @@ def logarithmicCombineGraphs(graphMap, startingGraphId, startingTime, intervalIn
     if intervalInSeconds%TIME_UNIT_IN_SECONDS==0: numberOfGraphs = int(intervalInSeconds/TIME_UNIT_IN_SECONDS)
     else: numberOfGraphs = int(intervalInSeconds/TIME_UNIT_IN_SECONDS)+1
     graphId = GeneralMethods.approximateEpoch(GeneralMethods.getEpochFromDateTimeObject(startingTime), TIME_UNIT_IN_SECONDS)
-    print getLogarithmicGraphId(startingGraphId, graphId)
+    
+    currentValue = start = getLogarithmicGraphId(startingGraphId, graphId)
+    stop = start-numberOfGraphs
+    if stop<0: stop=0
+    graphIdsToCombine = []
+    while currentValue>stop:
+        if currentValue%2==0: 
+            indices = map(lambda j: j*2, filter(lambda j: currentValue%(2**j)==0, range(1, int(math.log(currentValue+1,2))+1)))
+            for graphIdsToCombine in [map(lambda j: id-j*TIME_UNIT_IN_SECONDS, range(index)) for index in indices]:
+                graphsToCombine = [graphMap[j] for j in graphIdsToCombine if j in graphMap]
+                graphMap['%s_%s'%(id, len(graphIdsToCombine))] = reduce(combine,graphsToCombine[1:],graphsToCombine[0])
+        else: graphIdsToCombine.append(graphId-(start-currentValue)*TIME_UNIT_IN_SECONDS)
+    
+    print start, stop
+    
 def updateLogarithmicGraphs(graphMap):
     print 'Building logarithmic graphs... ',
     startingGraphId = sorted(graphMap.keys())[0]
