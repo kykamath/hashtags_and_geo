@@ -81,5 +81,5 @@ if __name__ == '__main__':
     timeRange, dataType, area = (5,6), 'world', 'us'
 #    timeRange, dataType, area = (5,6), 'world', 'world'
     
-#    mr_task(timeRange, dataType, area)
-    temp_analysis()
+    mr_task(timeRange, dataType, area)
+#    temp_analysis()
