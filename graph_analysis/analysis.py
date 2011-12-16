@@ -49,9 +49,20 @@ def plotLocationClustersOnMap(graph):
             m.drawgreatcircle(u[1],u[0],v[1],v[0],color=color, alpha=0.5)
     plt.show()
 
-def combine(g1, g2):
-    for u,v,data in g2.edges(data=True): updateNode(g1, u, g2.node[u]['w']), updateNode(g1, v, g2.node[v]['w']), updateEdge(g1, u, v, data['w'])
-    return g1
+#def combine(g1, g2):
+#    for u,v,data in g2.edges(data=True): updateNode(g1, u, g2.node[u]['w']), updateNode(g1, v, g2.node[v]['w']), updateEdge(g1, u, v, data['w'])
+#    return g1
+
+def combineGraphList(graphs):
+    graph = nx.Graph()
+    def addToG(g):
+        nodesUpdated = set()
+        for u,v,data in g.edges(data=True): 
+            if u not in nodesUpdated: updateNode(graph, u, g.node[u]['w']), nodesUpdated.add(u)
+            if v not in nodesUpdated: updateNode(graph, v, g.node[v]['w']), nodesUpdated.add(v)
+            updateEdge(graph, u, v, data['w'])
+    for g in graphs: addToG(g)
+    return graph
 
 class LocationGraphs:
     @staticmethod
@@ -80,7 +91,7 @@ class LocationGraphs:
             currentCollectedGraphs+=index
         graphIdsToCombine = sorted(graphIdsToCombine, key=lambda id:int(id.split('_')[1]), reverse=True)
         graphsToCombine = [graphMap[id] for id in graphIdsToCombine]
-        return reduce(combine,graphsToCombine[1:],graphsToCombine[0])
+        return combineGraphList(graphsToCombine)
     @staticmethod
     def updateLogarithmicGraphs(graphMap):
         print 'Building logarithmic graphs... ',
@@ -91,7 +102,7 @@ class LocationGraphs:
                 indices = map(lambda j: 2**j, filter(lambda j: i%(2**j)==0, range(1, int(math.log(i+1,2))+1)))
                 for graphIdsToCombine in [map(lambda j: graphId-j*TIME_UNIT_IN_SECONDS, range(index)) for index in indices]:
                     graphsToCombine = [graphMap[j] for j in graphIdsToCombine if j in graphMap]
-                    graphMap['%s_%s'%(graphId, len(graphIdsToCombine))] = reduce(combine,graphsToCombine[1:],graphsToCombine[0])
+                    graphMap['%s_%s'%(graphId, len(graphIdsToCombine))] = combineGraphList(graphsToCombine)
             graphMap['%s_%s'%(graphId, 1)] = graphMap[graphId]; del graphMap[graphId]
         print 'Completed!!'
         return startingGraphId
@@ -108,6 +119,8 @@ class LocationGraphs:
                 print graphType, linear, j, runningTime
                 dataToReturn.append([intervalInSeconds, runningTime])
             return dataToReturn
+#        getRunningTime(graphs, True)
+#        exit()
         graphFile = runningTimesFolder%graphType
         print graphFile
         GeneralMethods.runCommand(graphFile)
