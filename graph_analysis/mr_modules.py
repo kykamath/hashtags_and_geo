@@ -21,8 +21,8 @@ TIME_UNIT_IN_SECONDS = 6*60*60
 MIN_HASHTAG_OCCURENCES = 5
 MIN_OCCURANCES_TO_ASSIGN_HASHTAG_TO_A_LOCATION = 3
 
-BOUNDARY = [[24.527135,-127.792969], [49.61071,-59.765625]] #US
-#BOUNDARY = [[-90,-180], [90, 180]] # World
+#BOUNDARY = [[24.527135,-127.792969], [49.61071,-59.765625]] #US
+BOUNDARY = [[-90,-180], [90, 180]] # World
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
@@ -90,8 +90,6 @@ class MRGraph(ModifiedMRJob):
             totalEdgeWeight = sum([d['w'] for _,_,d in graph.edges(data=True)])+0.0
             for u,v in graph.edges()[:]: graph[u][v]['w']/=totalEdgeWeight
             yield ep, {'ep': ep, 'graph': my_nx.getDictForGraph(graph)} 
-#            print 'x'
-#        yield ep, occurrences
     # Tasks
     def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
     def jobsToGetEpochGraph(self): return self.jobsToGetHastagObjectsWithEndingWindow() + \
