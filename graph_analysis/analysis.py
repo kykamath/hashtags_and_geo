@@ -83,7 +83,7 @@ def plotLocationClustersOnMap(graph):
 #            graph.add_edge(u, v)
 #    return graph
 
-def combineGraphList(graphs, edgesToKeep=0.25):
+def combineGraphList(graphs, edgesToKeep=1.0):
 #    graph = nx.Graph()
     graph = graphs[0].copy()
     def addToG(g):
@@ -93,8 +93,8 @@ def combineGraphList(graphs, edgesToKeep=0.25):
             if v not in nodesUpdated: updateNode(graph, v, g.node[v]['w']), nodesUpdated.add(v)
             updateEdge(graph, u, v, data['w'])
     for g in graphs[1:]: addToG(g)
-    edgesToRemove = sorted([(u,v, data['w']) for u,v,data in graph.edges(data=True)], key=itemgetter(2))[:int(graph.number_of_edges()*(1-edgesToKeep))]
-    for u,v,_ in edgesToRemove: graph.remove_edge(u,v)
+#    edgesToRemove = sorted([(u,v, data['w']) for u,v,data in graph.edges(data=True)], key=itemgetter(2))[:int(graph.number_of_edges()*(1-edgesToKeep))]
+#    for u,v,_ in edgesToRemove: graph.remove_edge(u,v)
     return graph
 
 class RandomGraphGenerator:
@@ -244,7 +244,7 @@ class LocationGraphs:
         for data in FileIO.iterateJsonFromFile(runningTimesFolder%graphType):
             label = 'linear'
             if not data['linear']: label = 'logarithmic'
-            for iterationData in data['running_time']:
+            for iterationData in data['analysis']:
                 intervalInSecondsToClusters[iterationData['intervalInSeconds']][label] = iterationData['clusters']
         for interval in intervalInSecondsToClusters:
             linearClusters = [(id, set(cl)) for id, cl in intervalInSecondsToClusters[interval]['linear']]
@@ -261,18 +261,6 @@ class LocationGraphs:
             labels_true, labels_pred = zip(*nodeToClusterIdMap.values())
             from sklearn import metrics
             print metrics.adjusted_rand_score(labels_true, labels_pred)
-#        print intervalInSecondsToClusters.keys()
-#            dataX, dataY = zip(*[(d['intervalInSeconds'], d['runningTime']) for d in data['running_time']])
-#            dataX = map(lambda x: x/(24*60*60), dataX)
-#            label, marker = 'linear', 'o'
-#            if not data['linear']: label, marker = 'logarithmic', 'x'
-##            dataX, dataY = splineSmooth(dataX, dataY)
-#            plt.plot(dataX, dataY, marker=marker, label=label, lw=2)
-#        plt.legend(loc=2)
-#        plt.title('Running time comparison')
-#        plt.xlabel('Interval width (days)')
-#        plt.ylabel('Running Time (s)')
-#        plt.show()
     @staticmethod
     def run():
         timeRange, dataType, area = (5,6), 'world', 'world'
