@@ -247,9 +247,20 @@ class LocationGraphs:
             for iterationData in data['running_time']:
                 intervalInSecondsToClusters[iterationData['intervalInSeconds']][label] = iterationData['clusters']
         for interval in intervalInSecondsToClusters:
-            linearClusters = intervalInSecondsToClusters[interval]['linear']
-            logarithmicClusters = intervalInSecondsToClusters[interval]['logarithmic']
-            print interval
+            linearClusters = [(id, set(cl)) for id, cl in intervalInSecondsToClusters[interval]['linear']]
+            logarithmicClusters = [(id, set(cl)) for id, cl in intervalInSecondsToClusters[interval]['logarithmic']]
+            nodeToClusterIdMap = dict([(n, [id]) for id, cl in intervalInSecondsToClusters[interval]['linear'] for n in cl])
+            logToLinearClusterMap = {}
+            for logarithmicClusterId, logarithmicCluster in logarithmicClusters:
+                linearClusterId, linearCluster = max(linearClusters, key=lambda t: len(t[1].intersection(logarithmicCluster)))
+                score = len(linearCluster.intersection(logarithmicCluster))/float(min(len(linearCluster), len(logarithmicCluster)))
+                if score>=0.5:
+                    logToLinearClusterMap[logarithmicClusterId]=(linearClusterId,  len(linearCluster.intersection(logarithmicCluster)), len(linearCluster), len(logarithmicCluster))
+                    for n in logarithmicCluster: nodeToClusterIdMap[n].append(linearClusterId)
+            nodeToClusterIdMap = dict(filter(lambda l: len(l[1])>1, nodeToClusterIdMap.iteritems()))
+            labels_true, labels_pred = zip(*nodeToClusterIdMap.values())
+            from sklearn import metrics
+            print metrics.adjusted_rand_score(labels_true, labels_pred)
 #        print intervalInSecondsToClusters.keys()
 #            dataX, dataY = zip(*[(d['intervalInSeconds'], d['runningTime']) for d in data['running_time']])
 #            dataX = map(lambda x: x/(24*60*60), dataX)
@@ -290,7 +301,7 @@ if __name__ == '__main__':
     timeRange, dataType, area = (5,8), 'world', 'world'
 #    timeRange, dataType, area = (5,11), 'world', 'world'
     
-    mr_task(timeRange, dataType, area)
+#    mr_task(timeRange, dataType, area)
 #    temp_analysis()
-#    LocationGraphs.run()
+    LocationGraphs.run()
 #    RandomGraphGenerator.run()
