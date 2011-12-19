@@ -203,7 +203,7 @@ class LocationGraphs:
         print 'Completed!!'
         return startingGraphId
     @staticmethod
-    def runningTimeAnalysis(graphs, graphType, numberOfPoints=50):
+    def runningTimeAnalysis(graphs, graphType, numberOfPoints=10):
         def getRunningTime(graphs, linear):
             graphMap = dict(graphs)
             startingGraphId, endingGraphId = min(graphMap.keys()), max(graphMap.keys())
@@ -257,7 +257,8 @@ def mr_task(timeRange, dataType, area):
 
 if __name__ == '__main__':
 #    timeRange, dataType, area = (5,6), 'world', 'us'
-    timeRange, dataType, area = (5,11), 'world', 'world'
+    timeRange, dataType, area = (5,6), 'world', 'world'
+#    timeRange, dataType, area = (5,11), 'world', 'world'
     
     mr_task(timeRange, dataType, area)
 #    temp_analysis()
