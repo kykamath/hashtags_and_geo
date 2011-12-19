@@ -203,7 +203,7 @@ class LocationGraphs:
         print 'Completed!!'
         return startingGraphId
     @staticmethod
-    def runningTimeAnalysis(graphs, graphType, numberOfPoints=10):
+    def runningTimeAnalysis(graphs, graphType, numberOfPoints=50):
         def getRunningTime(graphs, linear):
             graphMap = dict(graphs)
             startingGraphId, endingGraphId = min(graphMap.keys()), max(graphMap.keys())
@@ -235,7 +235,7 @@ class LocationGraphs:
         plt.show()
     @staticmethod
     def run():
-        timeRange, dataType, area = (5,11), 'world', 'world'
+        timeRange, dataType, area = (5,6), 'world', 'world'
         LocationGraphs.runningTimeAnalysis(getGraphs(area, timeRange), 'location')
 #        LocationGraphs.runningTimeAnalysis(RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph), RandomGraphGenerator.erdos_renyi_graph)
         LocationGraphs.plotRunningTime('location')
@@ -257,7 +257,7 @@ def mr_task(timeRange, dataType, area):
 
 if __name__ == '__main__':
 #    timeRange, dataType, area = (5,6), 'world', 'us'
-    timeRange, dataType, area = (5,6), 'world', 'world'
+    timeRange, dataType, area = (5,7), 'world', 'world'
 #    timeRange, dataType, area = (5,11), 'world', 'world'
     
     mr_task(timeRange, dataType, area)
