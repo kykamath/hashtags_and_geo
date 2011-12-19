@@ -7,10 +7,11 @@ import sys, datetime
 import math
 from networkx.generators.random_graphs import erdos_renyi_graph,\
     fast_gnp_random_graph, newman_watts_strogatz_graph, powerlaw_cluster_graph
+import time
 sys.path.append('../')
 from library.geo import getLocationFromLid, plotPointsOnWorldMap,\
     plotPointsOnUSMap, isWithinBoundingBox
-from library.classes import GeneralMethods, timeit
+from library.classes import GeneralMethods
 from library.mrjobwrapper import runMRJob
 from itertools import groupby
 from library.file_io import FileIO
@@ -161,7 +162,6 @@ class LocationGraphs:
     @staticmethod
     def getGraphId(startingGraphId, logarithmicGraphId): return startingGraphId+((logarithmicGraphId-1)*TIME_UNIT_IN_SECONDS)
     @staticmethod
-    @timeit
     def combineLocationGraphs(graphMap, startingGraphId, startingTime, intervalInSeconds, linear=True, **kwargs):
         if intervalInSeconds%TIME_UNIT_IN_SECONDS==0 and int(intervalInSeconds/TIME_UNIT_IN_SECONDS)!=0: numberOfGraphs = int(intervalInSeconds/TIME_UNIT_IN_SECONDS)
         else: numberOfGraphs = int(intervalInSeconds/TIME_UNIT_IN_SECONDS)+1
@@ -203,7 +203,7 @@ class LocationGraphs:
         print 'Completed!!'
         return startingGraphId
     @staticmethod
-    def runningTimeAnalysis(graphs, graphType, numberOfPoints=50):
+    def analyze(graphs, graphType, numberOfPoints=10):
         def getRunningTime(graphs, linear):
             graphMap = dict(graphs)
             startingGraphId, endingGraphId = min(graphMap.keys()), max(graphMap.keys())
@@ -211,18 +211,23 @@ class LocationGraphs:
             LocationGraphs.updateLogarithmicGraphs(graphMap)
             dataToReturn = []
             for j, intervalInSeconds in enumerate(range(0, timeDifference, int(timeDifference/numberOfPoints))):
-                graph, runningTime = LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), intervalInSeconds, linear=linear, returnTimeDifferenceOnly=True)
-                print graphType, linear, graph.number_of_nodes(), j, runningTime
-                dataToReturn.append([intervalInSeconds, runningTime, graph.number_of_nodes()])
+                ts = time.time()
+                graph = LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), intervalInSeconds, linear=linear)
+                noOfClusters, clusters = clusterUsingAffinityPropagation(graph)
+                clusters = [[str(c), [l[0]for l in lst]] for c, lst in groupby(sorted(clusters, key=itemgetter(1)), key=itemgetter(1))]
+                te = time.time()
+                print graphType, linear, len(clusters), graph.number_of_nodes(), j, te-ts
+                dataToReturn.append({'intervalInSeconds': intervalInSeconds, 'runningTime': te-ts, 'clusters': clusters, 'noOfNodes': graph.number_of_nodes()})
+#                break;
             return dataToReturn
         graphFile = runningTimesFolder%graphType
         print graphFile
         GeneralMethods.runCommand('rm -rf %s'%graphFile)
-        for linear in [False, True]: FileIO.writeToFileAsJson({'linear': linear, 'running_time': getRunningTime(graphs, linear)}, graphFile)
+        for linear in [False, True]: FileIO.writeToFileAsJson({'linear': linear, 'analysis': getRunningTime(graphs, linear)}, graphFile)
     @staticmethod
     def plotRunningTime(graphType):
         for data in FileIO.iterateJsonFromFile(runningTimesFolder%graphType):
-            dataX, dataY, _ = zip(*data['running_time'])
+            dataX, dataY = zip(*[(d['intervalInSeconds'], d['runningTime']) for d in data['running_time']])
             dataX = map(lambda x: x/(24*60*60), dataX)
             label, marker = 'linear', 'o'
             if not data['linear']: label, marker = 'logarithmic', 'x'
@@ -234,11 +239,36 @@ class LocationGraphs:
         plt.ylabel('Running Time (s)')
         plt.show()
     @staticmethod
+    def plotHotspotsQuality(graphType):
+        intervalInSecondsToClusters = defaultdict(dict)
+        for data in FileIO.iterateJsonFromFile(runningTimesFolder%graphType):
+            label = 'linear'
+            if not data['linear']: label = 'logarithmic'
+            for iterationData in data['running_time']:
+                intervalInSecondsToClusters[iterationData['intervalInSeconds']][label] = iterationData['clusters']
+        for interval in intervalInSecondsToClusters:
+            linearClusters = intervalInSecondsToClusters[interval]['linear']
+            logarithmicClusters = intervalInSecondsToClusters[interval]['logarithmic']
+            print interval
+#        print intervalInSecondsToClusters.keys()
+#            dataX, dataY = zip(*[(d['intervalInSeconds'], d['runningTime']) for d in data['running_time']])
+#            dataX = map(lambda x: x/(24*60*60), dataX)
+#            label, marker = 'linear', 'o'
+#            if not data['linear']: label, marker = 'logarithmic', 'x'
+##            dataX, dataY = splineSmooth(dataX, dataY)
+#            plt.plot(dataX, dataY, marker=marker, label=label, lw=2)
+#        plt.legend(loc=2)
+#        plt.title('Running time comparison')
+#        plt.xlabel('Interval width (days)')
+#        plt.ylabel('Running Time (s)')
+#        plt.show()
+    @staticmethod
     def run():
         timeRange, dataType, area = (5,6), 'world', 'world'
-        LocationGraphs.runningTimeAnalysis(getGraphs(area, timeRange), 'location')
+#        LocationGraphs.analyze(getGraphs(area, timeRange), 'location')
 #        LocationGraphs.runningTimeAnalysis(RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph), RandomGraphGenerator.erdos_renyi_graph)
-        LocationGraphs.plotRunningTime('location')
+#        LocationGraphs.plotRunningTime('location')
+        LocationGraphs.plotHotspotsQuality('location')
 #        LocationGraphs.plotRunningTime(RandomGraphGenerator.powerlaw_cluster_graph)
 
 def temp_analysis():
@@ -257,7 +287,7 @@ def mr_task(timeRange, dataType, area):
 
 if __name__ == '__main__':
 #    timeRange, dataType, area = (5,6), 'world', 'us'
-    timeRange, dataType, area = (5,7), 'world', 'world'
+    timeRange, dataType, area = (5,8), 'world', 'world'
 #    timeRange, dataType, area = (5,11), 'world', 'world'
     
     mr_task(timeRange, dataType, area)
