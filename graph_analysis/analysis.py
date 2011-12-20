@@ -84,15 +84,15 @@ def plotLocationClustersOnMap(graph):
 #    return graph
 
 def combineGraphList(graphs, edgesToKeep=1.0):
-#    graph = nx.Graph()
-    graph = graphs[0].copy()
+    graph = nx.Graph()
+#    graph = graphs[0].copy()
     def addToG(g):
         nodesUpdated = set()
         for u,v,data in g.edges(data=True): 
             if u not in nodesUpdated: updateNode(graph, u, g.node[u]['w']), nodesUpdated.add(u)
             if v not in nodesUpdated: updateNode(graph, v, g.node[v]['w']), nodesUpdated.add(v)
             updateEdge(graph, u, v, data['w'])
-    for g in graphs[1:]: addToG(g)
+    for g in graphs: addToG(g)
 #    print graphs
 #    edgesToRemove = sorted([(u,v, data['w']) for u,v,data in graph.edges(data=True)], key=itemgetter(2))[:int(graph.number_of_edges()*(1-edgesToKeep))]
 #    for u,v,_ in edgesToRemove: graph.remove_edge(u,v)
@@ -219,9 +219,8 @@ class LocationGraphs:
                 clusters = [[str(c), [l[0]for l in lst]] for c, lst in groupby(sorted(clusters, key=itemgetter(1)), key=itemgetter(1))]
                 te = time.time()
                 edgeWeights = sum(data['w'] for _,_,data in graph.edges(data=True))
-                print graphType, linear, noOfClusters, graph.number_of_nodes(), graph.number_of_edges(), edgeWeights, j, te-ts
+                print graphType, linear, len(clusters), graph.number_of_nodes(), graph.number_of_edges(), edgeWeights, j, te-ts
                 dataToReturn.append({'intervalInSeconds': intervalInSeconds, 'runningTime': te-ts, 'clusters': clusters, 'noOfNodes': graph.number_of_nodes()})
-#                break;
             return dataToReturn
         graphFile = runningTimesFolder%graphType
         print graphFile
