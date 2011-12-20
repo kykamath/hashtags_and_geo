@@ -182,7 +182,7 @@ class LocationGraphs:
             currentLogarithmicId-=index
             currentCollectedGraphs+=index
         graphIdsToCombine = sorted(graphIdsToCombine, key=lambda id:int(id.split('_')[1]), reverse=True)
-#        print graphIdsToCombine
+        print graphIdsToCombine
 #        for i in graphIdsToCombine:
 #            ep, l = i.split('_')
 #            print i, datetime.datetime.fromtimestamp(float(ep)), l, graphMap[i].number_of_nodes()
