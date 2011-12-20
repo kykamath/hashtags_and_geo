@@ -219,7 +219,7 @@ class LocationGraphs:
                 clusters = [[str(c), [l[0]for l in lst]] for c, lst in groupby(sorted(clusters, key=itemgetter(1)), key=itemgetter(1))]
                 te = time.time()
                 edgeWeights = sum(data['w'] for _,_,data in graph.edges(data=True))
-                print graphType, linear, len(clusters), graph.number_of_nodes(), graph.number_of_edges(), edgeWeights, j, te-ts
+                print graphType, linear, noOfClusters, graph.number_of_nodes(), graph.number_of_edges(), edgeWeights, j, te-ts
                 dataToReturn.append({'intervalInSeconds': intervalInSeconds, 'runningTime': te-ts, 'clusters': clusters, 'noOfNodes': graph.number_of_nodes()})
 #                break;
             return dataToReturn
