@@ -93,6 +93,7 @@ def combineGraphList(graphs, edgesToKeep=1.0):
             if v not in nodesUpdated: updateNode(graph, v, g.node[v]['w']), nodesUpdated.add(v)
             updateEdge(graph, u, v, data['w'])
     for g in graphs[1:]: addToG(g)
+#    print graphs
 #    edgesToRemove = sorted([(u,v, data['w']) for u,v,data in graph.edges(data=True)], key=itemgetter(2))[:int(graph.number_of_edges()*(1-edgesToKeep))]
 #    for u,v,_ in edgesToRemove: graph.remove_edge(u,v)
     return graph
@@ -151,7 +152,7 @@ class RandomGraphGenerator:
                                   ]:
             for i in range(1, 11): FileIO.writeToFileAsJson({'n': 100*i, 'graphs': method(1000*i)}, randomGraphsFolder%graphType)
 
-def getGraphs(area, timeRange): return sorted([(d['ep'], my_nx.getGraphFromDict(d['graph']))for d in FileIO.iterateJsonFromFile(epochGraphsFile%(area, '%s_%s'%timeRange))])
+def getGraphs(area, timeRange): return sorted([(d['ep'], my_nx.getGraphFromDict(d['graph']))for d in FileIO.iterateJsonFromFile(epochGraphsFile%(area, '%s_%s'%timeRange))])[:15]
 def tempGetGraphs(area, timeRange): return sorted([(d['ep'], my_nx.getGraphFromDict(d['graph']))for d in FileIO.iterateJsonFromFile(tempEpochGraphsFile%(area, '%s_%s'%timeRange))])
 def writeTempGraphs(area, timeRange):
     dataToWrite = sorted([(d['ep'], d)for d in FileIO.iterateJsonFromFile(epochGraphsFile%(area, '%s_%s'%timeRange))])[:100]
@@ -181,6 +182,7 @@ class LocationGraphs:
             currentLogarithmicId-=index
             currentCollectedGraphs+=index
         graphIdsToCombine = sorted(graphIdsToCombine, key=lambda id:int(id.split('_')[1]), reverse=True)
+#        print graphIdsToCombine
 #        for i in graphIdsToCombine:
 #            ep, l = i.split('_')
 #            print i, datetime.datetime.fromtimestamp(float(ep)), l, graphMap[i].number_of_nodes()
@@ -216,7 +218,7 @@ class LocationGraphs:
                 noOfClusters, clusters = clusterUsingAffinityPropagation(graph)
                 clusters = [[str(c), [l[0]for l in lst]] for c, lst in groupby(sorted(clusters, key=itemgetter(1)), key=itemgetter(1))]
                 te = time.time()
-                print graphType, linear, len(clusters), graph.number_of_nodes(), j, te-ts
+                print graphType, linear, len(clusters), graph.number_of_nodes(), graph.number_of_edges(), j, te-ts
                 dataToReturn.append({'intervalInSeconds': intervalInSeconds, 'runningTime': te-ts, 'clusters': clusters, 'noOfNodes': graph.number_of_nodes()})
 #                break;
             return dataToReturn
@@ -264,7 +266,7 @@ class LocationGraphs:
     @staticmethod
     def run():
         timeRange, dataType, area = (5,6), 'world', 'world'
-#        LocationGraphs.analyze(getGraphs(area, timeRange), 'location')
+        LocationGraphs.analyze(getGraphs(area, timeRange), 'location')
 #        LocationGraphs.runningTimeAnalysis(RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph), RandomGraphGenerator.erdos_renyi_graph)
 #        LocationGraphs.plotRunningTime('location')
         LocationGraphs.plotHotspotsQuality('location')
