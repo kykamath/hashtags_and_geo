@@ -226,7 +226,7 @@ class LocationGraphs:
         graphFile = runningTimesFolder%graphType
         print graphFile
         GeneralMethods.runCommand('rm -rf %s'%graphFile)
-        for linear in [False, True]: FileIO.writeToFileAsJson({'linear': linear, 'analysis': getRunningTime(graphs, linear)}, graphFile)
+        for linear in [False, False]: FileIO.writeToFileAsJson({'linear': linear, 'analysis': getRunningTime(graphs, linear)}, graphFile)
     @staticmethod
     def plotRunningTime(graphType):
         for data in FileIO.iterateJsonFromFile(runningTimesFolder%graphType):
@@ -252,6 +252,9 @@ class LocationGraphs:
         for interval in intervalInSecondsToClusters:
             linearClusters = [(id, set(cl)) for id, cl in intervalInSecondsToClusters[interval]['linear']]
             logarithmicClusters = [(id, set(cl)) for id, cl in intervalInSecondsToClusters[interval]['logarithmic']]
+            
+            print len(linearClusters), len(logarithmicClusters)
+            
             nodeToClusterIdMap = dict([(n, [id]) for id, cl in intervalInSecondsToClusters[interval]['linear'] for n in cl])
             logToLinearClusterMap = {}
             for logarithmicClusterId, logarithmicCluster in logarithmicClusters:
