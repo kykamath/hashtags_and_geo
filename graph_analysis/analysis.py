@@ -57,34 +57,7 @@ def plotLocationClustersOnMap(graph):
             m.drawgreatcircle(u[1],u[0],v[1],v[0],color=color, alpha=0.5)
     plt.show()
 
-#def combine(g1, g2):
-#    for u,v,data in g2.edges(data=True): updateNode(g1, u, g2.node[u]['w']), updateNode(g1, v, g2.node[v]['w']), updateEdge(g1, u, v, data['w'])
-#    return g1
-
-#def combineGraphList(graphs):
-##    graph = nx.Graph()
-#    graph = graphs[0].copy()
-#    def addToG(g):
-#        nodesUpdated = set()
-#        for u,v,data in g.edges(data=True): 
-#            if u not in nodesUpdated: updateNode(graph, u, g.node[u]['w']), nodesUpdated.add(u)
-#            if v not in nodesUpdated: updateNode(graph, v, g.node[v]['w']), nodesUpdated.add(v)
-#            updateEdge(graph, u, v, data['w'])
-#    for g in graphs[1:]: addToG(g)
-#    return graph
-
-#def combineGraphList(graphs):
-#    graph = nx.Graph()
-#    edgesCount, numberOfGraphs = defaultdict(int), float(len(graphs))
-#    for g in graphs:
-#        for u, v in g.edges(): edgesCount['%s:ilab:%s'%(tuple(sorted([u,v])))]+=1
-#    for e in edgesCount:
-#        if edgesCount[e]/numberOfGraphs>=0.5:
-#            u,v = e.split(':ilab:')
-#            graph.add_edge(u, v)
-#    return graph
-
-def combineGraphList(graphs, edgesToKeep=1.0):
+def combineGraphList(graphs, edgesToKeep=0.75):
     def createSortedGraph(g):
         gToReturn = nx.Graph()
         for u in sorted(g.nodes()): gToReturn.add_node(u, {'w': g.node[u]['w']})
@@ -100,9 +73,8 @@ def combineGraphList(graphs, edgesToKeep=1.0):
             if v not in nodesUpdated: updateNode(graph, v, g.node[v]['w']), nodesUpdated.add(v)
             updateEdge(graph, u, v, data['w'])
     for g in graphs: addToG(g)
-#    print graphs
-#    edgesToRemove = sorted([(u,v, data['w']) for u,v,data in graph.edges(data=True)], key=itemgetter(2))[:int(graph.number_of_edges()*(1-edgesToKeep))]
-#    for u,v,_ in edgesToRemove: graph.remove_edge(u,v)
+    edgesToRemove = sorted([(u,v, data['w']) for u,v,data in graph.edges(data=True)], key=itemgetter(2))[:int(graph.number_of_edges()*(1-edgesToKeep))]
+    for u,v,_ in edgesToRemove: graph.remove_edge(u,v)
     graph = createSortedGraph(graph)
     return graph
 
@@ -237,7 +209,7 @@ class LocationGraphs:
     @staticmethod
     def plotRunningTime(graphType):
         for data in FileIO.iterateJsonFromFile(runningTimesFolder%graphType):
-            dataX, dataY = zip(*[(d['intervalInSeconds'], d['runningTime']) for d in data['running_time']])
+            dataX, dataY = zip(*[(d['intervalInSeconds'], d['runningTime']) for d in data['analysis']])
             dataX = map(lambda x: x/(24*60*60), dataX)
             label, marker = 'linear', 'o'
             if not data['linear']: label, marker = 'logarithmic', 'x'
@@ -274,11 +246,12 @@ class LocationGraphs:
     @staticmethod
     def run():
         timeRange, dataType, area = (5,6), 'world', 'world'
-#        LocationGraphs.analyze(getGraphs(area, timeRange)[:15], 'location')
-#        LocationGraphs.runningTimeAnalysis(RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph), RandomGraphGenerator.erdos_renyi_graph)
-#        LocationGraphs.plotRunningTime('location')
-        LocationGraphs.plotHotspotsQuality('location')
-#        LocationGraphs.plotRunningTime(RandomGraphGenerator.powerlaw_cluster_graph)
+#        type = 'location'
+        type = RandomGraphGenerator.erdos_renyi_graph
+#        LocationGraphs.analyze(getGraphs(area, timeRange), type)
+        LocationGraphs.analyze(RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph), type)
+#        LocationGraphs.plotRunningTime(type)
+        LocationGraphs.plotHotspotsQuality(type)
 
 def temp_analysis():
 #    def createSortedGraph(g):
@@ -298,42 +271,44 @@ def temp_analysis():
 #    _, clusters2 = clusterUsingAffinityPropagation(LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), intervalInSeconds, linear=False))
 #    print len(clusters1), len(clusters2)
     
-    graphMap = dict(getGraphs(area, timeRange)[:15])
+#    graphMap = dict(getGraphs(area, timeRange)[:15])
+    graphMap = dict(RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph))
     startingGraphId, endingGraphId = min(graphMap.keys()), max(graphMap.keys())
     timeDifference = endingGraphId-startingGraphId
     LocationGraphs.updateLogarithmicGraphs(graphMap)
     dataToReturn, numberOfPoints = [], 10.
+    
+    for i in range(10):
+        graphLinear = LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), int(timeDifference/numberOfPoints)*i, linear=True)
+        graphLog = LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), int(timeDifference/numberOfPoints)*i, linear=False)
         
-    graphLinear = LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), int(timeDifference/numberOfPoints)*3, linear=True)
-    graphLog = LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), int(timeDifference/numberOfPoints)*3, linear=False)
+    #    graphLinear = createSortedGraph(graphLinear)
+    #    graphLog = createSortedGraph(graphLog)
+        
+        _, clustersLinear = clusterUsingAffinityPropagation(graphLinear)
+        _, clustersLog = clusterUsingAffinityPropagation(graphLog)
+        clustersLinear = [[str(c), set([l[0]for l in lst])] for c, lst in groupby(sorted(clustersLinear, key=itemgetter(1)), key=itemgetter(1))]
+        clustersLog = [[str(c), set([l[0]for l in lst])] for c, lst in groupby(sorted(clustersLog, key=itemgetter(1)), key=itemgetter(1))]
+        
+        S1 = nx.to_numpy_matrix(graphLinear, weight='w')
+        S2 = nx.to_numpy_matrix(graphLog, weight='w')
+    #    edgeWeights = sum(data['w'] for _,_,data in graph.edges(data=True))
     
-#    graphLinear = createSortedGraph(graphLinear)
-#    graphLog = createSortedGraph(graphLog)
-    
-    _, clustersLinear = clusterUsingAffinityPropagation(graphLinear)
-    _, clustersLog = clusterUsingAffinityPropagation(graphLog)
-    clustersLinear = [[str(c), set([l[0]for l in lst])] for c, lst in groupby(sorted(clustersLinear, key=itemgetter(1)), key=itemgetter(1))]
-    clustersLog = [[str(c), set([l[0]for l in lst])] for c, lst in groupby(sorted(clustersLog, key=itemgetter(1)), key=itemgetter(1))]
-    
-    S1 = nx.to_numpy_matrix(graphLinear, weight='w')
-    S2 = nx.to_numpy_matrix(graphLog, weight='w')
-#    edgeWeights = sum(data['w'] for _,_,data in graph.edges(data=True))
-
-    for idL, cL in clustersLinear:
-        a,b,c = max([(cL.intersection(cO), idO, len(cO)) for idO, cO in clustersLog], key=itemgetter(0))
-        if len(cL)!=len(a):
-            print idL, cL, len(cL), a,b,c
-#    
-    print '************* **************'
-#    
-#    for idL, cL in clustersLog:
-#        a,b,c = max([(cL.intersection(cO), idO, len(cO)) for idO, cO in clustersLinear], key=itemgetter(0))
-#        if len(cL)!=len(a):
-#            print idL, cL, len(cL), a,b,c
-            
-    print len(clustersLinear), len(clustersLog)
-#    g =  nx.difference(graphLinear, graphLog)
-    print iso.is_isomorphic(graphLinear,graphLog, edge_match=lambda e1,e2: e1['w']==e2['w'], node_match=lambda u,v: u['w']==v['w'])
+        for idL, cL in clustersLinear:
+            a,b,c = max([(cL.intersection(cO), idO, len(cO)) for idO, cO in clustersLog], key=itemgetter(0))
+            if len(cL)!=len(a):
+                print idL, cL, len(cL), a,b,c
+    #    
+        print '************* **************'
+    #    
+    #    for idL, cL in clustersLog:
+    #        a,b,c = max([(cL.intersection(cO), idO, len(cO)) for idO, cO in clustersLinear], key=itemgetter(0))
+    #        if len(cL)!=len(a):
+    #            print idL, cL, len(cL), a,b,c
+                
+        print len(clustersLinear), len(clustersLog)
+    #    g =  nx.difference(graphLinear, graphLog)
+        print i, iso.is_isomorphic(graphLinear,graphLog, edge_match=lambda e1,e2: e1['w']==e2['w'], node_match=lambda u,v: u['w']==v['w'])
 #    graphMap = dict(tempGetGraphs(area, timeRange))
 #    startingGraphId, endingGraphId = min(graphMap.keys()), max(graphMap.keys())
 #    LocationGraphs.updateLogarithmicGraphs(graphMap)
