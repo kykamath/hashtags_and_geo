@@ -57,7 +57,7 @@ def plotLocationClustersOnMap(graph):
             m.drawgreatcircle(u[1],u[0],v[1],v[0],color=color, alpha=0.5)
     plt.show()
 
-def combineGraphList(graphs, edgesToKeep=0.75):
+def combineGraphList(graphs, edgesToKeep=1.0):
     def createSortedGraph(g):
         gToReturn = nx.Graph()
         for u in sorted(g.nodes()): gToReturn.add_node(u, {'w': g.node[u]['w']})
@@ -65,6 +65,7 @@ def combineGraphList(graphs, edgesToKeep=0.75):
         assert iso.is_isomorphic(gToReturn,g, edge_match=lambda e1,e2: e1['w']==e2['w'], node_match=lambda u,v: u['w']==v['w'])
         return gToReturn
     graph = nx.Graph()
+#    graph = graphs[0]
 #    graph = graphs[0].copy()
     def addToG(g):
         nodesUpdated = set()
@@ -73,8 +74,8 @@ def combineGraphList(graphs, edgesToKeep=0.75):
             if v not in nodesUpdated: updateNode(graph, v, g.node[v]['w']), nodesUpdated.add(v)
             updateEdge(graph, u, v, data['w'])
     for g in graphs: addToG(g)
-    edgesToRemove = sorted([(u,v, data['w']) for u,v,data in graph.edges(data=True)], key=itemgetter(2))[:int(graph.number_of_edges()*(1-edgesToKeep))]
-    for u,v,_ in edgesToRemove: graph.remove_edge(u,v)
+#    edgesToRemove = sorted([(u,v, data['w']) for u,v,data in graph.edges(data=True)], key=itemgetter(2))[:int(graph.number_of_edges()*(1-edgesToKeep))]
+#    for u,v,_ in edgesToRemove: graph.remove_edge(u,v)
     graph = createSortedGraph(graph)
     return graph
 
@@ -246,10 +247,10 @@ class LocationGraphs:
     @staticmethod
     def run():
         timeRange, dataType, area = (5,6), 'world', 'world'
-#        type = 'location'
-        type = RandomGraphGenerator.erdos_renyi_graph
-#        LocationGraphs.analyze(getGraphs(area, timeRange), type)
-        LocationGraphs.analyze(RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph), type)
+        type = 'location'
+#        type = RandomGraphGenerator.erdos_renyi_graph
+        LocationGraphs.analyze(getGraphs(area, timeRange), type)
+#        LocationGraphs.analyze(RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph), type)
 #        LocationGraphs.plotRunningTime(type)
         LocationGraphs.plotHotspotsQuality(type)
 
