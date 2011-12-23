@@ -57,7 +57,7 @@ def plotLocationClustersOnMap(graph):
             m.drawgreatcircle(u[1],u[0],v[1],v[0],color=color, alpha=0.5)
     plt.show()
 
-def combineGraphList(graphs, edgesToKeep=0.3):
+def combineGraphList(graphs, edgesToKeep=0.35):
     def createSortedGraph(g):
         gToReturn = nx.Graph()
         for u in sorted(g.nodes()): gToReturn.add_node(u, {'w': g.node[u]['w']})
@@ -186,7 +186,7 @@ class LocationGraphs:
         print 'Completed!!'
         return startingGraphId
     @staticmethod
-    def analyze(graphs, graphType, numberOfPoints=10):
+    def analyzeRunningTime(graphs, graphType, numberOfPoints=50):
         def getRunningTime(graphs, linear):
             graphMap = dict(graphs)
             startingGraphId, endingGraphId = min(graphMap.keys()), max(graphMap.keys())
@@ -246,13 +246,13 @@ class LocationGraphs:
             print metrics.adjusted_rand_score(labels_true, labels_pred)
     @staticmethod
     def run():
-        timeRange, dataType, area = (5,6), 'world', 'world'
+        timeRange, dataType, area = (5,11), 'world', 'world'
         type = 'location_%s_%s'%timeRange
 #        type = RandomGraphGenerator.erdos_renyi_graph
-        LocationGraphs.analyze(getGraphs(area, timeRange), type)
+        LocationGraphs.analyzeRunningTime(getGraphs(area, timeRange), type)
 #        LocationGraphs.analyze(RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph), type)
 #        LocationGraphs.plotRunningTime(type)
-        LocationGraphs.plotHotspotsQuality(type)
+#        LocationGraphs.plotHotspotsQuality(type)
 
 def temp_analysis():
 #    def createSortedGraph(g):
@@ -328,7 +328,7 @@ if __name__ == '__main__':
 #    timeRange, dataType, area = (5,8), 'world', 'world'
     timeRange, dataType, area = (5,11), 'world', 'world'
     
-    mr_task(timeRange, dataType, area)
+#    mr_task(timeRange, dataType, area)
 #    temp_analysis()
-#    LocationGraphs.run()
+    LocationGraphs.run()
 #    RandomGraphGenerator.run()
