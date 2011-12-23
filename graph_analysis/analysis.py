@@ -19,7 +19,7 @@ from graph_analysis.mr_modules import MRGraph, TIME_UNIT_IN_SECONDS, updateNode,
     updateEdge
 from graph_analysis.settings import hdfsInputFolder, epochGraphsFile,\
     hashtagsFile, us_boundary, runningTimesFolder, randomGraphsFolder,\
-    tempEpochGraphsFile
+    tempEpochGraphsFile, qualityMetricsFolder
 import networkx as nx
 import networkx.algorithms.isomorphism as iso
 from operator import itemgetter
@@ -208,6 +208,28 @@ class LocationGraphs:
         GeneralMethods.runCommand('rm -rf %s'%graphFile)
         for linear in [False, True]: FileIO.writeToFileAsJson({'linear': linear, 'analysis': getRunningTime(graphs, linear)}, graphFile)
     @staticmethod
+    def analyzeQuality(graphs, graphType, numberOfPoints=50):
+        def getQualityScore(graphMap, timeDifference):
+#            for j, intervalInSeconds in enumerate(range(0, timeDifference, int(timeDifference/numberOfPoints))):
+            ts = time.time()
+            graph = LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), intervalInSeconds, linear=linear)
+            noOfClusters, clusters = clusterUsingAffinityPropagation(graph)
+            clusters = [[str(c), [l[0]for l in lst]] for c, lst in groupby(sorted(clusters, key=itemgetter(1)), key=itemgetter(1))]
+            te = time.time()
+            edgeWeights = sum(data['w'] for _,_,data in graph.edges(data=True))
+            print graphType, linear, len(clusters), graph.number_of_nodes(), graph.number_of_edges(), edgeWeights, j, te-ts
+            dataToReturn.append({'intervalInSeconds': intervalInSeconds, 'runningTime': te-ts, 'clusters': clusters, 'noOfNodes': graph.number_of_nodes()})
+            return dataToReturn
+        graphFile = qualityMetricsFolder%graphType
+        print graphFile
+        GeneralMethods.runCommand('rm -rf %s'%graphFile)
+        graphMap = dict(graphs)
+        startingGraphId, endingGraphId = min(graphMap.keys()), max(graphMap.keys())
+        timeDifference = endingGraphId-startingGraphId
+        LocationGraphs.updateLogarithmicGraphs(graphMap)
+        dataToReturn = []
+        for linear in [False, True]: FileIO.writeToFileAsJson({'linear': linear, 'analysis': getQualityScore(graphs, linear)}, graphFile)
+    @staticmethod
     def plotRunningTime(graphType):
         for data in FileIO.iterateJsonFromFile(runningTimesFolder%graphType):
             dataX, dataY = zip(*[(d['intervalInSeconds'], d['runningTime']) for d in data['analysis']])
@@ -246,10 +268,11 @@ class LocationGraphs:
             print metrics.adjusted_rand_score(labels_true, labels_pred)
     @staticmethod
     def run():
-        timeRange, dataType, area = (5,11), 'world', 'world'
+        timeRange, dataType, area = (5,6), 'world', 'world'
         type = 'location_%s_%s'%timeRange
 #        type = RandomGraphGenerator.erdos_renyi_graph
-        LocationGraphs.analyzeRunningTime(getGraphs(area, timeRange), type)
+#        LocationGraphs.analyzeRunningTime(getGraphs(area, timeRange), type)
+        LocationGraphs.analyzeQuality(getGraphs(area, timeRange), type)
 #        LocationGraphs.analyze(RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph), type)
 #        LocationGraphs.plotRunningTime(type)
 #        LocationGraphs.plotHotspotsQuality(type)
