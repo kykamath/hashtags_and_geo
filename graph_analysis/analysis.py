@@ -268,11 +268,11 @@ class LocationGraphs:
             print metrics.adjusted_rand_score(labels_true, labels_pred)
     @staticmethod
     def run():
-        timeRange, dataType, area = (5,6), 'world', 'world'
+        timeRange, dataType, area = (5,11), 'world', 'world'
         type = 'location_%s_%s'%timeRange
 #        type = RandomGraphGenerator.erdos_renyi_graph
-#        LocationGraphs.analyzeRunningTime(getGraphs(area, timeRange), type)
-        LocationGraphs.analyzeQuality(getGraphs(area, timeRange), type)
+        LocationGraphs.analyzeRunningTime(getGraphs(area, timeRange), type)
+#        LocationGraphs.analyzeQuality(getGraphs(area, timeRange), type)
 #        LocationGraphs.analyze(RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph), type)
 #        LocationGraphs.plotRunningTime(type)
 #        LocationGraphs.plotHotspotsQuality(type)
