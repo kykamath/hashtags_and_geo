@@ -242,8 +242,9 @@ class LocationGraphs:
 #            dataX, dataY = splineSmooth(dataX, dataY)
 #            smooth(dataY, 4)
             dataY = smooth(dataY, 15)[:len(dataX)]
-            print len(dataX), len(dataY)
+#            dataX, dataY = dataX[5:], dataY[5:]
             plt.plot(dataX, dataY, marker=marker, label=label, lw=2)
+            plt.xlim(xmin=3)
         plt.legend(loc=2)
         plt.title(graphType)
         plt.xlabel('Interval width (days)')
@@ -251,13 +252,22 @@ class LocationGraphs:
         plt.show()
     @staticmethod
     def plotHotspotsQuality(graphType):
-        intervalInSecondsToClusters = defaultdict(dict)
-        for data in FileIO.iterateJsonFromFile(runningTimesFolder%graphType):
-            label = 'linear'
-            if not data['linear']: label = 'logarithmic'
-            for iterationData in data['analysis']:
-                intervalInSecondsToClusters[iterationData['intervalInSeconds']][label] = iterationData['clusters']
-        for interval in intervalInSecondsToClusters:
+        dataX, dataY = zip(* [data.values() for data in FileIO.iterateJsonFromFile(qualityMetricsFolder%graphType)])
+        
+        plt.plot(dataX, dataY, c='k', lw=2)
+        plt.plot(dataX, dataY, 'o', c='r')
+        plt.ylim(ymin=0.0, ymax=1.1)
+        plt.title(graphType)
+        plt.xlabel('Percentage of edges')
+        plt.ylabel('Rand Score')
+        plt.show()
+#        intervalInSecondsToClusters = defaultdict(dict)
+#        for data in FileIO.iterateJsonFromFile(runningTimesFolder%graphType):
+#            label = 'linear'
+#            if not data['linear']: label = 'logarithmic'
+#            for iterationData in data['analysis']:
+#                intervalInSecondsToClusters[iterationData['intervalInSeconds']][label] = iterationData['clusters']
+#        for interval in intervalInSecondsToClusters:
 #            linearClusters = [(id, set(cl)) for id, cl in intervalInSecondsToClusters[interval]['linear']]
 #            logarithmicClusters = [(id, set(cl)) for id, cl in intervalInSecondsToClusters[interval]['logarithmic']]
 #            nodeToClusterIdMap = dict([(n, [id]) for id, cl in intervalInSecondsToClusters[interval]['linear'] for n in cl])
@@ -272,7 +282,7 @@ class LocationGraphs:
 #            labels_true, labels_pred = zip(*nodeToClusterIdMap.values())
 #            from sklearn import metrics
 #            print metrics.adjusted_rand_score(labels_true, labels_pred)
-            print LocationGraphs.getClusterQualityScore(intervalInSecondsToClusters[interval]['linear'], intervalInSecondsToClusters[interval]['logarithmic'])
+#            print LocationGraphs.getClusterQualityScore(intervalInSecondsToClusters[interval]['linear'], intervalInSecondsToClusters[interval]['logarithmic'])
     @staticmethod
     def getClusterQualityScore(linearClusters, logarithmicClusters):
         linearClusters = [(id, set(cl)) for id, cl in linearClusters]
@@ -292,11 +302,11 @@ class LocationGraphs:
     @staticmethod
     def run():
         timeRange, dataType, area = (5,11), 'world', 'world'
-#        type, graphs = 'location_%s_%s'%timeRange, getGraphs(area, timeRange)
-        type, graphs = RandomGraphGenerator.fast_gnp_random_graph, RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph)
+        type, graphs = 'location_%s_%s'%timeRange, getGraphs(area, timeRange)
+#        type, graphs = RandomGraphGenerator.newman_watts_strogatz_graph, None# RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph)
 #        LocationGraphs.analyzeRunningTime(graphs, type, numberOfPoints=50)
-#        LocationGraphs.analyzeQuality(graphs, type)
-        LocationGraphs.plotRunningTime(type)
+        LocationGraphs.analyzeQuality(graphs, type)
+#        LocationGraphs.plotRunningTime(type)
 #        LocationGraphs.plotHotspotsQuality(type)
 
 def temp_analysis():
