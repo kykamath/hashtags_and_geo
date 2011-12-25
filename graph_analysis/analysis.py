@@ -301,7 +301,7 @@ class LocationGraphs:
         return metrics.adjusted_rand_score(labels_true, labels_pred)
     @staticmethod
     def run():
-        timeRange, dataType, area = (5,11), 'world', 'world'
+        timeRange, dataType, area = (5,7), 'world', 'world'
         type, graphs = 'location_%s_%s'%timeRange, getGraphs(area, timeRange)
 #        type, graphs = RandomGraphGenerator.newman_watts_strogatz_graph, None# RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph)
 #        LocationGraphs.analyzeRunningTime(graphs, type, numberOfPoints=50)
