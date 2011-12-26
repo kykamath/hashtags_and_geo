@@ -249,40 +249,20 @@ class LocationGraphs:
         plt.title(graphType)
         plt.xlabel('Interval width (days)')
         plt.ylabel('Running Time (s)')
-        plt.show()
+#        plt.show()
+        plt.savefig('images/rt_%s.png'%graphType)
     @staticmethod
     def plotHotspotsQuality(graphType):
         dataX, dataY = zip(* [data.values() for data in FileIO.iterateJsonFromFile(qualityMetricsFolder%graphType)])
-        
-        plt.plot(dataX, dataY, c='k', lw=2)
+#        dataY = smooth(dataY, 3)[:len(dataX)]
+        plt.plot(dataX, dataY, c='k', lw=1)
         plt.plot(dataX, dataY, 'o', c='r')
         plt.ylim(ymin=0.0, ymax=1.1)
         plt.title(graphType)
         plt.xlabel('Percentage of edges')
         plt.ylabel('Rand Score')
-        plt.show()
-#        intervalInSecondsToClusters = defaultdict(dict)
-#        for data in FileIO.iterateJsonFromFile(runningTimesFolder%graphType):
-#            label = 'linear'
-#            if not data['linear']: label = 'logarithmic'
-#            for iterationData in data['analysis']:
-#                intervalInSecondsToClusters[iterationData['intervalInSeconds']][label] = iterationData['clusters']
-#        for interval in intervalInSecondsToClusters:
-#            linearClusters = [(id, set(cl)) for id, cl in intervalInSecondsToClusters[interval]['linear']]
-#            logarithmicClusters = [(id, set(cl)) for id, cl in intervalInSecondsToClusters[interval]['logarithmic']]
-#            nodeToClusterIdMap = dict([(n, [id]) for id, cl in intervalInSecondsToClusters[interval]['linear'] for n in cl])
-#            logToLinearClusterMap = {}
-#            for logarithmicClusterId, logarithmicCluster in logarithmicClusters:
-#                linearClusterId, linearCluster = max(linearClusters, key=lambda t: len(t[1].intersection(logarithmicCluster)))
-#                score = len(linearCluster.intersection(logarithmicCluster))/float(min(len(linearCluster), len(logarithmicCluster)))
-#                if score>=0.5:
-#                    logToLinearClusterMap[logarithmicClusterId]=(linearClusterId,  len(linearCluster.intersection(logarithmicCluster)), len(linearCluster), len(logarithmicCluster))
-#                    for n in logarithmicCluster: nodeToClusterIdMap[n].append(linearClusterId)
-#            nodeToClusterIdMap = dict(filter(lambda l: len(l[1])>1, nodeToClusterIdMap.iteritems()))
-#            labels_true, labels_pred = zip(*nodeToClusterIdMap.values())
-#            from sklearn import metrics
-#            print metrics.adjusted_rand_score(labels_true, labels_pred)
-#            print LocationGraphs.getClusterQualityScore(intervalInSecondsToClusters[interval]['linear'], intervalInSecondsToClusters[interval]['logarithmic'])
+#        plt.show()
+        plt.savefig('images/quality_%s.png'%graphType)
     @staticmethod
     def getClusterQualityScore(linearClusters, logarithmicClusters):
         linearClusters = [(id, set(cl)) for id, cl in linearClusters]
@@ -301,77 +281,16 @@ class LocationGraphs:
         return metrics.adjusted_rand_score(labels_true, labels_pred)
     @staticmethod
     def run():
-        timeRange, dataType, area = (5,7), 'world', 'world'
-        type, graphs = 'location_%s_%s'%timeRange, getGraphs(area, timeRange)
-#        type, graphs = RandomGraphGenerator.newman_watts_strogatz_graph, None# RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph)
+        timeRange, dataType, area = (5,11), 'world', 'world'
+        type, graphs = 'location_%s_%s'%timeRange, None#getGraphs(area, timeRange)
+#        type, graphs = RandomGraphGenerator.powerlaw_cluster_graph, None# RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph)
 #        LocationGraphs.analyzeRunningTime(graphs, type, numberOfPoints=50)
-        LocationGraphs.analyzeQuality(graphs, type)
-#        LocationGraphs.plotRunningTime(type)
+#        LocationGraphs.analyzeQuality(graphs, type)
+        LocationGraphs.plotRunningTime(type)
 #        LocationGraphs.plotHotspotsQuality(type)
 
 def temp_analysis():
-#    def createSortedGraph(g):
-#        gToReturn = nx.Graph()
-#        for u in sorted(g.nodes()): gToReturn.add_node(u, {'w': g.node[u]['w']})
-#        for u, v in g.edges(): gToReturn.add_edge(u, v, {'w': g.edge[u][v]['w']})
-#        assert iso.is_isomorphic(gToReturn,g, edge_match=lambda e1,e2: e1['w']==e2['w'], node_match=lambda u,v: u['w']==v['w'])
-#        return gToReturn
-            
-    timeRange, dataType, area = (5,6), 'world', 'world'
-#    graphMap = dict(getGraphs(area, timeRange)[:15])
-#    startingGraphId, endingGraphId = min(graphMap.keys()), max(graphMap.keys())
-#    timeDifference = endingGraphId-startingGraphId
-#    LocationGraphs.updateLogarithmicGraphs(graphMap)
-#    intervalInSeconds = int(timeDifference/10.)
-#    _, clusters1 = clusterUsingAffinityPropagation(LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), intervalInSeconds, linear=True))
-#    _, clusters2 = clusterUsingAffinityPropagation(LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), intervalInSeconds, linear=False))
-#    print len(clusters1), len(clusters2)
-    
-#    graphMap = dict(getGraphs(area, timeRange)[:15])
-    graphMap = dict(RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph))
-    startingGraphId, endingGraphId = min(graphMap.keys()), max(graphMap.keys())
-    timeDifference = endingGraphId-startingGraphId
-    LocationGraphs.updateLogarithmicGraphs(graphMap)
-    dataToReturn, numberOfPoints = [], 10.
-    
-    for i in range(10):
-        graphLinear = LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), int(timeDifference/numberOfPoints)*i, linear=True)
-        graphLog = LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), int(timeDifference/numberOfPoints)*i, linear=False)
-        
-    #    graphLinear = createSortedGraph(graphLinear)
-    #    graphLog = createSortedGraph(graphLog)
-        
-        _, clustersLinear = clusterUsingAffinityPropagation(graphLinear)
-        _, clustersLog = clusterUsingAffinityPropagation(graphLog)
-        clustersLinear = [[str(c), set([l[0]for l in lst])] for c, lst in groupby(sorted(clustersLinear, key=itemgetter(1)), key=itemgetter(1))]
-        clustersLog = [[str(c), set([l[0]for l in lst])] for c, lst in groupby(sorted(clustersLog, key=itemgetter(1)), key=itemgetter(1))]
-        
-        S1 = nx.to_numpy_matrix(graphLinear, weight='w')
-        S2 = nx.to_numpy_matrix(graphLog, weight='w')
-    #    edgeWeights = sum(data['w'] for _,_,data in graph.edges(data=True))
-    
-        for idL, cL in clustersLinear:
-            a,b,c = max([(cL.intersection(cO), idO, len(cO)) for idO, cO in clustersLog], key=itemgetter(0))
-            if len(cL)!=len(a):
-                print idL, cL, len(cL), a,b,c
-    #    
-        print '************* **************'
-    #    
-    #    for idL, cL in clustersLog:
-    #        a,b,c = max([(cL.intersection(cO), idO, len(cO)) for idO, cO in clustersLinear], key=itemgetter(0))
-    #        if len(cL)!=len(a):
-    #            print idL, cL, len(cL), a,b,c
-                
-        print len(clustersLinear), len(clustersLog)
-    #    g =  nx.difference(graphLinear, graphLog)
-        print i, iso.is_isomorphic(graphLinear,graphLog, edge_match=lambda e1,e2: e1['w']==e2['w'], node_match=lambda u,v: u['w']==v['w'])
-#    graphMap = dict(tempGetGraphs(area, timeRange))
-#    startingGraphId, endingGraphId = min(graphMap.keys()), max(graphMap.keys())
-#    LocationGraphs.updateLogarithmicGraphs(graphMap)
-#    linearGraph = LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), TIME_UNIT_IN_SECONDS*10, linear=True)
-#    logarithmicGraph = LocationGraphs.combineLocationGraphs(graphMap, startingGraphId, datetime.datetime.fromtimestamp(endingGraphId+1), TIME_UNIT_IN_SECONDS*10, linear=False)
-#    print linearGraph.number_of_nodes()
-#    print logarithmicGraph.number_of_nodes()
+    pass
 
 def getInputFiles(months, folderType='/'): return [hdfsInputFolder+folderType+'/'+str(m) for m in months] 
 def mr_task(timeRange, dataType, area):
