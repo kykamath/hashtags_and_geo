@@ -256,7 +256,7 @@ class LocationGraphs:
         dataX, dataY = zip(* [data.values() for data in FileIO.iterateJsonFromFile(qualityMetricsFolder%graphType)])
 #        dataY = smooth(dataY, 3)[:len(dataX)]
         plt.plot(dataX, dataY, c='k', lw=1)
-        plt.plot(dataX, dataY, 'o', c='r')
+        plt.plot(dataX, dataY, 'o', c='r', markersize=15)
         plt.ylim(ymin=0.0, ymax=1.1)
         plt.title(graphType)
         plt.xlabel('Percentage of edges')
@@ -281,13 +281,13 @@ class LocationGraphs:
         return metrics.adjusted_rand_score(labels_true, labels_pred)
     @staticmethod
     def run():
-        timeRange, dataType, area = (5,11), 'world', 'world'
+        timeRange, dataType, area = (5,7), 'world', 'world'
         type, graphs = 'location_%s_%s'%timeRange, None#getGraphs(area, timeRange)
 #        type, graphs = RandomGraphGenerator.powerlaw_cluster_graph, None# RandomGraphGenerator.getGraphs(100, RandomGraphGenerator.erdos_renyi_graph)
 #        LocationGraphs.analyzeRunningTime(graphs, type, numberOfPoints=50)
 #        LocationGraphs.analyzeQuality(graphs, type)
-        LocationGraphs.plotRunningTime(type)
-#        LocationGraphs.plotHotspotsQuality(type)
+#        LocationGraphs.plotRunningTime(type)
+        LocationGraphs.plotHotspotsQuality(type)
 
 def temp_analysis():
     pass
