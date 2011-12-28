@@ -137,6 +137,9 @@ GREEDY_LATTICE_SELECTION_MODEL = 'greedy'
 SHARING_PROBABILITY_LATTICE_SELECTION_MODEL = 'sharing_probability'
 
 class Metrics:
+    overall_hit_rate = 'overall_hit_rate'
+    hit_rate_after_target_selection = 'hit_rate_after_target_selection'
+    miss_rate_before_target_selection = 'miss_rate_before_target_selection'
     @staticmethod
     def overallOccurancesHitRate(hashtag):
         totalOccurances, occurancesObserved = 0., 0.
@@ -161,9 +164,9 @@ class Metrics:
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v); occurancesBeforeTimeUnit+=len([i for i in v if i<=targetSelectionTimeUnit])
             return occurancesBeforeTimeUnit/totalOccurances
 EvaluationMetrics = {
-                     'overall_hit_rate': Metrics.overallOccurancesHitRate,
-                     'hit_rate_after_target_selection': Metrics.occurancesHitRateAfterTargetSelection,
-                     'miss_rate_before_target_selection': Metrics.occurancesMissRateBeforeTargetSelection
+                     Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
+                     Metrics.hit_rate_after_target_selection: Metrics.occurancesHitRateAfterTargetSelection,
+                     Metrics.miss_rate_before_target_selection: Metrics.occurancesMissRateBeforeTargetSelection
                      }
 
 class LatticeSelectionModel(object):
@@ -212,7 +215,7 @@ class LatticeSelectionModel(object):
                 self.params['budget'] = b
                 self.params['timeUnitToPickTargetLattices'] = t
                 FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
-    def plotModelWithVaryingTimeUnitToPickTargetLattices(self):
+    def plotModelWithVaryingTimeUnitToPickTargetLattices1(self):
         self.params['evaluationName'] = 'time'
         metricDistributionInTimeUnits = defaultdict(dict)
         for data in FileIO.iterateJsonFromFile(self.getModelSimulationFile()):
@@ -227,6 +230,25 @@ class LatticeSelectionModel(object):
             plt.plot(dataX, dataY, label=metric)
         plt.legend(loc=4)
         plt.title('%s lattice selection model'%self.id)
+        plt.show()
+    @staticmethod
+    def plotModelWithVaryingTimeUnitToPickTargetLattices(models, metric, **kwargs):
+        for model in models:
+            model = model(**kwargs)
+            model.params['evaluationName'] = 'time'
+            metricDistributionInTimeUnits = defaultdict(dict)
+            for data in FileIO.iterateJsonFromFile(model.getModelSimulationFile()):
+                t = data['params']['timeUnitToPickTargetLattices']
+                for h in data['hashtags']:
+    #                if data['hashtags'][h]['classId']==3:
+#                        for metric in metric:
+                        if metric not in metricDistributionInTimeUnits: metricDistributionInTimeUnits[metric] = defaultdict(list)
+                        metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
+            for metric, metricValues in metricDistributionInTimeUnits.iteritems():
+                dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
+                plt.plot(dataX, dataY, label=model.id)
+        plt.legend(loc=4)
+        plt.title('%s comparison'%metric)
         plt.show()
     def plotModelWithVaryingBudget(self):
         self.params['evaluationName'] = 'budget'
@@ -373,14 +395,18 @@ class Simulation:
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
     @staticmethod
     def varyingTimeUnitToPickTargetLattices():
-        params = dict(budget=10000, timeUnitToPickTargetLattices=6)
-#        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
+        params = dict(budget=5, timeUnitToPickTargetLattices=6)
+#        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotModelWithVaryingTimeUnitToPickTargetLattices()
 #        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
-        LatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingTimeUnitToPickTargetLattices()
+#        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingTimeUnitToPickTargetLattices()
+        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel,
+                                                                                GreedyLatticeSelectionModel], 
+                                                                               Metrics.overall_hit_rate, 
+                                                                               params=params)
     @staticmethod
     def varyingBudgetToPickTargetLattices():
-        params = dict(budget=100, timeUnitToPickTargetLattices=6)
+        params = dict(budget=5, timeUnitToPickTargetLattices=6)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotModelWithVaryingBudget()
 #        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).evaluateModelWithVaryingBudget(budgetLimit=20)
