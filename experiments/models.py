@@ -174,7 +174,8 @@ class LatticeSelectionModel(object):
         self.trainingHashtagsFile = kwargs.get('trainingHashtagsFile', None)
         self.testingHashtagsFile = kwargs.get('testingHashtagsFile', None)
         self.evaluationName = kwargs.get('evaluationName', '')
-    def selectTargetLattices(self, currentTimeUnit, hashtag): return random.sample(hashtag.occuranceDistributionInLattices, min([self.budget, len(hashtag.occuranceDistributionInLattices)]))
+    def selectTargetLattices(self, currentTimeUnit, hashtag): 
+        return random.sample(hashtag.occuranceDistributionInLattices, min([self.budget, len(hashtag.occuranceDistributionInLattices)]))
     def getModelSimulationFile(self): 
         file = hashtagsModelsFolder%('world', self.id)+'%s.eva'%self.params['evaluationName']; FileIO.createDirectoryForFile(file); return file
     def evaluateModel(self):
@@ -224,7 +225,8 @@ class LatticeSelectionModel(object):
         for metric, metricValues in metricDistributionInTimeUnits.iteritems():
             dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
             plt.plot(dataX, dataY, label=metric)
-        plt.legend()
+        plt.legend(loc=4)
+        plt.title('%s lattice selection model'%self.id)
         plt.show()
     def plotModelWithVaryingBudget(self):
         self.params['evaluationName'] = 'budget'
@@ -266,7 +268,7 @@ class GreedyLatticeSelectionModel(LatticeSelectionModel):
     '''
     def __init__(self, **kwargs): super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, **kwargs)
     def selectTargetLattices(self, currentTimeUnit, hashtag):
-        return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t), reverse=True))[0][:self.params['budget']]
+        return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
 
 class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with highest probability:
@@ -371,11 +373,11 @@ class Simulation:
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
     @staticmethod
     def varyingTimeUnitToPickTargetLattices():
-        params = dict(budget=100, timeUnitToPickTargetLattices=6)
-        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
+        params = dict(budget=10000, timeUnitToPickTargetLattices=6)
+#        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotModelWithVaryingTimeUnitToPickTargetLattices()
 #        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).evaluateModelWithVaryingTimeUnitToPickTargetLattices(numberOfTimeUnits=24)
-#        GreedyLatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingTimeUnitToPickTargetLattices()
+        LatticeSelectionModel(params=params, testingHashtagsFile=Simulation.testingHashtagsFile).plotModelWithVaryingTimeUnitToPickTargetLattices()
     @staticmethod
     def varyingBudgetToPickTargetLattices():
         params = dict(budget=100, timeUnitToPickTargetLattices=6)
