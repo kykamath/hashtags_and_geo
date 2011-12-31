@@ -109,15 +109,15 @@ class LatticeSelectionModel(object):
             print 'Evaluating at budget=%d'%b, self.getModelSimulationFile()
             self.params['budget'] = b
             FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
-#    def evaluateByVaringBudgetAndTimeUnits(self, numberOfTimeUnits=24, budgetLimit = 20):
-#        self.params['evaluationName'] = 'budget_time'
-#        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
-#        for b in range(1, budgetLimit):
-#            for t in range(numberOfTimeUnits):
-#                print 'Evaluating at budget=%d, numberOfTimeUnits=%d'%(b, t), self.getModelSimulationFile()
-#                self.params['budget'] = b
-#                self.params['timeUnitToPickTargetLattices'] = t
-#                FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
+    def evaluateByVaringBudgetAndTimeUnits(self, numberOfTimeUnits=24, budgetLimit = 20):
+        self.params['evaluationName'] = 'budget_time'
+        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
+        for b in range(1, budgetLimit):
+            for t in range(numberOfTimeUnits):
+                print 'Evaluating at budget=%d, numberOfTimeUnits=%d'%(b, t), self.getModelSimulationFile()
+                self.params['budget'] = b
+                self.params['timeUnitToPickTargetLattices'] = t
+                FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
     @staticmethod
     def plotModelWithVaryingTimeUnitToPickTargetLattices(models, metric, **kwargs):
         for model in models:
@@ -180,9 +180,7 @@ class GreedyLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
     '''
     def __init__(self, **kwargs): super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, **kwargs)
-    def selectTargetLattices(self, currentTimeUnit, hashtag): 
-#        print hashtag.hashtagObject['h'],zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
-        return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+    def selectTargetLattices(self, currentTimeUnit, hashtag): return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
 
 class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with highest probability:
@@ -207,38 +205,21 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
             self.model['sharingProbaility'][latticeObject['id']][latticeObject['id']]=1.0
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in self.model['hashtagObservingProbability'].keys()[:]: self.model['hashtagObservingProbability'][lattice] = len(self.model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
-#    def selectTargetLattices(self, currentTimeUnit, hashtag): 
-#        latticeScores = defaultdict(float)
-#        for currentLattice in hashtag.occuranceDistributionInLattices:
-#            for neighborLattice in self.model['sharingProbaility'][currentLattice]: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['sharingProbaility'][currentLattice][neighborLattice])
-#        if latticeScores: return zip(*sorted(latticeScores.iteritems(), key=lambda t: itemgetter(1), reverse=True))[0][:self.params['budget']]
-#        else: return hashtag.occuranceDistributionInLattices.keys()[:self.params['budget']]
-#    def selectTargetLattices(self, currentTimeUnit, hashtag): 
-#        latticeScores = defaultdict(float)
-#        for currentLattice in hashtag.occuranceDistributionInLattices:
-#            for neighborLattice in self.model['sharingProbaility'][currentLattice]: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['sharingProbaility'][currentLattice][neighborLattice])
-#        if latticeScores: 
-#            for lattice in latticeScores:
-#                noOfOccurances = len(hashtag.occuranceDistributionInLattices.get(lattice, []))
-#                if noOfOccurances!=0: latticeScores[lattice]+=math.log(noOfOccurances)
-##                else: latticeScores[lattice]+=float('-inf')
-##            print hashtag.hashtagObject['h'], zip(*sorted(latticeScores.iteritems(), key=itemgetter(1), reverse=True))[0][:self.params['budget']]
-#            return zip(*sorted(latticeScores.iteritems(), key=itemgetter(1), reverse=True))[0][:self.params['budget']]
-#        else: 
-##            print hashtag.hashtagObject['h'], zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
-#            return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
     def selectTargetLattices(self, currentTimeUnit, hashtag): 
         targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
-#        if len(targetLattices)<self.params['budget']: 
-#            latticeScores = defaultdict(float)
-#            for currentLattice in hashtag.occuranceDistributionInLattices:
-#                for neighborLattice in self.model['sharingProbaility'][currentLattice]: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['sharingProbaility'][currentLattice][neighborLattice])
-#                for lattice in latticeScores:
-#                    noOfOccurances = len(hashtag.occuranceDistributionInLattices.get(lattice, []))
-#                    if noOfOccurances!=0: latticeScores[lattice]+=math.log(noOfOccurances)
-#    #                else: latticeScores[lattice]+=float('-inf')
-#    #            print hashtag.hashtagObject['h'], zip(*sorted(latticeScores.iteritems(), key=itemgetter(1), reverse=True))[0][:self.params['budget']]
-#                targetLattices+=zip(*sorted(latticeScores.iteritems(), key=itemgetter(1), reverse=True))[0][:self.params['budget']-len(targetLattices)]
+        targetLattices = list(targetLattices)
+        if len(targetLattices)<self.params['budget']: 
+            latticeScores = defaultdict(float)
+            for currentLattice in hashtag.occuranceDistributionInLattices:
+                for neighborLattice in self.model['sharingProbaility'][currentLattice]: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['sharingProbaility'][currentLattice][neighborLattice])
+                for lattice in latticeScores:
+                    noOfOccurances = len(hashtag.occuranceDistributionInLattices.get(lattice, []))
+                    if noOfOccurances!=0: latticeScores[lattice]+=math.log(noOfOccurances)
+                extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1))
+#                extraTargetLattices.reverse()
+                while len(targetLattices)<self.params['budget'] and extraTargetLattices:
+                    t = extraTargetLattices.pop()
+                    if t[0] not in targetLattices: targetLattices.append(t[0])
         assert len(targetLattices)<=self.params['budget']
         return targetLattices
         
@@ -317,13 +298,16 @@ class Simulation:
     @staticmethod
     def run():
         params = dict(budget=5, timeUnitToPickTargetLattices=6)
-        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+#        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
-#        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel,
+#        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
+#        LatticeSelectionModel.plotModelWithVaryingBudget([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel,
 #                                                                                GreedyLatticeSelectionModel], 
 #                                                                               Metrics.overall_hit_rate, 
 #                                                                               params=params)
