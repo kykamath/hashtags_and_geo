@@ -192,7 +192,7 @@ class HashtagsClassifier:
     
     RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES=500
     PERCENTAGE_OF_OCCURANCES_IN_SUB_ACTIVITY_REGION=1.0
-    CLASSIFIER_TIME_UNIT_IN_SECONDS = 12*60
+    CLASSIFIER_TIME_UNIT_IN_SECONDS = 5*60
     
     classes = {
                'slow_burst_::_local':0,
