@@ -156,25 +156,25 @@ class LatticeSelectionModel(object):
         plt.legend(loc=4)
         plt.title('%s comparison'%metric)
         plt.show()
-#    def plotVaringBudgetAndTimeUnits(self):
-#        # overall_hit_rate, miss_rate_before_target_selection, hit_rate_after_target_selection
-#        metrics = ['hit_rate_after_target_selection']
-#        for metric in metrics:
-#            self.params['evaluationName'] = 'budget_time'
-#            scoreDistribution = defaultdict(dict)
-#    #        print self.getModelSimulationFile()
-#            for data in FileIO.iterateJsonFromFile(self.getModelSimulationFile()):
-#                timeUnit, budget = data['params']['timeUnitToPickTargetLattices'], data['params']['budget']
-#                for h in data['hashtags']: 
-#                    if data['hashtags'][h]['metrics'][metric]!=None: 
-#                        if budget not in scoreDistribution[timeUnit]: scoreDistribution[timeUnit][budget] = []
-#                        scoreDistribution[timeUnit][budget].append(data['hashtags'][h]['metrics'][metric])
-#            for timeUnit in scoreDistribution:
-#                for budget in scoreDistribution[timeUnit]:
-#                    scoreDistribution[timeUnit][budget] = np.mean(scoreDistribution[timeUnit][budget])
-#            print metric
-#            plot3D(scoreDistribution)
-#            plt.show()
+    def plotVaringBudgetAndTimeUnits(self):
+        # overall_hit_rate, miss_rate_before_target_selection, hit_rate_after_target_selection
+        metrics = [Metrics.overall_hit_rate]
+        for metric in metrics:
+            self.params['evaluationName'] = 'budget_time'
+            scoreDistribution = defaultdict(dict)
+    #        print self.getModelSimulationFile()
+            for data in FileIO.iterateJsonFromFile(self.getModelSimulationFile()):
+                timeUnit, budget = data['params']['timeUnitToPickTargetLattices'], data['params']['budget']
+                for h in data['hashtags']: 
+                    if data['hashtags'][h]['metrics'][metric]!=None: 
+                        if budget not in scoreDistribution[timeUnit]: scoreDistribution[timeUnit][budget] = []
+                        scoreDistribution[timeUnit][budget].append(data['hashtags'][h]['metrics'][metric])
+            for timeUnit in scoreDistribution:
+                for budget in scoreDistribution[timeUnit]:
+                    scoreDistribution[timeUnit][budget] = np.mean(scoreDistribution[timeUnit][budget])
+            print metric
+            plot3D(scoreDistribution)
+            plt.show()
             
 class GreedyLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
@@ -300,7 +300,7 @@ class Simulation:
         params = dict(budget=5, timeUnitToPickTargetLattices=6)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
-        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
+#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
@@ -311,6 +311,7 @@ class Simulation:
 #                                                                                GreedyLatticeSelectionModel], 
 #                                                                               Metrics.overall_hit_rate, 
 #                                                                               params=params)
+        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotVaringBudgetAndTimeUnits()
         
 if __name__ == '__main__':
     Simulation.run()
