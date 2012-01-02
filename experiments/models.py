@@ -36,6 +36,7 @@ def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, ne
 
 GREEDY_LATTICE_SELECTION_MODEL = 'greedy'
 SHARING_PROBABILITY_LATTICE_SELECTION_MODEL = 'sharing_probability'
+TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL = 'transmitting_probability'
 
 class Metrics:
     overall_hit_rate = 'overall_hit_rate'
@@ -222,6 +223,24 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
                     if t[0] not in targetLattices: targetLattices.append(t[0])
         assert len(targetLattices)<=self.params['budget']
         return targetLattices
+    
+class TransmittingProbabilityLatticeSelectionModel(SharingProbabilityLatticeSelectionModel):
+    def __init__(self, folderType=None, timeRange=None, **kwargs): 
+        super(TransmittingProbabilityLatticeSelectionModel, self).__init__(TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, folderType, timeRange, **kwargs)
+    def initializeModel(self):
+        self.model = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
+        hashtagsObserved = []
+        for latticeObject in FileIO.iterateJsonFromFile(self.graphFile):
+            latticeHashtagsSet = set(latticeObject['hashtags'])
+            hashtagsObserved+=latticeObject['hashtags']
+            self.model['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
+            for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+                neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
+                neighborHashtagsSet = set(neighborHashtags)
+                self.model['neighborProbability'][latticeObject['id']][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
+            self.model['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
+        totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
+        for lattice in self.model['hashtagObservingProbability'].keys()[:]: self.model['hashtagObservingProbability'][lattice] = len(self.model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
         
 def normalize(data):
     total = math.sqrt(float(sum([d**2 for d in data])))
