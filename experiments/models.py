@@ -192,7 +192,7 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
             self.graphFile = hashtagsLatticeGraphFile%(folderType,'%s_%s'%timeRange)
             self.initializeModel()
     def initializeModel(self):
-        self.model = {'sharingProbaility': defaultdict(dict), 'hashtagObservingProbability': {}}
+        self.model = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
         hashtagsObserved = []
         for latticeObject in FileIO.iterateJsonFromFile(self.graphFile):
             latticeHashtagsSet = set(latticeObject['hashtags'])
@@ -201,8 +201,8 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
             for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
                 neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
                 neighborHashtagsSet = set(neighborHashtags)
-                self.model['sharingProbaility'][latticeObject['id']][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
-            self.model['sharingProbaility'][latticeObject['id']][latticeObject['id']]=1.0
+                self.model['neighborProbability'][latticeObject['id']][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
+            self.model['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in self.model['hashtagObservingProbability'].keys()[:]: self.model['hashtagObservingProbability'][lattice] = len(self.model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
     def selectTargetLattices(self, currentTimeUnit, hashtag): 
@@ -211,7 +211,7 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
         if len(targetLattices)<self.params['budget']: 
             latticeScores = defaultdict(float)
             for currentLattice in hashtag.occuranceDistributionInLattices:
-                for neighborLattice in self.model['sharingProbaility'][currentLattice]: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['sharingProbaility'][currentLattice][neighborLattice])
+                for neighborLattice in self.model['neighborProbability'][currentLattice]: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['neighborProbability'][currentLattice][neighborLattice])
 #                for lattice in latticeScores:
 #                    noOfOccurances = len(hashtag.occuranceDistributionInLattices.get(lattice, []))
 #                    if noOfOccurances!=0: latticeScores[lattice]+=math.log(noOfOccurances)
