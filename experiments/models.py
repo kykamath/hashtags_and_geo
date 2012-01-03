@@ -187,8 +187,8 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with highest probability:
         score(l1) = P(l2)*P(l1|l2) + P(l3)*P(l1|l3) ... (where l2 and l3 are observed).
     '''
-    def __init__(self, folderType=None, timeRange=None, **kwargs): 
-        super(SharingProbabilityLatticeSelectionModel, self).__init__(SHARING_PROBABILITY_LATTICE_SELECTION_MODEL, **kwargs)
+    def __init__(self, id=SHARING_PROBABILITY_LATTICE_SELECTION_MODEL, folderType=None, timeRange=None, **kwargs): 
+        super(SharingProbabilityLatticeSelectionModel, self).__init__(id, **kwargs)
         if folderType:
             self.graphFile = hashtagsLatticeGraphFile%(folderType,'%s_%s'%timeRange)
             self.initializeModel()
@@ -212,7 +212,8 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
         if len(targetLattices)<self.params['budget']: 
             latticeScores = defaultdict(float)
             for currentLattice in hashtag.occuranceDistributionInLattices:
-                for neighborLattice in self.model['neighborProbability'][currentLattice]: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['neighborProbability'][currentLattice][neighborLattice])
+                for neighborLattice in self.model['neighborProbability'][currentLattice]: 
+                    if self.model['neighborProbability'][currentLattice][neighborLattice] > 0: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['neighborProbability'][currentLattice][neighborLattice])
 #                for lattice in latticeScores:
 #                    noOfOccurances = len(hashtag.occuranceDistributionInLattices.get(lattice, []))
 #                    if noOfOccurances!=0: latticeScores[lattice]+=math.log(noOfOccurances)
@@ -235,9 +236,10 @@ class TransmittingProbabilityLatticeSelectionModel(SharingProbabilityLatticeSele
             hashtagsObserved+=latticeObject['hashtags']
             self.model['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
             for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
-                neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
-                neighborHashtagsSet = set(neighborHashtags)
-                self.model['neighborProbability'][latticeObject['id']][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
+                neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags, findLag=False)
+#                neighborHashtagsSet = set(neighborHashtags)
+                transmittedHashtags = [k for k in neighborHashtags if k in latticeObject['hashtags'] and latticeObject['hashtags'][k][0]<neighborHashtags[k][0]]
+                self.model['neighborProbability'][latticeObject['id']][neighborLattice]=len(transmittedHashtags)/float(len(latticeHashtagsSet))
             self.model['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in self.model['hashtagObservingProbability'].keys()[:]: self.model['hashtagObservingProbability'][lattice] = len(self.model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
@@ -326,8 +328,10 @@ class Simulation:
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
-        LatticeSelectionModel.plotModelWithVaryingBudget([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel,
-                                                                                GreedyLatticeSelectionModel], 
+#        TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+#        TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel,
+                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
                                                                                Metrics.overall_hit_rate, 
                                                                                    params=params)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotVaringBudgetAndTimeUnits()
