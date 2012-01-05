@@ -3,6 +3,8 @@ Created on Dec 11, 2011
 
 @author: kykamath
 '''
+import sys
+sys.path.append('../')
 from library.file_io import FileIO
 from settings import hashtagsWithoutEndingWindowFile, hashtagsClassifiersFolder, hashtagsFile
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
@@ -43,11 +45,18 @@ class Classifier:
     @staticmethod
     def buildClassifier():
         documents = []
-        for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
-            ov = Hashtag(h, dataStructuresToBuildClassifier=True)
-            if ov.isValidObject() and ov.classifiable: documents.append(ov.getVector(5))
-        Classifier(5, features=Classifier.FEATURES_OCCURANCES_RADIUS).build(documents)
-
+        for numberOfTimeUnits in range(1,25):
+#            numberOfTimeUnits = 5
+            classifier = Classifier(numberOfTimeUnits, features=Classifier.FEATURES_RADIUS)
+            for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+                ov = Hashtag(h, dataStructuresToBuildClassifier=True)
+                if ov.isValidObject() and ov.classifiable: 
+                    if classifier.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=True))
+                    else: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=False))
+            trainDocuments = documents[:int(len(documents)*0.80)]
+            testDocuments = documents[:int(len(documents)*0.20)]
+            classifier.build(trainDocuments)
+#        print classifier.score(testDocuments)
 #X, y = zip(*documents)
 #X = np.array(X)
 #y = np.array(y)
@@ -70,6 +79,8 @@ class Classifier:
 ##joblib.dump(clf, 'classifiers/abc.pkl')
 #clf = joblib.load('classifiers/abc.pkl')
 #print clf.score(testX, testy)
+
+#0.937282229965
 
 
 #Classifier(5).build(trainDocuments)
