@@ -20,9 +20,12 @@ from library.classes import GeneralMethods
 timeRange, folderType = (2,11), 'world'
 
 class Classifier:
-    def __init__(self, numberOfTimeUnits, folderType='world'):
-        self.classfierFile = hashtagsClassifiersFolder%(folderType, numberOfTimeUnits)+'model.pkl'
+    FEATURES_RADIUS = 'radius'
+    FEATURES_OCCURANCES_RADIUS = 'occurances_radius'
+    def __init__(self, numberOfTimeUnits, features):
         self.clf = None
+        self.features = features
+        self.classfierFile = hashtagsClassifiersFolder%(self.features, numberOfTimeUnits)+'model.pkl'
     def build(self, documents):
         X, y = zip(*documents)
         self.clf = SVC(probability=True)
@@ -37,19 +40,13 @@ class Classifier:
     def load(self): 
         if self.clf==None: self.clf = joblib.load(self.classfierFile)
         return self.clf
-
-i = 1
-documents = []
-#for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)):
-for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
-    ov = Hashtag(h, dataStructuresToBuildClassifier=True)
-    if ov.isValidObject() and ov.classifiable: 
-#        print ov.hashtagClassId
-        documents.append(ov.getVector(5))
-    print i
-    i+=1
-    if i==200: break;
-    
+    @staticmethod
+    def buildClassifier():
+        documents = []
+        for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+            ov = Hashtag(h, dataStructuresToBuildClassifier=True)
+            if ov.isValidObject() and ov.classifiable: documents.append(ov.getVector(5))
+        Classifier(5, features=Classifier.FEATURES_OCCURANCES_RADIUS).build(documents)
 
 #X, y = zip(*documents)
 #X = np.array(X)
@@ -62,8 +59,8 @@ for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11
 #    clf.fit(X_train, y_train)
 #    print clf.score(X_test, y_test)
 
-trainDocuments = documents[:int(len(documents)*0.80)]
-testDocuments = documents[:int(len(documents)*0.20)]
+#trainDocuments = documents[:int(len(documents)*0.80)]
+#testDocuments = documents[:int(len(documents)*0.20)]
 
 #trainX, trainy = zip(*trainDocuments)
 #testX, testy = zip(*testDocuments)
@@ -76,4 +73,5 @@ testDocuments = documents[:int(len(documents)*0.20)]
 
 
 #Classifier(5).build(trainDocuments)
-print Classifier(5).score(testDocuments)
+#print Classifier(5).score(testDocuments)
+Classifier.buildClassifier()

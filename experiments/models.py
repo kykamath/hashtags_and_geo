@@ -271,12 +271,13 @@ class Hashtag:
                     if t: self.occuranceLatticesVector.append(getRadius(zip(*t)[0]))
                     else: self.occuranceLatticesVector.append(0.0)
             else: self.classifiable=False
-    def getVector(self, length):
+    def getVector(self, length, radiusOnly=True):
         if len(self.occuranceCountVector)<length: 
             difference = length-len(self.occuranceCountVector)
             self.occuranceCountVector=self.occuranceCountVector+[0 for i in range(difference)]
             self.occuranceLatticesVector=self.occuranceLatticesVector+[0 for i in range(difference)]
-        vector = normalize(self.occuranceCountVector[:length]) + self.occuranceLatticesVector[:length]
+        if radiusOnly: vector = self.occuranceLatticesVector[:length]
+        else: vector = self.occuranceLatticesVector[:length] + normalize(self.occuranceCountVector[:length])
         return [vector, self.hashtagClassId]
     def isValidObject(self):
         if not self.hashtagObject['oc']: return False
