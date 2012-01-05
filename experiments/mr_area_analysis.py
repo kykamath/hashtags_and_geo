@@ -202,7 +202,8 @@ class HashtagsClassifier:
                }
     
     @staticmethod
-    def getId(locality, periodicity): return HashtagsClassifier.classes['%s_::_%s'%(periodicity, locality)]
+    def getId(locality, periodicity): return HashtagsClassifier.classes['%s_::_%s'%(HashtagsClassifier.PERIODICITY_ID_SLOW_BURST, locality)]
+#    def getId(locality, periodicity): return HashtagsClassifier.classes['%s_::_%s'%(periodicity, locality)]
     @staticmethod
     def classify(hashtagObject): 
         periodicityId = HashtagsClassifier.getPeriodicityClass(hashtagObject)
