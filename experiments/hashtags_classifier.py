@@ -58,13 +58,13 @@ class Classifier:
                 if self.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=True))
                 else: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=False))
         testDocuments = documents[-int(len(documents)*0.20):]
-        print {'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}
-#        FileIO.writeToFileAsJson({'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}, Classifier.classifiersPerformanceFile)
+#        print {'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}
+        FileIO.writeToFileAsJson({'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}, Classifier.classifiersPerformanceFile)
     @staticmethod
     def testClassifierPerformances():
         GeneralMethods.runCommand('rm -rf %s'%Classifier.classifiersPerformanceFile)
-        for feature in [Classifier.FEATURES_RADIUS, Classifier.FEATURES_OCCURANCES_RADIUS]:
-            for numberOfTimeUnits in range(1,25):
+        for numberOfTimeUnits in range(1,25):
+            for feature in [Classifier.FEATURES_RADIUS, Classifier.FEATURES_OCCURANCES_RADIUS]:
 #                documents = []
                 classifier = Classifier(numberOfTimeUnits, features=feature)
 #                for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
@@ -78,7 +78,7 @@ class Classifier:
     @staticmethod
     def buildClassifiers():
         for feature in [Classifier.FEATURES_RADIUS, Classifier.FEATURES_OCCURANCES_RADIUS]:
-            for numberOfTimeUnits in range(1,2):
+            for numberOfTimeUnits in range(1,25):
 #                documents = []
                 classifier = Classifier(numberOfTimeUnits, features=feature)
 #                for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
