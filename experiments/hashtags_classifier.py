@@ -8,6 +8,7 @@ sys.path.append('../')
 from library.file_io import FileIO
 from settings import hashtagsClassifiersFolder, hashtagsFile,\
     hashtagsAnalysisFolder
+from experiments.mr_area_analysis import HashtagsClassifier
 from sklearn.svm import SVC
 from experiments.models import Hashtag
 from sklearn.externals import joblib
@@ -17,7 +18,7 @@ from library.classes import GeneralMethods
 class Classifier:
     FEATURES_RADIUS = 'radius'
     FEATURES_OCCURANCES_RADIUS = 'occurances_radius'
-    FEATURES_AGGGREGATED_RADIUS = 'aggregate_radius'
+    FEATURES_AGGGREGATED_OCCURANCES_RADIUS = 'aggregate_occurances_radius'
     classifiersPerformanceFile = hashtagsAnalysisFolder+'/classifiers/classifier_performance'
     def __init__(self, numberOfTimeUnits, features):
         self.clf = None
@@ -42,29 +43,40 @@ class Classifier:
         if self.clf==None: self.clf = joblib.load(self.classfierFile)
         return self.clf.predict(document)
     def buildClassifier(self):
-        documents = []
-        for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
-            ov = Hashtag(h, dataStructuresToBuildClassifier=True)
-            if ov.isValidObject() and ov.classifiable: 
-                if self.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=True))
-                else: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=False))
+        documents = self._getDocuments()
+#        for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+#            ov = Hashtag(h, dataStructuresToBuildClassifier=True)
+#            if ov.isValidObject() and ov.classifiable: 
+#                if self.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=True))
+#                else: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=False))
         trainDocuments = documents[:int(len(documents)*0.80)]
         self.build(trainDocuments)
-    def testClassifierPerformance(self):
+    def _getDocuments(self):
         documents = []
-        for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+        for i, h in enumerate(FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11)))):
             ov = Hashtag(h, dataStructuresToBuildClassifier=True)
+#            print i
             if ov.isValidObject() and ov.classifiable: 
                 if self.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=True))
-                else: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=False))
+                elif self.features == Classifier.FEATURES_OCCURANCES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=False))
+                elif self.features == Classifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS: 
+                    vector = ov.getVector(self.numberOfTimeUnits, radiusOnly=False, aggregate=True)
+                    if vector[0][-1]>=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: vector[0][-1] = 1
+                    else: vector[0][-1] = 0
+#                    base = HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES
+#                    vector[-1] = int((vector[-1]/base))*base
+                    documents.append(vector)
+        return documents
+    def testClassifierPerformance(self):
+        documents = self._getDocuments()
         testDocuments = documents[-int(len(documents)*0.20):]
-#        print {'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}
-        FileIO.writeToFileAsJson({'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}, Classifier.classifiersPerformanceFile)
+        print {'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}
+#        FileIO.writeToFileAsJson({'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}, Classifier.classifiersPerformanceFile)
     @staticmethod
     def testClassifierPerformances():
         GeneralMethods.runCommand('rm -rf %s'%Classifier.classifiersPerformanceFile)
         for numberOfTimeUnits in range(1,25):
-            for feature in [Classifier.FEATURES_RADIUS, Classifier.FEATURES_OCCURANCES_RADIUS]:
+            for feature in [Classifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS, Classifier.FEATURES_OCCURANCES_RADIUS, Classifier.FEATURES_RADIUS]:
 #                documents = []
                 classifier = Classifier(numberOfTimeUnits, features=feature)
 #                for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
@@ -77,7 +89,7 @@ class Classifier:
                 classifier.testClassifierPerformance()
     @staticmethod
     def buildClassifiers():
-        for feature in [Classifier.FEATURES_RADIUS, Classifier.FEATURES_OCCURANCES_RADIUS]:
+        for feature in [Classifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS]:
             for numberOfTimeUnits in range(1,25):
 #                documents = []
                 classifier = Classifier(numberOfTimeUnits, features=feature)
