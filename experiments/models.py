@@ -244,6 +244,8 @@ class TransmittingProbabilityLatticeSelectionModel(SharingProbabilityLatticeSele
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in self.model['hashtagObservingProbability'].keys()[:]: self.model['hashtagObservingProbability'][lattice] = len(self.model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
         
+class TransmittingProbabilityLatticeSelectionModel(SharingProbabilityLatticeSelectionModel): 
+        
 def normalize(data):
     total = math.sqrt(float(sum([d**2 for d in data])))
     if total==0: return map(lambda d: 0, data)
