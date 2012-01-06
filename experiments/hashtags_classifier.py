@@ -57,7 +57,7 @@ class Classifier:
                         if classifier.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=True))
                         else: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=False))
                 testDocuments = documents[-int(len(documents)*0.20):]
-                FileIO.writeToFileAsJson({'features': classifier.features, 'numberOfTimeUnits': numberOfTimeUnits, 'score': classifier.score(testDocuments)}, file)
+                FileIO.writeToFileAsJson({'features': classifier.features, 'numberOfTimeUnits': numberOfTimeUnits, 'score': classifier.score(testDocuments)}, Classifier.classifiersPerformanceFile)
     @staticmethod
     def buildClassifier():
         for numberOfTimeUnits in range(1,25):
