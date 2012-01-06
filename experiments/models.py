@@ -267,17 +267,22 @@ class Hashtag:
                 self.occurances = zip(*sorted(occurranceDistributionInEpochs.iteritems(), key=itemgetter(0)))[1]
                 self.occuranceCountVector = map(lambda t: len(t), self.occurances)
                 self.occuranceLatticesVector = []
+                self.occuranceLatticesAggregatedVector = []
+                tempOccurances = []
                 for t in self.occurances:
+                    tempOccurances+=t
                     if t: self.occuranceLatticesVector.append(getRadius(zip(*t)[0]))
                     else: self.occuranceLatticesVector.append(0.0)
+                    self.occuranceLatticesAggregatedVector.append(getRadius(zip(*tempOccurances)[0]))
             else: self.classifiable=False
     def getVector(self, length, radiusOnly=True):
         if len(self.occuranceCountVector)<length: 
             difference = length-len(self.occuranceCountVector)
             self.occuranceCountVector=self.occuranceCountVector+[0 for i in range(difference)]
             self.occuranceLatticesVector=self.occuranceLatticesVector+[0 for i in range(difference)]
+            self.occuranceLatticesAggregatedVector=self.occuranceLatticesAggregatedVector+[self.occuranceLatticesAggregatedVector[-1] for i in range(difference)]
         if radiusOnly: vector = self.occuranceLatticesVector[:length]
-        else: vector = self.occuranceLatticesVector[:length] + normalize(self.occuranceCountVector[:length])
+        else: vector = self.occuranceLatticesVector[:length] + normalize(self.occuranceCountVector[:length]) + [self.occuranceLatticesAggregatedVector[length-1]]
         return [vector, self.hashtagClassId]
     def isValidObject(self):
         if not self.hashtagObject['oc']: return False
