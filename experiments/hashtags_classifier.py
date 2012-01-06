@@ -60,9 +60,9 @@ class Classifier:
                 if self.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=True))
                 elif self.features == Classifier.FEATURES_OCCURANCES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=False))
                 elif self.features == Classifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS: 
-                    vector = ov.getVector(self.numberOfTimeUnits, radiusOnly=False, aggregate=True)
-                    if vector[0][-1]>=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: vector[0][-1] = 1
-                    else: vector[0][-1] = 0
+                    vector = ov.getVector(self.numberOfTimeUnits, radiusOnly=True, aggregate=True)
+                    if vector[0][-1]>=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: vector[0] = [1]
+                    else: vector[0] = [0]
 #                    base = HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES
 #                    vector[-1] = int((vector[-1]/base))*base
                     documents.append(vector)
@@ -71,10 +71,10 @@ class Classifier:
         documents = self._getDocuments()
         testDocuments = documents[-int(len(documents)*0.20):]
         print {'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}
-#        FileIO.writeToFileAsJson({'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}, Classifier.classifiersPerformanceFile)
+        FileIO.writeToFileAsJson({'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}, Classifier.classifiersPerformanceFile)
     @staticmethod
     def testClassifierPerformances():
-        GeneralMethods.runCommand('rm -rf %s'%Classifier.classifiersPerformanceFile)
+#        GeneralMethods.runCommand('rm -rf %s'%Classifier.classifiersPerformanceFile)
         for numberOfTimeUnits in range(1,25):
             for feature in [Classifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS, Classifier.FEATURES_OCCURANCES_RADIUS, Classifier.FEATURES_RADIUS]:
 #                documents = []
