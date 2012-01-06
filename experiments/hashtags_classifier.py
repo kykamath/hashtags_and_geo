@@ -6,7 +6,8 @@ Created on Dec 11, 2011
 import sys
 sys.path.append('../')
 from library.file_io import FileIO
-from settings import hashtagsWithoutEndingWindowFile, hashtagsClassifiersFolder, hashtagsFile
+from settings import hashtagsWithoutEndingWindowFile, hashtagsClassifiersFolder, hashtagsFile,\
+    hashtagsAnalysisFolder
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     getOccurranceDistributionInEpochs, HashtagsClassifier, getRadius
 from operator import itemgetter
@@ -24,6 +25,7 @@ timeRange, folderType = (2,11), 'world'
 class Classifier:
     FEATURES_RADIUS = 'radius'
     FEATURES_OCCURANCES_RADIUS = 'occurances_radius'
+    classifiersPerformanceFile = hashtagsAnalysisFolder+'/classifiers/classifier_performance'
     def __init__(self, numberOfTimeUnits, features):
         self.clf = None
         self.features = features
@@ -43,10 +45,23 @@ class Classifier:
         if self.clf==None: self.clf = joblib.load(self.classfierFile)
         return self.clf
     @staticmethod
+    def testClassifierPerformance():
+        GeneralMethods.runCommand('rm -rf %s*'%Classifier.classifiersPerformanceFile)
+        for feature in [Classifier.FEATURES_RADIUS, Classifier.FEATURES_OCCURANCES_RADIUS]:
+            for numberOfTimeUnits in range(1,25):
+                documents = []
+                classifier = Classifier(numberOfTimeUnits, features=feature)
+                for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+                    ov = Hashtag(h, dataStructuresToBuildClassifier=True)
+                    if ov.isValidObject() and ov.classifiable: 
+                        if classifier.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=True))
+                        else: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=False))
+                testDocuments = documents[-int(len(documents)*0.20):]
+                FileIO.writeToFileAsJson({'features': classifier.features, 'numberOfTimeUnits': numberOfTimeUnits, 'score': classifier.score(testDocuments)}, file)
+    @staticmethod
     def buildClassifier():
-        documents = []
         for numberOfTimeUnits in range(1,25):
-#            numberOfTimeUnits = 5
+            documents = []
             classifier = Classifier(numberOfTimeUnits, features=Classifier.FEATURES_RADIUS)
             for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
                 ov = Hashtag(h, dataStructuresToBuildClassifier=True)
@@ -85,4 +100,4 @@ class Classifier:
 
 #Classifier(5).build(trainDocuments)
 #print Classifier(5).score(testDocuments)
-Classifier.buildClassifier()
+Classifier.testClassifierPerformance()
