@@ -69,7 +69,6 @@ class Classifier:
                     if classifier.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=True))
                     else: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=False))
             trainDocuments = documents[:int(len(documents)*0.80)]
-            testDocuments = documents[:int(len(documents)*0.20)]
             classifier.build(trainDocuments)
 #        print classifier.score(testDocuments)
 #X, y = zip(*documents)
