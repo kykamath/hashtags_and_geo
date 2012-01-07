@@ -7,7 +7,8 @@ import sys
 sys.path.append('../')
 from library.file_io import FileIO
 from settings import hashtagsWithoutEndingWindowFile, hashtagsLatticeGraphFile,\
-    hashtagsFile, hashtagsModelsFolder
+    hashtagsFile, hashtagsModelsFolder, hashtagsAnalysisFolder,\
+    hashtagsClassifiersFolder
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     TIME_UNIT_IN_SECONDS, LATTICE_ACCURACY, HashtagsClassifier,\
     getOccurranceDistributionInEpochs,\
@@ -23,6 +24,8 @@ import datetime, math, random
 from library.classes import GeneralMethods
 import matplotlib.pyplot as plt
 from library.plotting import plot3D
+from sklearn.svm import SVC
+from sklearn.externals import joblib
 
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
@@ -37,6 +40,7 @@ def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, ne
 GREEDY_LATTICE_SELECTION_MODEL = 'greedy'
 SHARING_PROBABILITY_LATTICE_SELECTION_MODEL = 'sharing_probability'
 TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL = 'transmitting_probability'
+SHARING_PROBABILITY_LATTICE_SELECTION_WITH_LOCALITY_CLASSIFIER_MODEL = 'sharing_probability_with_locality_classifier'
 
 class Metrics:
     overall_hit_rate = 'overall_hit_rate'
@@ -214,11 +218,7 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
             for currentLattice in hashtag.occuranceDistributionInLattices:
                 for neighborLattice in self.model['neighborProbability'][currentLattice]: 
                     if self.model['neighborProbability'][currentLattice][neighborLattice] > 0: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['neighborProbability'][currentLattice][neighborLattice])
-#                for lattice in latticeScores:
-#                    noOfOccurances = len(hashtag.occuranceDistributionInLattices.get(lattice, []))
-#                    if noOfOccurances!=0: latticeScores[lattice]+=math.log(noOfOccurances)
                 extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1))
-#                extraTargetLattices.reverse()
                 while len(targetLattices)<self.params['budget'] and extraTargetLattices:
                     t = extraTargetLattices.pop()
                     if t[0] not in targetLattices: targetLattices.append(t[0])
@@ -244,7 +244,86 @@ class TransmittingProbabilityLatticeSelectionModel(SharingProbabilityLatticeSele
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in self.model['hashtagObservingProbability'].keys()[:]: self.model['hashtagObservingProbability'][lattice] = len(self.model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
         
-class TransmittingProbabilityLatticeSelectionModel(SharingProbabilityLatticeSelectionModel): 
+class SharingProbabilityLatticeSelectionWithLocalityClassifierModel(SharingProbabilityLatticeSelectionModel):
+    def __init__(self, folderType=None, timeRange=None, **kwargs): 
+        super(SharingProbabilityLatticeSelectionWithLocalityClassifierModel, self).__init__(SHARING_PROBABILITY_LATTICE_SELECTION_WITH_LOCALITY_CLASSIFIER_MODEL, folderType, timeRange, **kwargs)
+    def selectTargetLattices(self, currentTimeUnit, hashtag): 
+        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+        targetLattices = list(targetLattices)
+        if len(targetLattices)<self.params['budget']: 
+            latticeScores = defaultdict(float)
+            for currentLattice in hashtag.occuranceDistributionInLattices:
+                for neighborLattice in self.model['neighborProbability'][currentLattice]: 
+                    if self.model['neighborProbability'][currentLattice][neighborLattice] > 0: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['neighborProbability'][currentLattice][neighborLattice])
+                extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1))
+                while len(targetLattices)<self.params['budget'] and extraTargetLattices:
+                    t = extraTargetLattices.pop()
+                    if t[0] not in targetLattices: targetLattices.append(t[0])
+        assert len(targetLattices)<=self.params['budget']
+        return targetLattices
+    
+class LocalityClassifier:
+    FEATURES_RADIUS = 'radius'
+    FEATURES_OCCURANCES_RADIUS = 'occurances_radius'
+    FEATURES_AGGGREGATED_OCCURANCES_RADIUS = 'aggregate_occurances_radius'
+    classifiersPerformanceFile = hashtagsAnalysisFolder+'/classifiers/classifier_performance'
+    def __init__(self, numberOfTimeUnits, features):
+        self.clf = None
+        self.numberOfTimeUnits = numberOfTimeUnits
+        self.features = features
+        self.classfierFile = hashtagsClassifiersFolder%(self.features, numberOfTimeUnits)+'model.pkl'
+    def build(self, documents):
+        X, y = zip(*documents)
+        self.clf = SVC(probability=True)
+        self.clf.fit(X, y)
+        GeneralMethods.runCommand('rm -rf %s*'%self.classfierFile)
+        FileIO.createDirectoryForFile(self.classfierFile)
+        joblib.dump(self.clf, self.classfierFile)
+    def score(self, documents):
+        testX, testy = zip(*documents)
+        self.clf = self.load()
+        return self.clf.score(testX, testy)
+    def load(self): 
+        if self.clf==None: self.clf = joblib.load(self.classfierFile)
+        return self.clf
+    def predict(self, document):
+        if self.clf==None: self.clf = joblib.load(self.classfierFile)
+        return self.clf.predict(document)
+    def buildClassifier(self):
+        documents = self._getDocuments()
+        trainDocuments = documents[:int(len(documents)*0.80)]
+        self.build(trainDocuments)
+    def _getDocuments(self):
+        documents = []
+        for i, h in enumerate(FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11)))):
+            ov = Hashtag(h, dataStructuresToBuildClassifier=True)
+            if ov.isValidObject() and ov.classifiable: 
+                if self.features == LocalityClassifier.FEATURES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=True))
+                elif self.features == LocalityClassifier.FEATURES_OCCURANCES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=False))
+                elif self.features == LocalityClassifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS: 
+                    vector = ov.getVector(self.numberOfTimeUnits, radiusOnly=True, aggregate=True)
+                    if vector[0][-1]>=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: vector[0] = [1]
+                    else: vector[0] = [0]
+                    documents.append(vector)
+        return documents
+    def testClassifierPerformance(self):
+        documents = self._getDocuments()
+        testDocuments = documents[-int(len(documents)*0.20):]
+        print {'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}
+        FileIO.writeToFileAsJson({'features': self.features, 'numberOfTimeUnits': self.numberOfTimeUnits, 'score': self.score(testDocuments)}, LocalityClassifier.classifiersPerformanceFile)
+    @staticmethod
+    def testClassifierPerformances():
+#        GeneralMethods.runCommand('rm -rf %s'%Classifier.classifiersPerformanceFile)
+        for numberOfTimeUnits in range(1,25):
+            for feature in [LocalityClassifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS, LocalityClassifier.FEATURES_OCCURANCES_RADIUS, LocalityClassifier.FEATURES_RADIUS]:
+                classifier = LocalityClassifier(numberOfTimeUnits, features=feature)
+                classifier.testClassifierPerformance()
+    @staticmethod
+    def buildClassifiers():
+        for feature in [LocalityClassifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS]:
+            for numberOfTimeUnits in range(1,25):
+                classifier = LocalityClassifier(numberOfTimeUnits, features=feature)
+                classifier.buildClassifier()
         
 def normalize(data):
     total = math.sqrt(float(sum([d**2 for d in data])))
@@ -349,3 +428,4 @@ if __name__ == '__main__':
     Simulation.run()
 #    SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), params={})
 #    model.saveModelSimulation()
+#    LocalityClassifier.testClassifierPerformances()

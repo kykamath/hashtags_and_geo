@@ -44,11 +44,6 @@ class Classifier:
         return self.clf.predict(document)
     def buildClassifier(self):
         documents = self._getDocuments()
-#        for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
-#            ov = Hashtag(h, dataStructuresToBuildClassifier=True)
-#            if ov.isValidObject() and ov.classifiable: 
-#                if self.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=True))
-#                else: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=False))
         trainDocuments = documents[:int(len(documents)*0.80)]
         self.build(trainDocuments)
     def _getDocuments(self):
@@ -63,8 +58,6 @@ class Classifier:
                     vector = ov.getVector(self.numberOfTimeUnits, radiusOnly=True, aggregate=True)
                     if vector[0][-1]>=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: vector[0] = [1]
                     else: vector[0] = [0]
-#                    base = HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES
-#                    vector[-1] = int((vector[-1]/base))*base
                     documents.append(vector)
         return documents
     def testClassifierPerformance(self):
@@ -77,45 +70,13 @@ class Classifier:
 #        GeneralMethods.runCommand('rm -rf %s'%Classifier.classifiersPerformanceFile)
         for numberOfTimeUnits in range(1,25):
             for feature in [Classifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS, Classifier.FEATURES_OCCURANCES_RADIUS, Classifier.FEATURES_RADIUS]:
-#                documents = []
                 classifier = Classifier(numberOfTimeUnits, features=feature)
-#                for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
-#                    ov = Hashtag(h, dataStructuresToBuildClassifier=True)
-#                    if ov.isValidObject() and ov.classifiable: 
-#                        if classifier.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=True))
-#                        else: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=False))
-#                testDocuments = documents[-int(len(documents)*0.20):]
-#                FileIO.writeToFileAsJson({'features': classifier.features, 'numberOfTimeUnits': numberOfTimeUnits, 'score': classifier.score(testDocuments)}, Classifier.classifiersPerformanceFile)
                 classifier.testClassifierPerformance()
     @staticmethod
     def buildClassifiers():
         for feature in [Classifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS]:
             for numberOfTimeUnits in range(1,25):
-#                documents = []
                 classifier = Classifier(numberOfTimeUnits, features=feature)
-#                for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
-#                    ov = Hashtag(h, dataStructuresToBuildClassifier=True)
-#                    if ov.isValidObject() and ov.classifiable: 
-#                        if classifier.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=True))
-#                        else: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=False))
-#                trainDocuments = documents[:int(len(documents)*0.80)]
                 classifier.buildClassifier()
 
-#documents = []
-#numberOfTimeUnits = 1
-#classifier = Classifier(numberOfTimeUnits, features=Classifier.FEATURES_OCCURANCES_RADIUS)
-#for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
-#    ov = Hashtag(h, dataStructuresToBuildClassifier=True)
-#    if ov.isValidObject() and ov.classifiable: 
-#        if classifier.features == Classifier.FEATURES_RADIUS: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=True))
-#        else: documents.append(ov.getVector(numberOfTimeUnits, radiusOnly=False))
-#testDocuments = documents[-int(len(documents)*0.20):]
-#
-#for t in testDocuments:
-#    if classifier.predict(t[0])==1:
-#        print t, classifier.predict(t[0])
-
-#timeRange, folderType = (2,11), 'world'
-#Classifier(5).build(trainDocuments)
-#print Classifier(5).score(testDocuments)
 Classifier.testClassifierPerformances()
