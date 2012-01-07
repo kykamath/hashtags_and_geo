@@ -257,12 +257,12 @@ class SharingProbabilityLatticeSelectionWithLocalityClassifierModel(SharingProba
             for currentLattice in hashtag.occuranceDistributionInLattices:
                 for neighborLattice in self.model['neighborProbability'][currentLattice]: 
                     if self.model['neighborProbability'][currentLattice][neighborLattice] > 0: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['neighborProbability'][currentLattice][neighborLattice])
-            extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1))
-            while len(targetLattices)<self.params['budget'] and extraTargetLattices:
-                t = extraTargetLattices.pop()
-                if t[0] not in targetLattices:
-                    print [getLocationFromLid(t.replace('_', ' ')) for t in targetLattices+[t[0]]] 
-                    if localityClassId==0 and getRadius([getLocationFromLid(t.replace('_', ' ')) for i in targetLattices+[t[0]]])<=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: targetLattices.append(t[0])
+                extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1))
+                while len(targetLattices)<self.params['budget'] and extraTargetLattices:
+                    t = extraTargetLattices.pop()
+                    if t[0] not in targetLattices:
+    #                    print targetLattices+[t[0]]
+                        if localityClassId==0 and getRadius([getLocationFromLid(i.replace('_', ' ')) for i in targetLattices+[t[0]]])<=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: targetLattices.append(t[0])
         assert len(targetLattices)<=self.params['budget']
         return targetLattices
     
@@ -431,12 +431,12 @@ class Simulation:
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 #        TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
-        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+#        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
-#        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel,
-#                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
-#                                                                               Metrics.overall_hit_rate, 
-#                                                                                   params=params)
+        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
+                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
+                                                                               Metrics.overall_hit_rate, 
+                                                                                   params=params)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotVaringBudgetAndTimeUnits()
         
 if __name__ == '__main__':
