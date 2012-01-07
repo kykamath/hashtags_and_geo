@@ -15,7 +15,7 @@ from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     getRadius
 import numpy as np
 from library.stats import getOutliersRangeUsingIRQ
-from library.geo import getHaversineDistanceForLids, getLatticeLid
+from library.geo import getHaversineDistanceForLids, getLatticeLid, getLocationFromLid
 from collections import defaultdict
 from operator import itemgetter
 import networkx as nx
@@ -92,7 +92,7 @@ class LatticeSelectionModel(object):
     def evaluateModel(self):
         hashtags = {}
         for h in FileIO.iterateJsonFromFile(self.testingHashtagsFile): 
-            hashtag = Hashtag(h)
+            hashtag = Hashtag(h, dataStructuresToBuildClassifier=self.params.get('dataStructuresToBuildClassifier', False))
             if hashtag.isValidObject():
                 for timeUnit, occs in enumerate(hashtag.getOccrancesEveryTimeWindowIterator(HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)):
                     hashtag.updateOccuranceDistributionInLattices(timeUnit, occs)
@@ -218,10 +218,10 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
             for currentLattice in hashtag.occuranceDistributionInLattices:
                 for neighborLattice in self.model['neighborProbability'][currentLattice]: 
                     if self.model['neighborProbability'][currentLattice][neighborLattice] > 0: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['neighborProbability'][currentLattice][neighborLattice])
-                extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1))
-                while len(targetLattices)<self.params['budget'] and extraTargetLattices:
-                    t = extraTargetLattices.pop()
-                    if t[0] not in targetLattices: targetLattices.append(t[0])
+            extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1))
+            while len(targetLattices)<self.params['budget'] and extraTargetLattices:
+                t = extraTargetLattices.pop()
+                if t[0] not in targetLattices: targetLattices.append(t[0])
         assert len(targetLattices)<=self.params['budget']
         return targetLattices
     
@@ -248,6 +248,8 @@ class SharingProbabilityLatticeSelectionWithLocalityClassifierModel(SharingProba
     def __init__(self, folderType=None, timeRange=None, **kwargs): 
         super(SharingProbabilityLatticeSelectionWithLocalityClassifierModel, self).__init__(SHARING_PROBABILITY_LATTICE_SELECTION_WITH_LOCALITY_CLASSIFIER_MODEL, folderType, timeRange, **kwargs)
     def selectTargetLattices(self, currentTimeUnit, hashtag): 
+        classifier = LocalityClassifier(currentTimeUnit+1, features=LocalityClassifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS)
+        localityClassId = classifier.predict(hashtag)
         targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
         targetLattices = list(targetLattices)
         if len(targetLattices)<self.params['budget']: 
@@ -255,10 +257,12 @@ class SharingProbabilityLatticeSelectionWithLocalityClassifierModel(SharingProba
             for currentLattice in hashtag.occuranceDistributionInLattices:
                 for neighborLattice in self.model['neighborProbability'][currentLattice]: 
                     if self.model['neighborProbability'][currentLattice][neighborLattice] > 0: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['neighborProbability'][currentLattice][neighborLattice])
-                extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1))
-                while len(targetLattices)<self.params['budget'] and extraTargetLattices:
-                    t = extraTargetLattices.pop()
-                    if t[0] not in targetLattices: targetLattices.append(t[0])
+            extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1))
+            while len(targetLattices)<self.params['budget'] and extraTargetLattices:
+                t = extraTargetLattices.pop()
+                if t[0] not in targetLattices:
+                    print [getLocationFromLid(t.replace('_', ' ')) for t in targetLattices+[t[0]]] 
+                    if localityClassId==0 and getRadius([getLocationFromLid(t.replace('_', ' ')) for i in targetLattices+[t[0]]])<=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: targetLattices.append(t[0])
         assert len(targetLattices)<=self.params['budget']
         return targetLattices
     
@@ -286,25 +290,33 @@ class LocalityClassifier:
     def load(self): 
         if self.clf==None: self.clf = joblib.load(self.classfierFile)
         return self.clf
-    def predict(self, document):
+    def predict(self, ov):
         if self.clf==None: self.clf = joblib.load(self.classfierFile)
-        return self.clf.predict(document)
+        return self.clf.predict(self._getDocument(ov)[0])
     def buildClassifier(self):
         documents = self._getDocuments()
         trainDocuments = documents[:int(len(documents)*0.80)]
         self.build(trainDocuments)
+    def _getDocument(self, ov):
+        if self.features == LocalityClassifier.FEATURES_RADIUS: return ov.getVector(self.numberOfTimeUnits, radiusOnly=True)
+        elif self.features == LocalityClassifier.FEATURES_OCCURANCES_RADIUS: return ov.getVector(self.numberOfTimeUnits, radiusOnly=False)
+        elif self.features == LocalityClassifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS: 
+            vector = ov.getVector(self.numberOfTimeUnits, radiusOnly=True, aggregate=True)
+            if vector[0][-1]>=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: vector[0] = [1]
+            else: vector[0] = [0]
+            return vector
     def _getDocuments(self):
         documents = []
         for i, h in enumerate(FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11)))):
             ov = Hashtag(h, dataStructuresToBuildClassifier=True)
-            if ov.isValidObject() and ov.classifiable: 
-                if self.features == LocalityClassifier.FEATURES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=True))
-                elif self.features == LocalityClassifier.FEATURES_OCCURANCES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=False))
-                elif self.features == LocalityClassifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS: 
-                    vector = ov.getVector(self.numberOfTimeUnits, radiusOnly=True, aggregate=True)
-                    if vector[0][-1]>=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: vector[0] = [1]
-                    else: vector[0] = [0]
-                    documents.append(vector)
+            if ov.isValidObject() and ov.classifiable: documents.append(self._getDocument(ov))
+#                if self.features == LocalityClassifier.FEATURES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=True))
+#                elif self.features == LocalityClassifier.FEATURES_OCCURANCES_RADIUS: documents.append(ov.getVector(self.numberOfTimeUnits, radiusOnly=False))
+#                elif self.features == LocalityClassifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS: 
+#                    vector = ov.getVector(self.numberOfTimeUnits, radiusOnly=True, aggregate=True)
+#                    if vector[0][-1]>=HashtagsClassifier.RADIUS_LIMIT_FOR_LOCAL_HASHTAG_IN_MILES: vector[0] = [1]
+#                    else: vector[0] = [0]
+#                    documents.append(vector)
         return documents
     def testClassifierPerformance(self):
         documents = self._getDocuments()
@@ -406,18 +418,21 @@ class Simulation:
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
     @staticmethod
     def run():
-        params = dict(budget=5, timeUnitToPickTargetLattices=6)
-#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
-#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
+        params = dict(budget=5, timeUnitToPickTargetLattices=1)
+        params['dataStructuresToBuildClassifier'] = True
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
+#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 #        TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+#        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel,
 #                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
 #                                                                               Metrics.overall_hit_rate, 
