@@ -445,9 +445,8 @@ class Analysis:
 #        print model
 
     @staticmethod
-    def analyzeSharingAndTransmittingProbabilityForLattices():
+    def plotSharingAndTransmittingProbabilityForLatticesOnMap():
         def plotOnMap(lattice, points, colors):
-            colors = [float(i)/len(points) for i in range(1, len(points)+1)]
             cm = matplotlib.cm.get_cmap('YlOrRd')
             sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0, vmin=0.0)
             plotPointsOnWorldMap([getLocationFromLid(lattice.replace('_', ' '))], c='#00FF00', lw = 0)
@@ -459,15 +458,19 @@ class Analysis:
         for count, lattice in enumerate(transmittingModel.model['neighborProbability']):
             transmittingPoints, transmittingColors = zip(*sorted([(getLocationFromLid(neighborId.replace('_', ' ')), val) for neighborId, val in transmittingModel.model['neighborProbability'][lattice].iteritems()], key=itemgetter(1)))
             sharingPoints, sharingColors = zip(*sorted([(getLocationFromLid(neighborId.replace('_', ' ')), val) for neighborId, val in sharingModel.model['neighborProbability'][lattice].iteritems()], key=itemgetter(1)))
+            transmittingColors = [float(i)/len(transmittingColors) for i in range(1, len(transmittingColors)+1)]
+            sharingColors = [float(i)/len(sharingColors) for i in range(1, len(sharingColors)+1)]
             plt.subplot(211), plotOnMap(lattice, transmittingPoints, transmittingColors), plt.xlabel(transmittingModel.id), plt.title(lattice)
             plt.subplot(212), plotOnMap(lattice, sharingPoints, sharingColors), plt.xlabel(sharingModel.id)
             print count, hashtagsImagesHastagSharingVsTransmittingProbabilityFolder%'world'+'%s.png'%lattice
             plt.savefig(hashtagsImagesHastagSharingVsTransmittingProbabilityFolder%'world'+'%s.png'%lattice)
 #            plt.show()
+            plt.clf()
+            
     @staticmethod
     def run():
-#        Analysis.analyzeLatticeSharingProbabilityGraph()
-        Analysis.analyzeSharingAndTransmittingProbabilityForLattices()
+        Analysis.analyzeLatticeSharingProbabilityGraph()
+#        Analysis.plotSharingAndTransmittingProbabilityForLatticesOnMap()
 
 class Simulation:
     trainingHashtagsFile = hashtagsFile%('training_world','%s_%s'%(2,11))
