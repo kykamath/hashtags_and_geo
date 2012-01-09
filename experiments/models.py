@@ -15,17 +15,19 @@ from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     getRadius
 import numpy as np
 from library.stats import getOutliersRangeUsingIRQ
-from library.geo import getHaversineDistanceForLids, getLatticeLid, getLocationFromLid
+from library.geo import getHaversineDistanceForLids, getLatticeLid, getLocationFromLid,\
+    plotPointsOnUSMap, plotPointsOnWorldMap
 from collections import defaultdict
 from operator import itemgetter
 import networkx as nx
-from library.graphs import plot
+from library.graphs import plot, clusterUsingAffinityPropagation
 import datetime, math, random
 from library.classes import GeneralMethods
 import matplotlib.pyplot as plt
 from library.plotting import plot3D
 from sklearn.svm import SVC
 from sklearn.externals import joblib
+from itertools import groupby
 
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
@@ -407,11 +409,34 @@ class Hashtag:
             for occuranceTimeUnit in occuranceDistributionInLattices[targetLattice]: 
                 if occuranceTimeUnit==currentTimeUnit: 
                     self.occuranceDistributionInTargetLattices[targetLattice]['occurances'][currentTimeUnit]+=1
-#    @staticmethod
-#    def iterateHashtags(timeRange, folderType):
-#        for h in FileIO.iterateJsonFromFile(hashtagsWithoutEndingWindowFile%(folderType,'%s_%s'%timeRange)): 
-#            hashtagObject = Hashtag(h)
-#            if hashtagObject.isValidObject(): yield hashtagObject
+def plotLocationClustersOnMap(graph):
+    noOfClusters, clusters = clusterUsingAffinityPropagation(graph)
+    nodeToClusterIdMap = dict(clusters)
+    colorMap = dict([(i, GeneralMethods.getRandomColor()) for i in range(noOfClusters)])
+    clusters = [(c, list(l)) for c, l in groupby(sorted(clusters, key=itemgetter(1)), key=itemgetter(1))]
+    points, colors = zip(*map(lambda  l: (getLocationFromLid(l.replace('_', ' ')), colorMap[nodeToClusterIdMap[l]]), graph.nodes()))
+    _, m =plotPointsOnWorldMap(points, s=30, lw=0, c=colors, returnBaseMapObject=True)
+#    for u, v, data in graph.edges(data=True):
+#        if nodeToClusterIdMap[u]==nodeToClusterIdMap[v]:
+#            color, u, v, w = colorMap[nodeToClusterIdMap[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
+#            m.drawgreatcircle(u[1],u[0],v[1],v[0],color=color, alpha=0.5)
+    plt.show()
+class Analysis:
+    @staticmethod
+    def analyzeLatticeSharingProbability():
+        params = dict(budget=5, timeUnitToPickTargetLattices=1)
+        model = SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params)
+        graph = nx.DiGraph()
+        for currentLattice in model.model['neighborProbability']:
+            for neighborLattice in model.model['neighborProbability'][currentLattice]: 
+                graph.add_edge(currentLattice, neighborLattice, {'w':1})
+        
+#                latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['neighborProbability'][currentLattice][neighborLattice])
+        plotLocationClustersOnMap(graph)
+#        print model
+    @staticmethod
+    def run():
+        Analysis.analyzeLatticeSharingProbability()
 
 class Simulation:
     trainingHashtagsFile = hashtagsFile%('training_world','%s_%s'%(2,11))
@@ -440,7 +465,8 @@ class Simulation:
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotVaringBudgetAndTimeUnits()
         
 if __name__ == '__main__':
-    Simulation.run()
+#    Simulation.run()
+    Analysis.run()
 #    SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), params={})
 #    model.saveModelSimulation()
 #    LocalityClassifier.testClassifierPerformances()
