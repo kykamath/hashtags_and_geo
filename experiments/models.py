@@ -8,7 +8,7 @@ sys.path.append('../')
 from library.file_io import FileIO
 from settings import hashtagsWithoutEndingWindowFile, hashtagsLatticeGraphFile,\
     hashtagsFile, hashtagsModelsFolder, hashtagsAnalysisFolder,\
-    hashtagsClassifiersFolder
+    hashtagsClassifiersFolder, us_boundary
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     TIME_UNIT_IN_SECONDS, LATTICE_ACCURACY, HashtagsClassifier,\
     getOccurranceDistributionInEpochs,\
@@ -16,7 +16,7 @@ from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
 import numpy as np
 from library.stats import getOutliersRangeUsingIRQ
 from library.geo import getHaversineDistanceForLids, getLatticeLid, getLocationFromLid,\
-    plotPointsOnUSMap, plotPointsOnWorldMap
+    plotPointsOnUSMap, plotPointsOnWorldMap, isWithinBoundingBox, getLattice
 from collections import defaultdict
 from operator import itemgetter
 import networkx as nx
@@ -415,11 +415,11 @@ def plotLocationClustersOnMap(graph):
     colorMap = dict([(i, GeneralMethods.getRandomColor()) for i in range(noOfClusters)])
     clusters = [(c, list(l)) for c, l in groupby(sorted(clusters, key=itemgetter(1)), key=itemgetter(1))]
     points, colors = zip(*map(lambda  l: (getLocationFromLid(l.replace('_', ' ')), colorMap[nodeToClusterIdMap[l]]), graph.nodes()))
-    _, m =plotPointsOnWorldMap(points, s=30, lw=0, c=colors, returnBaseMapObject=True)
-#    for u, v, data in graph.edges(data=True):
-#        if nodeToClusterIdMap[u]==nodeToClusterIdMap[v]:
-#            color, u, v, w = colorMap[nodeToClusterIdMap[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
-#            m.drawgreatcircle(u[1],u[0],v[1],v[0],color=color, alpha=0.5)
+    _, m =plotPointsOnUSMap(points, s=30, lw=0, c=colors, returnBaseMapObject=True)
+    for u, v, data in graph.edges(data=True):
+        if nodeToClusterIdMap[u]==nodeToClusterIdMap[v]:
+            color, u, v, w = colorMap[nodeToClusterIdMap[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
+            m.drawgreatcircle(u[1],u[0],v[1],v[0],color=color, alpha=0.5)
     plt.show()
 class Analysis:
     @staticmethod
@@ -429,7 +429,11 @@ class Analysis:
         graph = nx.DiGraph()
         for currentLattice in model.model['neighborProbability']:
             for neighborLattice in model.model['neighborProbability'][currentLattice]: 
-                graph.add_edge(currentLattice, neighborLattice, {'w':1})
+                if isWithinBoundingBox(getLocationFromLid(currentLattice.replace('_', ' ')), us_boundary) and \
+                    isWithinBoundingBox(getLocationFromLid(neighborLattice.replace('_', ' ')), us_boundary):
+#                    graph.add_edge(currentLattice, neighborLattice, {'w':1})
+                    graph.add_edge(currentLattice, neighborLattice, 
+                                   {'w':model.model['hashtagObservingProbability'][currentLattice]*model.model['neighborProbability'][currentLattice][neighborLattice]})
         
 #                latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['neighborProbability'][currentLattice][neighborLattice])
         plotLocationClustersOnMap(graph)
