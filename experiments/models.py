@@ -455,14 +455,14 @@ class Analysis:
         params = dict(budget=5, timeUnitToPickTargetLattices=1)
         transmittingModel = TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params)
         sharingModel = SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params)
-        FileIO.createDirectoryForFile(hashtagsImagesHastagSharingVsTransmittingProbabilityFolder)
+        FileIO.createDirectoryForFile(hashtagsImagesHastagSharingVsTransmittingProbabilityFolder%'world')
         for count, lattice in enumerate(transmittingModel.model['neighborProbability']):
             transmittingPoints, transmittingColors = zip(*sorted([(getLocationFromLid(neighborId.replace('_', ' ')), val) for neighborId, val in transmittingModel.model['neighborProbability'][lattice].iteritems()], key=itemgetter(1)))
             sharingPoints, sharingColors = zip(*sorted([(getLocationFromLid(neighborId.replace('_', ' ')), val) for neighborId, val in sharingModel.model['neighborProbability'][lattice].iteritems()], key=itemgetter(1)))
             plt.subplot(211), plotOnMap(lattice, transmittingPoints, transmittingColors), plt.xlabel(transmittingModel.id), plt.title(lattice)
             plt.subplot(212), plotOnMap(lattice, sharingPoints, sharingColors), plt.xlabel(sharingModel.id)
-            print count, hashtagsImagesHastagSharingVsTransmittingProbabilityFolder+'%s.png'%lattice
-            plt.savefig(hashtagsImagesHastagSharingVsTransmittingProbabilityFolder+'%s.png'%lattice)
+            print count, hashtagsImagesHastagSharingVsTransmittingProbabilityFolder%'world'+'%s.png'%lattice
+            plt.savefig(hashtagsImagesHastagSharingVsTransmittingProbabilityFolder%'world'+'%s.png'%lattice)
 #            plt.show()
     @staticmethod
     def run():
