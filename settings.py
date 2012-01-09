@@ -6,6 +6,7 @@ Created on Nov 19, 2011
 
 # Boundaries
 us_boundary = [[24.527135,-127.792969], [49.61071,-59.765625]]
+sub_world_boundary = [[-58.447733,-153.457031], [72.127936,75.410156]]
 
 #Input files
 tempInputFile = 'hdfs:///user/kykamath/geo/twitter/2_11'
@@ -45,6 +46,8 @@ hashtagsImagesHashtagsClassFolder = hashtagsImagesFolder + 'hashtags_class/'
 hashtagsImagesFirstActiveTimeSeriesAnalysisFolder = hashtagsImagesFolder + 'first_active_time_series/'
 hashtagsImagesGraphAnalysisFolder = hashtagsImagesFolder + 'graph_analysis/'
 hashtagsImagesHastagEvolutionFolder = hashtagsImagesFolder + 'hashtag_evolution/'
+hashtagsImagesHastagSharingVsTransmittingProbabilityFolder = hashtagsImagesFolder + 'sharing_vs_transmitting/'
+
 
 
 # Classifiers
