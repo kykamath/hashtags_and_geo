@@ -347,7 +347,7 @@ class LocalityClassifier:
             featuresData[data['features']][data['numberOfTimeUnits']] = data['score']
         for id, v in featuresData.iteritems():
             dataX, dataY = sorted(v.keys()), [v[k] for k in sorted(v.keys())]
-            plt.plot(dataX, dataY, label=id)
+            plt.plot(dataX, dataY, lw=2, label=id)
         plt.legend(loc=3)
         plt.ylim(ymin=0.4)
         plt.title('Locality classifier performance')
