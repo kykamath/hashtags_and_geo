@@ -340,7 +340,18 @@ class LocalityClassifier:
             for numberOfTimeUnits in range(1,25):
                 classifier = LocalityClassifier(numberOfTimeUnits, features=feature)
                 classifier.buildClassifier()
-        
+    @staticmethod
+    def plotClassifierPerformance():
+        featuresData = defaultdict(dict)
+        for data in FileIO.iterateJsonFromFile(LocalityClassifier.classifiersPerformanceFile):
+            featuresData[data['features']][data['numberOfTimeUnits']] = data['score']
+        for id, v in featuresData.iteritems():
+            dataX, dataY = sorted(v.keys()), [v[k] for k in sorted(v.keys())]
+            plt.plot(dataX, dataY, label=id)
+        plt.legend(loc=3)
+        plt.ylim(ymin=0.4)
+        plt.title('Locality classifier performance')
+        plt.show()
 def normalize(data):
     total = math.sqrt(float(sum([d**2 for d in data])))
     if total==0: return map(lambda d: 0, data)
@@ -499,7 +510,8 @@ class Simulation:
         
 if __name__ == '__main__':
 #    Simulation.run()
-    Analysis.run()
+#    Analysis.run()
+    LocalityClassifier.plotClassifierPerformance()
 #    SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), params={})
 #    model.saveModelSimulation()
 #    LocalityClassifier.testClassifierPerformances()
