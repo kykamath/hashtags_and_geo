@@ -411,38 +411,37 @@ class Hashtag:
             for occuranceTimeUnit in occuranceDistributionInLattices[targetLattice]: 
                 if occuranceTimeUnit==currentTimeUnit: 
                     self.occuranceDistributionInTargetLattices[targetLattice]['occurances'][currentTimeUnit]+=1
-def plotLocationClustersOnMap(graph):
+def plotLocationClustersOnMap(title, graph):
     noOfClusters, clusters = clusterUsingAffinityPropagation(graph)
     nodeToClusterIdMap = dict(clusters)
     colorMap = dict([(i, GeneralMethods.getRandomColor()) for i in range(noOfClusters)])
     clusters = [(c, list(l)) for c, l in groupby(sorted(clusters, key=itemgetter(1)), key=itemgetter(1))]
     points, colors = zip(*map(lambda  l: (getLocationFromLid(l.replace('_', ' ')), colorMap[nodeToClusterIdMap[l]]), graph.nodes()))
-    _, m =plotPointsOnWorldMap(points, s=30, lw=0, c=colors, returnBaseMapObject=True)
+    _, m =plotPointsOnWorldMap(points[:1], s=0, lw=0, c=colors[:1], returnBaseMapObject=True)
     for u, v, data in graph.edges(data=True):
         if nodeToClusterIdMap[u]==nodeToClusterIdMap[v]:
             color, u, v, w = colorMap[nodeToClusterIdMap[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
             m.drawgreatcircle(u[1],u[0],v[1],v[0],color=color, alpha=0.5)
+    plt.title(title)
     plt.show()
 class Analysis:
     @staticmethod
-    def analyzeLatticeSharingProbabilityGraph():
+    def analyzeLatticeProbabilityGraph():
         params = dict(budget=5, timeUnitToPickTargetLattices=1)
-        model = SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params)
+#        model = SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params)
+        model = TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params)
         graph = nx.DiGraph()
         for currentLattice in model.model['neighborProbability']:
             for neighborLattice in model.model['neighborProbability'][currentLattice]: 
                 if isWithinBoundingBox(getLocationFromLid(currentLattice.replace('_', ' ')), sub_world_boundary) and \
                     isWithinBoundingBox(getLocationFromLid(neighborLattice.replace('_', ' ')), sub_world_boundary):
-#                graph.add_edge(currentLattice, neighborLattice, {'w':1})
                     graph.add_edge(currentLattice, neighborLattice, 
                                    {'w':model.model['hashtagObservingProbability'][currentLattice]*model.model['neighborProbability'][currentLattice][neighborLattice]})
         edgesToRemove = sorted(graph.edges_iter(data=True),key=lambda t:t[2]['w'])[:int(0.75*graph.number_of_edges())]
         for u,v,_ in edgesToRemove: graph.remove_edge(u, v)
         for u in graph.nodes()[:]:
             if graph.degree(u)==0: graph.remove_node(u)
-#                latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['neighborProbability'][currentLattice][neighborLattice])
-        plotLocationClustersOnMap(graph)
-#        print model
+        plotLocationClustersOnMap(model.id, graph)
 
     @staticmethod
     def plotSharingAndTransmittingProbabilityForLatticesOnMap():
@@ -469,7 +468,7 @@ class Analysis:
             
     @staticmethod
     def run():
-        Analysis.analyzeLatticeSharingProbabilityGraph()
+        Analysis.analyzeLatticeProbabilityGraph()
 #        Analysis.plotSharingAndTransmittingProbabilityForLatticesOnMap()
 
 class Simulation:
