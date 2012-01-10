@@ -142,7 +142,7 @@ class LatticeSelectionModel(object):
                         metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
             for metric, metricValues in metricDistributionInTimeUnits.iteritems():
                 dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
-                plt.plot(dataX, dataY, label=model.id)
+                plt.plot(dataX, dataY, label=model.id, lw=2)
         plt.legend(loc=4)
         plt.title('%s comparison'%metric)
         plt.show()
@@ -161,7 +161,7 @@ class LatticeSelectionModel(object):
                         metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
             for metric, metricValues in metricDistributionInTimeUnits.iteritems():
                 dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
-                plt.plot(dataX, dataY, label=model.id)
+                plt.plot(dataX, dataY, label=model.id, lw=2)
         plt.legend(loc=4)
         plt.title('%s comparison'%metric)
         plt.show()
@@ -436,11 +436,24 @@ def plotLocationClustersOnMap(title, graph):
     plt.title(title)
     plt.show()
 def plotLocationGraphOnMap(title, graph):
+#    noOfClusters, clusters = clusterUsingAffinityPropagation(graph)
+#    nodeToClusterIdMap = dict(clusters)
+#    colorMap = dict([(i, GeneralMethods.getRandomColor()) for i in range(noOfClusters)])
+#    clusters = [(c, list(l)) for c, l in groupby(sorted(clusters, key=itemgetter(1)), key=itemgetter(1))]
+#    points, colors = zip(*map(lambda  l: (getLocationFromLid(l.replace('_', ' ')), 'k'), graph.nodes()))
+#    _, m =plotPointsOnWorldMap(points[:1], s=0, lw=0, c=colors[:1], returnBaseMapObject=True)
+#    for u, v, data in graph.edges(data=True):
+#        if nodeToClusterIdMap[u]==nodeToClusterIdMap[v]:
+#            color, u, v, w = colorMap[nodeToClusterIdMap[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
+#            m.drawgreatcircle(u[1],u[0],v[1],v[0],color='k', alpha=0.5)
+#    plt.title(title)
+#    plt.show()
+    
     noOfClusters, clusters = clusterUsingAffinityPropagation(graph)
     nodeToClusterIdMap = dict(clusters)
     colorMap = dict([(i, GeneralMethods.getRandomColor()) for i in range(noOfClusters)])
     clusters = [(c, list(l)) for c, l in groupby(sorted(clusters, key=itemgetter(1)), key=itemgetter(1))]
-    points, colors = zip(*map(lambda  l: (getLocationFromLid(l.replace('_', ' ')), 'k'), graph.nodes()))
+    points, colors = zip(*map(lambda  l: (getLocationFromLid(l.replace('_', ' ')), colorMap[nodeToClusterIdMap[l]]), graph.nodes()))
     _, m =plotPointsOnWorldMap(points[:1], s=0, lw=0, c=colors[:1], returnBaseMapObject=True)
     for u, v, data in graph.edges(data=True):
         if nodeToClusterIdMap[u]==nodeToClusterIdMap[v]:
@@ -448,12 +461,13 @@ def plotLocationGraphOnMap(title, graph):
             m.drawgreatcircle(u[1],u[0],v[1],v[0],color='k', alpha=0.5)
     plt.title(title)
     plt.show()
+    
 class Analysis:
     @staticmethod
     def analyzeLatticeProbabilityGraph():
         params = dict(budget=5, timeUnitToPickTargetLattices=1)
-#        model = SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params)
-        model = TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params)
+        model = SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params)
+#        model = TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params)
         graph = nx.DiGraph()
         for currentLattice in model.model['neighborProbability']:
             for neighborLattice in model.model['neighborProbability'][currentLattice]: 
@@ -461,12 +475,16 @@ class Analysis:
                     isWithinBoundingBox(getLocationFromLid(neighborLattice.replace('_', ' ')), sub_world_boundary):
                     graph.add_edge(currentLattice, neighborLattice, 
                                    {'w':model.model['hashtagObservingProbability'][currentLattice]*model.model['neighborProbability'][currentLattice][neighborLattice]})
+#        nodesToRemove = sorted([(c, model.model['hashtagObservingProbability'][c]) for c in model.model['hashtagObservingProbability'] if isWithinBoundingBox(getLocationFromLid(c.replace('_', ' ')), sub_world_boundary)], 
+#                               key=itemgetter(1))[:int(0.75*graph.number_of_nodes())]
+#        for u, _ in nodesToRemove: graph.remove_node(u)
+        
         edgesToRemove = sorted(graph.edges_iter(data=True),key=lambda t:t[2]['w'])[:int(0.75*graph.number_of_edges())]
         for u,v,_ in edgesToRemove: graph.remove_edge(u, v)
         for u in graph.nodes()[:]:
             if graph.degree(u)==0: graph.remove_node(u)
-#        plotLocationClustersOnMap(model.id, graph)
-        plotLocationGraphOnMap(model.id, graph)
+        plotLocationClustersOnMap(model.id, graph)
+#        plotLocationGraphOnMap(model.id, graph)
 
     @staticmethod
     def plotSharingAndTransmittingProbabilityForLatticesOnMap():
@@ -516,15 +534,15 @@ class Simulation:
 #        TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
-        LatticeSelectionModel.plotModelWithVaryingBudget([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
+        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
                                                                                 GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
                                                                                Metrics.overall_hit_rate, 
                                                                                    params=params)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotVaringBudgetAndTimeUnits()
         
 if __name__ == '__main__':
-#    Simulation.run()
-    Analysis.run()
+    Simulation.run()
+#    Analysis.run()
 #    LocalityClassifier.plotClassifierPerformance()
 #    SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), params={})
 #    model.saveModelSimulation()
