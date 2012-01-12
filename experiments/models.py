@@ -42,6 +42,7 @@ def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, ne
         return dict([(t[0], t[1]) for t in dataToReturn if t[2]<=upperRangeForTemporalDistance])
 
 GREEDY_LATTICE_SELECTION_MODEL = 'greedy'
+BEST_RATE = 'best_rate'
 SHARING_PROBABILITY_LATTICE_SELECTION_MODEL = 'sharing_probability'
 TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL = 'transmitting_probability'
 SHARING_PROBABILITY_LATTICE_SELECTION_WITH_LOCALITY_CLASSIFIER_MODEL = 'sharing_probability_with_locality_classifier'
@@ -50,15 +51,25 @@ class Metrics:
     overall_hit_rate = 'overall_hit_rate'
     hit_rate_after_target_selection = 'hit_rate_after_target_selection'
     miss_rate_before_target_selection = 'miss_rate_before_target_selection'
+    best_rate = 'best_rate'
     @staticmethod
-    def overallOccurancesHitRate(hashtag):
+    def bestRate(hashtag, **params):
+        totalOccurances, occuranceCountInLatices = 0., {}
+        if hashtag.occuranceDistributionInTargetLattices:
+            selectedTimeUnit = hashtag.occuranceDistributionInTargetLattices.values()[0]['selectedTimeUnit']
+            for k,v in hashtag.occuranceDistributionInLattices.iteritems(): 
+                totalOccurances+=len(v)
+                occuranceCountInLatices[k] = len(filter(lambda i: i>selectedTimeUnit, v))
+            return sum(sorted(occuranceCountInLatices.values())[-3:])/totalOccurances
+    @staticmethod
+    def overallOccurancesHitRate(hashtag, **params):
         totalOccurances, occurancesObserved = 0., 0.
         if hashtag.occuranceDistributionInTargetLattices:
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v)
             for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
             return occurancesObserved/totalOccurances
     @staticmethod
-    def occurancesHitRateAfterTargetSelection(hashtag):
+    def occurancesHitRateAfterTargetSelection(hashtag, **params):
         totalOccurances, occurancesObserved = 0., 0.
         if hashtag.occuranceDistributionInTargetLattices:
             targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in hashtag.occuranceDistributionInTargetLattices.values())
@@ -67,16 +78,17 @@ class Metrics:
             if totalOccurances!=0.: return occurancesObserved/totalOccurances
             return None
     @staticmethod
-    def occurancesMissRateBeforeTargetSelection(hashtag):
+    def occurancesMissRateBeforeTargetSelection(hashtag, **params):
         totalOccurances, occurancesBeforeTimeUnit = 0., 0.
         if hashtag.occuranceDistributionInTargetLattices:
             targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in hashtag.occuranceDistributionInTargetLattices.values())
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v); occurancesBeforeTimeUnit+=len([i for i in v if i<=targetSelectionTimeUnit])
             return occurancesBeforeTimeUnit/totalOccurances
 EvaluationMetrics = {
-                     Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
-                     Metrics.hit_rate_after_target_selection: Metrics.occurancesHitRateAfterTargetSelection,
-                     Metrics.miss_rate_before_target_selection: Metrics.occurancesMissRateBeforeTargetSelection
+#                     Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
+#                     Metrics.hit_rate_after_target_selection: Metrics.occurancesHitRateAfterTargetSelection,
+#                     Metrics.miss_rate_before_target_selection: Metrics.occurancesMissRateBeforeTargetSelection,
+                     Metrics.best_rate: Metrics.bestRate
                      }
 
 class LatticeSelectionModel(object):
@@ -102,7 +114,7 @@ class LatticeSelectionModel(object):
                     hashtag.updateOccuranceDistributionInLattices(timeUnit, occs)
                     hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
                     if self.params['timeUnitToPickTargetLattices']==timeUnit: hashtag._initializeTargetLattices(timeUnit, self.selectTargetLattices(timeUnit, hashtag))
-                hashtags[hashtag.hashtagObject['h']] = {'model': self.id, 'classId': hashtag.hashtagClassId, 'metrics': dict([(k, method(hashtag))for k,method in EvaluationMetrics.iteritems()])}
+                hashtags[hashtag.hashtagObject['h']] = {'model': self.id, 'classId': hashtag.hashtagClassId, 'metrics': dict([(k, method(hashtag, budget=self.budget))for k,method in EvaluationMetrics.iteritems()])}
         return hashtags
     def evaluateModelWithVaryingTimeUnitToPickTargetLattices(self, numberOfTimeUnits = 24):
         self.params['evaluationName'] = 'time'
@@ -190,6 +202,12 @@ class GreedyLatticeSelectionModel(LatticeSelectionModel):
     '''
     def __init__(self, **kwargs): super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, **kwargs)
     def selectTargetLattices(self, currentTimeUnit, hashtag): return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+
+class BestRateModel(LatticeSelectionModel):
+    ''' Pick the location with maximum observations till that time.
+    '''
+    def __init__(self, **kwargs): super(BestRateModel, self).__init__(BEST_RATE, **kwargs)
+
 
 class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with highest probability:
@@ -521,6 +539,8 @@ class Simulation:
     def run():
         params = dict(budget=5, timeUnitToPickTargetLattices=1)
         params['dataStructuresToBuildClassifier'] = True
+#        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
@@ -534,10 +554,10 @@ class Simulation:
 #        TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
-        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
-                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
-                                                                               Metrics.overall_hit_rate, 
-                                                                                   params=params)
+#        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
+#                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
+#                                                                               Metrics.hit_rate_after_target_selection, 
+#                                                                                   params=params)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotVaringBudgetAndTimeUnits()
         
 if __name__ == '__main__':
