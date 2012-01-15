@@ -3,6 +3,8 @@ Created on Jan 14, 2012
 
 @author: kykamath
 '''
+import sys
+sys.path.append('../')
 from settings import targetSelectionRegressionClassifiersFolder, hashtagsFile,\
     hashtagsLatticeGraphFile
 from library.file_io import FileIO
