@@ -11,13 +11,28 @@ from experiments.mr_area_analysis import HashtagsClassifier
 from itertools import groupby
 from operator import itemgetter
 from collections import defaultdict
+from sklearn import linear_model
+from library.classes import GeneralMethods
+from sklearn.externals import joblib
 
 class TargetSelectionRegressionClassifier:
-    def __init__(self, id='linear_regression'): self.id = id
-    def getModelFile(self, decisionTimeUnit, predictingLattice):
-        modelFile = targetSelectionRegressionClassifiersFolder%(self.id, decisionTimeUnit, predictingLattice)+'model.pkl'
-        FileIO.createDirectoryForFile(modelFile)
-        return modelFile
+    def __init__(self, id='linear_regression', decisionTimeUnit=None, predictingLattice=None): 
+        self.id = id
+        self.decisionTimeUnit = decisionTimeUnit
+        self.predictingLattice = predictingLattice
+        self.classfierFile = targetSelectionRegressionClassifiersFolder%(self.id, self.decisionTimeUnit, self.predictingLattice)+'model.pkl'
+        FileIO.createDirectoryForFile(self.classfierFile)
+        self.clf = None
+    def build(self, trainingDocuments):
+        inputVectors, outputValues = zip(*trainingDocuments)
+        clf = linear_model.LinearRegression()
+        clf.fit (inputVectors, outputValues)
+        GeneralMethods.runCommand('rm -rf %s*'%self.classfierFile)
+        FileIO.createDirectoryForFile(self.classfierFile)
+        joblib.dump(clf, self.classfierFile)
+    def predict(self, vector):
+        if self.clf==None: self.clf = joblib.load(self.classfierFile)
+        return self.clf.predict(self._getDocument(vector)[0])
 def build(numberOfTimeUnits=24):
     def getPercentageDistributionInLattice(document):
         data = zip(*document)[1]
@@ -41,18 +56,17 @@ def build(numberOfTimeUnits=24):
             if document: documents.append(document)
     lattices = sorted(list(lattices))
     documents = [(d, getPercentageDistributionInLattice(d)) for d in documents]
-    for timeUnit in range(1, numberOfTimeUnits+1):
-        for lattice in lattices:
+    for decisionTimeUnit in range(1, numberOfTimeUnits+1):
+        for latticeCount, predictingLattice in enumerate(lattices):
+            print latticeCount
             inputVectors, outputValues = [], []
             for rawDocument, processedDocument in documents:
-                documentForTimeUnit = getPercentageDistributionInLattice(rawDocument[:timeUnit])
+                documentForTimeUnit = getPercentageDistributionInLattice(rawDocument[:decisionTimeUnit])
                 if documentForTimeUnit and processedDocument:
                     vector =  [documentForTimeUnit.get(l, 0) for l in lattices]
-                    inputVectors.append(vector), outputValues.append(float(processedDocument.get(lattice, 0)))
-            from sklearn import linear_model
-            clf = linear_model.LinearRegression()
-            clf.fit (inputVectors, outputValues)
-            print outputValues[0], clf.predict(inputVectors[0])
+                    inputVectors.append(vector), outputValues.append(float(processedDocument.get(predictingLattice, 0)))
+            TargetSelectionRegressionClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).build(zip(inputVectors, outputValues))
+            print outputValues[0], TargetSelectionRegressionClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).predict(inputVectors[0])
             exit()
 #        print documents
 #        exit()
