@@ -52,6 +52,6 @@ hashtagsImagesHastagSharingVsTransmittingProbabilityFolder = hashtagsImagesFolde
 
 # Classifiers
 hashtagsClassifiersFolder = hashtagsAnalysisFolder+'/classifiers/%s/%s/'
-
+targetSelectionRegressionClassifiersFolder  = hashtagsAnalysisFolder+'/ts_classifiers/%s/%s/'
 #Models
 hashtagsModelsFolder = hashtagsAnalysisFolder+'/models/%s/%s/'

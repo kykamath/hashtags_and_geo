@@ -52,6 +52,7 @@ class Metrics:
     hit_rate_after_target_selection = 'hit_rate_after_target_selection'
     miss_rate_before_target_selection = 'miss_rate_before_target_selection'
     best_rate = 'best_rate'
+    target_selection_accuracy = 'target_selection_accuracy'
     @staticmethod
     def bestRate(hashtag, **params):
         totalOccurances, occuranceCountInLatices = 0., {}
@@ -60,7 +61,16 @@ class Metrics:
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): 
                 totalOccurances+=len(v)
                 occuranceCountInLatices[k] = len(filter(lambda i: i>selectedTimeUnit, v))
-            return sum(sorted(occuranceCountInLatices.values())[-3:])/totalOccurances
+            return sum(sorted(occuranceCountInLatices.values())[-params['budget']:])/totalOccurances
+    @staticmethod
+    def targetSelectionAccuracy(hashtag, **params):
+        occuranceCountInLatices = {}
+        if hashtag.occuranceDistributionInTargetLattices:
+            selectedTimeUnit = hashtag.occuranceDistributionInTargetLattices.values()[0]['selectedTimeUnit']
+            for k,v in hashtag.occuranceDistributionInLattices.iteritems(): occuranceCountInLatices[k] = len(filter(lambda i: i>selectedTimeUnit, v))
+            bestLattices = set(zip(*sorted(occuranceCountInLatices.iteritems(), key=itemgetter(1))[-params['budget']:])[0])
+            targetLattices = set(hashtag.occuranceDistributionInTargetLattices.keys())
+            return len(bestLattices.intersection(targetLattices))/float(len(bestLattices))
     @staticmethod
     def overallOccurancesHitRate(hashtag, **params):
         totalOccurances, occurancesObserved = 0., 0.
@@ -85,10 +95,11 @@ class Metrics:
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v); occurancesBeforeTimeUnit+=len([i for i in v if i<=targetSelectionTimeUnit])
             return occurancesBeforeTimeUnit/totalOccurances
 EvaluationMetrics = {
-#                     Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
-#                     Metrics.hit_rate_after_target_selection: Metrics.occurancesHitRateAfterTargetSelection,
-#                     Metrics.miss_rate_before_target_selection: Metrics.occurancesMissRateBeforeTargetSelection,
-                     Metrics.best_rate: Metrics.bestRate
+                     Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
+                     Metrics.hit_rate_after_target_selection: Metrics.occurancesHitRateAfterTargetSelection,
+                     Metrics.miss_rate_before_target_selection: Metrics.occurancesMissRateBeforeTargetSelection,
+#                     Metrics.best_rate: Metrics.bestRate,
+                      Metrics.target_selection_accuracy: Metrics.targetSelectionAccuracy  
                      }
 
 class LatticeSelectionModel(object):
@@ -540,7 +551,7 @@ class Simulation:
         params = dict(budget=5, timeUnitToPickTargetLattices=1)
         params['dataStructuresToBuildClassifier'] = True
 #        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+#        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
@@ -554,10 +565,10 @@ class Simulation:
 #        TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
-#        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
-#                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
-#                                                                               Metrics.hit_rate_after_target_selection, 
-#                                                                                   params=params)
+        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
+                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
+                                                                               Metrics.target_selection_accuracy, 
+                                                                                   params=params)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotVaringBudgetAndTimeUnits()
         
 if __name__ == '__main__':
