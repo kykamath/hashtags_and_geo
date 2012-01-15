@@ -61,15 +61,16 @@ def build(numberOfTimeUnits=24):
     documents = [(d, getPercentageDistributionInLattice(d)) for d in documents]
     for decisionTimeUnit in range(1, numberOfTimeUnits+1):
         for latticeCount, predictingLattice in enumerate(lattices):
-            print latticeCount
+            print decisionTimeUnit, latticeCount,
             inputVectors, outputValues = [], []
             for rawDocument, processedDocument in documents:
                 documentForTimeUnit = getPercentageDistributionInLattice(rawDocument[:decisionTimeUnit])
                 if documentForTimeUnit and processedDocument:
                     vector =  [documentForTimeUnit.get(l, 0) for l in lattices]
                     inputVectors.append(vector), outputValues.append(float(processedDocument.get(predictingLattice, 0)))
-            TargetSelectionRegressionClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).build(zip(inputVectors, outputValues))
-            print outputValues[0], TargetSelectionRegressionClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).predict(inputVectors[0])
+#            TargetSelectionRegressionClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).build(zip(inputVectors, outputValues))
+            for iv, ov in zip(inputVectors, outputValues):
+                print ov, TargetSelectionRegressionClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).predict(iv)
             exit()
 #        print documents
 #        exit()
