@@ -57,6 +57,7 @@ def build(numberOfTimeUnits=24):
                 document.append([timeUnit, [(k, len(list(i))) for k, i in groupby(occs, key=itemgetter(0))]])
             if document: documents.append(document)
     lattices = sorted(list(lattices))
+    print len(lattices)
     documents = [(d, getPercentageDistributionInLattice(d)) for d in documents]
     for decisionTimeUnit in range(1, numberOfTimeUnits+1):
         for latticeCount, predictingLattice in enumerate(lattices):
