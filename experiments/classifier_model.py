@@ -34,7 +34,7 @@ class TargetSelectionRegressionClassifier:
         joblib.dump(clf, self.classfierFile)
     def predict(self, vector):
         if self.clf==None: self.clf = joblib.load(self.classfierFile)
-        return self.clf.predict(self._getDocument(vector)[0])
+        return self.clf.predict(vector)
 def build(numberOfTimeUnits=24):
     def getPercentageDistributionInLattice(document):
         data = zip(*document)[1]
