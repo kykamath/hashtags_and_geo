@@ -13,11 +13,11 @@ from experiments.mr_area_analysis import HashtagsClassifier
 from itertools import groupby
 from operator import itemgetter
 from collections import defaultdict
-from sklearn import linear_model
+from sklearn import linear_model, svm
 from library.classes import GeneralMethods
 from sklearn.externals import joblib
 
-class TargetSelectionRegressionClassifier:
+class TargetSelectionRegressionClassifier(object):
     def __init__(self, id='linear_regression', decisionTimeUnit=None, predictingLattice=None): 
         self.id = id
         self.decisionTimeUnit = decisionTimeUnit
@@ -25,16 +25,39 @@ class TargetSelectionRegressionClassifier:
         self.classfierFile = targetSelectionRegressionClassifiersFolder%(self.id, self.decisionTimeUnit, self.predictingLattice)+'model.pkl'
         FileIO.createDirectoryForFile(self.classfierFile)
         self.clf = None
-    def build(self, trainingDocuments):
+    def buildClassifier(self, trainingDocuments):
         inputVectors, outputValues = zip(*trainingDocuments)
-        clf = linear_model.LinearRegression()
-        clf.fit (inputVectors, outputValues)
+        self.clf = linear_model.LinearRegression()
+        self.clf.fit(inputVectors, outputValues)
+    def build(self, trainingDocuments):
+        self.buildClassifier(trainingDocuments)
         GeneralMethods.runCommand('rm -rf %s*'%self.classfierFile)
         FileIO.createDirectoryForFile(self.classfierFile)
-        joblib.dump(clf, self.classfierFile)
+        joblib.dump(self.clf, self.classfierFile)
     def predict(self, vector):
         if self.clf==None: self.clf = joblib.load(self.classfierFile)
         return self.clf.predict(vector)
+class TargetSelectionRegressionSVMRBFClassifier(TargetSelectionRegressionClassifier):
+    def __init__(self, id='svm_rbf_regression', decisionTimeUnit=None, predictingLattice=None):
+        TargetSelectionRegressionClassifier.__init__(self, id=id, decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice)
+    def buildClassifier(self, trainingDocuments):
+        inputVectors, outputValues = zip(*trainingDocuments)
+        self.clf = svm.SVR(kernel='rbf', C=1e4, gamma=0.1)
+        self.clf.fit(inputVectors, outputValues)
+class TargetSelectionRegressionSVMLinearClassifier(TargetSelectionRegressionClassifier):
+    def __init__(self, id='svm_linear_regression', decisionTimeUnit=None, predictingLattice=None):
+        TargetSelectionRegressionSVMLinearClassifier.__init__(self, id=id, decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice)
+    def buildClassifier(self, trainingDocuments):
+        inputVectors, outputValues = zip(*trainingDocuments)
+        self.clf = svm.SVR(kernel='linear', C=1e4)
+        self.clf.fit(inputVectors, outputValues)
+class TargetSelectionRegressionSVMPolyClassifier(TargetSelectionRegressionClassifier):
+    def __init__(self, id='svm_poly_regression', decisionTimeUnit=None, predictingLattice=None):
+        TargetSelectionRegressionSVMPolyClassifier.__init__(self, id=id, decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice)
+    def buildClassifier(self, trainingDocuments):
+        inputVectors, outputValues = zip(*trainingDocuments)
+        self.clf = svm.SVR(kernel='poly', C=1e4, degree=2)
+        self.clf.fit(inputVectors, outputValues)
 def build(numberOfTimeUnits=24):
     def getPercentageDistributionInLattice(document):
         data = zip(*document)[1]
@@ -69,7 +92,10 @@ def build(numberOfTimeUnits=24):
                 if documentForTimeUnit and processedDocument:
                     vector =  [documentForTimeUnit.get(l, 0) for l in lattices]
                     inputVectors.append(vector), outputValues.append(float(processedDocument.get(predictingLattice, 0)))
-            TargetSelectionRegressionClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).build(zip(inputVectors, outputValues))
+#            TargetSelectionRegressionClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).build(zip(inputVectors, outputValues))
+            TargetSelectionRegressionSVMRBFClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).build(zip(inputVectors, outputValues))
+#            TargetSelectionRegressionSVMLinearClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).build(zip(inputVectors, outputValues))
+#            TargetSelectionRegressionSVMPolyClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).build(zip(inputVectors, outputValues))
 #            for iv, ov in zip(inputVectors, outputValues):
 #                print ov, TargetSelectionRegressionClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).predict(iv)
 #            exit()
