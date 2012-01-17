@@ -134,10 +134,10 @@ def testClassifierPerformance(numberOfTimeUnits=24):
                 classifier = classifierType(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice)
                 for iv, ov in zip(inputVectors, outputValues): 
                     if ov!=0.0: 
-                        print ov, classifier.predict(iv), pow(ov-classifier.predict(iv), 2)
+                        if latticeCount==2: print ov, classifier.predict(iv), pow(ov-classifier.predict(iv), 2)
                         tempError.append(pow(ov-classifier.predict(iv), 2))
-                print tempError, np.mean(tempError)
-                exit()
+#                print tempError, np.mean(tempError)
+#                exit()
                 totalError.append(np.mean(tempError))
             print {'id': classifier.id, 'timeUnit': decisionTimeUnit-1, 'error': np.mean(totalError)}
             FileIO.writeToFileAsJson({'id': classifier.id, 'timeUnit': decisionTimeUnit-1, 'error': np.mean(totalError)}, TargetSelectionRegressionClassifier.classifiersPerformanceFile)
