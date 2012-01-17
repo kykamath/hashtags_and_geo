@@ -9,7 +9,8 @@ from library.file_io import FileIO
 from settings import hashtagsWithoutEndingWindowFile, hashtagsLatticeGraphFile,\
     hashtagsFile, hashtagsModelsFolder, hashtagsAnalysisFolder,\
     hashtagsClassifiersFolder, us_boundary, sub_world_boundary,\
-    hashtagsImagesHastagSharingVsTransmittingProbabilityFolder
+    hashtagsImagesHastagSharingVsTransmittingProbabilityFolder,\
+    targetSelectionRegressionClassifiersFolder
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     TIME_UNIT_IN_SECONDS, LATTICE_ACCURACY, HashtagsClassifier,\
     getOccurranceDistributionInEpochs,\
@@ -30,6 +31,7 @@ from sklearn.svm import SVC
 from sklearn.externals import joblib
 from itertools import groupby
 import matplotlib
+from sklearn import linear_model, svm
 
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
@@ -214,14 +216,6 @@ class GreedyLatticeSelectionModel(LatticeSelectionModel):
     '''
     def __init__(self, **kwargs): super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, **kwargs)
     def selectTargetLattices(self, currentTimeUnit, hashtag): return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
-
-class LinearRegressionLatticeSelectionModel(LatticeSelectionModel):
-    ''' Pick the location with maximum observations till that time.
-    '''
-    def __init__(self, **kwargs): super(LinearRegressionLatticeSelectionModel, self).__init__(LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, **kwargs)
-    def selectTargetLattices(self, currentTimeUnit, hashtag): 
-        return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
-
 
 class BestRateModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
@@ -552,6 +546,87 @@ class Analysis:
         Analysis.analyzeLatticeProbabilityGraph()
 #        Analysis.plotSharingAndTransmittingProbabilityForLatticesOnMap()
 
+class TargetSelectionRegressionClassifier(object):
+    classifiersPerformanceFile = hashtagsAnalysisFolder+'/ts_classifiers/classifier_performance'
+    def __init__(self, id='linear_regression', decisionTimeUnit=None, predictingLattice=None): 
+        self.id = id
+        self.decisionTimeUnit = decisionTimeUnit
+        self.predictingLattice = predictingLattice
+        self.classfierFile = targetSelectionRegressionClassifiersFolder%(self.id, self.decisionTimeUnit, self.predictingLattice)+'model.pkl'
+        FileIO.createDirectoryForFile(self.classfierFile)
+        self.clf = None
+    def buildClassifier(self, trainingDocuments):
+        inputVectors, outputValues = zip(*trainingDocuments)
+        self.clf = linear_model.LinearRegression()
+        self.clf.fit(inputVectors, outputValues)
+    def build(self, trainingDocuments):
+        self.buildClassifier(trainingDocuments)
+        GeneralMethods.runCommand('rm -rf %s*'%self.classfierFile)
+        FileIO.createDirectoryForFile(self.classfierFile)
+        joblib.dump(self.clf, self.classfierFile)
+    def predict(self, vector):
+        if self.clf==None: self.clf = joblib.load(self.classfierFile)
+        return self.clf.predict(vector)
+    @staticmethod
+    def writeLattices():
+        validLattices = set()
+        for data in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('world','%s_%s'%(2,11))): validLattices.add(data['id'])
+        lattices = set()
+        for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))): 
+            hashtag = Hashtag(h)
+            if hashtag.isValidObject():
+                for timeUnit, occs in enumerate(hashtag.getOccrancesEveryTimeWindowIterator(HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)):
+                    occs = filter(lambda t: t[0] in validLattices, occs)
+                    occs = sorted(occs, key=itemgetter(0))
+                    if occs: 
+                        for lattice in zip(*occs)[0]: lattices.add(lattice)
+        lattices = sorted(list(lattices))
+        FileIO.writeToFileAsJson(lattices, '../data/lattices.json')
+    @staticmethod
+    def loadLattices(): return list(FileIO.iterateJsonFromFile('../data/lattices.json'))[0]
+    @staticmethod
+    def getPercentageDistributionInLattice(document):
+        data = zip(*document)[1]
+        distributionInLaticces = defaultdict(int)
+        for d in data:
+            for k, v in d: distributionInLaticces[k]+=v
+        total = float(sum(distributionInLaticces.values()))
+        return dict([k,v/total] for k, v in distributionInLaticces.iteritems())
+    
+class TargetSelectionRegressionSVMRBFClassifier(TargetSelectionRegressionClassifier):
+    def __init__(self, id='svm_rbf_regression', decisionTimeUnit=None, predictingLattice=None):
+        TargetSelectionRegressionClassifier.__init__(self, id=id, decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice)
+    def buildClassifier(self, trainingDocuments):
+        inputVectors, outputValues = zip(*trainingDocuments)
+        self.clf = svm.SVR(kernel='rbf', C=1e4, gamma=0.1)
+        self.clf.fit(inputVectors, outputValues)
+class TargetSelectionRegressionSVMLinearClassifier(TargetSelectionRegressionClassifier):
+    def __init__(self, id='svm_linear_regression', decisionTimeUnit=None, predictingLattice=None):
+        TargetSelectionRegressionClassifier.__init__(self, id=id, decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice)
+    def buildClassifier(self, trainingDocuments):
+        inputVectors, outputValues = zip(*trainingDocuments)
+        self.clf = svm.SVR(kernel='linear', C=1e4)
+        self.clf.fit(inputVectors, outputValues)
+class TargetSelectionRegressionSVMPolyClassifier(TargetSelectionRegressionClassifier):
+    def __init__(self, id='svm_poly_regression', decisionTimeUnit=None, predictingLattice=None):
+        TargetSelectionRegressionClassifier.__init__(self, id=id, decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice)
+    def buildClassifier(self, trainingDocuments):
+        inputVectors, outputValues = zip(*trainingDocuments)
+        self.clf = svm.SVR(kernel='poly', C=1e4, degree=2)
+        self.clf.fit(inputVectors, outputValues)
+class LinearRegressionLatticeSelectionModel(LatticeSelectionModel):
+    ''' Pick the location with maximum observations till that time.
+    '''
+    lattices = TargetSelectionRegressionClassifier.loadLattices()
+    def __init__(self, **kwargs): super(LinearRegressionLatticeSelectionModel, self).__init__(LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, **kwargs)
+    def selectTargetLattices(self, currentTimeUnit, hashtag): 
+        occuranceDistributionInLattices = dict([(k, len(v)) for k, v in hashtag.occuranceDistributionInLattices.iteritems()])
+        total = float(sum(occuranceDistributionInLattices.values()))
+        occuranceDistributionInLattices = dict([k,v/total] for k, v in occuranceDistributionInLattices.iteritems())
+        vector =  [occuranceDistributionInLattices.get(l, 0) for l in LinearRegressionLatticeSelectionModel.lattices]
+        latticeScores = [(l, TargetSelectionRegressionClassifier(decisionTimeUnit=currentTimeUnit+1, predictingLattice=l).predict(vector)) for l in LinearRegressionLatticeSelectionModel.lattices]
+        return zip(*sorted(latticeScores, key=itemgetter(1), reverse=True)[:self.params['budget']])[0]
+
 class Simulation:
     trainingHashtagsFile = hashtagsFile%('training_world','%s_%s'%(2,11))
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
@@ -574,10 +649,11 @@ class Simulation:
 #        TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
-        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
-                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
-                                                                               Metrics.target_selection_accuracy, 
-                                                                                   params=params)
+        LinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+#        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
+#                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
+#                                                                               Metrics.target_selection_accuracy, 
+#                                                                                   params=params)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotVaringBudgetAndTimeUnits()
         
 if __name__ == '__main__':
