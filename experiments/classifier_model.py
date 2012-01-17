@@ -58,14 +58,14 @@ class TargetSelectionRegressionSVMPolyClassifier(TargetSelectionRegressionClassi
         inputVectors, outputValues = zip(*trainingDocuments)
         self.clf = svm.SVR(kernel='poly', C=1e4, degree=2)
         self.clf.fit(inputVectors, outputValues)
+def getPercentageDistributionInLattice(document):
+    data = zip(*document)[1]
+    distributionInLaticces = defaultdict(int)
+    for d in data:
+        for k, v in d: distributionInLaticces[k]+=v
+    total = float(sum(distributionInLaticces.values()))
+    return dict([k,v/total] for k, v in distributionInLaticces.iteritems())
 def build(numberOfTimeUnits=24):
-    def getPercentageDistributionInLattice(document):
-        data = zip(*document)[1]
-        distributionInLaticces = defaultdict(int)
-        for d in data:
-            for k, v in d: distributionInLaticces[k]+=v
-        total = float(sum(distributionInLaticces.values()))
-        return dict([k,v/total] for k, v in distributionInLaticces.iteritems())
     validLattices = set()
     for data in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('world','%s_%s'%(2,11))): validLattices.add(data['id'])
     documents, lattices = [], set()
@@ -98,10 +98,39 @@ def build(numberOfTimeUnits=24):
 #            TargetSelectionRegressionSVMPolyClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).build(zip(inputVectors, outputValues))
 #            for iv, ov in zip(inputVectors, outputValues):
 #                print ov, TargetSelectionRegressionClassifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).predict(iv)
-#            exit()
-#        print documents
-#        exit()
+
+def testClassifierPerformance(numberOfTimeUnits=24):
+    validLattices = set()
+    for data in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('world','%s_%s'%(2,11))): validLattices.add(data['id'])
+    documents, lattices = [], set()
+    for h in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))): 
+        hashtag, document = Hashtag(h), []
+        if hashtag.isValidObject():
+            for timeUnit, occs in enumerate(hashtag.getOccrancesEveryTimeWindowIterator(HashtagsClassifier.CLASSIFIER_TIME_UNIT_IN_SECONDS)):
+                occs = filter(lambda t: t[0] in validLattices, occs)
+                occs = sorted(occs, key=itemgetter(0))
+                if occs: 
+                    for lattice in zip(*occs)[0]: lattices.add(lattice)
+                document.append([timeUnit, [(k, len(list(i))) for k, i in groupby(occs, key=itemgetter(0))]])
+            if document: documents.append(document)
+    lattices = sorted(list(lattices))
+    print len(lattices)
+    documents = [(d, getPercentageDistributionInLattice(d)) for d in documents]
+    documents = documents[:int(len(documents)*0.80)]
+    for decisionTimeUnit in range(1, numberOfTimeUnits+1):
+        totalError = []
+        for latticeCount, predictingLattice in enumerate(lattices):
+            inputVectors, outputValues = [], []
+            for rawDocument, processedDocument in documents:
+                documentForTimeUnit = getPercentageDistributionInLattice(rawDocument[:decisionTimeUnit])
+                if documentForTimeUnit and processedDocument:
+                    vector =  [documentForTimeUnit.get(l, 0) for l in lattices]
+                    inputVectors.append(vector), outputValues.append(float(processedDocument.get(predictingLattice, 0)))
+            classifier = TargetSelectionRegressionClassifier
+            for iv, ov in zip(inputVectors, outputValues): totalError.append(pow(ov-classifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).predict(iv), 2))
+        print {'timeUnit': decisionTimeUnit-1, 'error': sum(totalError)}
 if __name__ == '__main__':
-    build()
+#    build()
+    testClassifierPerformance()
 #    for data in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('world','%s_%s'%(2,11))):
 #        print data['id']
