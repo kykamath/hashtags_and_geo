@@ -620,7 +620,7 @@ class LinearRegressionLatticeSelectionModel(LatticeSelectionModel):
     lattices = TargetSelectionRegressionClassifier.loadLattices()
     def __init__(self, **kwargs): super(LinearRegressionLatticeSelectionModel, self).__init__(LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, **kwargs)
     def selectTargetLattices(self, currentTimeUnit, hashtag): 
-        print currentTimeUnit, hashtag['id']
+        print currentTimeUnit, hashtag.hashtagObject['id']
         occuranceDistributionInLattices = dict([(k, len(v)) for k, v in hashtag.occuranceDistributionInLattices.iteritems()])
         total = float(sum(occuranceDistributionInLattices.values()))
         occuranceDistributionInLattices = dict([k,v/total] for k, v in occuranceDistributionInLattices.iteritems())
