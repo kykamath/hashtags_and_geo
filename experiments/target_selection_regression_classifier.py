@@ -121,8 +121,8 @@ def testClassifierPerformance(numberOfTimeUnits=24):
     documents = documents[-int(len(documents)*0.20):]
     GeneralMethods.runCommand('rm -rf %s'%TargetSelectionRegressionClassifier.classifiersPerformanceFile)
     for decisionTimeUnit in range(1, numberOfTimeUnits+1):
-        for classifierType in [TargetSelectionRegressionClassifier, TargetSelectionRegressionSVMRBFClassifier, TargetSelectionRegressionSVMLinearClassifier,
-                               TargetSelectionRegressionSVMPolyClassifier]:
+        for classifierType in [TargetSelectionRegressionSVMRBFClassifier, TargetSelectionRegressionSVMLinearClassifier,
+                               TargetSelectionRegressionSVMPolyClassifier, TargetSelectionRegressionClassifier]:
             totalError = []
             for latticeCount, predictingLattice in enumerate(lattices):
                 inputVectors, outputValues, tempError = [], [], []
