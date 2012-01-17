@@ -4,6 +4,7 @@ Created on Jan 14, 2012
 @author: kykamath
 '''
 import sys
+from graph_analysis.settings import hashtagsAnalysisFolder
 sys.path.append('../')
 from settings import targetSelectionRegressionClassifiersFolder, hashtagsFile,\
     hashtagsLatticeGraphFile
@@ -18,6 +19,7 @@ from library.classes import GeneralMethods
 from sklearn.externals import joblib
 
 class TargetSelectionRegressionClassifier(object):
+    classifiersPerformanceFile = hashtagsAnalysisFolder+'/ts_classifiers/classifier_performance'
     def __init__(self, id='linear_regression', decisionTimeUnit=None, predictingLattice=None): 
         self.id = id
         self.decisionTimeUnit = decisionTimeUnit
@@ -117,18 +119,23 @@ def testClassifierPerformance(numberOfTimeUnits=24):
     print len(lattices)
     documents = [(d, getPercentageDistributionInLattice(d)) for d in documents]
     documents = documents[:int(len(documents)*0.80)]
+    GeneralMethods.runCommand('rm -rf %s'%TargetSelectionRegressionClassifier.classifiersPerformanceFile)
     for decisionTimeUnit in range(1, numberOfTimeUnits+1):
-        totalError = []
-        for latticeCount, predictingLattice in enumerate(lattices):
-            inputVectors, outputValues = [], []
-            for rawDocument, processedDocument in documents:
-                documentForTimeUnit = getPercentageDistributionInLattice(rawDocument[:decisionTimeUnit])
-                if documentForTimeUnit and processedDocument:
-                    vector =  [documentForTimeUnit.get(l, 0) for l in lattices]
-                    inputVectors.append(vector), outputValues.append(float(processedDocument.get(predictingLattice, 0)))
-            classifier = TargetSelectionRegressionClassifier
-            for iv, ov in zip(inputVectors, outputValues): totalError.append(pow(ov-classifier(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice).predict(iv), 2))
-        print {'timeUnit': decisionTimeUnit-1, 'error': sum(totalError)}
+        for classifierType in [TargetSelectionRegressionClassifier, TargetSelectionRegressionSVMRBFClassifier, TargetSelectionRegressionSVMLinearClassifier,
+                               TargetSelectionRegressionSVMPolyClassifier]:
+            totalError = []
+            for latticeCount, predictingLattice in enumerate(lattices):
+                inputVectors, outputValues = [], []
+                for rawDocument, processedDocument in documents:
+                    documentForTimeUnit = getPercentageDistributionInLattice(rawDocument[:decisionTimeUnit])
+                    if documentForTimeUnit and processedDocument:
+                        vector =  [documentForTimeUnit.get(l, 0) for l in lattices]
+                        inputVectors.append(vector), outputValues.append(float(processedDocument.get(predictingLattice, 0)))
+                classifier = classifierType(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice)
+                for iv, ov in zip(inputVectors, outputValues): totalError.append(pow(ov-classifier.predict(iv), 2))
+                print classifier.id, decisionTimeUnit-1, latticeCount
+            FileIO.writeToFileAsJson({'id': classifier.id, 'timeUnit': decisionTimeUnit-1, 'error': sum(totalError)}, TargetSelectionRegressionClassifier.classifiersPerformanceFile)
+
 if __name__ == '__main__':
 #    build()
     testClassifierPerformance()
