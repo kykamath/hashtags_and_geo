@@ -155,9 +155,12 @@ def writeLattices():
                     for lattice in zip(*occs)[0]: lattices.add(lattice)
     lattices = sorted(list(lattices))
     FileIO.writeToFileAsJson(lattices, '../data/lattices.json')
+def loadLattices():
+    return list(FileIO.iterateJsonFromFile('../data/lattices.json'))[0]
 if __name__ == '__main__':
 #    build()
 #    testClassifierPerformance()
-    writeLattices()
+    print loadLattices()
+    print len(loadLattices())
 #    for data in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('world','%s_%s'%(2,11))):
 #        print data['id']
