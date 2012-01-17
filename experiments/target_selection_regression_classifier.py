@@ -133,7 +133,9 @@ def testClassifierPerformance(numberOfTimeUnits=24):
                         inputVectors.append(vector), outputValues.append(float(processedDocument.get(predictingLattice, 0)))
                 classifier = classifierType(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice)
                 for iv, ov in zip(inputVectors, outputValues): 
-                    if ov!=0.0: tempError.append(pow(ov-classifier.predict(iv), 2))
+                    if ov!=0.0: 
+                        print ov, pow(ov-classifier.predict(iv), 2)
+                        tempError.append(pow(ov-classifier.predict(iv), 2))
                 print tempError, np.mean(tempError)
                 exit()
                 totalError.append(np.mean(tempError))
