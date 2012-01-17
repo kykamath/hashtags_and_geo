@@ -4,10 +4,9 @@ Created on Jan 14, 2012
 @author: kykamath
 '''
 import sys
-from graph_analysis.settings import hashtagsAnalysisFolder
 sys.path.append('../')
 from settings import targetSelectionRegressionClassifiersFolder, hashtagsFile,\
-    hashtagsLatticeGraphFile
+    hashtagsLatticeGraphFile, hashtagsAnalysisFolder
 from library.file_io import FileIO
 from experiments.models import Hashtag
 from experiments.mr_area_analysis import HashtagsClassifier
