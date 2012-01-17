@@ -16,6 +16,7 @@ from collections import defaultdict
 from sklearn import linear_model, svm
 from library.classes import GeneralMethods
 from sklearn.externals import joblib
+import numpy as np
 
 class TargetSelectionRegressionClassifier(object):
     classifiersPerformanceFile = hashtagsAnalysisFolder+'/ts_classifiers/classifier_performance'
@@ -124,16 +125,17 @@ def testClassifierPerformance(numberOfTimeUnits=24):
                                TargetSelectionRegressionSVMPolyClassifier]:
             totalError = []
             for latticeCount, predictingLattice in enumerate(lattices):
-                inputVectors, outputValues = [], []
+                inputVectors, outputValues, tempError = [], [], []
                 for rawDocument, processedDocument in documents:
                     documentForTimeUnit = getPercentageDistributionInLattice(rawDocument[:decisionTimeUnit])
                     if documentForTimeUnit and processedDocument:
                         vector =  [documentForTimeUnit.get(l, 0) for l in lattices]
                         inputVectors.append(vector), outputValues.append(float(processedDocument.get(predictingLattice, 0)))
                 classifier = classifierType(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice)
-                for iv, ov in zip(inputVectors, outputValues): totalError.append(pow(ov-classifier.predict(iv), 2))
-                print classifier.id, decisionTimeUnit-1, latticeCount
-            FileIO.writeToFileAsJson({'id': classifier.id, 'timeUnit': decisionTimeUnit-1, 'error': sum(totalError)}, TargetSelectionRegressionClassifier.classifiersPerformanceFile)
+                for iv, ov in zip(inputVectors, outputValues): tempError.append(pow(ov-classifier.predict(iv), 2))
+                totalError.append(sum(tempError))
+            print {'id': classifier.id, 'timeUnit': decisionTimeUnit-1, 'error': np.mean(totalError)}
+            FileIO.writeToFileAsJson({'id': classifier.id, 'timeUnit': decisionTimeUnit-1, 'error': np.mean(totalError)}, TargetSelectionRegressionClassifier.classifiersPerformanceFile)
 
 if __name__ == '__main__':
 #    build()
