@@ -46,6 +46,7 @@ BEST_RATE = 'best_rate'
 SHARING_PROBABILITY_LATTICE_SELECTION_MODEL = 'sharing_probability'
 TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL = 'transmitting_probability'
 SHARING_PROBABILITY_LATTICE_SELECTION_WITH_LOCALITY_CLASSIFIER_MODEL = 'sharing_probability_with_locality_classifier'
+LINEAR_REGRESSION_LATTICE_SELECTION_MODEL = 'linear_regression'
 
 class Metrics:
     overall_hit_rate = 'overall_hit_rate'
@@ -213,6 +214,14 @@ class GreedyLatticeSelectionModel(LatticeSelectionModel):
     '''
     def __init__(self, **kwargs): super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, **kwargs)
     def selectTargetLattices(self, currentTimeUnit, hashtag): return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+
+class LinearRegressionLatticeSelectionModel(LatticeSelectionModel):
+    ''' Pick the location with maximum observations till that time.
+    '''
+    def __init__(self, **kwargs): super(LinearRegressionLatticeSelectionModel, self).__init__(LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, **kwargs)
+    def selectTargetLattices(self, currentTimeUnit, hashtag): 
+        return zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+
 
 class BestRateModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
