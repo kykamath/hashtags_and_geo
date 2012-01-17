@@ -134,7 +134,7 @@ def testClassifierPerformance(numberOfTimeUnits=24):
                 classifier = classifierType(decisionTimeUnit=decisionTimeUnit, predictingLattice=predictingLattice)
                 for iv, ov in zip(inputVectors, outputValues): 
                     if ov!=0.0: 
-                        print ov, pow(ov-classifier.predict(iv), 2)
+                        print ov, classifier.predict(iv), pow(ov-classifier.predict(iv), 2)
                         tempError.append(pow(ov-classifier.predict(iv), 2))
                 print tempError, np.mean(tempError)
                 exit()
