@@ -117,7 +117,7 @@ def testClassifierPerformance(numberOfTimeUnits=24):
     lattices = sorted(list(lattices))
     print len(lattices)
     documents = [(d, getPercentageDistributionInLattice(d)) for d in documents]
-    documents = documents[:int(len(documents)*0.80)]
+    documents = documents[-int(len(documents)*0.20):]
     GeneralMethods.runCommand('rm -rf %s'%TargetSelectionRegressionClassifier.classifiersPerformanceFile)
     for decisionTimeUnit in range(1, numberOfTimeUnits+1):
         for classifierType in [TargetSelectionRegressionClassifier, TargetSelectionRegressionSVMRBFClassifier, TargetSelectionRegressionSVMLinearClassifier,
