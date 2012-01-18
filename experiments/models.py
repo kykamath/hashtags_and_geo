@@ -621,8 +621,8 @@ class LinearRegressionLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location using linear regression.
     '''
     lattices = TargetSelectionRegressionClassifier.loadLattices()
-    def __init__(self, **kwargs): 
-        super(LinearRegressionLatticeSelectionModel, self).__init__(LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, **kwargs)
+    def __init__(self, id=LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, **kwargs): 
+        super(LinearRegressionLatticeSelectionModel, self).__init__(id, **kwargs)
         self.regressionClassType = TargetSelectionRegressionClassifier
     def selectTargetLattices(self, currentTimeUnit, hashtag): 
         occuranceDistributionInLattices = dict([(k, len(v)) for k, v in hashtag.occuranceDistributionInLattices.iteritems()])
@@ -633,8 +633,8 @@ class LinearRegressionLatticeSelectionModel(LatticeSelectionModel):
         return zip(*sorted(latticeScores, key=itemgetter(1), reverse=True)[:self.params['budget']])[0]
     
 class SVMLinearRegressionLatticeSelectionModel(LinearRegressionLatticeSelectionModel):
-    def __init__(self, **kwargs): 
-        super(SVMLinearRegressionLatticeSelectionModel, self).__init__(SVM_LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, **kwargs)
+    def __init__(self, id=SVM_LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, **kwargs): 
+        super(SVMLinearRegressionLatticeSelectionModel, self).__init__(id, **kwargs)
         self.regressionClassType = TargetSelectionRegressionSVMLinearClassifier
 
 class Simulation:
