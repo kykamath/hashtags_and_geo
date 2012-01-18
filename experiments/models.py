@@ -633,7 +633,7 @@ class LinearRegressionLatticeSelectionModel(LatticeSelectionModel):
             occuranceDistributionInLattices = dict([k,v/total] for k, v in occuranceDistributionInLattices.iteritems())
             vector =  [occuranceDistributionInLattices.get(l, 0) for l in LinearRegressionLatticeSelectionModel.lattices]
             latticeScores = [(l, self.regressionClassType(decisionTimeUnit=currentTimeUnit+1, predictingLattice=l).predict(vector)) for l in LinearRegressionLatticeSelectionModel.lattices]
-            extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1))
+            extraTargetLattices = sorted(latticeScores, key=itemgetter(1))
             while len(targetLattices)<self.params['budget'] and extraTargetLattices:
                 t = extraTargetLattices.pop()
                 if t[0] not in targetLattices: targetLattices.append(t[0])
@@ -687,8 +687,8 @@ class Simulation:
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-#        LinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-        LinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        LinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+#        LinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SVMLinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SVMLinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SVMPolyRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
