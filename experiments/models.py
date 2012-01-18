@@ -633,7 +633,6 @@ class LinearRegressionLatticeSelectionModel(LatticeSelectionModel):
         return zip(*sorted(latticeScores, key=itemgetter(1), reverse=True)[:self.params['budget']])[0]
     
 class SVMLinearRegressionLatticeSelectionModel(LinearRegressionLatticeSelectionModel):
-    lattices = TargetSelectionRegressionClassifier.loadLattices()
     def __init__(self, **kwargs): 
         super(SVMLinearRegressionLatticeSelectionModel, self).__init__(SVM_LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, **kwargs)
         self.regressionClassType = TargetSelectionRegressionSVMLinearClassifier
