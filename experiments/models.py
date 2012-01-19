@@ -59,6 +59,7 @@ class Metrics:
     miss_rate_before_target_selection = 'miss_rate_before_target_selection'
     best_rate = 'best_rate'
     target_selection_accuracy = 'target_selection_accuracy'
+    rate_lag = 'rate_lag'
     @staticmethod
     def bestRate(hashtag, **params):
         totalOccurances, occuranceCountInLatices = 0., {}
@@ -68,6 +69,21 @@ class Metrics:
                 totalOccurances+=len(v)
                 occuranceCountInLatices[k] = len(filter(lambda i: i>selectedTimeUnit, v))
             return sum(sorted(occuranceCountInLatices.values())[-params['budget']:])/totalOccurances
+    @staticmethod
+    def rateLag(hashtag, **params):
+        totalOccurances, occuranceCountInLatices, occurancesObserved = 0., {}, 0.
+        if hashtag.occuranceDistributionInTargetLattices:
+            selectedTimeUnit = hashtag.occuranceDistributionInTargetLattices.values()[0]['selectedTimeUnit']
+            for k,v in hashtag.occuranceDistributionInLattices.iteritems(): 
+                totalOccurances+=len(v)
+                occuranceCountInLatices[k] = len(filter(lambda i: i>selectedTimeUnit, v))
+            for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
+            return (sum(sorted(occuranceCountInLatices.values())[-params['budget']:]) - occurancesObserved)/totalOccurances
+#        totalOccurances, occurancesObserved = 0., 0.
+#        if hashtag.occuranceDistributionInTargetLattices:
+#            for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v)
+#            for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
+#            return occurancesObserved/totalOccurances
     @staticmethod
     def targetSelectionAccuracy(hashtag, **params):
         occuranceCountInLatices = {}
@@ -101,11 +117,12 @@ class Metrics:
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v); occurancesBeforeTimeUnit+=len([i for i in v if i<=targetSelectionTimeUnit])
             return occurancesBeforeTimeUnit/totalOccurances
 EvaluationMetrics = {
-                     Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
-                     Metrics.hit_rate_after_target_selection: Metrics.occurancesHitRateAfterTargetSelection,
-                     Metrics.miss_rate_before_target_selection: Metrics.occurancesMissRateBeforeTargetSelection,
-#                     Metrics.best_rate: Metrics.bestRate,
-                      Metrics.target_selection_accuracy: Metrics.targetSelectionAccuracy  
+#                     Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
+#                     Metrics.hit_rate_after_target_selection: Metrics.occurancesHitRateAfterTargetSelection,
+#                     Metrics.miss_rate_before_target_selection: Metrics.occurancesMissRateBeforeTargetSelection,
+                     Metrics.best_rate: Metrics.bestRate,
+#                      Metrics.target_selection_accuracy: Metrics.targetSelectionAccuracy,
+#                      Metrics.rate_lag: Metrics.rateLag 
                      }
 
 class LatticeSelectionModel(object):
@@ -135,7 +152,7 @@ class LatticeSelectionModel(object):
         return hashtags
     def evaluateModelWithVaryingTimeUnitToPickTargetLattices(self, numberOfTimeUnits = 24):
         self.params['evaluationName'] = 'time'
-        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
+#        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
         for t in range(numberOfTimeUnits):
             print 'Evaluating at t=%d'%t, self.getModelSimulationFile()
             self.params['timeUnitToPickTargetLattices'] = t
@@ -149,7 +166,7 @@ class LatticeSelectionModel(object):
             FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
     def evaluateByVaringBudgetAndTimeUnits(self, numberOfTimeUnits=24, budgetLimit = 20):
         self.params['evaluationName'] = 'budget_time'
-        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
+#        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
         for b in range(1, budgetLimit):
             for t in range(numberOfTimeUnits):
                 print 'Evaluating at budget=%d, numberOfTimeUnits=%d'%(b, t), self.getModelSimulationFile()
