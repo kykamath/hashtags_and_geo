@@ -78,7 +78,9 @@ class Metrics:
                 totalOccurances+=len(v)
                 occuranceCountInLatices[k] = len(filter(lambda i: i>selectedTimeUnit, v))
             for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
-            return (sum(sorted(occuranceCountInLatices.values())[-params['budget']:]) - occurancesObserved)/totalOccurances
+            difference = (sum(sorted(occuranceCountInLatices.values())[-params['budget']:]) - occurancesObserved)/totalOccurances
+            assert difference>=0.0
+            return difference
 #        totalOccurances, occurancesObserved = 0., 0.
 #        if hashtag.occuranceDistributionInTargetLattices:
 #            for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v)
@@ -163,6 +165,7 @@ class LatticeSelectionModel(object):
         for b in range(1, budgetLimit):
             print 'Evaluating at budget=%d'%b, self.getModelSimulationFile()
             self.params['budget'] = b
+            self.budget = b
             FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
     def evaluateByVaringBudgetAndTimeUnits(self, numberOfTimeUnits=24, budgetLimit = 20):
         self.params['evaluationName'] = 'budget_time'
@@ -171,6 +174,7 @@ class LatticeSelectionModel(object):
             for t in range(numberOfTimeUnits):
                 print 'Evaluating at budget=%d, numberOfTimeUnits=%d'%(b, t), self.getModelSimulationFile()
                 self.params['budget'] = b
+                self.budget = b
                 self.params['timeUnitToPickTargetLattices'] = t
                 FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
     @staticmethod
@@ -718,7 +722,7 @@ class Simulation:
 #                                                                               Metrics.overall_hit_rate, 
 #                                                                                   params=params)
 
-#        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([BestRateModel], 
+#        LatticeSelectionModel.plotModelWithVaryingBudget([BestRateModel], 
 #                                                                               Metrics.best_rate, 
 #                                                                                   params=params)
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotVaringBudgetAndTimeUnits()
