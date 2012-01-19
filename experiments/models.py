@@ -81,11 +81,6 @@ class Metrics:
             difference = (sum(sorted(occuranceCountInLatices.values())[-params['budget']:]) - occurancesObserved)/totalOccurances
             assert difference>=0.0
             return difference
-#        totalOccurances, occurancesObserved = 0., 0.
-#        if hashtag.occuranceDistributionInTargetLattices:
-#            for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v)
-#            for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
-#            return occurancesObserved/totalOccurances
     @staticmethod
     def targetSelectionAccuracy(hashtag, **params):
         occuranceCountInLatices = {}
@@ -94,7 +89,7 @@ class Metrics:
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): occuranceCountInLatices[k] = len(filter(lambda i: i>selectedTimeUnit, v))
             bestLattices = set(zip(*sorted(occuranceCountInLatices.iteritems(), key=itemgetter(1))[-params['budget']:])[0])
             targetLattices = set(hashtag.occuranceDistributionInTargetLattices.keys())
-            return len(bestLattices.intersection(targetLattices))/float(len(bestLattices))
+            return len(bestLattices.intersection(targetLattices))/float(params['budget'])
     @staticmethod
     def overallOccurancesHitRate(hashtag, **params):
         totalOccurances, occurancesObserved = 0., 0.
@@ -119,10 +114,10 @@ class Metrics:
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v); occurancesBeforeTimeUnit+=len([i for i in v if i<=targetSelectionTimeUnit])
             return occurancesBeforeTimeUnit/totalOccurances
 EvaluationMetrics = {
+                    Metrics.best_rate: Metrics.bestRate,
 #                     Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
 #                     Metrics.hit_rate_after_target_selection: Metrics.occurancesHitRateAfterTargetSelection,
 #                     Metrics.miss_rate_before_target_selection: Metrics.occurancesMissRateBeforeTargetSelection,
-                     Metrics.best_rate: Metrics.bestRate,
 #                      Metrics.target_selection_accuracy: Metrics.targetSelectionAccuracy,
 #                      Metrics.rate_lag: Metrics.rateLag 
                      }
@@ -154,7 +149,7 @@ class LatticeSelectionModel(object):
         return hashtags
     def evaluateModelWithVaryingTimeUnitToPickTargetLattices(self, numberOfTimeUnits = 24):
         self.params['evaluationName'] = 'time'
-#        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
+        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
         for t in range(numberOfTimeUnits):
             print 'Evaluating at t=%d'%t, self.getModelSimulationFile()
             self.params['timeUnitToPickTargetLattices'] = t
@@ -687,16 +682,16 @@ class Simulation:
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
     @staticmethod
     def run():
-        params = dict(budget=5, timeUnitToPickTargetLattices=1)
+        params = dict(budget=20, timeUnitToPickTargetLattices=1)
         params['dataStructuresToBuildClassifier'] = True
 #        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+#        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget(budgetLimit=50)
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-#        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
