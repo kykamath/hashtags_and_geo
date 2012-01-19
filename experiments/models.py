@@ -115,11 +115,11 @@ class Metrics:
             return occurancesBeforeTimeUnit/totalOccurances
 EvaluationMetrics = {
                     Metrics.best_rate: Metrics.bestRate,
-#                     Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
-#                     Metrics.hit_rate_after_target_selection: Metrics.occurancesHitRateAfterTargetSelection,
-#                     Metrics.miss_rate_before_target_selection: Metrics.occurancesMissRateBeforeTargetSelection,
-#                      Metrics.target_selection_accuracy: Metrics.targetSelectionAccuracy,
-#                      Metrics.rate_lag: Metrics.rateLag 
+                     Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
+                     Metrics.hit_rate_after_target_selection: Metrics.occurancesHitRateAfterTargetSelection,
+                     Metrics.miss_rate_before_target_selection: Metrics.occurancesMissRateBeforeTargetSelection,
+                      Metrics.target_selection_accuracy: Metrics.targetSelectionAccuracy,
+                      Metrics.rate_lag: Metrics.rateLag 
                      }
 
 class LatticeSelectionModel(object):
@@ -154,10 +154,10 @@ class LatticeSelectionModel(object):
             print 'Evaluating at t=%d'%t, self.getModelSimulationFile()
             self.params['timeUnitToPickTargetLattices'] = t
             FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
-    def evaluateModelWithVaryingBudget(self, budgetLimit = 20):
+    def evaluateModelWithVaryingBudget(self, startingRange = 1, budgetLimit = 20):
         self.params['evaluationName'] = 'budget'
         GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
-        for b in range(1, budgetLimit):
+        for b in range(startingRange, budgetLimit):
             print 'Evaluating at budget=%d'%b, self.getModelSimulationFile()
             self.params['budget'] = b
             self.budget = b
@@ -685,13 +685,13 @@ class Simulation:
         params = dict(budget=20, timeUnitToPickTargetLattices=1)
         params['dataStructuresToBuildClassifier'] = True
 #        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-#        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget(budgetLimit=50)
+#        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget(startingRange = 1, budgetLimit=100)
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+#        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
@@ -713,8 +713,8 @@ class Simulation:
 #        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
 #        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
-#                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel, LinearRegressionLatticeSelectionModel], 
-#                                                                               Metrics.overall_hit_rate, 
+#                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
+#                                                                               Metrics.rate_lag, 
 #                                                                                   params=params)
 
 #        LatticeSelectionModel.plotModelWithVaryingBudget([BestRateModel], 
