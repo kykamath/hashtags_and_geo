@@ -8,10 +8,6 @@ sys.path.append('../')
 from scipy import stats
 from library.graphs import plot
 from library.stats import getOutliersRangeUsingIRQ
-from experiments.models import latticeNodeBySharingProbability,\
-    latticeNodeByTemporalClosenessScore, latticeNodeByTemporalDistanceInHours,\
-    latticeNodeByHaversineDistance, LatticeGraph,\
-    filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance
 from library.classes import GeneralMethods
 from experiments.mr_area_analysis import MRAreaAnalysis, latticeIdInValidAreas,\
     LATTICE_ACCURACY, TIME_UNIT_IN_SECONDS, getSourceLattice,\
