@@ -32,7 +32,8 @@ TIME_UNIT_IN_SECONDS = 60*60
 #MIN_HASHTAG_OCCURENCES_PER_LATTICE = 1
 
 # Paramters to filter hashtags.
-MIN_HASHTAG_OCCURENCES = 250
+#MIN_HASHTAG_OCCURENCES = 250
+MIN_HASHTAG_OCCURENCES = 1000
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
 #HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 8, 31).timetuple())
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 9, 1).timetuple())
