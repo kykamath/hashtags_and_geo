@@ -35,8 +35,10 @@ TIME_UNIT_IN_SECONDS = 60*60
 MIN_HASHTAG_OCCURENCES = 250
 #HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 25).timetuple())
 #HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 8, 31).timetuple())
-HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 9, 1).timetuple())
-HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
+#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 9, 1).timetuple())
+#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
+HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 2, 1).timetuple())
+HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 11, 30).timetuple())
 
 # Paramters to construct lattice graph.
 MIN_NO_OF_TIME_UNITS_IN_INACTIVE_REGION = 12
@@ -329,8 +331,8 @@ class MRAreaAnalysis(ModifiedMRJob):
 
     def steps(self):
         pass
-        return self.jobsToGetHastagObjectsWithEndingWindow()
-#        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+#        return self.jobsToGetHastagObjectsWithEndingWindow()
+        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetHastagObjectsWithKnownSource()
 #        return self.jobsToBuildLatticeGraph() 
 #        return self.jobToBuildLocationTemporalClosenessGraph()

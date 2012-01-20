@@ -318,8 +318,8 @@ if __name__ == '__main__':
     mrOutputFolder = 'new_world'
 #    mrOutputFolder = 'training_world'
 #    mrOutputFolder = 'testing_world'
-#    mr_area_analysis(timeRange, folderType, mrOutputFolder)
-    mr_analysis(timeRange, folderType, mrOutputFolder)
+    mr_area_analysis(timeRange, folderType, mrOutputFolder)
+#    mr_analysis(timeRange, folderType, mrOutputFolder)
 #    HashtagsClassifierAnalysis.timePeriods(timeRange, folderType)
     
 #    tempAnalysis(timeRange, mrOutputFolder)
