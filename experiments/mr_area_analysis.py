@@ -329,7 +329,7 @@ class MRAreaAnalysis(ModifiedMRJob):
 
     def steps(self):
         pass
-#        return self.jobsToGetHastagObjectsWithEndingWindow()
+        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetHastagObjectsWithKnownSource()
 #        return self.jobsToBuildLatticeGraph() 
