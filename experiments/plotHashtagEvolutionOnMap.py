@@ -19,6 +19,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
+from datetime import datetime
 
 
 def getFileName():
@@ -62,31 +63,40 @@ outputFolder = 'world'
 #            currentIndex+=WINDOW
 #    exit()
 
-#for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/new_world/2_11/hashtags'):
-#    if hashtagObject['h']=='ripamywinehouse':
-#        print unicode(hashtagObject['h']).encode('utf-8')
-#        occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=60*60, fillInGaps=True, occurancesCount=False)
-#        totalOccurances = []
-#        for t, occs in occsDistributionInTimeUnits.iteritems():
-#            totalOccurances+=occs
-#            if occs:
-#                occurancesGroupedByLattice = [(getLocationFromLid(lid.replace('_', ' ')), len(sorted(zip(*occs)[1]))) for lid, occs in groupby(sorted([(getLatticeLid(l, LATTICE_ACCURACY), t) for l, t in totalOccurances], key=itemgetter(0)), key=itemgetter(0))]
-#                occurancesGroupedByLattice = sorted(occurancesGroupedByLattice, key=itemgetter(1))
-#                points, colors = zip(*occurancesGroupedByLattice)
-#                ax = plt.subplot(111)
-#                cm = matplotlib.cm.get_cmap('cool')
-#                sc = plotPointsOnWorldMap(points, c=colors, cmap=cm, lw = 0)
-#        #        plotPointsOnWorldMap([source], c='g', alpha=0.5, s=50, lw=1)
-#        #        plt.title('%s (%s of %s) (%0.3f - %d)'%(hashtagObject['h'], len(occurances), numberOfOccurences, td/TIME_UNIT_IN_SECONDS, td))
-#                divider = make_axes_locatable(ax)
-#                cax = divider.append_axes("right", size="5%", pad=0.05)
-#                plt.colorbar(sc, cax=cax)
-#                plt.show()
-                
-hashtags = []
-for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/new_world/2_11/hashtags'):
-    hashtags.append(hashtagObject['h'])
-hashtags=sorted(hashtags)
-for h in hashtags: FileIO.writeToFile(unicode(h).encode('utf-8'), 'hashtags')
+def plotGraphsForHashtag(hashtag):
+    for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/new_world/2_11/hashtags'):
+        MINUTES = 5
+        if hashtagObject['h']==hashtag:
+            print unicode(hashtagObject['h']).encode('utf-8'), len(hashtagObject['oc'])
+            occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
+            totalOccurances = []
+            for interval, t in enumerate(sorted(occsDistributionInTimeUnits)):
+                occs = occsDistributionInTimeUnits[t]
+                totalOccurances+=occs
+                if occs:
+                    fileName = '../images/plotsOnMap/%s/%s.png'%(hashtagObject['h'], (interval+1)*MINUTES); FileIO.createDirectoryForFile(fileName)
+                    print fileName
+                    occurancesGroupedByLattice = [(getLocationFromLid(lid.replace('_', ' ')), 'r') for lid, occs in groupby(sorted([(getLatticeLid(l, LATTICE_ACCURACY), t) for l, t in totalOccurances], key=itemgetter(0)), key=itemgetter(0))]
+                    occurancesGroupedByLattice = sorted(occurancesGroupedByLattice, key=itemgetter(1))
+                    points, colors = zip(*occurancesGroupedByLattice)
+                    plotPointsOnWorldMap(points, blueMarble=False, c=colors, lw = 0)
+    #                plt.show()
+                    plt.savefig(fileName)
+                    plt.clf()
+                if (interval+1)*MINUTES>=120: break
+            break
+def writeHashtagsFile():
+    hashtags = []
+    for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/new_world/2_11/hashtags'):
+        print hashtagObject.keys()
+        exit()
+        hashtags.append(hashtagObject['h'])
+    hashtags=sorted(hashtags)
+    for h in hashtags: FileIO.writeToFile(unicode(h).encode('utf-8'), 'hashtags')
+
+plotGraphsForHashtag('chupacorinthians')    
+plotGraphsForHashtag('ripstevejobs')
+plotGraphsForHashtag('ripamywinehouse')
+plotGraphsForHashtag('cnndebate')
     
     
