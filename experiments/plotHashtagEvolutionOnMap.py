@@ -76,15 +76,16 @@ def plotGraphsForHashtag(hashtag):
                 if occs:
                     fileName = '../images/plotsOnMap/%s/%s.png'%(hashtagObject['h'], (interval+1)*MINUTES); FileIO.createDirectoryForFile(fileName)
                     print fileName
-                    occurancesGroupedByLattice = [(getLocationFromLid(lid.replace('_', ' ')), 'r') for lid, occs in groupby(sorted([(getLatticeLid(l, LATTICE_ACCURACY), t) for l, t in totalOccurances], key=itemgetter(0)), key=itemgetter(0))]
+                    occurancesGroupedByLattice = [(getLocationFromLid(lid.replace('_', ' ')), 'm') for lid, occs in groupby(sorted([(getLatticeLid(l, LATTICE_ACCURACY), t) for l, t in totalOccurances], key=itemgetter(0)), key=itemgetter(0))]
                     occurancesGroupedByLattice = sorted(occurancesGroupedByLattice, key=itemgetter(1))
                     points, colors = zip(*occurancesGroupedByLattice)
-                    plotPointsOnWorldMap(points, blueMarble=False, c=colors, lw = 0)
-    #                plt.show()
-                    plt.savefig(fileName)
+                    plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c=colors, lw = 0)
+                    plt.show()
+#                    plt.savefig(fileName)
                     plt.clf()
                 if (interval+1)*MINUTES>=120: break
             break
+        
 def writeHashtagsFile():
     hashtags = []
     for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/new_world/2_11/hashtags'):
@@ -94,9 +95,9 @@ def writeHashtagsFile():
     hashtags=sorted(hashtags)
     for h in hashtags: FileIO.writeToFile(unicode(h).encode('utf-8'), 'hashtags')
 
-plotGraphsForHashtag('chupacorinthians')    
+plotGraphsForHashtag('chupacorinthians')
+plotGraphsForHashtag('cnndebate')    
 plotGraphsForHashtag('ripstevejobs')
 plotGraphsForHashtag('ripamywinehouse')
-plotGraphsForHashtag('cnndebate')
     
     
