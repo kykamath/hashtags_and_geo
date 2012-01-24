@@ -6,6 +6,7 @@ Created on Dec 7, 2011
 import sys
 from settings import hashtagsLatticeGraphFile
 from experiments.models import filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance
+from library.stats import getOutliersRangeUsingIRQ
 sys.path.append('../')
 from itertools import groupby
 from operator import itemgetter
@@ -80,21 +81,27 @@ class Locality:
                     distances[key]['similarity']=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet.union(neighborHashtagsSet)))
                     distances[key]['temporalDistance']=np.mean([abs(latticeObject['hashtags'][k][0]-neighborHashtags[k][0]) for k in neighborHashtags if k in latticeObject['hashtags']])
                     distances[key]['geoDistance']=getHaversineDistanceForLids(latticeObject['id'].replace('_', ' '), neighborLattice.replace('_', ' '))
+#                    if distances[key]['similarity']==1: 
+#                        print 'x'
 #            distances['similarity'][latticeObject['id']][latticeObject['id']]=1.0
         return distances
     @staticmethod
-    def plotSpatialLocality():
+    def plotLocality(type='temporalDistance'):
         distances = Locality._getDistances()
+        dataToPlot = defaultdict(list)
         for _, data in distances.iteritems():
-#            print data['similarity'], data['geoDistance'] 
-            plt.scatter(data['similarity'], data['temporalDistance'])
-#        print 'x'
-        plt.show()
+            dataToPlot[round(data['similarity'],2)].append(data[type]) 
+        for k in sorted(dataToPlot):
+            _, upperRange = getOutliersRangeUsingIRQ(dataToPlot[k])
+            print k, len(dataToPlot[k]), len(filter(lambda i:i<upperRange, dataToPlot[k]))
+            plt.scatter(k, np.mean(filter(lambda i:i<upperRange, dataToPlot[k]))/(60.*60.))
+#        plt.show()
+        plt.savefig('../images/%s.png'%type)
     @staticmethod
     def run():
-        pass
+        Locality.plotLocality(type='temporalDistance')
         
 if __name__ == '__main__':
 #    PlotGraphsOnMap.run()
-    Locality.plotSpatialLocality()    
+    Locality.run()    
     
