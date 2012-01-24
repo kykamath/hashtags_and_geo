@@ -79,7 +79,7 @@ def plotGraphsForHashtag(hashtag):
                     occurancesGroupedByLattice = [(getLocationFromLid(lid.replace('_', ' ')), 'm') for lid, occs in groupby(sorted([(getLatticeLid(l, LATTICE_ACCURACY), t) for l, t in totalOccurances], key=itemgetter(0)), key=itemgetter(0))]
                     occurancesGroupedByLattice = sorted(occurancesGroupedByLattice, key=itemgetter(1))
                     points, colors = zip(*occurancesGroupedByLattice)
-                    plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c=colors, lw = 0)
+                    plotPointsOnWorldMap(points, blueMarble=True, bkcolor='#CFCFCF', c=colors, lw = 0)
                     plt.show()
 #                    plt.savefig(fileName)
                     plt.clf()
