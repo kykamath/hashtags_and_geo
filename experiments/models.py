@@ -114,10 +114,10 @@ class Metrics:
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v); occurancesBeforeTimeUnit+=len([i for i in v if i<=targetSelectionTimeUnit])
             return occurancesBeforeTimeUnit/totalOccurances
 EvaluationMetrics = {
-                    Metrics.best_rate: Metrics.bestRate,
-                     Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
-                     Metrics.hit_rate_after_target_selection: Metrics.occurancesHitRateAfterTargetSelection,
-                     Metrics.miss_rate_before_target_selection: Metrics.occurancesMissRateBeforeTargetSelection,
+                      Metrics.best_rate: Metrics.bestRate,
+                      Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
+                      Metrics.hit_rate_after_target_selection: Metrics.occurancesHitRateAfterTargetSelection,
+                      Metrics.miss_rate_before_target_selection: Metrics.occurancesMissRateBeforeTargetSelection,
                       Metrics.target_selection_accuracy: Metrics.targetSelectionAccuracy,
                       Metrics.rate_lag: Metrics.rateLag 
                      }
@@ -680,7 +680,7 @@ class Simulation:
         params['dataStructuresToBuildClassifier'] = True
 #        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget(startingRange = 1, budgetLimit=100)
-#        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 
@@ -706,10 +706,10 @@ class Simulation:
 #        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
-                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
-                                                                               Metrics.hit_rate_after_target_selection, 
-                                                                                   params=params)
+#        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
+#                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
+#                                                                               Metrics.hit_rate_after_target_selection, 
+#                                                                                   params=params)
 
 #        LatticeSelectionModel.plotModelWithVaryingBudget([BestRateModel], 
 #                                                                               Metrics.best_rate, 

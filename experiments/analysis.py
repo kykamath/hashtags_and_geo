@@ -315,7 +315,7 @@ if __name__ == '__main__':
     folderType = 'world'
 #    folderType = '/'
 #    mrOutputFolder = 'world'
-    mrOutputFolder = 'new_world'
+    mrOutputFolder = 'all_world'
 #    mrOutputFolder = 'training_world'
 #    mrOutputFolder = 'testing_world'
     mr_area_analysis(timeRange, folderType, mrOutputFolder)

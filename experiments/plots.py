@@ -5,33 +5,19 @@ Created on Dec 7, 2011
 '''
 import sys
 sys.path.append('../')
-from itertools import groupby, combinations
+from itertools import groupby
 from operator import itemgetter
 from library.file_io import FileIO
-from settings import hashtagsWithKnownSourceFile,\
-    hashtagsImagesHastagEvolutionFolder, hashtagsFile
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
-    LATTICE_ACCURACY, getSourceLattice,\
-    MIN_OCCURRENCES_TO_DETERMINE_SOURCE_LATTICE, TIME_UNIT_IN_SECONDS,\
-    getOccurranceDistributionInEpochs, HashtagsClassifier
+    LATTICE_ACCURACY, getOccurranceDistributionInEpochs
 from library.geo import getLocationFromLid, getLatticeLid, plotPointsOnWorldMap
-import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import os
-from datetime import datetime
-
-
-def getFileName():
-    for i in combinations('abcdefghijklmnopqrstuvwxyz',8): yield ''.join(i)+'.png'
-
-timeRange = (2,11)
-outputFolder = 'world'
 
 class PlotGraphsOnMap:
     @staticmethod
     def plotGraphsForHashtag(hashtag):
-        for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/new_world/2_11/hashtags'):
+        for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/hashtagsWithoutEndingWindow'):
             MINUTES = 5
             if hashtagObject['h']==hashtag:
                 print unicode(hashtagObject['h']).encode('utf-8'), len(hashtagObject['oc'])
@@ -55,7 +41,7 @@ class PlotGraphsOnMap:
     @staticmethod
     def writeHashtagsFile():
         hashtags = []
-        for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/new_world/2_11/hashtags'):
+        for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/hashtagsWithoutEndingWindow'):
             print hashtagObject.keys()
             exit()
             hashtags.append(hashtagObject['h'])
@@ -67,6 +53,18 @@ class PlotGraphsOnMap:
         PlotGraphsOnMap.plotGraphsForHashtag('cnndebate')    
         PlotGraphsOnMap.plotGraphsForHashtag('ripstevejobs')
         PlotGraphsOnMap.plotGraphsForHashtag('ripamywinehouse')
+    
+class Locality:
+    ''' Total memes (Mar-Oct): 3057
+    Train memes (Mar-Aug): 1466
+    Test memes (Sept-Oct): 515
+    '''
+    @staticmethod
+    def spatialLocality():
+        pass
+    @staticmethod
+    def run():
+        pass
         
 if __name__ == '__main__':
     PlotGraphsOnMap.run()
