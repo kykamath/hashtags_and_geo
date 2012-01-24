@@ -86,20 +86,35 @@ class Locality:
 #            distances['similarity'][latticeObject['id']][latticeObject['id']]=1.0
         return distances
     @staticmethod
-    def plotLocality(type='temporalDistance'):
+    def plotTemporalLocality():
         distances = Locality._getDistances()
         dataToPlot = defaultdict(list)
         for _, data in distances.iteritems():
-            dataToPlot[round(data['similarity'],2)].append(data[type]) 
+            dataToPlot[round(data['similarity'],2)].append(data['temporalDistance']) 
         for k in sorted(dataToPlot):
             _, upperRange = getOutliersRangeUsingIRQ(dataToPlot[k])
             print k, len(dataToPlot[k]), len(filter(lambda i:i<upperRange, dataToPlot[k]))
-            plt.scatter(k, np.mean(filter(lambda i:i<upperRange, dataToPlot[k]))/(60.*60.))
+            plt.scatter(k, np.mean(filter(lambda i:i<upperRange, dataToPlot[k]))/(60.*60.), c='r', lw = 0)
 #        plt.show()
-        plt.savefig('../images/%s.png'%type)
+        plt.title('Temporal distance between lattices'), plt.xlabel('Jakkard similarity'), plt.ylabel('Time difference (hours)')
+        plt.savefig('../images/temporalDistance.png')
+    @staticmethod
+    def plotSpatialLocality():
+        distances = Locality._getDistances()
+        dataToPlot = defaultdict(list)
+        for _, data in distances.iteritems():
+            dataToPlot[round(data['similarity'],2)].append(data['geoDistance']) 
+        for k in sorted(dataToPlot):
+            _, upperRange = getOutliersRangeUsingIRQ(dataToPlot[k])
+            print k, len(dataToPlot[k]), len(filter(lambda i:i<upperRange, dataToPlot[k]))
+            plt.scatter(k, np.mean(filter(lambda i:i<upperRange, dataToPlot[k])), c='r', lw = 0)
+#        plt.show()
+        plt.title('Spatial locality between lattices'), plt.xlabel('Jakkard similarity'), plt.ylabel('Mean distance (miles)')
+        plt.savefig('../images/geoDistance.png')
     @staticmethod
     def run():
-        Locality.plotLocality(type='temporalDistance')
+        Locality.plotTemporalLocality()
+#        Locality.plotSpatialLocality()
         
 if __name__ == '__main__':
 #    PlotGraphsOnMap.run()
