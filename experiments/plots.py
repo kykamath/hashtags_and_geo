@@ -4,15 +4,20 @@ Created on Dec 7, 2011
 @author: kykamath
 '''
 import sys
+from settings import hashtagsLatticeGraphFile
+from experiments.models import filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance
 sys.path.append('../')
 from itertools import groupby
 from operator import itemgetter
 from library.file_io import FileIO
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     LATTICE_ACCURACY, getOccurranceDistributionInEpochs
-from library.geo import getLocationFromLid, getLatticeLid, plotPointsOnWorldMap
+from library.geo import getLocationFromLid, getLatticeLid, plotPointsOnWorldMap,\
+    getHaversineDistanceForLids
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from collections import defaultdict
+import numpy as np
 
 class PlotGraphsOnMap:
     @staticmethod
@@ -60,13 +65,36 @@ class Locality:
     Test memes (Sept-Oct): 515
     '''
     @staticmethod
-    def spatialLocality():
-        pass
+    def _getDistances():
+        distances = {}
+#        distances = {'similarity': defaultdict(dict), 'temporalDistance': defaultdict(dict), 'geoDistance': defaultdict(dict)}
+        for latticeObject in FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('training_world','%s_%s'%(2,11))):
+            latticeHashtagsSet = set(latticeObject['hashtags'])
+#            distances['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
+            for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+                key = '_'.join(sorted([latticeObject['id'], neighborLattice]))
+                if key not in distances:
+                    distances[key] = {}
+                    neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags, findLag=False)
+                    neighborHashtagsSet = set(neighborHashtags)
+                    distances[key]['similarity']=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet.union(neighborHashtagsSet)))
+                    distances[key]['temporalDistance']=np.mean([abs(latticeObject['hashtags'][k][0]-neighborHashtags[k][0]) for k in neighborHashtags if k in latticeObject['hashtags']])
+                    distances[key]['geoDistance']=getHaversineDistanceForLids(latticeObject['id'].replace('_', ' '), neighborLattice.replace('_', ' '))
+#            distances['similarity'][latticeObject['id']][latticeObject['id']]=1.0
+        return distances
+    @staticmethod
+    def plotSpatialLocality():
+        distances = Locality._getDistances()
+        for _, data in distances.iteritems():
+#            print data['similarity'], data['geoDistance'] 
+            plt.scatter(data['similarity'], data['temporalDistance'])
+#        print 'x'
+        plt.show()
     @staticmethod
     def run():
         pass
         
 if __name__ == '__main__':
-    PlotGraphsOnMap.run()
-    
+#    PlotGraphsOnMap.run()
+    Locality.plotSpatialLocality()    
     
