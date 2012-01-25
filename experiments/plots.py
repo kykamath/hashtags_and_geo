@@ -214,7 +214,7 @@ class Locality:
         
 class Coverage:
     @staticmethod
-    def temp():
+    def coverageIndication():
         MINUTES = 5
         for timeUnit in [1, 3, 6]:
             print timeUnit
@@ -230,13 +230,15 @@ class Coverage:
                         data[int(abs(timeUnitRadius-allRadius))/50*50+50]+=1
                 except IndexError as e: pass
             dataX, dataY = zip(*sorted(data.iteritems(), key=itemgetter(0)))
-            plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES))
+            plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES) + ' minutes')
+        plt.title('Early indication of coverage'), plt.xlabel('Coverage difference (miles)'), plt.ylabel('Number of memes')
         plt.legend()
-        plt.show()
+#        plt.show()
+        plt.savefig('../images/coverageIndication.png')
             
     @staticmethod
     def run():
-        Coverage.temp()
+        Coverage.coverageIndication()
 
 if __name__ == '__main__':
 #    PlotGraphsOnMap.run()
