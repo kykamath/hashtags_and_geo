@@ -230,11 +230,7 @@ class Coverage:
                         data[int(abs(timeUnitRadius-allRadius))/50*50+50]+=1
                 except IndexError as e: pass
             dataX, dataY = zip(*sorted(data.iteritems(), key=itemgetter(0)))
-            plt.plot(dataX, dataY, label=str(timeUnit))
-    #        plt.loglog([1],[1])
-    #        plt.scatter(dataX, dataY)
-    #        plt.show()
-    #        plt.hist(data, bins=100)
+            plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES))
         plt.legend()
         plt.show()
             
