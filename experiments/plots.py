@@ -4,21 +4,24 @@ Created on Dec 7, 2011
 @author: kykamath
 '''
 import sys
-from settings import hashtagsLatticeGraphFile
+from settings import hashtagsLatticeGraphFile, hashtagsFile
 from experiments.models import filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance
 from library.stats import getOutliersRangeUsingIRQ
+from library.plotting import getLatexForString
 sys.path.append('../')
 from itertools import groupby
 from operator import itemgetter
 from library.file_io import FileIO
 from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
-    LATTICE_ACCURACY, getOccurranceDistributionInEpochs
+    LATTICE_ACCURACY, getOccurranceDistributionInEpochs, getRadius
 from library.geo import getLocationFromLid, getLatticeLid, plotPointsOnWorldMap,\
     getHaversineDistanceForLids
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from collections import defaultdict
 import numpy as np
+from datetime import datetime
+import scipy.stats
 
 RIO_DE_JANEIRO = '-22.7650_-43.0650'
 NEW_YORK = '40.6000_-73.8050'
@@ -84,32 +87,32 @@ class Locality:
                     distances[key]['temporalDistance']=np.mean([abs(latticeObject['hashtags'][k][0]-neighborHashtags[k][0]) for k in neighborHashtags if k in latticeObject['hashtags']])
                     distances[key]['geoDistance']=getHaversineDistanceForLids(latticeObject['id'].replace('_', ' '), neighborLattice.replace('_', ' '))
         return distances
-    @staticmethod
-    def plotTemporalLocality():
-        distances = Locality._getDistances()
-        dataToPlot = defaultdict(list)
-        for _, data in distances.iteritems():
-            dataToPlot[round(data['similarity'],2)].append(data['temporalDistance']) 
-        for k in sorted(dataToPlot):
-            _, upperRange = getOutliersRangeUsingIRQ(dataToPlot[k])
-            print k, len(dataToPlot[k]), len(filter(lambda i:i<upperRange, dataToPlot[k]))
-            plt.scatter(k, np.mean(filter(lambda i:i<upperRange, dataToPlot[k]))/(60.*60.), c='r', lw = 0)
-#        plt.show()
-        plt.title('Temporal distance between lattices'), plt.xlabel('Jaccard similarity'), plt.ylabel('Mean time difference (hours)')
-        plt.savefig('../images/temporalDistance.png')
-    @staticmethod
-    def plotSpatialLocality():
-        distances = Locality._getDistances()
-        dataToPlot = defaultdict(list)
-        for _, data in distances.iteritems():
-            dataToPlot[round(data['similarity'],2)].append(data['geoDistance']) 
-        for k in sorted(dataToPlot):
-            _, upperRange = getOutliersRangeUsingIRQ(dataToPlot[k])
-            print k, len(dataToPlot[k]), len(filter(lambda i:i<upperRange, dataToPlot[k]))
-            plt.scatter(k, np.mean(filter(lambda i:i<upperRange, dataToPlot[k])), c='r', lw = 0)
-#        plt.show()
-        plt.title('Haversine distance between lattices'), plt.xlabel('Jaccard similarity'), plt.ylabel('Mean haversine distance (miles)')
-        plt.savefig('../images/geoDistance.png')
+#    @staticmethod
+#    def plotTemporalLocality():
+#        distances = Locality._getDistances()
+#        dataToPlot = defaultdict(list)
+#        for _, data in distances.iteritems():
+#            dataToPlot[round(data['similarity'],2)].append(data['temporalDistance']) 
+#        for k in sorted(dataToPlot):
+#            _, upperRange = getOutliersRangeUsingIRQ(dataToPlot[k])
+#            print k, len(dataToPlot[k]), len(filter(lambda i:i<upperRange, dataToPlot[k]))
+#            plt.scatter(k, np.mean(filter(lambda i:i<upperRange, dataToPlot[k]))/(60.*60.), c='r', lw = 0)
+##        plt.show()
+#        plt.title('Temporal distance between lattices'), plt.xlabel('Jaccard similarity'), plt.ylabel('Mean time difference (hours)')
+#        plt.savefig('../images/temporalDistance.png')
+#    @staticmethod
+#    def plotSpatialLocality():
+#        distances = Locality._getDistances()
+#        dataToPlot = defaultdict(list)
+#        for _, data in distances.iteritems():
+#            dataToPlot[round(data['similarity'],2)].append(data['geoDistance']) 
+#        for k in sorted(dataToPlot):
+#            _, upperRange = getOutliersRangeUsingIRQ(dataToPlot[k])
+#            print k, len(dataToPlot[k]), len(filter(lambda i:i<upperRange, dataToPlot[k]))
+#            plt.scatter(k, np.mean(filter(lambda i:i<upperRange, dataToPlot[k])), c='r', lw = 0)
+##        plt.show()
+#        plt.title('Haversine distance between lattices'), plt.xlabel('Jaccard similarity'), plt.ylabel('Mean haversine distance (miles)')
+#        plt.savefig('../images/geoDistance.png')
     @staticmethod
     def temporalLocalitySimilarityExample(lattice=NEW_YORK):
         distances = defaultdict(dict)
@@ -163,14 +166,85 @@ class Locality:
 #        plt.show()
         plt.savefig('../images/temporalDistanceExample.png')
     @staticmethod
+    def plotTemporalLocality():
+        distances = Locality._getDistances()
+        dataToPlot, dataX, dataY = defaultdict(list), [], []
+        ax = plt.gca()
+        for _, data in distances.iteritems():
+            dataToPlot[int(data['geoDistance'])/100*100+100].append(data['temporalDistance']/(60*60)) 
+        
+        for k in sorted(dataToPlot):
+            _, upperRange = getOutliersRangeUsingIRQ(dataToPlot[k])
+            points = filter(lambda i:i<upperRange, dataToPlot[k])
+            if len(points)>50:
+                dataX.append(k), dataY.append(np.mean(points))
+        pearsonCoeff, p_value = scipy.stats.pearsonr(dataX, dataY)
+#        print round(pearsonCoeff,2), round(p_value, 2)
+        plt.scatter(dataX, dataY, c='r', lw = 0)
+        plt.title('Temporal distance between lattices ' + getLatexForString('( \\rho = %0.2f, p-value = %0.2f )'%(pearsonCoeff, p_value))), plt.xlabel('Haversine distance (miles)'), plt.ylabel('Temporal distance (hours)')
+#        plt.show()
+        plt.savefig('../images/temporalLocality.png')
+    @staticmethod
+    def plotSpatialLocality():
+        distances = Locality._getDistances()
+        dataToPlot, dataX, dataY = defaultdict(list), [], []
+        ax = plt.gca()
+        for _, data in distances.iteritems():
+            dataToPlot[int(data['geoDistance'])/100*100+100].append(data['similarity']) 
+        
+        for k in sorted(dataToPlot):
+            _, upperRange = getOutliersRangeUsingIRQ(dataToPlot[k])
+            points = filter(lambda i:i<upperRange, dataToPlot[k])
+            if len(points)>50:
+#                print k, len(dataToPlot[k]), len(points)
+                dataX.append(k), dataY.append(np.mean(points))
+        pearsonCoeff, p_value = scipy.stats.pearsonr(dataX, dataY)
+        print round(pearsonCoeff,2), round(p_value, 2)
+        plt.scatter(dataX, dataY, c='r', lw = 0)
+        plt.title('Similarity between lattices ' + getLatexForString('( \\rho = %0.2f, p-value = %0.2f )'%(pearsonCoeff, p_value))), plt.xlabel('Haversine distance (miles)'), plt.ylabel('Jaccard similarity')
+#        plt.show()
+        plt.savefig('../images/spatialLocality.png')    
+    
+    @staticmethod
     def run():
         Locality.plotTemporalLocality()
 #        Locality.plotSpatialLocality()
 #        Locality.temporalLocalitySimilarityExample()
 #        Locality.temporalLocalityTemporalDistanceExample()
         
+class Coverage:
+    @staticmethod
+    def temp():
+        MINUTES = 5
+        for timeUnit in [1, 3, 6]:
+            print timeUnit
+            data = defaultdict(int)
+            for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+                try:
+                    occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
+                    occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
+                    occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
+                    if len(occsInTimeunit)>10:
+                        allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
+                        timeUnitRadius, allRadius = getRadius(occsInTimeunit), getRadius(allOccurances)
+                        data[int(abs(timeUnitRadius-allRadius))/50*50+50]+=1
+                except IndexError as e: pass
+            dataX, dataY = zip(*sorted(data.iteritems(), key=itemgetter(0)))
+            plt.plot(dataX, dataY, label=str(timeUnit))
+    #        plt.loglog([1],[1])
+    #        plt.scatter(dataX, dataY)
+    #        plt.show()
+    #        plt.hist(data, bins=100)
+        plt.legend()
+        plt.show()
+            
+    @staticmethod
+    def run():
+        Coverage.temp()
+
 if __name__ == '__main__':
 #    PlotGraphsOnMap.run()
-    Locality.run()
+#    Locality.run()
+    Coverage.run()
 #    print getLatticeLid([-23.549569,-46.639173],  0.145)
     
