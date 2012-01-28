@@ -214,6 +214,11 @@ class Locality:
         
 class Coverage:
     @staticmethod
+    def probabilityDistributionForLattices(points):
+        points = sorted(points, key=itemgetter(0,1))
+        numberOfOccurrences = float(len(points))
+        return [(k, len(list(data))/numberOfOccurrences) for k, data in groupby(points, key=itemgetter(0,1))]
+    @staticmethod
     def coverageIndication():
         MINUTES = 5
         for timeUnit in [1, 3, 6]:
@@ -237,25 +242,25 @@ class Coverage:
         plt.savefig('../images/coverageIndication.png')
     @staticmethod
     def temp(hashtag):
-#        points = []
-#        for i, latticeObject in enumerate(FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('training_world','%s_%s'%(2,11)))):
-#            print i, unicode(latticeObject['id']).encode('utf-8')
-#            points.append(getLocationFromLid(latticeObject['id'].replace('_', ' ')))
-#        print len(points)
-#        plotPointsOnWorldMap(points)
-#        plt.show()
+        def getLattices():
+            points = []
+            for i, latticeObject in enumerate(FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('training_world','%s_%s'%(2,11)))): points.append(getLocationFromLid(latticeObject['id'].replace('_', ' ')))
+            return points
         MINUTES = 5
+        lattices = getLattices()
+        print len(lattices)
         for timeUnit in [1]:
             print timeUnit
             data = defaultdict(int)
 #            for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
-            for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/hashtagsWithoutEndingWindow'):
+            for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/hashtags'):
 #                try:
                 if hashtagObject['h']==hashtag:
                     occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
                     occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
                     occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
                     allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
+                    probabilityDistributionForLattices = Coverage.probabilityDistributionForLattices(occsInTimeunit)
                     print unicode(hashtagObject['h']).encode('utf-8'), len(occsInTimeunit), len(allOccurances), getRadius(occsInTimeunit), getRadius(allOccurances)
                     print occsInTimeunit
                     exit()
@@ -274,7 +279,7 @@ class Coverage:
     @staticmethod
     def run():
 #        Coverage.coverageIndication()
-        Coverage.temp('chupacorinthians')
+        Coverage.temp('celebritybigbrother')
 
 
 if __name__ == '__main__':
