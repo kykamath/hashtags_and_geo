@@ -4,11 +4,11 @@ Created on Dec 7, 2011
 @author: kykamath
 '''
 import sys
+sys.path.append('../')
 from settings import hashtagsLatticeGraphFile, hashtagsFile
 from experiments.models import filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance
 from library.stats import getOutliersRangeUsingIRQ
 from library.plotting import getLatexForString
-sys.path.append('../')
 from itertools import groupby
 from operator import itemgetter
 from library.file_io import FileIO
