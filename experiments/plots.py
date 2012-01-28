@@ -235,10 +235,47 @@ class Coverage:
         plt.legend()
 #        plt.show()
         plt.savefig('../images/coverageIndication.png')
+    @staticmethod
+    def temp(hashtag):
+#        points = []
+#        for i, latticeObject in enumerate(FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('training_world','%s_%s'%(2,11)))):
+#            print i, unicode(latticeObject['id']).encode('utf-8')
+#            points.append(getLocationFromLid(latticeObject['id'].replace('_', ' ')))
+#        print len(points)
+#        plotPointsOnWorldMap(points)
+#        plt.show()
+        MINUTES = 5
+        for timeUnit in [1]:
+            print timeUnit
+            data = defaultdict(int)
+#            for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+            for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/hashtagsWithoutEndingWindow'):
+#                try:
+                if hashtagObject['h']==hashtag:
+                    occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
+                    occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
+                    occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
+                    allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
+                    print unicode(hashtagObject['h']).encode('utf-8'), len(occsInTimeunit), len(allOccurances), getRadius(occsInTimeunit), getRadius(allOccurances)
+                    print occsInTimeunit
+                    exit()
+#                    if len(occsInTimeunit)>10:
+#                        allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
+#                        timeUnitRadius, allRadius = getRadius(occsInTimeunit), getRadius(allOccurances)
+#                        data[int(abs(timeUnitRadius-allRadius))/50*50+50]+=1
+#                except IndexError as e: pass
+#            dataX, dataY = zip(*sorted(data.iteritems(), key=itemgetter(0)))
+#            plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES) + ' minutes')
+#        plt.title('Early indication of coverage'), plt.xlabel('Coverage difference (miles)'), plt.ylabel('Number of memes')
+#        plt.legend()
+##        plt.show()
+#        plt.savefig('../images/coverageIndication.png')
             
     @staticmethod
     def run():
-        Coverage.coverageIndication()
+#        Coverage.coverageIndication()
+        Coverage.temp('chupacorinthians')
+
 
 if __name__ == '__main__':
 #    PlotGraphsOnMap.run()
