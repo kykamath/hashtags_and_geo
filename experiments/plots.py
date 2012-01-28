@@ -243,7 +243,7 @@ class Coverage:
     @staticmethod
     def probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice): return 1.01**(-getHaversineDistance(currentLattice, sourceLattice))*probabilityAtSourceLattice
     @staticmethod
-    def temp(hashtag):
+    def probabilisticCoverageModelExample(hashtag, type):
         def getLattices():
             points = []
             for i, latticeObject in enumerate(FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('training_world','%s_%s'%(2,11)))): points.append(latticeObject['id'])
@@ -254,57 +254,44 @@ class Coverage:
                 score = 0.0
                 currentLattice = getLocationFromLid(lattice.replace('_', ' '))
                 latticeScores[lattice] = sum([Coverage.probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice)for sourceLattice, probabilityAtSourceLattice in probabilityDistributionForObservedLattices])
-#                print lattice, latticeScores[lattice]
-#                latticeScores[lattice]
             total = sum(latticeScores.values())
             for k in latticeScores: latticeScores[k]/=total
             return latticeScores
-#            print sum(latticeScores.values())
-#            print sorted(latticeScores.iteritems(), key=itemgetter(1), reverse=True)
-        MINUTES = 5
+        MINUTES, timeUnit = 5, 1
         lattices = getLattices()
         print len(lattices)
-        for timeUnit in [1]:
-            print timeUnit
-            data = defaultdict(int)
-#            for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
-            count=0
-            for i, hashtagObject in enumerate(FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/hashtagsWithoutEndingWindow')):
+        for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/hashtagsWithoutEndingWindow'):
+            if hashtagObject['h']==hashtag:
                 occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
-                try:
-                    occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
-                    occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
-                    if len(occsInTimeunit)>50: count+=1
-                    print i, count
-                except: pass
-                
-#                if hashtagObject['h']==hashtag:
-#                    occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
-#                    occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
-#                    occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
-#                    allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
-##                    probabilityDistributionForObservedLattices = Coverage.probabilityDistributionForLattices(occsInTimeunit)
-#                    probabilityDistributionForObservedLattices = Coverage.probabilityDistributionForLattices(allOccurances)
-##                    print unicode(hashtagObject['h']).encode('utf-8'), len(occsInTimeunit), len(allOccurances), getRadius(occsInTimeunit), getRadius(allOccurances)
-##                    print occsInTimeunit
-#                    print probabilityDistributionForObservedLattices
-#                    latticeScores = spreadProbability(lattices, probabilityDistributionForObservedLattices)
-#                    points, colors = zip(*map(lambda t: (getLocationFromLid(t[0].replace('_', ' ')), t[1]), sorted(latticeScores.iteritems(), key=itemgetter(1))))
-#                    print points[0], colors[0]
-#                    ax = plt.subplot(111)
-#                    sc = plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c=colors, cmap='PuRd', lw = 0)
-#                    divider = make_axes_locatable(ax)
-#                    plt.title('Jaccard similarity with New York')
-#                    cax = divider.append_axes("right", size="5%", pad=0.05)
-#                    plt.colorbar(sc, cax=cax)
-#                    plt.show()
-#                    exit()
-#        plt.savefig('../images/coverageIndication.png')
+                occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
+                occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
+                allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
+                if type=='5m': probabilityDistributionForObservedLattices = Coverage.probabilityDistributionForLattices(occsInTimeunit)
+                else: probabilityDistributionForObservedLattices = Coverage.probabilityDistributionForLattices(allOccurances)
+#                    print unicode(hashtagObject['h']).encode('utf-8'), len(occsInTimeunit), len(allOccurances), getRadius(occsInTimeunit), getRadius(allOccurances)
+#                    print occsInTimeunit
+#                print probabilityDistributionForObservedLattices
+                latticeScores = spreadProbability(lattices, probabilityDistributionForObservedLattices)
+                points, colors = zip(*map(lambda t: (getLocationFromLid(t[0].replace('_', ' ')), t[1]), sorted(latticeScores.iteritems(), key=itemgetter(1))))
+#                print points[0], colors[0]
+                ax = plt.subplot(111)
+                sc = plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c=colors, cmap='cool', lw = 0)
+                divider = make_axes_locatable(ax)
+#                plt.title('Jaccard similarity with New York')
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                plt.colorbar(sc, cax=cax)
+#                plt.show()
+                plt.savefig('../images/coverage_examples/%s_%s.png'%(hashtag, type))
+                plt.clf()
+                break
             
     @staticmethod
     def run():
 #        Coverage.coverageIndication()
-        Coverage.temp('ripstevejobs')
+        Coverage.probabilisticCoverageModelExample('ripstevejobs', '120m')
+        Coverage.probabilisticCoverageModelExample('ripstevejobs', '5m')
+        Coverage.probabilisticCoverageModelExample('cnndebate', '120m')
+        Coverage.probabilisticCoverageModelExample('cnndebate', '5m')
 
 
 if __name__ == '__main__':
