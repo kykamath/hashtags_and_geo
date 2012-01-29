@@ -245,7 +245,7 @@ class GreedyLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
     '''
     def __init__(self, **kwargs): super(GreedyLatticeSelectionModel, self).__init__(GREEDY_LATTICE_SELECTION_MODEL, **kwargs)
-    def selectTargetLattices(self, currentTimeUnit, hashtag): GreedyLatticeSelectionModel.getLattices(self, hashtag)
+    def selectTargetLattices(self, currentTimeUnit, hashtag): return GreedyLatticeSelectionModel.getLattices(self, hashtag)
 #        latticesData = sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True)
 #        if latticesData: return zip(*latticesData)[0][:self.params['budget']]
 #        else: return []
