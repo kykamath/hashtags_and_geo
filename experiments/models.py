@@ -44,6 +44,7 @@ SVM_LINEAR_REGRESSION_LATTICE_SELECTION_MODEL = 'svm_linear_regression'
 SVM_POLY_REGRESSION_LATTICE_SELECTION_MODEL = 'svm_poly_regression'
 SVM_RBF_REGRESSION_LATTICE_SELECTION_MODEL = 'svm_rbf_regression'
 COVERAGE_BASED_LATTICE_SELECTION_MODEL = 'coverage_based'
+COVERAGE_BASED_AND_GREEDY_LATTICE_SELECTION_MODEL = 'coverage_based_and_greedy'
 
 def getLattices():
     points = []
@@ -274,6 +275,30 @@ class CoverageBasedLatticeSelectionModel(LatticeSelectionModel):
         for k in latticeScores: latticeScores[k]/=total
         return latticeScores
 
+class CoverageBasedAndGreedyLatticeSelectionModel(CoverageBasedLatticeSelectionModel):
+    lattices = getLattices()
+    def __init__(self, **kwargs): super(CoverageBasedAndGreedyLatticeSelectionModel, self).__init__(COVERAGE_BASED_AND_GREEDY_LATTICE_SELECTION_MODEL, **kwargs)
+    def selectTargetLattices(self, currentTimeUnit, hashtag):
+#        classifier = LocalityClassifier(currentTimeUnit+1, features=LocalityClassifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS)
+#        localityClassId = classifier.predict(hashtag)
+        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+        targetLattices = list(targetLattices)
+        if len(targetLattices)<self.params['budget']: 
+#            latticeScores = defaultdict(float)
+#            for currentLattice in hashtag.occuranceDistributionInLattices:
+#                for neighborLattice in self.model['neighborProbability'][currentLattice]: 
+#                    if self.model['neighborProbability'][currentLattice][neighborLattice] > 0: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+math.log(self.model['neighborProbability'][currentLattice][neighborLattice])
+#                extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1))
+            occurrences = [getLocationFromLid(k.replace('_', ' ')) for k, v in hashtag.occuranceDistributionInLattices.iteritems() for i in range(len(v))]
+            probabilityDistributionForObservedLattices = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(occurrences)
+            latticeScores = CoverageBasedLatticeSelectionModel.spreadProbability(CoverageBasedLatticeSelectionModel.lattices, probabilityDistributionForObservedLattices)
+            extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1), reverse=True)
+            
+            while len(targetLattices)<self.params['budget'] and extraTargetLattices:
+                t = extraTargetLattices.pop()
+                if t[0] not in targetLattices: targetLattices.append(t[0])
+        assert len(targetLattices)<=self.params['budget']
+        return targetLattices
 
 class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
     ''' Pick the location with highest probability:
@@ -743,12 +768,16 @@ class Simulation:
 #        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
 #        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+#        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
 
-#        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
-#                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
-#                                                                               Metrics.hit_rate_after_target_selection, 
+        CoverageBasedAndGreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+#        CoverageBasedAndGreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+
+
+#        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel,
+#                                                                                CoverageBasedLatticeSelectionModel], 
+#                                                                               Metrics.rate_lag, 
 #                                                                                   params=params)
 
 #        LatticeSelectionModel.plotModelWithVaryingBudget([BestRateModel], 
