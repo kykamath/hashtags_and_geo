@@ -795,10 +795,10 @@ class Simulation:
         CoverageBasedAndSharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        CoverageBasedAndSharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel,
-                                                                                CoverageBasedAndGreedyLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel], 
-                                                                               Metrics.rate_lag, 
-                                                                                   params=params)
+#        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel,
+#                                                                                CoverageBasedAndGreedyLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel], 
+#                                                                               Metrics.rate_lag, 
+#                                                                                   params=params)
 
 #        LatticeSelectionModel.plotModelWithVaryingBudget([BestRateModel], 
 #                                                                               Metrics.best_rate, 
