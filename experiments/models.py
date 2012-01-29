@@ -290,7 +290,8 @@ class CoverageBasedAndGreedyLatticeSelectionModel(CoverageBasedLatticeSelectionM
     lattices = getLattices()
     def __init__(self, **kwargs): super(CoverageBasedAndGreedyLatticeSelectionModel, self).__init__(id=COVERAGE_BASED_AND_GREEDY_LATTICE_SELECTION_MODEL, **kwargs)
     def selectTargetLattices(self, currentTimeUnit, hashtag):
-        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+#        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+        targetLattices = GreedyLatticeSelectionModel.getLattices(self, hashtag)
         targetLattices = list(targetLattices)
         if len(targetLattices)<self.params['budget']: 
             occurrences = [getLocationFromLid(k.replace('_', ' ')) for k, v in hashtag.occuranceDistributionInLattices.iteritems() for i in range(len(v))]
@@ -328,7 +329,8 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in self.model['hashtagObservingProbability'].keys()[:]: self.model['hashtagObservingProbability'][lattice] = len(self.model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
     def selectTargetLattices(self, currentTimeUnit, hashtag): 
-        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+#        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+        targetLattices = GreedyLatticeSelectionModel.getLattices(self, hashtag)
         targetLattices = list(targetLattices)
         if len(targetLattices)<self.params['budget']: 
             latticeScores = defaultdict(float)
@@ -367,7 +369,8 @@ class SharingProbabilityLatticeSelectionWithLocalityClassifierModel(SharingProba
     def selectTargetLattices(self, currentTimeUnit, hashtag): 
         classifier = LocalityClassifier(currentTimeUnit+1, features=LocalityClassifier.FEATURES_AGGGREGATED_OCCURANCES_RADIUS)
         localityClassId = classifier.predict(hashtag)
-        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+#        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+        targetLattices = GreedyLatticeSelectionModel.getLattices(self, hashtag)
         targetLattices = list(targetLattices)
         if len(targetLattices)<self.params['budget']: 
             latticeScores = defaultdict(float)
@@ -391,7 +394,8 @@ class CoverageBasedAndSharingProbabilityLatticeSelectionModel(SharingProbability
         probabilityDistributionForObservedLattices = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(occurrences)
         coverageLatticeScores = CoverageBasedLatticeSelectionModel.spreadProbability(CoverageBasedLatticeSelectionModel.lattices, probabilityDistributionForObservedLattices)
         
-        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+#        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+        targetLattices = GreedyLatticeSelectionModel.getLattices(self, hashtag)
         targetLattices = list(targetLattices)
         if len(targetLattices)<self.params['budget']: 
             latticeScores = defaultdict(float)
@@ -727,7 +731,8 @@ class LinearRegressionLatticeSelectionModel(LatticeSelectionModel):
         super(LinearRegressionLatticeSelectionModel, self).__init__(id, **kwargs)
         self.regressionClassType = TargetSelectionRegressionClassifier
     def selectTargetLattices(self, currentTimeUnit, hashtag): 
-        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+#        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+        targetLattices = GreedyLatticeSelectionModel.getLattices(self, hashtag)
         targetLattices = list(targetLattices)
         if len(targetLattices)<self.params['budget']: 
             occuranceDistributionInLattices = dict([(k, len(v)) for k, v in hashtag.occuranceDistributionInLattices.iteritems()])
@@ -772,11 +777,11 @@ class Simulation:
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 
-        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+#        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 
-#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 
