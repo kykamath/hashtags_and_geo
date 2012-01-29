@@ -18,7 +18,8 @@ from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
 import numpy as np
 from library.stats import getOutliersRangeUsingIRQ
 from library.geo import getHaversineDistanceForLids, getLatticeLid, getLocationFromLid,\
-    plotPointsOnUSMap, plotPointsOnWorldMap, isWithinBoundingBox, getLattice
+    plotPointsOnUSMap, plotPointsOnWorldMap, isWithinBoundingBox, getLattice,\
+    getHaversineDistance
 from collections import defaultdict
 from operator import itemgetter
 import networkx as nx
@@ -33,16 +34,6 @@ from itertools import groupby
 import matplotlib
 from sklearn import linear_model, svm
 
-def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
-    if findLag: 
-        dataToReturn = [(hashtag, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
-        _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[1])
-        return dict(filter(lambda t: t[1]<=upperRangeForTemporalDistance, dataToReturn))
-    else: 
-        dataToReturn = [(hashtag, timeTuple, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
-        _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[2])
-        return dict([(t[0], t[1]) for t in dataToReturn if t[2]<=upperRangeForTemporalDistance])
-
 GREEDY_LATTICE_SELECTION_MODEL = 'greedy'
 BEST_RATE = 'best_rate'
 SHARING_PROBABILITY_LATTICE_SELECTION_MODEL = 'sharing_probability'
@@ -52,6 +43,22 @@ LINEAR_REGRESSION_LATTICE_SELECTION_MODEL = 'linear_regression'
 SVM_LINEAR_REGRESSION_LATTICE_SELECTION_MODEL = 'svm_linear_regression'
 SVM_POLY_REGRESSION_LATTICE_SELECTION_MODEL = 'svm_poly_regression'
 SVM_RBF_REGRESSION_LATTICE_SELECTION_MODEL = 'svm_rbf_regression'
+COVERAGE_BASED_LATTICE_SELECTION_MODEL = 'coverage_based'
+
+def getLattices():
+    points = []
+    for i, latticeObject in enumerate(FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('training_world','%s_%s'%(2,11)))): points.append(latticeObject['id'])
+    return points
+
+def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
+    if findLag: 
+        dataToReturn = [(hashtag, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
+        _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[1])
+        return dict(filter(lambda t: t[1]<=upperRangeForTemporalDistance, dataToReturn))
+    else: 
+        dataToReturn = [(hashtag, timeTuple, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
+        _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[2])
+        return dict([(t[0], t[1]) for t in dataToReturn if t[2]<=upperRangeForTemporalDistance])
 
 class Metrics:
     overall_hit_rate = 'overall_hit_rate'
@@ -240,6 +247,32 @@ class BestRateModel(LatticeSelectionModel):
     ''' Pick the location with maximum observations till that time.
     '''
     def __init__(self, **kwargs): super(BestRateModel, self).__init__(BEST_RATE, **kwargs)
+    
+class CoverageBasedLatticeSelectionModel(LatticeSelectionModel):
+    lattices = getLattices()
+    def __init__(self, **kwargs): super(CoverageBasedLatticeSelectionModel, self).__init__(COVERAGE_BASED_LATTICE_SELECTION_MODEL, **kwargs)
+    def selectTargetLattices(self, currentTimeUnit, hashtag):
+        occurrences = [getLocationFromLid(k.replace('_', ' ')) for k, v in hashtag.occuranceDistributionInLattices.iteritems() for i in range(len(v))]
+        probabilityDistributionForObservedLattices = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(occurrences)
+        latticeScores = CoverageBasedLatticeSelectionModel.spreadProbability(CoverageBasedLatticeSelectionModel.lattices, probabilityDistributionForObservedLattices)
+        return zip(*sorted(latticeScores.iteritems(), key=itemgetter(1), reverse=True))[0][:self.params['budget']]
+    @staticmethod
+    def probabilityDistributionForLattices(points):
+            points = sorted(points, key=itemgetter(0,1))
+            numberOfOccurrences = float(len(points))
+            return [(k, len(list(data))/numberOfOccurrences) for k, data in groupby(points, key=itemgetter(0,1))]
+    @staticmethod
+    def probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice): return 1.01**(-getHaversineDistance(currentLattice, sourceLattice))*probabilityAtSourceLattice
+    @staticmethod
+    def spreadProbability(lattices, probabilityDistributionForObservedLattices):
+        latticeScores = {}
+        for lattice in lattices:
+            score = 0.0
+            currentLattice = getLocationFromLid(lattice.replace('_', ' '))
+            latticeScores[lattice] = sum([CoverageBasedLatticeSelectionModel.probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice)for sourceLattice, probabilityAtSourceLattice in probabilityDistributionForObservedLattices])
+        total = sum(latticeScores.values())
+        for k in latticeScores: latticeScores[k]/=total
+        return latticeScores
 
 
 class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
@@ -707,7 +740,11 @@ class Simulation:
 #        SVMPolyRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SVMPolyRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+#        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+
+        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+#        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+
 
 #        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, SharingProbabilityLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
 #                                                                                GreedyLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 

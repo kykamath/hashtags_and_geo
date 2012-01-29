@@ -6,7 +6,8 @@ Created on Dec 7, 2011
 import sys
 sys.path.append('../')
 from settings import hashtagsLatticeGraphFile, hashtagsFile
-from experiments.models import filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance
+from experiments.models import filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance,\
+    getLattices, CoverageBasedLatticeSelectionModel
 from library.stats import getOutliersRangeUsingIRQ
 from library.plotting import getLatexForString
 from itertools import groupby
@@ -214,11 +215,6 @@ class Locality:
         
 class Coverage:
     @staticmethod
-    def probabilityDistributionForLattices(points):
-        points = sorted(points, key=itemgetter(0,1))
-        numberOfOccurrences = float(len(points))
-        return [(k, len(list(data))/numberOfOccurrences) for k, data in groupby(points, key=itemgetter(0,1))]
-    @staticmethod
     def coverageIndication():
         MINUTES = 5
         for timeUnit in [1, 3, 6]:
@@ -240,23 +236,23 @@ class Coverage:
         plt.legend()
 #        plt.show()
         plt.savefig('../images/coverageIndication.png')
-    @staticmethod
-    def probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice): return 1.01**(-getHaversineDistance(currentLattice, sourceLattice))*probabilityAtSourceLattice
+#    @staticmethod
+#    def probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice): return 1.01**(-getHaversineDistance(currentLattice, sourceLattice))*probabilityAtSourceLattice
     @staticmethod
     def probabilisticCoverageModelExample(hashtag, type):
-        def getLattices():
-            points = []
-            for i, latticeObject in enumerate(FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('training_world','%s_%s'%(2,11)))): points.append(latticeObject['id'])
-            return points
-        def spreadProbability(lattices, probabilityDistributionForObservedLattices):
-            latticeScores = {}
-            for lattice in lattices:
-                score = 0.0
-                currentLattice = getLocationFromLid(lattice.replace('_', ' '))
-                latticeScores[lattice] = sum([Coverage.probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice)for sourceLattice, probabilityAtSourceLattice in probabilityDistributionForObservedLattices])
-            total = sum(latticeScores.values())
-            for k in latticeScores: latticeScores[k]/=total
-            return latticeScores
+#        def getLattices():
+#            points = []
+#            for i, latticeObject in enumerate(FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('training_world','%s_%s'%(2,11)))): points.append(latticeObject['id'])
+#            return points
+#        def spreadProbability(lattices, probabilityDistributionForObservedLattices):
+#            latticeScores = {}
+#            for lattice in lattices:
+#                score = 0.0
+#                currentLattice = getLocationFromLid(lattice.replace('_', ' '))
+#                latticeScores[lattice] = sum([Coverage.probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice)for sourceLattice, probabilityAtSourceLattice in probabilityDistributionForObservedLattices])
+#            total = sum(latticeScores.values())
+#            for k in latticeScores: latticeScores[k]/=total
+#            return latticeScores
         MINUTES, timeUnit = 5, 1
         lattices = getLattices()
         print len(lattices)
@@ -266,11 +262,8 @@ class Coverage:
                 occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
                 occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
                 allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
-                if type=='5m': probabilityDistributionForObservedLattices = Coverage.probabilityDistributionForLattices(occsInTimeunit)
-                else: probabilityDistributionForObservedLattices = Coverage.probabilityDistributionForLattices(allOccurances)
-#                    print unicode(hashtagObject['h']).encode('utf-8'), len(occsInTimeunit), len(allOccurances), getRadius(occsInTimeunit), getRadius(allOccurances)
-#                    print occsInTimeunit
-#                print probabilityDistributionForObservedLattices
+                if type=='5m': probabilityDistributionForObservedLattices = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(occsInTimeunit)
+                else: probabilityDistributionForObservedLattices = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(allOccurances)
                 latticeScores = spreadProbability(lattices, probabilityDistributionForObservedLattices)
                 points, colors = zip(*map(lambda t: (getLocationFromLid(t[0].replace('_', ' ')), t[1]), sorted(latticeScores.iteritems(), key=itemgetter(1))))
 #                print points[0], colors[0]
