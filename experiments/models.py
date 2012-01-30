@@ -283,7 +283,9 @@ class CoverageBasedLatticeSelectionModel(LatticeSelectionModel):
             currentLattice = getLocationFromLid(lattice.replace('_', ' '))
             latticeScores[lattice] = sum([CoverageBasedLatticeSelectionModel.probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice)for sourceLattice, probabilityAtSourceLattice in probabilityDistributionForObservedLattices])
         total = sum(latticeScores.values())
-        for k in latticeScores: latticeScores[k]/=total
+        for k in latticeScores: 
+            if total==0: latticeScores[k]=1.0
+            else: latticeScores[k]/=total
         return latticeScores
 
 class CoverageBasedAndGreedyLatticeSelectionModel(CoverageBasedLatticeSelectionModel):
@@ -800,8 +802,8 @@ class Simulation:
 #        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-#        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+#        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
 
 #        CoverageBasedAndGreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
