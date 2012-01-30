@@ -812,7 +812,7 @@ class Simulation:
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-#        LinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        LinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        LinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SVMLinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SVMLinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
@@ -835,10 +835,10 @@ class Simulation:
 #                                                                               Metrics.rate_lag, 
 #                                                                                   params=params)
 
-        LatticeSelectionModel.tableWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, GreedyLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
-                                                                                SharingProbabilityLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
-                                                                               Metrics.rate_lag, 1, 
-                                                                                   params=params)
+#        LatticeSelectionModel.tableWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, GreedyLatticeSelectionModel, SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
+#                                                                                SharingProbabilityLatticeSelectionModel, TransmittingProbabilityLatticeSelectionModel], 
+#                                                                               Metrics.rate_lag, 1, 
+#                                                                                   params=params)
 
 #        LatticeSelectionModel.plotModelWithVaryingBudget([BestRateModel], 
 #                                                                               Metrics.best_rate, 
