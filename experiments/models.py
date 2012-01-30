@@ -242,10 +242,44 @@ class LatticeSelectionModel(object):
                         metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
             for metric, metricValues in metricDistributionInTimeUnits.iteritems():
                 dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
+                plt.plot([(x+1)*5 for x in dataX], dataY, label=modelLabels[model.id], lw=2, marker=modelMarkers[model.id])
+        if metric==Metrics.rate_lag: plt.legend(loc=1, ncol=1)
+#        else: plt.legend(loc=3, ncol=2, mode='expand')
+        plt.xlabel('Lattice subset selection time (minutes)')
+        plt.ylabel(Metrics.metricLabels[metric])
+        plt.title('%s vs $t_s$'%Metrics.metricLabels[metric])
+        plt.xlim(xmin=5)
+#        plt.show()
+        plt.savefig('../images/modelPerformance/time_%s.png'%metric)
+        plt.clf()
+    @staticmethod
+    def plotModelWithVaryingBudget(models, metric, **kwargs):
+        for model in models:
+            model = model(**kwargs)
+            model.params['evaluationName'] = 'budget'
+            metricDistributionInTimeUnits = defaultdict(dict)
+            for data in FileIO.iterateJsonFromFile(model.getModelSimulationFile()):
+                t = data['params']['budget']
+                for h in data['hashtags']:
+    #                if data['hashtags'][h]['classId']==3:
+#                        for metric in metric:
+                        if metric not in metricDistributionInTimeUnits: metricDistributionInTimeUnits[metric] = defaultdict(list)
+                        metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
+            for metric, metricValues in metricDistributionInTimeUnits.iteritems():
+                dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
                 plt.plot(dataX, dataY, label=modelLabels[model.id], lw=2, marker=modelMarkers[model.id])
-        plt.legend(loc=4)
-        plt.title('%s comparison'%metric)
-        plt.show()
+        if metric==Metrics.rate_lag: 
+            leg=plt.legend(loc=4, ncol=1)
+#            for t in leg.get_texts(): t.set_fontsize('small')
+#        elif metric==Metrics.target_selection_accuracy: leg=plt.legend(loc=5, ncol=2, mode='expand')
+#        else: leg=plt.legend(loc=3, ncol=2, mode='expand')
+#        for t in leg.get_texts(): t.set_fontsize('small')
+        plt.xlabel('Size of target lattice subset (k)')
+        plt.ylabel(Metrics.metricLabels[metric])
+        plt.title('%s vs k'%Metrics.metricLabels[metric])
+#        plt.show()
+        plt.savefig('../images/modelPerformance/budget_%s.png'%metric)
+        plt.clf()
     @staticmethod
     def tableWithVaryingTimeUnitToPickTargetLattices(models, metric, timeUnit, **kwargs):
         print '\\begin{table}[!t]' 
@@ -273,25 +307,6 @@ class LatticeSelectionModel(object):
         print '\\caption{%s}'%Metrics.metricLabels[metric]
         print '\\label{tab:%s}'%metric
         print '\\end{table}'
-    @staticmethod
-    def plotModelWithVaryingBudget(models, metric, **kwargs):
-        for model in models:
-            model = model(**kwargs)
-            model.params['evaluationName'] = 'budget'
-            metricDistributionInTimeUnits = defaultdict(dict)
-            for data in FileIO.iterateJsonFromFile(model.getModelSimulationFile()):
-                t = data['params']['budget']
-                for h in data['hashtags']:
-    #                if data['hashtags'][h]['classId']==3:
-#                        for metric in metric:
-                        if metric not in metricDistributionInTimeUnits: metricDistributionInTimeUnits[metric] = defaultdict(list)
-                        metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
-            for metric, metricValues in metricDistributionInTimeUnits.iteritems():
-                dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
-                plt.plot(dataX, dataY, label=model.id, lw=2)
-        plt.legend(loc=4)
-        plt.title('%s comparison'%metric)
-        plt.show()
     def plotVaringBudgetAndTimeUnits(self):
         # overall_hit_rate, miss_rate_before_target_selection, hit_rate_after_target_selection
         metrics = [Metrics.overall_hit_rate]
@@ -843,29 +858,29 @@ class Simulation:
         params = dict(budget=20, timeUnitToPickTargetLattices=1, useValidLatticesOnly=True)
         params['dataStructuresToBuildClassifier'] = True
 
-#        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-#        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget(startingRange = 1, budgetLimit=100)
+        if int(sys.argv[1])==1: BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        elif int(sys.argv[1])==2: BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget(startingRange = 1, budgetLimit=100)
 
-#        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-#        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        elif int(sys.argv[1])==3: LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        elif int(sys.argv[1])==5: LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 
-#        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-#        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        elif int(sys.argv[1])==5: GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        elif int(sys.argv[1])==6: GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        GreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 
-#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-#        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        elif int(sys.argv[1])==7: SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        elif int(sys.argv[1])==8: SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 
-#        TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-#        TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        elif int(sys.argv[1])==9: TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        elif int(sys.argv[1])==10: TransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-#        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-#        SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        elif int(sys.argv[1])==11: SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        elif int(sys.argv[1])==12: SharingProbabilityLatticeSelectionWithLocalityClassifierModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-#        LinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-#        LinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        elif int(sys.argv[1])==13: LinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        elif int(sys.argv[1])==14: LinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SVMLinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SVMLinearRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        SVMPolyRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
@@ -873,24 +888,25 @@ class Simulation:
 #        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-#        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-#        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        elif int(sys.argv[1])==15: CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        elif int(sys.argv[1])==16: CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
 #        CoverageBasedAndGreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        CoverageBasedAndGreedyLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-#        CoverageBasedAndSharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
-#        CoverageBasedAndSharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+        elif int(sys.argv[1])==17: CoverageBasedAndSharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        elif int(sys.argv[1])==18: CoverageBasedAndSharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
-                                                                            GreedyLatticeSelectionModel, 
-                                                                            SharingProbabilityLatticeSelectionModel, 
-                                                                            TransmittingProbabilityLatticeSelectionModel,
-                                                                            CoverageBasedAndSharingProbabilityLatticeSelectionModel,
-                                                                            SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
-                                                                            ], 
-                                                          Metrics.rate_lag, 
-                                                          params=params)
+#        for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
+#            LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
+#                                                                                GreedyLatticeSelectionModel, 
+#                                                                                SharingProbabilityLatticeSelectionModel, 
+#                                                                                TransmittingProbabilityLatticeSelectionModel,
+#                                                                                CoverageBasedAndSharingProbabilityLatticeSelectionModel,
+#                                                                                SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
+#                                                                                ], 
+#                                                              metric, 
+#                                                              params=params)
 
 #        LatticeSelectionModel.tableWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
 #                                                                            GreedyLatticeSelectionModel, 
