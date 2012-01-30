@@ -232,6 +232,7 @@ class Coverage:
                 except IndexError as e: pass
             dataX, dataY = zip(*sorted(data.iteritems(), key=itemgetter(0)))
             plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES) + ' minutes')
+#        plt.loglog([1],[1])
         plt.title('Early indication of coverage'), plt.xlabel('Coverage difference (miles)'), plt.ylabel('Number of memes')
         plt.legend()
 #        plt.show()
@@ -280,11 +281,11 @@ class Coverage:
             
     @staticmethod
     def run():
-#        Coverage.coverageIndication()
-        Coverage.probabilisticCoverageModelExample('ripstevejobs', '120m')
-        Coverage.probabilisticCoverageModelExample('ripstevejobs', '5m')
-        Coverage.probabilisticCoverageModelExample('cnndebate', '120m')
-        Coverage.probabilisticCoverageModelExample('cnndebate', '5m')
+        Coverage.coverageIndication()
+#        Coverage.probabilisticCoverageModelExample('ripstevejobs', '120m')
+#        Coverage.probabilisticCoverageModelExample('ripstevejobs', '5m')
+#        Coverage.probabilisticCoverageModelExample('cnndebate', '120m')
+#        Coverage.probabilisticCoverageModelExample('cnndebate', '5m')
 
 
 if __name__ == '__main__':
