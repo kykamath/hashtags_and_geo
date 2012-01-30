@@ -77,7 +77,7 @@ class Metrics:
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): 
                 totalOccurances+=len(v)
                 occuranceCountInLatices[k] = len(filter(lambda i: i>selectedTimeUnit, v))
-            return sum(sorted(occuranceCountInLatices.values())[-params['budget']:])/totalOccurances
+            if totalOccurances!=0.0: return sum(sorted(occuranceCountInLatices.values())[-params['budget']:])/totalOccurances
     @staticmethod
     def rateLag(hashtag, **params):
         totalOccurances, occuranceCountInLatices, occurancesObserved = 0., {}, 0.
@@ -87,16 +87,20 @@ class Metrics:
                 totalOccurances+=len(v)
                 occuranceCountInLatices[k] = len(filter(lambda i: i>selectedTimeUnit, v))
             for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
-            difference = (sum(sorted(occuranceCountInLatices.values())[-params['budget']:]) - occurancesObserved)/totalOccurances
-            assert difference>=0.0
-            return difference
+            if totalOccurances!=0.0:
+                difference = (sum(sorted(occuranceCountInLatices.values())[-params['budget']:]) - occurancesObserved)/totalOccurances
+                assert difference>=0.0
+                return difference
     @staticmethod
     def targetSelectionAccuracy(hashtag, **params):
-        occuranceCountInLatices = {}
+        occuranceCountInLatices, bestLattices = {}, set()
         if hashtag.occuranceDistributionInTargetLattices:
             selectedTimeUnit = hashtag.occuranceDistributionInTargetLattices.values()[0]['selectedTimeUnit']
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): occuranceCountInLatices[k] = len(filter(lambda i: i>selectedTimeUnit, v))
-            bestLattices = set(zip(*sorted(occuranceCountInLatices.iteritems(), key=itemgetter(1))[-params['budget']:])[0])
+#            try:
+            if occuranceCountInLatices: bestLattices = set(zip(*sorted(occuranceCountInLatices.iteritems(), key=itemgetter(1))[-params['budget']:])[0])
+#            except:
+#                print 'x'
             targetLattices = set(hashtag.occuranceDistributionInTargetLattices.keys())
             return len(bestLattices.intersection(targetLattices))/float(params['budget'])
     @staticmethod
@@ -105,7 +109,7 @@ class Metrics:
         if hashtag.occuranceDistributionInTargetLattices:
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v)
             for k, v in hashtag.occuranceDistributionInTargetLattices.iteritems(): occurancesObserved+=sum(v['occurances'].values())
-            return occurancesObserved/totalOccurances
+            if totalOccurances!=0.0:return occurancesObserved/totalOccurances
     @staticmethod
     def occurancesHitRateAfterTargetSelection(hashtag, **params):
         totalOccurances, occurancesObserved = 0., 0.
@@ -121,7 +125,7 @@ class Metrics:
         if hashtag.occuranceDistributionInTargetLattices:
             targetSelectionTimeUnit = min(v['selectedTimeUnit'] for v in hashtag.occuranceDistributionInTargetLattices.values())
             for k,v in hashtag.occuranceDistributionInLattices.iteritems(): totalOccurances+=len(v); occurancesBeforeTimeUnit+=len([i for i in v if i<=targetSelectionTimeUnit])
-            return occurancesBeforeTimeUnit/totalOccurances
+            if totalOccurances!=0.0: return occurancesBeforeTimeUnit/totalOccurances
 EvaluationMetrics = {
                       Metrics.best_rate: Metrics.bestRate,
                       Metrics.overall_hit_rate: Metrics.overallOccurancesHitRate,
@@ -156,7 +160,7 @@ class LatticeSelectionModel(object):
                     hashtag.updateOccuranceDistributionInLattices(timeUnit, occs)
                     hashtag.updateOccurancesInTargetLattices(timeUnit, hashtag.occuranceDistributionInLattices)
                     if self.params['timeUnitToPickTargetLattices']==timeUnit: hashtag._initializeTargetLattices(timeUnit, self.selectTargetLattices(timeUnit, hashtag))
-                hashtags[hashtag.hashtagObject['h']] = {'model': self.id, 'classId': hashtag.hashtagClassId, 'metrics': dict([(k, method(hashtag, budget=self.budget))for k,method in EvaluationMetrics.iteritems()])}
+                hashtags[hashtag.hashtagObject['h']] = {'model': self.id, 'classId': hashtag.hashtagClassId, 'metrics': dict([(k, method(hashtag, budget=self.budget)) for k,method in EvaluationMetrics.iteritems()])}
         return hashtags
     def evaluateModelWithVaryingTimeUnitToPickTargetLattices(self, numberOfTimeUnits = 24):
         self.params['evaluationName'] = 'time'
@@ -775,7 +779,7 @@ class Simulation:
 #        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget(startingRange = 1, budgetLimit=100)
 
-        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+#        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 #        LatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateByVaringBudgetAndTimeUnits()
 
@@ -802,7 +806,7 @@ class Simulation:
 #        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        SVMRBFRegressionLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-#        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        CoverageBasedLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
 
