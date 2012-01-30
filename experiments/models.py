@@ -63,6 +63,21 @@ modelLabels = dict([(RANDOM, 'Random'),
                     (COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Sharing Prob. + Cov. Prob.')
                     ])
 
+modelMarkers = dict([(RANDOM, '7'),
+                    (GREEDY_LATTICE_SELECTION_MODEL, 'o'), 
+                    (BEST_RATE, 'D'), 
+                    (SHARING_PROBABILITY_LATTICE_SELECTION_MODEL,  '>'), 
+                    (TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, '<'),
+                    (SHARING_PROBABILITY_LATTICE_SELECTION_WITH_LOCALITY_CLASSIFIER_MODEL, '^'),
+                    (LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, '*'),
+                    (SVM_LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, 'svm_linear_regression'),
+                    (SVM_POLY_REGRESSION_LATTICE_SELECTION_MODEL, 'svm_poly_regression'),
+                    (SVM_RBF_REGRESSION_LATTICE_SELECTION_MODEL, 'svm_rbf_regression'),
+                    (COVERAGE_BASED_LATTICE_SELECTION_MODEL, 'd'),
+                    (COVERAGE_BASED_AND_GREEDY_LATTICE_SELECTION_MODEL, 'Greedy + Cov. Prob.'),
+                    (COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL, 'x')
+                    ])
+
 def getLattices():
     points = []
     for i, latticeObject in enumerate(FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('training_world','%s_%s'%(2,11)))): points.append(latticeObject['id'])
@@ -227,7 +242,7 @@ class LatticeSelectionModel(object):
                         metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
             for metric, metricValues in metricDistributionInTimeUnits.iteritems():
                 dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
-                plt.plot(dataX, dataY, label=model.id, lw=2)
+                plt.plot(dataX, dataY, label=modelLabels[model.id], lw=2, marker=modelMarkers[model.id])
         plt.legend(loc=4)
         plt.title('%s comparison'%metric)
         plt.show()
@@ -867,24 +882,25 @@ class Simulation:
 #        CoverageBasedAndSharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        CoverageBasedAndSharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-#        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
-#                                                          GreedyLatticeSelectionModel, 
-#                                                          SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
-#                                                          SharingProbabilityLatticeSelectionModel, 
-#                                                          TransmittingProbabilityLatticeSelectionModel,
-#                                                          ], 
-#                                                          Metrics.rate_lag, 
-#                                                          params=params)
-
-        LatticeSelectionModel.tableWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
+        LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
                                                                             GreedyLatticeSelectionModel, 
                                                                             SharingProbabilityLatticeSelectionModel, 
                                                                             TransmittingProbabilityLatticeSelectionModel,
                                                                             CoverageBasedAndSharingProbabilityLatticeSelectionModel,
                                                                             SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
                                                                             ], 
-                                                                            Metrics.target_selection_accuracy, 1, 
-                                                                            params=params)
+                                                          Metrics.rate_lag, 
+                                                          params=params)
+
+#        LatticeSelectionModel.tableWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
+#                                                                            GreedyLatticeSelectionModel, 
+#                                                                            SharingProbabilityLatticeSelectionModel, 
+#                                                                            TransmittingProbabilityLatticeSelectionModel,
+#                                                                            CoverageBasedAndSharingProbabilityLatticeSelectionModel,
+#                                                                            SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
+#                                                                            ], 
+#                                                                            Metrics.target_selection_accuracy, 1, 
+#                                                                            params=params)
 
 #        LatticeSelectionModel.plotModelWithVaryingBudget([BestRateModel], 
 #                                                                               Metrics.best_rate, 
