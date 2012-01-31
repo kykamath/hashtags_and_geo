@@ -877,7 +877,7 @@ class Simulation:
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
     @staticmethod
     def run():
-        params = dict(budget=20, timeUnitToPickTargetLattices=1, useValidLatticesOnly=True)
+        params = dict(budget=20, timeUnitToPickTargetLattices=1, useValidLatticesOnly=False)
         params['dataStructuresToBuildClassifier'] = True
 
         if int(sys.argv[1])==1: BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
