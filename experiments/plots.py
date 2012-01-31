@@ -255,8 +255,8 @@ class Coverage:
 #            for k in latticeScores: latticeScores[k]/=total
 #            return latticeScores
         MINUTES, timeUnit = 5, 1
-        lattices = getLattices()
-        print len(lattices)
+#        lattices = getLattices()
+        print len(CoverageBasedLatticeSelectionModel.lattices)
         for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/hashtagsWithoutEndingWindow'):
             if hashtagObject['h']==hashtag:
                 occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
@@ -264,8 +264,10 @@ class Coverage:
                 occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
                 allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
                 if type=='5m': probabilityDistributionForObservedLattices = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(occsInTimeunit)
-                else: probabilityDistributionForObservedLattices = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(allOccurances)
-                latticeScores = spreadProbability(lattices, probabilityDistributionForObservedLattices)
+                else: 
+                    print getRadius(allOccurances)
+                    probabilityDistributionForObservedLattices = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(allOccurances)
+                latticeScores = CoverageBasedLatticeSelectionModel.spreadProbability(CoverageBasedLatticeSelectionModel.lattices, probabilityDistributionForObservedLattices)
                 points, colors = zip(*map(lambda t: (getLocationFromLid(t[0].replace('_', ' ')), t[1]), sorted(latticeScores.iteritems(), key=itemgetter(1))))
 #                print points[0], colors[0]
                 ax = plt.subplot(111)
@@ -274,15 +276,15 @@ class Coverage:
 #                plt.title('Jaccard similarity with New York')
                 cax = divider.append_axes("right", size="5%", pad=0.05)
                 plt.colorbar(sc, cax=cax)
-#                plt.show()
-                plt.savefig('../images/coverage_examples/%s_%s.png'%(hashtag, type))
+                plt.show()
+#                plt.savefig('../images/coverage_examples/%s_%s.png'%(hashtag, type))
                 plt.clf()
                 break
             
     @staticmethod
     def run():
-        Coverage.coverageIndication()
-#        Coverage.probabilisticCoverageModelExample('ripstevejobs', '120m')
+#        Coverage.coverageIndication()
+        Coverage.probabilisticCoverageModelExample('ripstevejobs', '120m')
 #        Coverage.probabilisticCoverageModelExample('ripstevejobs', '5m')
 #        Coverage.probabilisticCoverageModelExample('cnndebate', '120m')
 #        Coverage.probabilisticCoverageModelExample('cnndebate', '5m')
