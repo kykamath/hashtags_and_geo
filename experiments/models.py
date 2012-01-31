@@ -47,6 +47,7 @@ SVM_RBF_REGRESSION_LATTICE_SELECTION_MODEL = 'svm_rbf_regression'
 COVERAGE_BASED_LATTICE_SELECTION_MODEL = 'coverage_based'
 COVERAGE_BASED_AND_GREEDY_LATTICE_SELECTION_MODEL = 'coverage_based_and_greedy'
 COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL = 'coverage_based_and_sharing_probability'
+COVERAGE_BASED_AND_TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL = 'coverage_based_and_transmitting_probability'
 
 modelLabels = dict([(RANDOM, 'Random'),
                     (GREEDY_LATTICE_SELECTION_MODEL, 'Greedy'), 
@@ -433,8 +434,8 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
         return targetLattices
     
 class TransmittingProbabilityLatticeSelectionModel(SharingProbabilityLatticeSelectionModel):
-    def __init__(self, folderType=None, timeRange=None, **kwargs): 
-        super(TransmittingProbabilityLatticeSelectionModel, self).__init__(TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, folderType, timeRange, **kwargs)
+    def __init__(self, id=TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, folderType=None, timeRange=None, **kwargs): 
+        super(TransmittingProbabilityLatticeSelectionModel, self).__init__(id, folderType, timeRange, **kwargs)
     def initializeModel(self):
         self.model = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
         hashtagsObserved = []
@@ -481,8 +482,29 @@ class CoverageBasedAndSharingProbabilityLatticeSelectionModel(SharingProbability
         occurrences = [getLocationFromLid(k.replace('_', ' ')) for k, v in hashtag.occuranceDistributionInLattices.iteritems() for i in range(len(v))]
         probabilityDistributionForObservedLattices = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(occurrences)
         coverageLatticeScores = CoverageBasedLatticeSelectionModel.spreadProbability(CoverageBasedLatticeSelectionModel.lattices, probabilityDistributionForObservedLattices)
-        
-#        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
+        targetLattices = GreedyLatticeSelectionModel.getLattices(self, hashtag)
+        targetLattices = list(targetLattices)
+        if len(targetLattices)<self.params['budget']: 
+            latticeScores = defaultdict(float)
+            for currentLattice in hashtag.occuranceDistributionInLattices:
+                for neighborLattice in self.model['neighborProbability'][currentLattice]: 
+                    if self.model['neighborProbability'][currentLattice][neighborLattice] > 0: latticeScores[neighborLattice]+=math.log(self.model['hashtagObservingProbability'][currentLattice])+\
+                                                                                                math.log(self.model['neighborProbability'][currentLattice][neighborLattice])+\
+                                                                                                math.log(coverageLatticeScores[neighborLattice])
+            extraTargetLattices = sorted(latticeScores.iteritems(), key=itemgetter(1))
+            while len(targetLattices)<self.params['budget'] and extraTargetLattices:
+                t = extraTargetLattices.pop()
+                if t[0] not in targetLattices: targetLattices.append(t[0])
+        assert len(targetLattices)<=self.params['budget']
+        return targetLattices
+
+class CoverageBasedAndTransmittingProbabilityLatticeSelectionModel(TransmittingProbabilityLatticeSelectionModel):
+    def __init__(self, folderType=None, timeRange=None, **kwargs): 
+        super(CoverageBasedAndTransmittingProbabilityLatticeSelectionModel, self).__init__(COVERAGE_BASED_AND_TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, folderType, timeRange, **kwargs)
+    def selectTargetLattices(self, currentTimeUnit, hashtag): 
+        occurrences = [getLocationFromLid(k.replace('_', ' ')) for k, v in hashtag.occuranceDistributionInLattices.iteritems() for i in range(len(v))]
+        probabilityDistributionForObservedLattices = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(occurrences)
+        coverageLatticeScores = CoverageBasedLatticeSelectionModel.spreadProbability(CoverageBasedLatticeSelectionModel.lattices, probabilityDistributionForObservedLattices)
         targetLattices = GreedyLatticeSelectionModel.getLattices(self, hashtag)
         targetLattices = list(targetLattices)
         if len(targetLattices)<self.params['budget']: 
@@ -897,23 +919,29 @@ class Simulation:
         elif int(sys.argv[1])==17: CoverageBasedAndSharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
         elif int(sys.argv[1])==18: CoverageBasedAndSharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
+        elif int(sys.argv[1])==19: CoverageBasedAndTransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
+        elif int(sys.argv[1])==20: CoverageBasedAndTransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
+
 #        for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
-#            LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
-#                                                                                GreedyLatticeSelectionModel, 
-#                                                                                SharingProbabilityLatticeSelectionModel, 
-#                                                                                TransmittingProbabilityLatticeSelectionModel,
-#                                                                                CoverageBasedAndSharingProbabilityLatticeSelectionModel,
-#                                                                                SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
-#                                                                                ], 
+#            LatticeSelectionModel.plotModelWithVaryingBudget([LatticeSelectionModel, 
+#                                                                            GreedyLatticeSelectionModel, 
+#                                                                            LinearRegressionLatticeSelectionModel,
+#                                                                            SharingProbabilityLatticeSelectionModel, 
+#                                                                            TransmittingProbabilityLatticeSelectionModel,
+#                                                                            CoverageBasedLatticeSelectionModel,
+#                                                                            CoverageBasedAndSharingProbabilityLatticeSelectionModel,
+##                                                                            SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
+#                                                                            ], 
 #                                                              metric, 
 #                                                              params=params)
 
 #        LatticeSelectionModel.tableWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
 #                                                                            GreedyLatticeSelectionModel, 
+#                                                                            LinearRegressionLatticeSelectionModel,
 #                                                                            SharingProbabilityLatticeSelectionModel, 
 #                                                                            TransmittingProbabilityLatticeSelectionModel,
 #                                                                            CoverageBasedAndSharingProbabilityLatticeSelectionModel,
-#                                                                            SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
+##                                                                            SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
 #                                                                            ], 
 #                                                                            Metrics.target_selection_accuracy, 1, 
 #                                                                            params=params)
