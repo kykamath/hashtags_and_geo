@@ -4,6 +4,7 @@ Created on Dec 7, 2011
 @author: kykamath
 '''
 import sys
+from library.classes import GeneralMethods
 sys.path.append('../')
 from settings import hashtagsLatticeGraphFile, hashtagsFile
 from experiments.models import filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance,\
@@ -214,29 +215,29 @@ class Locality:
 #        Locality.temporalLocalityTemporalDistanceExample()
         
 class Coverage:
-    @staticmethod
-    def coverageIndication():
-        MINUTES = 5
-        for timeUnit in [1, 3, 6]:
-            print timeUnit
-            data = defaultdict(int)
-            for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
-                try:
-                    occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
-                    occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
-                    occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
-                    if len(occsInTimeunit)>10:
-                        allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
-                        timeUnitRadius, allRadius = getRadius(occsInTimeunit), getRadius(allOccurances)
-                        data[int(abs(timeUnitRadius-allRadius))/50*50+50]+=1
-                except IndexError as e: pass
-            dataX, dataY = zip(*sorted(data.iteritems(), key=itemgetter(0)))
-            plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES) + ' minutes')
-#        plt.loglog([1],[1])
-        plt.title('Early indication of coverage'), plt.xlabel('Coverage difference (miles)'), plt.ylabel('Number of memes')
-        plt.legend()
+#    @staticmethod
+#    def coverageIndication():
+#        MINUTES = 5
+#        for timeUnit in [1, 3, 6]:
+#            print timeUnit
+#            data = defaultdict(int)
+#            for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+#                try:
+#                    occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
+#                    occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
+#                    occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
+#                    if len(occsInTimeunit)>10:
+#                        allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
+#                        timeUnitRadius, allRadius = getRadius(occsInTimeunit), getRadius(allOccurances)
+#                        data[int(abs(timeUnitRadius-allRadius))/50*50+50]+=1
+#                except IndexError as e: pass
+#            dataX, dataY = zip(*sorted(data.iteritems(), key=itemgetter(0)))
+#            plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES) + ' minutes')
+##        plt.loglog([1],[1])
+#        plt.title('Early indication of coverage'), plt.xlabel('Coverage difference (miles)'), plt.ylabel('Number of memes')
+#        plt.legend()
 #        plt.show()
-        plt.savefig('../images/coverageIndication.png')
+#        plt.savefig('../images/coverageIndication.png')
 #    @staticmethod
 #    def probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice): return 1.01**(-getHaversineDistance(currentLattice, sourceLattice))*probabilityAtSourceLattice
     @staticmethod
@@ -280,15 +281,52 @@ class Coverage:
 #                plt.savefig('../images/coverage_examples/%s_%s.png'%(hashtag, type))
                 plt.clf()
                 break
+    @staticmethod
+    def coverageIndication(generateData=False):
+        MINUTES, dataFile = 5, '/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/coverageIndication'
+        if generateData:
+            GeneralMethods.runCommand('rm -rf %s'%dataFile)
+            for timeUnit in [1, 3, 6]:
+                print timeUnit
+                data = defaultdict(int)
+                for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+                    try:
+                        occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
+                        occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
+                        occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
+                        if len(occsInTimeunit)>10:
+                            allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
+                            timeUnitRadius, allRadius = getRadius(occsInTimeunit), getRadius(allOccurances)
+                            data[int(abs(timeUnitRadius-allRadius))/50*50+50]+=1
+                    except IndexError as e: pass
+                FileIO.writeToFileAsJson([timeUnit, sorted(data.iteritems(), key=itemgetter(0))], dataFile)
+        else:
+            for timeUnit, data in FileIO.iterateJsonFromFile(dataFile):
+                total = float(sum([d[1] for d in data]))
+                dataX, dataY = zip(*sorted(data, key=itemgetter(0)))
+                tempTotal, newDataY = 0.0, []
+                for y in dataY:
+                    tempTotal+=y
+                    newDataY.append(tempTotal/total)
+                plt.plot(dataX, newDataY, label=str(timeUnit))
+            plt.legend()
+            plt.show()
+#                print timeUnit, total, dataX, dataY
+#            dataX, dataY = zip(*sorted(data.iteritems(), key=itemgetter(0)))
+#            plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES) + ' minutes')
+#        plt.loglog([1],[1])
+#        plt.title('Early indication of coverage'), plt.xlabel('Coverage difference (miles)'), plt.ylabel('Number of memes')
+#        plt.legend()
+#        plt.show()
+#        plt.savefig('../images/coverageIndication.png')
             
     @staticmethod
     def run():
-#        Coverage.coverageIndication()
-        Coverage.probabilisticCoverageModelExample('ripstevejobs', '120m')
+#        Coverage.probabilisticCoverageModelExample('ripstevejobs', '120m')
 #        Coverage.probabilisticCoverageModelExample('ripstevejobs', '5m')
 #        Coverage.probabilisticCoverageModelExample('cnndebate', '120m')
 #        Coverage.probabilisticCoverageModelExample('cnndebate', '5m')
-
+        Coverage.coverageIndication(generateData=False)
 
 if __name__ == '__main__':
 #    PlotGraphsOnMap.run()
