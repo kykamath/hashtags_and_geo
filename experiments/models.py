@@ -210,14 +210,14 @@ class LatticeSelectionModel(object):
         return hashtags
     def evaluateModelWithVaryingTimeUnitToPickTargetLattices(self, numberOfTimeUnits = 24):
         self.params['evaluationName'] = 'time'
-#        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
+        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
         for t in range(numberOfTimeUnits):
             print 'Evaluating at t=%d'%t, self.getModelSimulationFile()
             self.params['timeUnitToPickTargetLattices'] = t
             FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
     def evaluateModelWithVaryingBudget(self, startingRange = 1, budgetLimit = 20):
         self.params['evaluationName'] = 'budget'
-#        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
+        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
         for b in range(startingRange, budgetLimit):
             print 'Evaluating at budget=%d'%b, self.getModelSimulationFile()
             self.params['budget'] = b
