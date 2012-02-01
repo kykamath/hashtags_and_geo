@@ -286,28 +286,57 @@ class LatticeSelectionModel(object):
 #        plt.show()
         plt.savefig('../images/modelPerformance/budget_%s.png'%metric)
         plt.clf()
+#    @staticmethod
+#    def tableWithVaryingTimeUnitToPickTargetLattices(models, metric, timeUnit, **kwargs):
+#        print '\\begin{table}[!t]' 
+#        print '\\renewcommand{\\arraystretch}{1.3}' 
+#        print '\\centering'
+#        print '\\begin{tabular}{c|c}'
+#        print '\\hline' 
+#        print '\\bfseries Subset Selection Method & \\bfseries %s \\\\'%Metrics.metricLabels[metric]
+#        print '\\hline\\hline' 
+#        for model in models:
+#            model = model(**kwargs)
+#            model.params['evaluationName'] = 'time'
+#            metricDistributionInTimeUnits = defaultdict(dict)
+#            for data in FileIO.iterateJsonFromFile(model.getModelSimulationFile()):
+#                t = data['params']['timeUnitToPickTargetLattices']
+#                for h in data['hashtags']:
+#    #                if data['hashtags'][h]['classId']==3:
+##                        for metric in metric:
+#                        if metric not in metricDistributionInTimeUnits: metricDistributionInTimeUnits[metric] = defaultdict(list)
+#                        metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
+#            for metric, metricValues in metricDistributionInTimeUnits.iteritems():
+#                print modelLabels[model.id], ' & ', round(np.mean(filter(lambda l: l!=None, metricValues[2])),3), '\\\\'
+#        print '\\hline'
+#        print '\\end{tabular}'
+#        print '\\caption{%s}'%Metrics.metricLabels[metric]
+#        print '\\label{tab:%s}'%metric
+#        print '\\end{table}'
     @staticmethod
     def tableWithVaryingTimeUnitToPickTargetLattices(models, metric, timeUnit, **kwargs):
+        tableBudget = kwargs['params']['tableBudget']
+        tableTime = kwargs['params']['timeUnitToPickTargetLattices']
         print '\\begin{table}[!t]' 
         print '\\renewcommand{\\arraystretch}{1.3}' 
         print '\\centering'
         print '\\begin{tabular}{c|c}'
         print '\\hline' 
         print '\\bfseries Subset Selection Method & \\bfseries %s \\\\'%Metrics.metricLabels[metric]
-        print '\\hline\\hline' 
+        print '\\hline\\hline'
         for model in models:
             model = model(**kwargs)
-            model.params['evaluationName'] = 'time'
-            metricDistributionInTimeUnits = defaultdict(dict)
+            model.params['evaluationName'] = 'budget'
+            metricDistributionInTimeUnits = defaultdict(list)
             for data in FileIO.iterateJsonFromFile(model.getModelSimulationFile()):
-                t = data['params']['timeUnitToPickTargetLattices']
-                for h in data['hashtags']:
-    #                if data['hashtags'][h]['classId']==3:
-#                        for metric in metric:
-                        if metric not in metricDistributionInTimeUnits: metricDistributionInTimeUnits[metric] = defaultdict(list)
-                        metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
+                if tableTime==data['params']['timeUnitToPickTargetLattices'] and tableBudget==data['params']['budget']:
+                    for h in data['hashtags']:
+        #                if data['hashtags'][h]['classId']==3:
+    #                        for metric in metric:
+#                            if metric not in metricDistributionInTimeUnits: metricDistributionInTimeUnits[metric] = defaultdict(list)
+                            metricDistributionInTimeUnits[metric].append(data['hashtags'][h]['metrics'][metric])
             for metric, metricValues in metricDistributionInTimeUnits.iteritems():
-                print modelLabels[model.id], ' & ', round(np.mean(filter(lambda l: l!=None, metricValues[2])),3), '\\\\'
+                print modelLabels[model.id], ' & ', round(np.mean(filter(lambda l: l!=None, metricValues)),3), '\\\\'
         print '\\hline'
         print '\\end{tabular}'
         print '\\caption{%s}'%Metrics.metricLabels[metric]
@@ -884,7 +913,7 @@ class Simulation:
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
     @staticmethod
     def run():
-        params = dict(budget=20, timeUnitToPickTargetLattices=1, useValidLatticesOnly=True)
+        params = dict(budget=20, timeUnitToPickTargetLattices=1, tableBudget=3, tableTime = 1, useValidLatticesOnly=True)
         params['dataStructuresToBuildClassifier'] = True
 
 #        if int(sys.argv[1])==1: BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
