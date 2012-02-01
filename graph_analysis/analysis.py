@@ -50,7 +50,7 @@ def plotLocationClustersOnMap(graph):
     colorMap = dict([(i, GeneralMethods.getRandomColor()) for i in range(noOfClusters)])
     clusters = [(c, list(l)) for c, l in groupby(sorted(clusters, key=itemgetter(1)), key=itemgetter(1))]
     points, colors = zip(*map(lambda  l: (getLocationFromLid(l.replace('_', ' ')), colorMap[nodeToClusterIdMap[l]]), graph.nodes()))
-    _, m =plotPointsOnUSMap(points, s=30, lw=0, c=colors, returnBaseMapObject=True)
+    _, m =plotPointsOnUSMap(points, s=0, lw=0, c=colors, returnBaseMapObject=True)
     for u, v, data in graph.edges(data=True):
         if nodeToClusterIdMap[u]==nodeToClusterIdMap[v]:
             color, u, v, w = colorMap[nodeToClusterIdMap[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
@@ -298,11 +298,11 @@ def mr_task(timeRange, dataType, area):
     runMRJob(MRGraph, epochGraphsFile%(area, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), dataType), jobconf={'mapred.reduce.tasks':160})   
 
 if __name__ == '__main__':
-#    timeRange, dataType, area = (5,6), 'world', 'us'
+    timeRange, dataType, area = (2,11), 'world', 'us'
 #    timeRange, dataType, area = (5,8), 'world', 'world'
-    timeRange, dataType, area = (5,11), 'world', 'world'
+#    timeRange, dataType, area = (5,11), 'world', 'world'
     
-#    mr_task(timeRange, dataType, area)
-    temp_analysis()
+    mr_task(timeRange, dataType, area)
+#    temp_analysis()
 #    LocationGraphs.run()
 #    RandomGraphGenerator.run()
