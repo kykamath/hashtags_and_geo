@@ -61,7 +61,8 @@ modelLabels = dict([(RANDOM, 'Random'),
                     (SVM_RBF_REGRESSION_LATTICE_SELECTION_MODEL, 'svm_rbf_regression'),
                     (COVERAGE_BASED_LATTICE_SELECTION_MODEL, 'Cov. Prob.'),
                     (COVERAGE_BASED_AND_GREEDY_LATTICE_SELECTION_MODEL, 'Greedy + Cov. Prob.'),
-                    (COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Sharing Prob. + Cov. Prob.')
+                    (COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Sharing Prob. + Cov. Prob.'),
+                    (COVERAGE_BASED_AND_TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Transmitting Prob. + Cov. Prob.'),
                     ])
 
 modelMarkers = dict([(RANDOM, '7'),
@@ -76,7 +77,8 @@ modelMarkers = dict([(RANDOM, '7'),
                     (SVM_RBF_REGRESSION_LATTICE_SELECTION_MODEL, 'svm_rbf_regression'),
                     (COVERAGE_BASED_LATTICE_SELECTION_MODEL, 'd'),
                     (COVERAGE_BASED_AND_GREEDY_LATTICE_SELECTION_MODEL, 'Greedy + Cov. Prob.'),
-                    (COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL, 'x')
+                    (COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL, 'x'),
+                    (COVERAGE_BASED_AND_TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, '+'),
                     ])
 
 def getLattices():
@@ -190,7 +192,10 @@ class LatticeSelectionModel(object):
         '''
         return random.sample(hashtag.occuranceDistributionInLattices, min([self.budget, len(hashtag.occuranceDistributionInLattices)]))
     def getModelSimulationFile(self): 
-        file = hashtagsModelsFolder%('world', self.id)+'%s.eva'%self.params['evaluationName']; FileIO.createDirectoryForFile(file); return file
+        latticesType = ''
+        if self.params['useValidLatticesOnly']: latticesType = 'valid_lattices'
+        else: latticesType = 'all_lattices'
+        file = hashtagsModelsFolder%('world', latticesType, self.id)+'%s.eva'%self.params['evaluationName']; FileIO.createDirectoryForFile(file); return file
     def evaluateModel(self):
         hashtags = {}
         for h in FileIO.iterateJsonFromFile(self.testingHashtagsFile): 
@@ -205,14 +210,14 @@ class LatticeSelectionModel(object):
         return hashtags
     def evaluateModelWithVaryingTimeUnitToPickTargetLattices(self, numberOfTimeUnits = 24):
         self.params['evaluationName'] = 'time'
-        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
+#        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
         for t in range(numberOfTimeUnits):
             print 'Evaluating at t=%d'%t, self.getModelSimulationFile()
             self.params['timeUnitToPickTargetLattices'] = t
             FileIO.writeToFileAsJson({'params': self.params, 'hashtags': self.evaluateModel()}, self.getModelSimulationFile())
     def evaluateModelWithVaryingBudget(self, startingRange = 1, budgetLimit = 20):
         self.params['evaluationName'] = 'budget'
-        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
+#        GeneralMethods.runCommand('rm -rf %s'%self.getModelSimulationFile())
         for b in range(startingRange, budgetLimit):
             print 'Evaluating at budget=%d'%b, self.getModelSimulationFile()
             self.params['budget'] = b
@@ -278,8 +283,8 @@ class LatticeSelectionModel(object):
         plt.xlabel('Size of target lattice subset (k)')
         plt.ylabel(Metrics.metricLabels[metric])
         plt.title('%s vs k'%Metrics.metricLabels[metric])
-#        plt.show()
-        plt.savefig('../images/modelPerformance/budget_%s.png'%metric)
+        plt.show()
+#        plt.savefig('../images/modelPerformance/budget_%s.png'%metric)
         plt.clf()
     @staticmethod
     def tableWithVaryingTimeUnitToPickTargetLattices(models, metric, timeUnit, **kwargs):
@@ -419,8 +424,9 @@ class SharingProbabilityLatticeSelectionModel(LatticeSelectionModel):
         for lattice in self.model['hashtagObservingProbability'].keys()[:]: self.model['hashtagObservingProbability'][lattice] = len(self.model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
     def selectTargetLattices(self, currentTimeUnit, hashtag): 
 #        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
-        targetLattices = GreedyLatticeSelectionModel.getLattices(self, hashtag)
-        targetLattices = list(targetLattices)
+#        targetLattices = GreedyLatticeSelectionModel.getLattices(self, hashtag)
+#        targetLattices = list(targetLattices)
+        targetLattices = []
         if len(targetLattices)<self.params['budget']: 
             latticeScores = defaultdict(float)
             for currentLattice in hashtag.occuranceDistributionInLattices:
@@ -842,8 +848,9 @@ class LinearRegressionLatticeSelectionModel(LatticeSelectionModel):
         self.regressionClassType = TargetSelectionRegressionClassifier
     def selectTargetLattices(self, currentTimeUnit, hashtag): 
 #        targetLattices = zip(*sorted(hashtag.occuranceDistributionInLattices.iteritems(), key=lambda t: len(t[1]), reverse=True))[0][:self.params['budget']]
-        targetLattices = GreedyLatticeSelectionModel.getLattices(self, hashtag)
-        targetLattices = list(targetLattices)
+#        targetLattices = GreedyLatticeSelectionModel.getLattices(self, hashtag)
+#        targetLattices = list(targetLattices)
+        targetLattices = []
         if len(targetLattices)<self.params['budget']: 
             occuranceDistributionInLattices = dict([(k, len(v)) for k, v in hashtag.occuranceDistributionInLattices.iteritems()])
             total = float(sum(occuranceDistributionInLattices.values()))
@@ -877,7 +884,7 @@ class Simulation:
     testingHashtagsFile = hashtagsFile%('testing_world','%s_%s'%(2,11))
     @staticmethod
     def run():
-        params = dict(budget=20, timeUnitToPickTargetLattices=1, useValidLatticesOnly=False)
+        params = dict(budget=20, timeUnitToPickTargetLattices=1, useValidLatticesOnly=True)
         params['dataStructuresToBuildClassifier'] = True
 
         if int(sys.argv[1])==1: BestRateModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
@@ -923,15 +930,16 @@ class Simulation:
         elif int(sys.argv[1])==20: CoverageBasedAndTransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
 #        for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
-#            LatticeSelectionModel.plotModelWithVaryingBudget([LatticeSelectionModel, 
-#                                                                            GreedyLatticeSelectionModel, 
-#                                                                            LinearRegressionLatticeSelectionModel,
-#                                                                            SharingProbabilityLatticeSelectionModel, 
-#                                                                            TransmittingProbabilityLatticeSelectionModel,
-#                                                                            CoverageBasedLatticeSelectionModel,
-#                                                                            CoverageBasedAndSharingProbabilityLatticeSelectionModel,
+#            LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
+#                                                            GreedyLatticeSelectionModel,
+#                                                            LinearRegressionLatticeSelectionModel,
+#                                                            SharingProbabilityLatticeSelectionModel, 
+#                                                            TransmittingProbabilityLatticeSelectionModel,
+#                                                            CoverageBasedLatticeSelectionModel,
+#                                                            CoverageBasedAndSharingProbabilityLatticeSelectionModel,
+#                                                            CoverageBasedAndTransmittingProbabilityLatticeSelectionModel,
 ##                                                                            SharingProbabilityLatticeSelectionWithLocalityClassifierModel,
-#                                                                            ], 
+#                                                            ], 
 #                                                              metric, 
 #                                                              params=params)
 
