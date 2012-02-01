@@ -303,6 +303,6 @@ if __name__ == '__main__':
     timeRange, dataType, area = (5,11), 'world', 'world'
     
 #    mr_task(timeRange, dataType, area)
-#    temp_analysis()
-    LocationGraphs.run()
+    temp_analysis()
+#    LocationGraphs.run()
 #    RandomGraphGenerator.run()
