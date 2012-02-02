@@ -30,17 +30,19 @@ class RawDataProcessing():
     def convertBrightkiteDataToJSON():
         print 'Writing to: ', checkinsJSONFile%BRIGHTKITE_ID
         for i, line in enumerate(FileIO.iterateLinesFromFile('/mnt/chevron/kykamath/data/geo/checkins/raw_data/brightkite/loc-brightkite_totalCheckins.txt')):
-            FileIO.writeToFileAsJson(RawDataProcessing.parseJSONForGowallaAndBrightkite(line), checkinsJSONFile%BRIGHTKITE_ID)
+            try:
+                FileIO.writeToFileAsJson(RawDataProcessing.parseJSONForGowallaAndBrightkite(line), checkinsJSONFile%BRIGHTKITE_ID)
+            except: pass
     @staticmethod
     def convertGowallaDataToJSON():
-        print 'Writing to: ', checkinsJSONFile%BRIGHTKITE_ID
+        print 'Writing to: ', checkinsJSONFile%GOWALLA_ID
         for i, line in enumerate(FileIO.iterateLinesFromFile('/mnt/chevron/kykamath/data/geo/checkins/raw_data/gowalla/loc-gowalla_totalCheckins.txt')):
-            FileIO.writeToFileAsJson(RawDataProcessing.parseJSONForGowallaAndBrightkite(line), checkinsJSONFile%BRIGHTKITE_ID)
+            FileIO.writeToFileAsJson(RawDataProcessing.parseJSONForGowallaAndBrightkite(line), checkinsJSONFile%GOWALLA_ID)
     
 def mr_driver():
     def getInputFiles(): return map(lambda id: hdfsInputCheckinsFile%id, [FOURSQUARE_ID])
     runMRJob(MRCheckins, userToCheckinsMapFile, getInputFiles(), jobconf={'mapred.reduce.tasks':60})
 
 if __name__ == '__main__':
-    mr_driver()
-#    RawDataProcessing.convertGowallaDataToJSON()
+#    mr_driver()
+    RawDataProcessing.convertBrightkiteDataToJSON()
