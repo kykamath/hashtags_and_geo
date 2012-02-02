@@ -25,7 +25,7 @@ class RawDataProcessing():
             FileIO.writeToFileAsJson(parse4SQData(data), checkinsJSONFile%FOUR_SQUARE)
     @staticmethod
     def convertGowallaDataToJSON():
-        for i, line in FileIO.iterateLinesFromFile('/mnt/chevron/kykamath/data/geo/checkins/raw_data/brightkite/loc-brightkite_totalCheckins.txt'):
+        for i, line in enumerate(FileIO.iterateLinesFromFile('/mnt/chevron/kykamath/data/geo/checkins/raw_data/brightkite/loc-brightkite_totalCheckins.txt')):
             print line.strip().split()
             if i==10: exit()
     
