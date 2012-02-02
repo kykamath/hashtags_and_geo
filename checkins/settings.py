@@ -6,9 +6,9 @@ Created on Feb 1, 2012
 
 hdfsInputCheckinsFile = 'hdfs:///user/kykamath/geo/checkins/checkins.json'
 
-FOUR_SQUARE = '4sq'
-GOWALLA = 'gowalla'
-BRIGHTKITE = 'brightkite'
+FOURSQUARE_ID = '4sq'
+GOWALLA_ID = 'gowalla'
+BRIGHTKITE_ID = 'brightkite'
  
 checkinsFolder = '/mnt/chevron/kykamath/data/geo/checkins/%s/'
 checkinsAnalysisFolder = checkinsFolder+'analysis/'
