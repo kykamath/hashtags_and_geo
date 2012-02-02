@@ -4,11 +4,14 @@ Created on Feb 1, 2012
 @author: kykamath
 '''
 import sys
-from library.classes import GeneralMethods
+from checkins.mr_modules import MRCheckins
 sys.path.append('../')
+from library.classes import GeneralMethods
+from library.mrjobwrapper import runMRJob
 from library.file_io import FileIO
 from datetime import datetime
-from checkins.settings import checkinsJSONFile
+from checkins.settings import checkinsJSONFile, userToCheckinsMapFile,\
+    hdfsInputCheckinsFile
 def parseData(line):
     data = line.strip().split('\t')
     if len(data)!=7: data.append(None) 
@@ -19,5 +22,9 @@ def writeCheckinsToJSONFormat():
 #    for i, data in enumerate(FileIO.iterateLinesFromFile('../data/checkin_data.txt')):
         print i
         FileIO.writeToFileAsJson(parseData(data), checkinsJSONFile)
-        
-writeCheckinsToJSONFormat()
+    
+def mr_driver():
+    runMRJob(MRCheckins, userToCheckinsMapFile, [hdfsInputCheckinsFile], jobconf={'mapred.reduce.tasks':160})
+
+if __name__ == '__main__':
+    mr_driver()
