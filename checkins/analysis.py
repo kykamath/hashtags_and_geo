@@ -27,7 +27,7 @@ class RawDataProcessing():
     def parseJSONForGowallaAndBrightkite(line):
         print line
         data = line.strip().split()
-        print {'u': '%s_%s'%(GOWALLA_ID, data[0]), 'l': [float(data[2]), float(data[3])], 't': GeneralMethods.getEpochFromDateTimeObject(datetime.strptime(data[4], '%Y-%m-%dT%H:%M:%SZ')), 'lid': data[4]}
+        print {'u': '%s_%s'%(GOWALLA_ID, data[0]), 'l': [float(data[2]), float(data[3])], 't': GeneralMethods.getEpochFromDateTimeObject(datetime.strptime(data[1], '%Y-%m-%dT%H:%M:%SZ')), 'lid': data[4]}
 
     @staticmethod
     def convertGowallaDataToJSON():
