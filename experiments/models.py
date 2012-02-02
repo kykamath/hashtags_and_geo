@@ -966,23 +966,23 @@ class Simulation:
 #                                                            SharingProbabilityLatticeSelectionModel, 
 #                                                            TransmittingProbabilityLatticeSelectionModel,
 #                                                            CoverageBasedLatticeSelectionModel,
-#                                                            CoverageBasedAndSharingProbabilityLatticeSelectionModel,
 #                                                            CoverageBasedAndTransmittingProbabilityLatticeSelectionModel,
+#                                                            CoverageBasedAndSharingProbabilityLatticeSelectionModel,
 #                                                            ], 
 #                                                              metric, 
 #                                                              params=params)
 
     
         for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
-            print '\n\n\n\n'
+            print '\n\n'
             LatticeSelectionModel.tableWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
                                                                                 GreedyLatticeSelectionModel,
-                    #                                                            LinearRegressionLatticeSelectionModel,
+                                                                                LinearRegressionLatticeSelectionModel,
                                                                                 SharingProbabilityLatticeSelectionModel, 
                                                                                 TransmittingProbabilityLatticeSelectionModel,
                                                                                 CoverageBasedLatticeSelectionModel,
-                                                                                CoverageBasedAndSharingProbabilityLatticeSelectionModel,
                                                                                 CoverageBasedAndTransmittingProbabilityLatticeSelectionModel,
+                                                                                CoverageBasedAndSharingProbabilityLatticeSelectionModel,
                                                                                 ], 
                                                                                 metric, 1, 
                                                                                 params=params)
@@ -993,8 +993,8 @@ class Simulation:
 #        SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).plotVaringBudgetAndTimeUnits()
         
 if __name__ == '__main__':
-#    Simulation.run()
-    Analysis.run()
+    Simulation.run()
+#    Analysis.run()
 #    LocalityClassifier.plotClassifierPerformance()
 #    SharingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), params={})
 #    model.saveModelSimulation()
