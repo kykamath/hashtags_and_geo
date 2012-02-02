@@ -4,7 +4,7 @@ Created on Feb 1, 2012
 @author: kykamath
 '''
 
-hdfsInputCheckinsFile = 'hdfs:///user/kykamath/geo/checkins/checkins.json'
+hdfsInputCheckinsFile = 'hdfs:///user/kykamath/geo/checkins/%s/checkins.json'
 
 FOURSQUARE_ID = '4sq'
 GOWALLA_ID = 'gowalla'

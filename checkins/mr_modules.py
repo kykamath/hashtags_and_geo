@@ -35,7 +35,7 @@ class MRCheckins(ModifiedMRJob):
         checkins = reduce(list.__add__, values, [])
         if len(checkins)>=MINIMUM_NUMBER_OF_CHECKINS_PER_USER: 
             checkins = sorted(checkins, key=lambda t: t[1])
-            yield key, [len(checkins)]
+            yield key, {'u': key, 'c': len(checkins)}
     
     def jobsToGetCheckinsInABoundaryPerUser(self): return [self.mr(mapper=self.mapCheckinsPerUser, mapper_final=self.mapCheckinsPerUserFinal, reducer=self.reducerCheckinsPerUser)]
     def steps(self):
