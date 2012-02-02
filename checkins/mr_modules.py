@@ -14,7 +14,7 @@ BOUNDARY = [[-90,-180], [90, 180]] # World
 #BOUNDARY = [[24.527135,-127.792969], [49.61071,-59.765625]] #US
 #BOUNDARY = [[40.491, -74.356], [41.181, -72.612]] #NY
 
-MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 50
+MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 100
 
 def getCheckinsObject(line):
     data = cjson.decode(line)
