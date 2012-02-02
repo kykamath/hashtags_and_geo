@@ -24,7 +24,7 @@ def writeCheckinsToJSONFormat():
         FileIO.writeToFileAsJson(parseData(data), checkinsJSONFile)
     
 def mr_driver():
-    runMRJob(MRCheckins, userToCheckinsMapFile, [hdfsInputCheckinsFile], jobconf={'mapred.reduce.tasks':160})
+    runMRJob(MRCheckins, userToCheckinsMapFile, [hdfsInputCheckinsFile], jobconf={'mapred.reduce.tasks':60})
 
 if __name__ == '__main__':
     mr_driver()

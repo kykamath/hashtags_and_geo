@@ -17,7 +17,7 @@ MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 50
 
 def getCheckinsObject(line):
     data = cjson.decode(line)
-    if isWithinBoundingBox(data['l'], BOUNDARY): return data
+    if data and isWithinBoundingBox(data['l'], BOUNDARY): return data
 
 class MRCheckins(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
