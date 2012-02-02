@@ -4,11 +4,11 @@ Created on Feb 1, 2012
 @author: kykamath
 '''
 import sys
-from checkins.mr_modules import MRCheckins
 sys.path.append('../')
 from library.classes import GeneralMethods
 from library.mrjobwrapper import runMRJob
 from library.file_io import FileIO
+from checkins.mr_modules import MRCheckins
 from datetime import datetime
 from checkins.settings import checkinsJSONFile, userToCheckinsMapFile,\
     hdfsInputCheckinsFile
