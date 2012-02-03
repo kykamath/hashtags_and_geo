@@ -285,33 +285,6 @@ class LatticeSelectionModel(object):
 #        plt.show()
         plt.savefig('../images/modelPerformance/budget_%s.png'%metric)
         plt.clf()
-#    @staticmethod
-#    def tableWithVaryingTimeUnitToPickTargetLattices(models, metric, timeUnit, **kwargs):
-#        print '\\begin{table}[!t]' 
-#        print '\\renewcommand{\\arraystretch}{1.3}' 
-#        print '\\centering'
-#        print '\\begin{tabular}{c|c}'
-#        print '\\hline' 
-#        print '\\bfseries Subset Selection Method & \\bfseries %s \\\\'%Metrics.metricLabels[metric]
-#        print '\\hline\\hline' 
-#        for model in models:
-#            model = model(**kwargs)
-#            model.params['evaluationName'] = 'time'
-#            metricDistributionInTimeUnits = defaultdict(dict)
-#            for data in FileIO.iterateJsonFromFile(model.getModelSimulationFile()):
-#                t = data['params']['timeUnitToPickTargetLattices']
-#                for h in data['hashtags']:
-#    #                if data['hashtags'][h]['classId']==3:
-##                        for metric in metric:
-#                        if metric not in metricDistributionInTimeUnits: metricDistributionInTimeUnits[metric] = defaultdict(list)
-#                        metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
-#            for metric, metricValues in metricDistributionInTimeUnits.iteritems():
-#                print modelLabels[model.id], ' & ', round(np.mean(filter(lambda l: l!=None, metricValues[2])),3), '\\\\'
-#        print '\\hline'
-#        print '\\end{tabular}'
-#        print '\\caption{%s}'%Metrics.metricLabels[metric]
-#        print '\\label{tab:%s}'%metric
-#        print '\\end{table}'
     @staticmethod
     def tableWithVaryingTimeUnitToPickTargetLattices(models, metric, timeUnit, **kwargs):
         tableBudget = kwargs['params']['tableBudget']
@@ -335,12 +308,48 @@ class LatticeSelectionModel(object):
 #                            if metric not in metricDistributionInTimeUnits: metricDistributionInTimeUnits[metric] = defaultdict(list)
                             metricDistributionInTimeUnits[metric].append(data['hashtags'][h]['metrics'][metric])
             for metric, metricValues in metricDistributionInTimeUnits.iteritems():
-                print modelLabels[model.id], ' & ', round(np.mean(filter(lambda l: l!=None, metricValues)),3), '\\\\'
+                if model.id==COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL: print '\\textbf{' + modelLabels[model.id], '} & \\textbf{' , round(np.mean(filter(lambda l: l!=None, metricValues)),3), '} \\\\'
+                else: print modelLabels[model.id], ' & ', round(np.mean(filter(lambda l: l!=None, metricValues)),3), '\\\\'
         print '\\hline'
         print '\\end{tabular}'
-        print '\\caption{%s} ($t_s=%s$, $k=%s$)'%(Metrics.metricLabels[metric], tableTime, tableBudget )
+        print '\\caption{%s ($t_s=%s$ minutes, $k=%s$)}'%(Metrics.metricLabels[metric], tableTime*5, tableBudget )
         print '\\label{tab:%s}'%metric
         print '\\end{table}'
+    @staticmethod
+    def tableCombinedWithVaryingTimeUnitToPickTargetLattices(models, metrics, timeUnit, **kwargs):
+        tableBudget = kwargs['params']['tableBudget']
+        tableTime = kwargs['params']['timeUnitToPickTargetLattices']
+        print '\\begin{table*}[!t]' 
+        print '\\renewcommand{\\arraystretch}{1.3}' 
+        print '\\centering'
+        print '\\begin{tabular}{c|c|c|c}'
+        print '\\hline' 
+        metricScores = defaultdict(dict)
+        for metric in metrics:
+            for model in models:
+                model = model(**kwargs)
+                model.params['evaluationName'] = 'budget'
+                metricDistributionInTimeUnits = defaultdict(list)
+                for data in FileIO.iterateJsonFromFile(model.getModelSimulationFile()):
+                    if tableTime==data['params']['timeUnitToPickTargetLattices'] and tableBudget==data['params']['budget']:
+                        for h in data['hashtags']:
+                                metricDistributionInTimeUnits[metric].append(data['hashtags'][h]['metrics'][metric])
+                for metric, metricValues in metricDistributionInTimeUnits.iteritems():
+#                    if model.id==COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL: print '\\textbf{' + modelLabels[model.id], '} & \\textbf{' , round(np.mean(filter(lambda l: l!=None, metricValues)),3), '} \\\\'
+#                    else: print modelLabels[model.id], ' & ', round(np.mean(filter(lambda l: l!=None, metricValues)),3), '\\\\'
+                    metricScores[metric][model.id] = np.mean(filter(lambda l: l!=None, metricValues))
+        print '\\bfseries Subset Selection Method & \\bfseries %s \\\\'%(' & \\bfseries '.join([Metrics.metricLabels[metric] for metric in metrics]))
+        print '\\hline\\hline'
+        for model in models:
+            model = model(**kwargs)
+            if model.id==COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL: 
+                print '\\textbf{' + modelLabels[model.id], '} & \\textbf{ %s'%('} & \\textbf{'.join([str(round(metricScores[metric][model.id],3)) for metric in metrics])) + '} \\\\'
+            else: print modelLabels[model.id], ' & %s'%(' & '.join([str(round(metricScores[metric][model.id],3)) for metric in metrics])), '\\\\'
+        print '\\hline'
+        print '\\end{tabular}'
+        print '\\caption{%s ($t_s=%s$ minutes, $k=%s$)}'%('Performance of lattice subset selection algorithms.', tableTime*5, tableBudget )
+        print '\\label{tab:%s}'%metric
+        print '\\end{table*}'
     def plotVaringBudgetAndTimeUnits(self):
         # overall_hit_rate, miss_rate_before_target_selection, hit_rate_after_target_selection
         metrics = [Metrics.overall_hit_rate]
@@ -972,9 +981,21 @@ class Simulation:
 #                                                              params=params)
 
     
-        for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
-            print '\n\n'
-            LatticeSelectionModel.tableWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
+#        for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
+#            print '\n\n'
+#            LatticeSelectionModel.tableWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
+#                                                                                GreedyLatticeSelectionModel,
+#                                                                                LinearRegressionLatticeSelectionModel,
+#                                                                                SharingProbabilityLatticeSelectionModel, 
+#                                                                                TransmittingProbabilityLatticeSelectionModel,
+#                                                                                CoverageBasedLatticeSelectionModel,
+#                                                                                CoverageBasedAndTransmittingProbabilityLatticeSelectionModel,
+#                                                                                CoverageBasedAndSharingProbabilityLatticeSelectionModel,
+#                                                                                ], 
+#                                                                                metric, 1, 
+#                                                                                params=params)
+
+        LatticeSelectionModel.tableCombinedWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
                                                                                 GreedyLatticeSelectionModel,
                                                                                 LinearRegressionLatticeSelectionModel,
                                                                                 SharingProbabilityLatticeSelectionModel, 
@@ -983,7 +1004,7 @@ class Simulation:
                                                                                 CoverageBasedAndTransmittingProbabilityLatticeSelectionModel,
                                                                                 CoverageBasedAndSharingProbabilityLatticeSelectionModel,
                                                                                 ], 
-                                                                                metric, 1, 
+                                                                                [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag], 1, 
                                                                                 params=params)
 
 #        LatticeSelectionModel.plotModelWithVaryingBudget([BestRateModel], 
