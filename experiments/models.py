@@ -249,11 +249,10 @@ class LatticeSelectionModel(object):
             for metric, metricValues in metricDistributionInTimeUnits.iteritems():
                 dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
                 plt.plot([(x+1)*5 for x in dataX], dataY, label=modelLabels[model.id], lw=2, marker=modelMarkers[model.id])
-        if metric==Metrics.rate_lag: plt.legend(loc=1, ncol=1)
-#        else: plt.legend(loc=3, ncol=2, mode='expand')
-        plt.xlabel('Lattice subset selection time (minutes)')
-        plt.ylabel(Metrics.metricLabels[metric])
-        plt.title('%s vs $t_s$'%Metrics.metricLabels[metric])
+#        if metric==Metrics.rate_lag: plt.legend(loc=1, ncol=1)
+        plt.xlabel('Lattice subset selection time (minutes)', fontsize=20)
+        plt.ylabel(Metrics.metricLabels[metric], fontsize=20)
+#        plt.title('%s vs $t_s$'%Metrics.metricLabels[metric])
         plt.xlim(xmin=5)
 #        plt.show()
         plt.savefig('../images/modelPerformance/time_%s.png'%metric)
@@ -280,9 +279,9 @@ class LatticeSelectionModel(object):
 #        elif metric==Metrics.target_selection_accuracy: leg=plt.legend(loc=5, ncol=2, mode='expand')
 #        else: leg=plt.legend(loc=3, ncol=2, mode='expand')
 #        for t in leg.get_texts(): t.set_fontsize('small')
-        plt.xlabel('Size of target lattice subset (k)')
-        plt.ylabel(Metrics.metricLabels[metric])
-        plt.title('%s vs k'%Metrics.metricLabels[metric])
+        plt.xlabel('Size of target lattice subset (k)', fontsize=20)
+        plt.ylabel(Metrics.metricLabels[metric], fontsize=20)
+#        plt.title('%s vs k'%Metrics.metricLabels[metric])
 #        plt.show()
         plt.savefig('../images/modelPerformance/budget_%s.png'%metric)
         plt.clf()
@@ -960,7 +959,7 @@ class Simulation:
 #        elif int(sys.argv[1])==20: CoverageBasedAndTransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
         for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
-            LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
+            LatticeSelectionModel.plotModelWithVaryingBudget([LatticeSelectionModel, 
                                                             GreedyLatticeSelectionModel,
                                                             LinearRegressionLatticeSelectionModel,
                                                             SharingProbabilityLatticeSelectionModel, 

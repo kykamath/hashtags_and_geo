@@ -262,7 +262,8 @@ class Coverage:
             dataX, dataY = zip(*sorted(data.iteritems(), key=itemgetter(0)))
             plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES) + ' minutes')
 #        plt.loglog([1],[1])
-        plt.title('Early indication of coverage'), plt.xlabel('Coverage difference (miles)'), plt.ylabel('Number of memes')
+#        plt.title('Early indication of coverage'), 
+        plt.xlabel('Coverage difference (miles)', fontsize=20), plt.ylabel('Number of memes', fontsize=20)
         plt.legend()
 #        plt.show()
         plt.savefig('../images/coverageIndication.png')
@@ -358,7 +359,7 @@ class Coverage:
 
 if __name__ == '__main__':
 #    PlotGraphsOnMap.run()
-    Locality.run()
-#    Coverage.run()
+#    Locality.run()
+    Coverage.run()
 #    print getLatticeLid([-23.549569,-46.639173],  0.145)
     
