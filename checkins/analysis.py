@@ -40,7 +40,7 @@ class RawDataProcessing():
             FileIO.writeToFileAsJson(RawDataProcessing.parseJSONForGowallaAndBrightkite(line), checkinsJSONFile%GOWALLA_ID)
     
 def mr_driver():
-    def getInputFiles(): return map(lambda id: hdfsInputCheckinsFile%id, [GOWALLA_ID])
+    def getInputFiles(): return map(lambda id: hdfsInputCheckinsFile%id, [GOWALLA_ID, BRIGHTKITE_ID, FOURSQUARE_ID])
     runMRJob(MRCheckins, userToCheckinsMapFile, getInputFiles(), jobconf={'mapred.reduce.tasks':60})
 
 if __name__ == '__main__':
