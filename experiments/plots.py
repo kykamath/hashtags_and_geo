@@ -63,11 +63,34 @@ class PlotGraphsOnMap:
         hashtags=sorted(hashtags)
         for h in hashtags: FileIO.writeToFile(unicode(h).encode('utf-8'), 'hashtags')
     @staticmethod
+    def temp():
+        hashtags, MINUTES = [], 60
+        for hashtagObject in FileIO.iterateJsonFromFile('americanhorrorstory'):
+            if hashtagObject['h']=='americanhorrorstory':
+                print unicode(hashtagObject['h']).encode('utf-8'), len(hashtagObject['oc'])
+                occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject, timeUnit=60*60), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
+                totalOccurances = []
+                for interval, t in enumerate(sorted(occsDistributionInTimeUnits)):
+                    occs = occsDistributionInTimeUnits[t]
+                    if occs:
+                        fileName = '../images/plotsOnMap/%s/%s.png'%(hashtagObject['h'], (interval+1)*MINUTES); FileIO.createDirectoryForFile(fileName)
+#                        print interval, t, len(occs)
+                        print fileName
+                        occurancesGroupedByLattice = [(getLocationFromLid(lid.replace('_', ' ')), 'm') for lid, occ in groupby(sorted([(getLatticeLid(l, LATTICE_ACCURACY), t) for l, t in occs], key=itemgetter(0)), key=itemgetter(0))]
+                        occurancesGroupedByLattice = sorted(occurancesGroupedByLattice, key=itemgetter(1))
+                        points, colors = zip(*occurancesGroupedByLattice)
+                        plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c=colors, lw = 0)
+#                        plt.show()
+                        plt.savefig(fileName)
+                        plt.clf()
+                exit()
+    @staticmethod
     def run():
-        PlotGraphsOnMap.plotGraphsForHashtag('chupacorinthians')
-        PlotGraphsOnMap.plotGraphsForHashtag('cnndebate')    
-        PlotGraphsOnMap.plotGraphsForHashtag('ripstevejobs')
-        PlotGraphsOnMap.plotGraphsForHashtag('ripamywinehouse')
+#        PlotGraphsOnMap.plotGraphsForHashtag('chupacorinthians')
+#        PlotGraphsOnMap.plotGraphsForHashtag('cnndebate')    
+#        PlotGraphsOnMap.plotGraphsForHashtag('ripstevejobs')
+#        PlotGraphsOnMap.plotGraphsForHashtag('ripamywinehouse')
+        PlotGraphsOnMap.temp()
     
 class Locality:
     ''' Total memes (Mar-Oct): 3057
@@ -181,9 +204,10 @@ class Locality:
             if len(points)>50:
                 dataX.append(k), dataY.append(np.mean(points))
         pearsonCoeff, p_value = scipy.stats.pearsonr(dataX, dataY)
-#        print round(pearsonCoeff,2), round(p_value, 2)
+        print round(pearsonCoeff,2), round(p_value, 2)
         plt.scatter(dataX, dataY, c='r', lw = 0)
-        plt.title('Temporal distance between lattices ' + getLatexForString('( \\rho = %0.2f, p-value = %0.2f )'%(pearsonCoeff, p_value))), plt.xlabel('Haversine distance (miles)'), plt.ylabel('Temporal distance (hours)')
+#        plt.title('Temporal distance between lattices ' + getLatexForString('( \\rho = %0.2f, p-value = %0.2f )'%(pearsonCoeff, p_value)))
+        plt.xlabel('Haversine distance (miles)', fontsize=20), plt.ylabel('Temporal distance (hours)', fontsize=20)
 #        plt.show()
         plt.savefig('../images/temporalLocality.png')
     @staticmethod
@@ -203,7 +227,8 @@ class Locality:
         pearsonCoeff, p_value = scipy.stats.pearsonr(dataX, dataY)
         print round(pearsonCoeff,2), round(p_value, 2)
         plt.scatter(dataX, dataY, c='r', lw = 0)
-        plt.title('Similarity between lattices ' + getLatexForString('( \\rho = %0.2f, p-value = %0.2f )'%(pearsonCoeff, p_value))), plt.xlabel('Haversine distance (miles)'), plt.ylabel('Jaccard similarity')
+#        plt.title('Similarity between lattices ' + getLatexForString('( \\rho = %0.2f, p-value = %0.2f )'%(pearsonCoeff, p_value))), 
+        plt.xlabel('Haversine distance (miles)', fontsize=20), plt.ylabel('Jaccard similarity', fontsize=20)
 #        plt.show()
         plt.savefig('../images/spatialLocality.png')    
     
@@ -333,7 +358,7 @@ class Coverage:
 
 if __name__ == '__main__':
 #    PlotGraphsOnMap.run()
-#    Locality.run()
-    Coverage.run()
+    Locality.run()
+#    Coverage.run()
 #    print getLatticeLid([-23.549569,-46.639173],  0.145)
     
