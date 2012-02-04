@@ -342,13 +342,12 @@ class LatticeSelectionModel(object):
         print '\\hline\\hline'
         for model in models:
             model = model(**kwargs)
-            if model.id==COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL: 
-                print '\\textbf{' + modelLabels[model.id], '} & \\textbf{ %s'%('} & \\textbf{'.join([str(round(metricScores[metric][model.id],3)) for metric in metrics])) + '} \\\\'
+            if model.id==COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL: print '\\textbf{' + modelLabels[model.id], '} & \\textbf{ %s'%('} & \\textbf{'.join([str(round(metricScores[metric][model.id],3)) for metric in metrics])) + '} \\\\'
             else: print modelLabels[model.id], ' & %s'%(' & '.join([str(round(metricScores[metric][model.id],3)) for metric in metrics])), '\\\\'
-        print '\\hline'
+            if model.id in [LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL]: print '\\hline'
         print '\\end{tabular}'
         print '\\caption{%s ($t_s=%s$ minutes, $k=%s$)}'%('Performance of lattice subset selection algorithms.', tableTime*5, tableBudget )
-        print '\\label{tab:%s}'%metric
+        print '\\label{tab:%s}'%('lattice_algo_perf')
         print '\\end{table*}'
     def plotVaringBudgetAndTimeUnits(self):
         # overall_hit_rate, miss_rate_before_target_selection, hit_rate_after_target_selection
