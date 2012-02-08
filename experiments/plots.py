@@ -24,6 +24,7 @@ from collections import defaultdict
 import numpy as np
 from datetime import datetime
 import scipy.stats
+from scipy.stats import ks_2samp
 
 RIO_DE_JANEIRO = '-22.7650_-43.0650'
 NEW_YORK = '40.6000_-73.8050'
@@ -207,7 +208,7 @@ class Locality:
         print round(pearsonCoeff,2), round(p_value, 2)
         plt.scatter(dataX, dataY, c='r', lw = 0)
 #        plt.title('Temporal distance between lattices ' + getLatexForString('( \\rho = %0.2f, p-value = %0.2f )'%(pearsonCoeff, p_value)))
-        plt.xlabel('Haversine distance (miles)', fontsize=20), plt.ylabel('Temporal distance (hours)', fontsize=20)
+        plt.xlabel('Spatial affinity (miles)', fontsize=20), plt.ylabel('Temporal affinity (hours)', fontsize=20)
 #        plt.show()
         plt.savefig('../images/temporalLocality.png')
     @staticmethod
@@ -228,14 +229,14 @@ class Locality:
         print round(pearsonCoeff,2), round(p_value, 2)
         plt.scatter(dataX, dataY, c='r', lw = 0)
 #        plt.title('Similarity between lattices ' + getLatexForString('( \\rho = %0.2f, p-value = %0.2f )'%(pearsonCoeff, p_value))), 
-        plt.xlabel('Haversine distance (miles)', fontsize=20), plt.ylabel('Jaccard similarity', fontsize=20)
+        plt.xlabel('Spatial affinity (miles)', fontsize=20), plt.ylabel('Content affinity', fontsize=20)
 #        plt.show()
         plt.savefig('../images/spatialLocality.png')    
     
     @staticmethod
     def run():
-        Locality.plotTemporalLocality()
-#        Locality.plotSpatialLocality()
+#        Locality.plotTemporalLocality()
+        Locality.plotSpatialLocality()
 #        Locality.temporalLocalitySimilarityExample()
 #        Locality.temporalLocalityTemporalDistanceExample()
         
@@ -243,7 +244,7 @@ class Coverage:
     @staticmethod
     def coverageIndication():
         MINUTES = 5
-        for timeUnit, color in [(1, 'r'), (3, 'g'), (6, 'b')]:
+        for timeUnit, color, shape in [(1, 'r', 'x'), (3, 'g', 'd'), (6, 'b', 's')]:
             print timeUnit
             data = defaultdict(int)
             for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
@@ -260,32 +261,16 @@ class Coverage:
             for k in data.keys()[:]: 
                 if data[k]<3: del data[k]
             dataX, dataY = zip(*sorted(data.iteritems(), key=itemgetter(0)))
-            plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES) + ' minutes')
+            plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES) + ' minutes', marker=shape)
 #        plt.loglog([1],[1])
 #        plt.title('Early indication of coverage'), 
         plt.xlabel('Coverage difference (miles)', fontsize=20), plt.ylabel('Number of memes', fontsize=20)
         plt.legend()
 #        plt.show()
         plt.savefig('../images/coverageIndication.png')
-#    @staticmethod
-#    def probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice): return 1.01**(-getHaversineDistance(currentLattice, sourceLattice))*probabilityAtSourceLattice
     @staticmethod
     def probabilisticCoverageModelExample(hashtag, type):
-#        def getLattices():
-#            points = []
-#            for i, latticeObject in enumerate(FileIO.iterateJsonFromFile(hashtagsLatticeGraphFile%('training_world','%s_%s'%(2,11)))): points.append(latticeObject['id'])
-#            return points
-#        def spreadProbability(lattices, probabilityDistributionForObservedLattices):
-#            latticeScores = {}
-#            for lattice in lattices:
-#                score = 0.0
-#                currentLattice = getLocationFromLid(lattice.replace('_', ' '))
-#                latticeScores[lattice] = sum([Coverage.probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice)for sourceLattice, probabilityAtSourceLattice in probabilityDistributionForObservedLattices])
-#            total = sum(latticeScores.values())
-#            for k in latticeScores: latticeScores[k]/=total
-#            return latticeScores
         MINUTES, timeUnit = 5, 1
-#        lattices = getLattices()
         print len(CoverageBasedLatticeSelectionModel.lattices)
         for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/hashtagsWithoutEndingWindow'):
             if hashtagObject['h']==hashtag:
@@ -310,44 +295,30 @@ class Coverage:
 #                plt.savefig('../images/coverage_examples/%s_%s.png'%(hashtag, type))
                 plt.clf()
                 break
-#    @staticmethod
-#    def coverageIndication(generateData=False):
-#        MINUTES, dataFile = 5, '/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/coverageIndication'
-#        if generateData:
-#            GeneralMethods.runCommand('rm -rf %s'%dataFile)
-#            for timeUnit in [1, 3, 6]:
-#                print timeUnit
-#                data = defaultdict(int)
-#                for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
-#                    try:
-#                        occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
-#                        occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
-#                        occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
-#                        if len(occsInTimeunit)>10:
-#                            allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
-#                            timeUnitRadius, allRadius = getRadius(occsInTimeunit), getRadius(allOccurances)
-#                            data[int(abs(timeUnitRadius-allRadius))/50*50+50]+=1
-#                    except IndexError as e: pass
-#                FileIO.writeToFileAsJson([timeUnit, sorted(data.iteritems(), key=itemgetter(0))], dataFile)
-#        else:
-#            for timeUnit, data in FileIO.iterateJsonFromFile(dataFile):
-#                total = float(sum([d[1] for d in data]))
-#                dataX, dataY = zip(*sorted(data, key=itemgetter(0)))
-#                tempTotal, newDataY = 0.0, []
-#                for y in dataY:
-#                    tempTotal+=y
-#                    newDataY.append(tempTotal/total)
-#                plt.plot(dataX, newDataY, label=str(timeUnit))
-#            plt.legend()
-#            plt.show()
-#                print timeUnit, total, dataX, dataY
-#            dataX, dataY = zip(*sorted(data.iteritems(), key=itemgetter(0)))
-#            plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES) + ' minutes')
-#        plt.loglog([1],[1])
-#        plt.title('Early indication of coverage'), plt.xlabel('Coverage difference (miles)'), plt.ylabel('Number of memes')
-#        plt.legend()
-#        plt.show()
-#        plt.savefig('../images/coverageIndication.png')
+    @staticmethod
+    def temp():
+        MINUTES = 5
+#        for timeUnit, color, shape in [(1, 'r', 'x'), (3, 'g', 'd'), (6, 'b', 's')]:
+        for timeUnit, color, shape in [(6, 'r', 'x')]:
+            print timeUnit
+            data = defaultdict(int)
+            for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+                try:
+                    occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
+                    occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
+                    occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
+                    if len(occsInTimeunit)>10:
+                        allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
+#                        timeUnitRadius, allRadius = getRadius(occsInTimeunit), getRadius(allOccurances)
+                        timeUnitDist = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(occsInTimeunit)
+                        timeUnitDist = CoverageBasedLatticeSelectionModel.spreadProbability(CoverageBasedLatticeSelectionModel.lattices, timeUnitDist)
+                        allDist = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(allOccurances)
+                        allDist = CoverageBasedLatticeSelectionModel.spreadProbability(CoverageBasedLatticeSelectionModel.lattices, allDist)
+#                        print timeUnitRadius, allRadius
+                        ksstat, p_value = ks_2samp(timeUnitDist.values(),allDist.values())
+                        print hashtagObject['h'], round(ksstat,3), round(p_value,3)
+#                        exit()
+                except IndexError as e: pass
             
     @staticmethod
     def run():
@@ -355,7 +326,9 @@ class Coverage:
 #        Coverage.probabilisticCoverageModelExample('ripstevejobs', '5m')
 #        Coverage.probabilisticCoverageModelExample('cnndebate', '120m')
 #        Coverage.probabilisticCoverageModelExample('cnndebate', '5m')
-        Coverage.coverageIndication()
+#        Coverage.coverageIndication()
+        Coverage.temp()
+        
 
 if __name__ == '__main__':
 #    PlotGraphsOnMap.run()
