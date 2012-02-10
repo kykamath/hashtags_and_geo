@@ -249,7 +249,12 @@ class MRAreaAnalysis(ModifiedMRJob):
     def __init__(self, *args, **kwargs):
         super(MRAreaAnalysis, self).__init__(*args, **kwargs)
         self.hashtags = defaultdict(list)
-        
+    ''' Count number of occurrences
+    '''
+    def mapCountOccurrences(self, key, line):
+        yield 'oc', 1
+    def reduceCountOccurrences(self, key, values):
+        yield key, sum(values)
     ''' Start: Methods to get hashtag objects
     '''
     def parse_hashtag_objects(self, key, line):
@@ -319,7 +324,7 @@ class MRAreaAnalysis(ModifiedMRJob):
             if nodeObject['links']: yield lattice, nodeObject
     ''' End: Methods to build lattice graph..
     '''
-    
+    def jobsToCountOccurrences(self): return [(self.mapCountOccurrences, self.reduceCountOccurrences)] 
     def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_with_ending_window)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
     def jobsToGetHastagObjectsWithKnownSource(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)] + \
@@ -334,7 +339,8 @@ class MRAreaAnalysis(ModifiedMRJob):
 
     def steps(self):
         pass
-        return self.jobsToGetHastagObjectsWithEndingWindow()
+        return self.jobsToCountOccurrences()
+#        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetHastagObjectsWithKnownSource()
 #        return self.jobsToBuildLatticeGraph() 
