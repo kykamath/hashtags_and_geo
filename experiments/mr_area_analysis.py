@@ -252,9 +252,13 @@ class MRAreaAnalysis(ModifiedMRJob):
     ''' Count number of occurrences, no of hashtags, no of completed hashtags.
     '''
     def mapCountOccurrences(self, key, line):
+        for h, d in iterateHashtagObjectInstances(line): yield 'hashtags', h
         yield 'oc', 1
     def reduceCountOccurrences(self, key, values):
-        yield key, sum(values)
+        dataToOutput = {}
+        if key=='oc': dataToOutput[key] = sum(values)
+        elif key=='hashtags': dataToOutput[key] = len(set(values))
+        yield 'stats', dataToOutput
     ''' Start: Methods to get hashtag objects
     '''
     def parse_hashtag_objects(self, key, line):

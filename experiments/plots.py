@@ -296,12 +296,14 @@ class Coverage:
                 plt.clf()
                 break
     @staticmethod
-    def temp(hashtag='cnndebate'):
+    def temp(hashtag='blackparentsquotes'):
         for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/hashtagsWithoutEndingWindow'):
+#            print hashtagObject['h']
             if hashtagObject['h']==hashtag:
                 print hashtagObject['h']
                 occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(hashtagObject['oc'], timeUnit=5, fillInGaps=True, occurancesCount=False)
 #                plt.plot_date()
+                exit()
                 
 #        MINUTES = 5
 ##        for timeUnit, color, shape in [(1, 'r', 'x'), (3, 'g', 'd'), (6, 'b', 's')]:
