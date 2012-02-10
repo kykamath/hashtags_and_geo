@@ -249,7 +249,7 @@ class MRAreaAnalysis(ModifiedMRJob):
     def __init__(self, *args, **kwargs):
         super(MRAreaAnalysis, self).__init__(*args, **kwargs)
         self.hashtags = defaultdict(list)
-    ''' Count number of occurrences
+    ''' Count number of occurrences, no of hashtags, no of completed hashtags.
     '''
     def mapCountOccurrences(self, key, line):
         yield 'oc', 1
