@@ -296,29 +296,35 @@ class Coverage:
                 plt.clf()
                 break
     @staticmethod
-    def temp():
-        MINUTES = 5
-#        for timeUnit, color, shape in [(1, 'r', 'x'), (3, 'g', 'd'), (6, 'b', 's')]:
-        for timeUnit, color, shape in [(6, 'r', 'x')]:
-            print timeUnit
-            data = defaultdict(int)
-            for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
-                try:
-                    occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
-                    occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
-                    occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
-                    if len(occsInTimeunit)>10:
-                        allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
-#                        timeUnitRadius, allRadius = getRadius(occsInTimeunit), getRadius(allOccurances)
-                        timeUnitDist = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(occsInTimeunit)
-                        timeUnitDist = CoverageBasedLatticeSelectionModel.spreadProbability(CoverageBasedLatticeSelectionModel.lattices, timeUnitDist)
-                        allDist = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(allOccurances)
-                        allDist = CoverageBasedLatticeSelectionModel.spreadProbability(CoverageBasedLatticeSelectionModel.lattices, allDist)
-#                        print timeUnitRadius, allRadius
-                        ksstat, p_value = ks_2samp(timeUnitDist.values(),allDist.values())
-                        print hashtagObject['h'], round(ksstat,3), round(p_value,3)
-#                        exit()
-                except IndexError as e: pass
+    def temp(hashtag='cnndebate'):
+        for hashtagObject in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/analysis/all_world/2_11/hashtagsWithoutEndingWindow'):
+            if hashtagObject['h']==hashtag:
+                print hashtagObject['h']
+                occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(hashtagObject['oc'], timeUnit=5, fillInGaps=True, occurancesCount=False)
+#                plt.plot_date()
+                
+#        MINUTES = 5
+##        for timeUnit, color, shape in [(1, 'r', 'x'), (3, 'g', 'd'), (6, 'b', 's')]:
+#        for timeUnit, color, shape in [(6, 'r', 'x')]:
+#            print timeUnit
+#            data = defaultdict(int)
+#            for hashtagObject in FileIO.iterateJsonFromFile(hashtagsFile%('training_world','%s_%s'%(2,11))):
+#                try:
+#                    occsDistributionInTimeUnits = getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtagObject), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
+#                    occurances = list(zip(*sorted(occsDistributionInTimeUnits.iteritems(), key=itemgetter(0)))[1])
+#                    occsInTimeunit =  zip(*reduce(lambda aggList, l: aggList+l, occurances[:timeUnit], []))[0]
+#                    if len(occsInTimeunit)>10:
+#                        allOccurances = zip(*reduce(lambda aggList, l: aggList+l, occurances, []))[0]
+##                        timeUnitRadius, allRadius = getRadius(occsInTimeunit), getRadius(allOccurances)
+#                        timeUnitDist = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(occsInTimeunit)
+#                        timeUnitDist = CoverageBasedLatticeSelectionModel.spreadProbability(CoverageBasedLatticeSelectionModel.lattices, timeUnitDist)
+#                        allDist = CoverageBasedLatticeSelectionModel.probabilityDistributionForLattices(allOccurances)
+#                        allDist = CoverageBasedLatticeSelectionModel.spreadProbability(CoverageBasedLatticeSelectionModel.lattices, allDist)
+##                        print timeUnitRadius, allRadius
+#                        ksstat, p_value = ks_2samp(timeUnitDist.values(),allDist.values())
+#                        print hashtagObject['h'], round(ksstat,3), round(p_value,3)
+##                        exit()
+#                except IndexError as e: pass
             
     @staticmethod
     def run():
