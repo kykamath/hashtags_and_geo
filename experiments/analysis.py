@@ -310,8 +310,8 @@ def mr_area_analysis(timeRange, folderType, mrOutputFolder):
 
 if __name__ == '__main__':
 #    timeRange = (2,11)
-#    timeRange = (3,8)
-    timeRange = (9,10)
+    timeRange = (3,8)
+#    timeRange = (9,10)
     
 #    outputFolder = '/'
 #    outputFolder = 'world'
@@ -321,8 +321,8 @@ if __name__ == '__main__':
 #    folderType = '/'
 #    mrOutputFolder = 'world'
 #    mrOutputFolder = 'all_world'
-#    mrOutputFolder = 'training_world'
-    mrOutputFolder = 'testing_world'
+    mrOutputFolder = 'training_world'
+#    mrOutputFolder = 'testing_world'
     mr_area_analysis(timeRange, folderType, mrOutputFolder)
 #    mr_analysis(timeRange, folderType, mrOutputFolder)
 #    HashtagsClassifierAnalysis.timePeriods(timeRange, folderType)
