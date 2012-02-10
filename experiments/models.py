@@ -105,11 +105,11 @@ class Metrics:
     rate_lag = 'rate_lag'
     metricLabels = dict([
                         (overall_hit_rate, 'overall_hit_rate'),
-                        (hit_rate_after_target_selection, 'Subset Impact'),
+                        (hit_rate_after_target_selection, 'Impact'),
                         (miss_rate_before_target_selection, 'miss_rate_before_target_selection'),
                         (best_rate, 'best_rate'),
-                        (target_selection_accuracy, 'Subset Accuracy'),
-                        (rate_lag, 'Subset Impact Diff.'),
+                        (target_selection_accuracy, 'Accuracy'),
+                        (rate_lag, 'Impact Diff.'),
                          ])
     
     @staticmethod
@@ -250,7 +250,7 @@ class LatticeSelectionModel(object):
                 dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
                 plt.plot([(x+1)*5 for x in dataX], dataY, label=modelLabels[model.id], lw=2, marker=modelMarkers[model.id])
 #        if metric==Metrics.rate_lag: plt.legend(loc=1, ncol=1)
-        plt.xlabel('Lattice subset selection time (minutes)', fontsize=20)
+        plt.xlabel('Location subset selection time (minutes)', fontsize=20)
         plt.ylabel(Metrics.metricLabels[metric], fontsize=20)
 #        plt.title('%s vs $t_s$'%Metrics.metricLabels[metric])
         plt.xlim(xmin=5)
@@ -279,7 +279,7 @@ class LatticeSelectionModel(object):
 #        elif metric==Metrics.target_selection_accuracy: leg=plt.legend(loc=5, ncol=2, mode='expand')
 #        else: leg=plt.legend(loc=3, ncol=2, mode='expand')
 #        for t in leg.get_texts(): t.set_fontsize('small')
-        plt.xlabel('Size of target lattice subset (k)', fontsize=20)
+        plt.xlabel('Size of location subset (k)', fontsize=20)
         plt.ylabel(Metrics.metricLabels[metric], fontsize=20)
 #        plt.title('%s vs k'%Metrics.metricLabels[metric])
 #        plt.show()
@@ -966,18 +966,18 @@ class Simulation:
 #        elif int(sys.argv[1])==19: CoverageBasedAndTransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        elif int(sys.argv[1])==20: CoverageBasedAndTransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
-#        for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
-#            LatticeSelectionModel.plotModelWithVaryingBudget([LatticeSelectionModel, 
-#                                                            GreedyLatticeSelectionModel,
-#                                                            LinearRegressionLatticeSelectionModel,
-#                                                            SharingProbabilityLatticeSelectionModel, 
-#                                                            TransmittingProbabilityLatticeSelectionModel,
-#                                                            CoverageBasedLatticeSelectionModel,
-#                                                            CoverageBasedAndTransmittingProbabilityLatticeSelectionModel,
-#                                                            CoverageBasedAndSharingProbabilityLatticeSelectionModel,
-#                                                            ], 
-#                                                              metric, 
-#                                                              params=params)
+        for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
+            LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
+                                                            GreedyLatticeSelectionModel,
+                                                            LinearRegressionLatticeSelectionModel,
+                                                            SharingProbabilityLatticeSelectionModel, 
+                                                            TransmittingProbabilityLatticeSelectionModel,
+                                                            CoverageBasedLatticeSelectionModel,
+                                                            CoverageBasedAndTransmittingProbabilityLatticeSelectionModel,
+                                                            CoverageBasedAndSharingProbabilityLatticeSelectionModel,
+                                                            ], 
+                                                              metric, 
+                                                              params=params)
 
     
 #        for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
@@ -994,17 +994,17 @@ class Simulation:
 #                                                                                metric, 1, 
 #                                                                                params=params)
 
-        LatticeSelectionModel.tableCombinedWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
-                                                                                GreedyLatticeSelectionModel,
-                                                                                LinearRegressionLatticeSelectionModel,
-                                                                                SharingProbabilityLatticeSelectionModel, 
-                                                                                TransmittingProbabilityLatticeSelectionModel,
-                                                                                CoverageBasedLatticeSelectionModel,
-                                                                                CoverageBasedAndTransmittingProbabilityLatticeSelectionModel,
-                                                                                CoverageBasedAndSharingProbabilityLatticeSelectionModel,
-                                                                                ], 
-                                                                                [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag], 1, 
-                                                                                params=params)
+#        LatticeSelectionModel.tableCombinedWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
+#                                                                                GreedyLatticeSelectionModel,
+#                                                                                LinearRegressionLatticeSelectionModel,
+#                                                                                SharingProbabilityLatticeSelectionModel, 
+#                                                                                TransmittingProbabilityLatticeSelectionModel,
+#                                                                                CoverageBasedLatticeSelectionModel,
+#                                                                                CoverageBasedAndTransmittingProbabilityLatticeSelectionModel,
+#                                                                                CoverageBasedAndSharingProbabilityLatticeSelectionModel,
+#                                                                                ], 
+#                                                                                [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag], 1, 
+#                                                                                params=params)
 
 #        LatticeSelectionModel.plotModelWithVaryingBudget([BestRateModel], 
 #                                                                               Metrics.best_rate, 

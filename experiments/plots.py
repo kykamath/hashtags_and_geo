@@ -264,7 +264,7 @@ class Coverage:
             plt.loglog(dataX, dataY, lw=2, label=str(timeUnit*MINUTES) + ' minutes', marker=shape)
 #        plt.loglog([1],[1])
 #        plt.title('Early indication of coverage'), 
-        plt.xlabel('Coverage difference (miles)', fontsize=20), plt.ylabel('Number of memes', fontsize=20)
+        plt.xlabel('Coverage difference (miles)', fontsize=20), plt.ylabel('Number of hashtags', fontsize=20)
         plt.legend()
 #        plt.show()
         plt.savefig('../images/coverageIndication.png')
@@ -332,8 +332,8 @@ class Coverage:
 #        Coverage.probabilisticCoverageModelExample('ripstevejobs', '5m')
 #        Coverage.probabilisticCoverageModelExample('cnndebate', '120m')
 #        Coverage.probabilisticCoverageModelExample('cnndebate', '5m')
-#        Coverage.coverageIndication()
-        Coverage.temp()
+        Coverage.coverageIndication()
+#        Coverage.temp()
         
 
 if __name__ == '__main__':
