@@ -7,7 +7,8 @@ from library.twitter import getDateTimeObjectFromTweetTimestamp
 from library.mrjobwrapper import ModifiedMRJob
 from library.geo import getLatticeLid, getLattice, isWithinBoundingBox,\
     getLocationFromLid, getHaversineDistance, getCenterOfMass
-import cjson, time, datetime
+import cjson, time
+from datetime import datetime
 from collections import defaultdict
 from itertools import groupby
 import numpy as np
@@ -23,14 +24,18 @@ LATTICE_ACCURACY = 0.145
 MIN_HASHTAG_OCCURENCES = 250
 
 # Time windows.
-HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 4, 1).timetuple())
-HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2012, 1, 31).timetuple())
-#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 5, 1).timetuple())
-#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 12, 31).timetuple())
-#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 5, 1).timetuple())
-#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 10, 31).timetuple())
-#HASHTAG_STARTING_WINDOW = time.mktime(datetime.datetime(2011, 11, 1).timetuple())
-#HASHTAG_ENDING_WINDOW = time.mktime(datetime.datetime(2011, 12, 31).timetuple())
+startTime, endTime = datetime(2011, 4, 1), datetime(2012, 1, 31) # Complete duration
+#startTime, endTime = datetime(2011, 5, 1), datetime(2011, 12, 31) # Complete propagation duration
+#startTime, endTime = datetime(2011, 5, 1), datetime(2011, 10, 31) # Training duration
+#startTime, endTime = datetime(2011, 11, 1), datetime(2011, 12, 31) # Testing duration
+HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(startTime.timetuple()), time.mktime(endTime.timetuple())
+
+# Parameters for the MR Job that will be logged.
+PARAMS_DICT = dict(PARAMS_DICT = True,
+                   LATTICE_ACCURACY=LATTICE_ACCURACY,
+                   MIN_HASHTAG_OCCURENCES=MIN_HASHTAG_OCCURENCES,
+                   HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
+                   )
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
@@ -39,7 +44,6 @@ def iterateHashtagObjectInstances(line):
     else: l = data['bb']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
     point = getLattice(l, LATTICE_ACCURACY)
-#    if isWithinBoundingBox(point, BOUNDING_BOX):
     for h in data['h']: yield h.lower(), [point, t]
 
 def getHashtagWithoutEndingWindow(key, values):
@@ -62,10 +66,10 @@ def getHashtagWithEndingWindow(key, values):
         if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
             e[1]>=HASHTAG_STARTING_WINDOW and l[1]<=HASHTAG_ENDING_WINDOW: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
 
-class MRAreaAnalysis(ModifiedMRJob):
+class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
-        super(MRAreaAnalysis, self).__init__(*args, **kwargs)
+        super(MRAnalysis, self).__init__(*args, **kwargs)
         self.hashtags = defaultdict(list)
     ''' Start: Methods to get hashtag objects
     '''
@@ -93,4 +97,4 @@ class MRAreaAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
     
 if __name__ == '__main__':
-    MRAreaAnalysis.run()
+    MRAnalysis.run()
