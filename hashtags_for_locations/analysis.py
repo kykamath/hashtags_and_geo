@@ -7,8 +7,7 @@ from settings import hdfsInputFolder, hashtagsWithoutEndingWindowFile, hashtagsW
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from library.mrjobwrapper import runMRJob
-from mr_analysis import MRAnalysis
-from hashtags_for_locations.mr_analysis import PARAMS_DICT
+from mr_analysis import MRAnalysis, PARAMS_DICT
 from library.file_io import FileIO
 
 def getInputFiles(startTime, endTime, folderType='world'):
