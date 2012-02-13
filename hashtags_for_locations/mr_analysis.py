@@ -17,22 +17,30 @@ from itertools import combinations
 from operator import itemgetter
 from library.stats import getOutliersRangeUsingIRQ
 
+#Local run parameters
+#MIN_HASHTAG_OCCURENCES = 1
+#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 1, 1), datetime(2012, 1, 31), 'complete' # Complete duration
+
 # General parameters
-LATTICE_ACCURACY = 0.145
+LOCATION_ACCURACY = 0.145
 
 # Paramters to filter hashtags.
 MIN_HASHTAG_OCCURENCES = 250
 
 # Time windows.
-#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
+START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 10, 31), 'training' # Training duration
-START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing' # Testing duration
+#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing' # Testing duration
 HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
+
+# Parameters to filter hashtags at a location.
+MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 5
+
 
 # Parameters for the MR Job that will be logged.
 PARAMS_DICT = dict(PARAMS_DICT = True,
-                   LATTICE_ACCURACY=LATTICE_ACCURACY,
+                   LOCATION_ACCURACY=LOCATION_ACCURACY,
                    MIN_HASHTAG_OCCURENCES=MIN_HASHTAG_OCCURENCES,
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
                    )
@@ -43,7 +51,7 @@ def iterateHashtagObjectInstances(line):
     if 'geo' in data: l = data['geo']
     else: l = data['bb']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
-    point = getLattice(l, LATTICE_ACCURACY)
+    point = getLattice(l, LOCATION_ACCURACY)
     for h in data['h']: yield h.lower(), [point, t]
 
 def getHashtagWithoutEndingWindow(key, values):
@@ -65,36 +73,68 @@ def getHashtagWithEndingWindow(key, values):
         numberOfInstances=len(occurences)
         if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
             e[1]>=HASHTAG_STARTING_WINDOW and l[1]<=HASHTAG_ENDING_WINDOW: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
+            
+def getLocationObjectForLocationUnits(key, values):
+    locationObject = {'loc': key, 'oc': []}
+    hashtagObjects = defaultdict(list)
+    for instances in values: 
+        for h, t in instances['oc']: hashtagObjects[h].append(t)
+    hashtagObjects = dict(filter(lambda (j, occs): len(occs)>=MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION, hashtagObjects.iteritems()))
+    for h, occs in hashtagObjects.iteritems():
+        for oc in occs: locationObject['oc'].append([h, oc])
+#        locationObject['oc']+=instance['oc']
+    return locationObject
+    
 
 class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
         super(MRAnalysis, self).__init__(*args, **kwargs)
         self.hashtags = defaultdict(list)
+        self.locations = defaultdict(list)
     ''' Start: Methods to get hashtag objects
     '''
-    def parse_hashtag_objects(self, key, line):
+    def mapParseHashtagObjects(self, key, line):
         if False: yield # I'm a generator!
         for h, d in iterateHashtagObjectInstances(line): self.hashtags[h].append(d)
-    def parse_hashtag_objects_final(self):
+    def mapFinalParseHashtagObjects(self):
         for h, instances in self.hashtags.iteritems(): # e = earliest, l = latest
             yield h, {'oc': instances, 'e': min(instances, key=lambda t: t[1]), 'l': max(instances, key=lambda t: t[1])}
-    def combine_hashtag_instances_without_ending_window(self, key, values):
+    def reduceHashtagInstancesWithoutEndingWindow(self, key, values):
         hashtagObject = getHashtagWithoutEndingWindow(key, values)
         if hashtagObject: yield key, hashtagObject 
-    def combine_hashtag_instances_with_ending_window(self, key, values):
+    def reduceHashtagInstancesWithEndingWindow(self, key, values):
         hashtagObject = getHashtagWithEndingWindow(key, values)
         if hashtagObject: yield key, hashtagObject 
     ''' End: Methods to get hashtag objects
     '''
-    def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_with_ending_window)]
-    def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.parse_hashtag_objects, mapper_final=self.parse_hashtag_objects_final, reducer=self.combine_hashtag_instances_without_ending_window)]
+    ''' Start: Methods to get location objects.
+    '''
+    def mapHashtagObjectsToLocationUnits(self, key, hashtagObject):
+        if False: yield # I'm a generator!
+        hashtag = hashtagObject['h']
+        for point, t in hashtagObject['oc']: 
+            self.locations[getLatticeLid(point, LOCATION_ACCURACY)].append([hashtagObject['h'], t])
+    def mapFinalHashtagObjectsToLocationUnits(self):
+        for loc, occurrences in self.locations.iteritems(): yield loc, {'loc': loc, 'oc': occurrences}
+    def reduceLocationUnitsToLocationObject(self, key, values):
+#        locationObject = {'loc': key, 'oc': []}
+#        for instance in values: locationObject['oc']+=instance['oc']
+        locationObject = getLocationObjectForLocationUnits(key, values)
+        if locationObject['oc']: yield key, locationObject
+    ''' End: Methods to get location objects.
+    '''
     
+    ''' MR Jobs
+    '''
+    def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]
+    def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithoutEndingWindow)]
+    def jobsToGetLocationObject(self): return self.jobsToGetHastagObjectsWithEndingWindow() + [self.mr(mapper=self.mapHashtagObjectsToLocationUnits, mapper_final=self.mapFinalHashtagObjectsToLocationUnits, reducer=self.reduceLocationUnitsToLocationObject)]
 
     def steps(self):
         pass
         return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
-    
+#        return self.jobsToGetLocationObject()    
 if __name__ == '__main__':
     MRAnalysis.run()
