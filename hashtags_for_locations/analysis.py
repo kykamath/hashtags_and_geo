@@ -24,7 +24,7 @@ def mr_analysis(startTime, endTime, outputFolder):
 if __name__ == '__main__':
 #    startTime, endTime, outputFolder = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
 #    startTime, endTime, outputFolder = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
-    startTime, endTime, outputFolder = datetime(2011, 5, 1), datetime(2011, 10, 31), 'training' # Training duration
-#    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing' # Testing duration
+#    startTime, endTime, outputFolder = datetime(2011, 5, 1), datetime(2011, 10, 31), 'training' # Training duration
+    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing' # Testing duration
     
     mr_analysis(startTime, endTime, outputFolder)
