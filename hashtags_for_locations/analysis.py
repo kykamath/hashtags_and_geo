@@ -10,6 +10,10 @@ from library.mrjobwrapper import runMRJob
 from mr_analysis import MRAnalysis, PARAMS_DICT
 from library.file_io import FileIO
 
+def iterateJsonFromFile(file):
+    for data in FileIO.iterateJsonFromFile(file):
+        if 'PARAMS_DICT' not in data: yield data
+
 def getInputFiles(startTime, endTime, folderType='world'):
     current=startTime
     while current<=endTime:
