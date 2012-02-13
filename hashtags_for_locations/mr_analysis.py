@@ -28,14 +28,17 @@ LOCATION_ACCURACY = 0.145
 MIN_HASHTAG_OCCURENCES = 250
 
 # Time windows.
-#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
+START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 10, 31), 'training' # Training duration
-START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing' # Testing duration
+#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing' # Testing duration
 HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
 
 # Parameters to filter hashtags at a location.
 MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 5
+
+# Time unit.
+TIME_UNIT_IN_SECONDS = 5*60
 
 
 # Parameters for the MR Job that will be logged.
@@ -43,6 +46,8 @@ PARAMS_DICT = dict(PARAMS_DICT = True,
                    LOCATION_ACCURACY=LOCATION_ACCURACY,
                    MIN_HASHTAG_OCCURENCES=MIN_HASHTAG_OCCURENCES,
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
+                   MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION,
+                   TIME_UNIT_IN_SECONDS = TIME_UNIT_IN_SECONDS,
                    )
 
 def iterateHashtagObjectInstances(line):
@@ -82,8 +87,12 @@ def getLocationObjectForLocationUnits(key, values):
     hashtagObjects = dict(filter(lambda (j, occs): len(occs)>=MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION, hashtagObjects.iteritems()))
     for h, occs in hashtagObjects.iteritems():
         for oc in occs: locationObject['oc'].append([h, oc])
-#        locationObject['oc']+=instance['oc']
-    return locationObject
+    if locationObject['oc']: return locationObject
+
+def getTimeUnitObjectFromTimeUnits(key, values):
+    timeUnitObject = {'tu': key, 'oc': []}
+    for instance in values:  timeUnitObject['oc']+=instance['oc']
+    if timeUnitObject['oc']: return timeUnitObject
     
 
 class MRAnalysis(ModifiedMRJob):
@@ -92,6 +101,7 @@ class MRAnalysis(ModifiedMRJob):
         super(MRAnalysis, self).__init__(*args, **kwargs)
         self.hashtags = defaultdict(list)
         self.locations = defaultdict(list)
+        self.timeUnits = defaultdict(list)
     ''' Start: Methods to get hashtag objects
     '''
     def mapParseHashtagObjects(self, key, line):
@@ -118,23 +128,35 @@ class MRAnalysis(ModifiedMRJob):
     def mapFinalHashtagObjectsToLocationUnits(self):
         for loc, occurrences in self.locations.iteritems(): yield loc, {'loc': loc, 'oc': occurrences}
     def reduceLocationUnitsToLocationObject(self, key, values):
-#        locationObject = {'loc': key, 'oc': []}
-#        for instance in values: locationObject['oc']+=instance['oc']
         locationObject = getLocationObjectForLocationUnits(key, values)
-        if locationObject['oc']: yield key, locationObject
+        if locationObject: yield key, locationObject
     ''' End: Methods to get location objects.
     '''
-    
+    ''' Start: Methods to occurrences by time unit.
+    '''
+    def mapLocationsObjectsToTimeUnits(self, key, locationObject):
+        if False: yield # I'm a generator!
+        for h, t in locationObject['oc']: self.timeUnits[GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS)].append([h, locationObject['loc'], t])
+    def mapFinalLocationsObjectsToTimeUnits(self):
+        for t, data in self.timeUnits.iteritems(): yield t, {'tu':t, 'oc': data}
+    def reduceTimeUnitsToTimeUnitObject(self, key, values):
+        timeUnitObject = getTimeUnitObjectFromTimeUnits(key, values)
+        if timeUnitObject: yield key, timeUnitObject
+    ''' End: Methods to occurrences by time unit.
+    '''
     ''' MR Jobs
     '''
     def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithoutEndingWindow)]
-    def jobsToGetLocationObject(self): return self.jobsToGetHastagObjectsWithEndingWindow() + [self.mr(mapper=self.mapHashtagObjectsToLocationUnits, mapper_final=self.mapFinalHashtagObjectsToLocationUnits, reducer=self.reduceLocationUnitsToLocationObject)]
+    def jobsToGetLocationObjects(self): return self.jobsToGetHastagObjectsWithEndingWindow() + [self.mr(mapper=self.mapHashtagObjectsToLocationUnits, mapper_final=self.mapFinalHashtagObjectsToLocationUnits, reducer=self.reduceLocationUnitsToLocationObject)]
+    def jobsToGetTimeUnitObjects(self): return self.jobsToGetLocationObjects() + \
+                                                [self.mr(mapper=self.mapLocationsObjectsToTimeUnits, mapper_final=self.mapFinalLocationsObjectsToTimeUnits, reducer=self.reduceTimeUnitsToTimeUnitObject)]
 
     def steps(self):
         pass
-        return self.jobsToGetHastagObjectsWithEndingWindow()
+#        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
-#        return self.jobsToGetLocationObject()    
+#        return self.jobsToGetLocationObjects()
+        return self.jobsToGetTimeUnitObjects()
 if __name__ == '__main__':
     MRAnalysis.run()
