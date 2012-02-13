@@ -7,7 +7,8 @@ from settings import hdfsInputFolder, hashtagsWithoutEndingWindowFile, hashtagsW
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from library.mrjobwrapper import runMRJob
-from mr_analysis import MRAnalysis, PARAMS_DICT
+from mr_analysis import MRAnalysis, PARAMS_DICT, START_TIME,\
+                    END_TIME, WINDOW_OUTPUT_FOLDER
 from library.file_io import FileIO
 
 def iterateJsonFromFile(file):
@@ -26,5 +27,5 @@ def mr_analysis(startTime, endTime, outputFolder):
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 
 if __name__ == '__main__':
-    START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
-    mr_analysis(START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
+    INPUT_START_TIME, INPUT_END_TIME = datetime(2011, 4, 1), datetime(2012, 1, 31)
+    mr_analysis(INPUT_START_TIME, INPUT_END_TIME, WINDOW_OUTPUT_FOLDER)
