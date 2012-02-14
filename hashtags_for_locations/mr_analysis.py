@@ -39,7 +39,7 @@ HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetupl
 MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 3
 
 # Time unit.
-TIME_UNIT_IN_SECONDS = 5*60
+TIME_UNIT_IN_SECONDS = 30*60
 
 
 # Parameters for the MR Job that will be logged.
