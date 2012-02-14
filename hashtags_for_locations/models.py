@@ -8,6 +8,17 @@ from settings import timeUnitWithOccurrencesFile
 from datetime import datetime, timedelta
 from mr_analysis import TIME_UNIT_IN_SECONDS
 import time
+from collections import defaultdict
+
+class PropagationsInInterval:
+    def __init__(self, startTime, interval):
+        self.startTime, self.interval = startTime, interval
+        self.occurrances = defaultdict(list)
+    def updateOccurrences(self, occurrances):
+        for h, loc, t in occurrances: self.occurrances[h].append([loc, t])
+
+historyTimeInterval = timedelta(seconds=30*60)
+predictionTimeInterval = timedelta(seconds=120*60)
 
 startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing'
 currentTime = startTime
