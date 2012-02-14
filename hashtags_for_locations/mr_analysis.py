@@ -29,9 +29,10 @@ MIN_HASHTAG_OCCURENCES = 250
 
 # Time windows.
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
-#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
-START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 10, 31), 'training' # Training duration
+START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
+#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 10, 31), 'training' # Training duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing' # Testing duration
+
 HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
 
 # Parameters to filter hashtags at a location.
@@ -154,9 +155,9 @@ class MRAnalysis(ModifiedMRJob):
 
     def steps(self):
         pass
-#        return self.jobsToGetHastagObjectsWithEndingWindow()
+        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetLocationObjects()
-        return self.jobsToGetTimeUnitObjects()
+#        return self.jobsToGetTimeUnitObjects()
 if __name__ == '__main__':
     MRAnalysis.run()
