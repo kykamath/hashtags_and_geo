@@ -25,7 +25,7 @@ from library.stats import getOutliersRangeUsingIRQ
 LOCATION_ACCURACY = 0.145
 
 # Paramters to filter hashtags.
-MIN_HASHTAG_OCCURENCES = 250
+MIN_HASHTAG_OCCURENCES = 100
 
 # Time windows.
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
@@ -36,7 +36,7 @@ START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 11, 1), datetime(201
 HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
 
 # Parameters to filter hashtags at a location.
-MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 5
+MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 3
 
 # Time unit.
 TIME_UNIT_IN_SECONDS = 5*60
