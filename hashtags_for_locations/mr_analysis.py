@@ -155,9 +155,9 @@ class MRAnalysis(ModifiedMRJob):
 
     def steps(self):
         pass
-        return self.jobsToGetHastagObjectsWithEndingWindow()
+#        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetLocationObjects()
-#        return self.jobsToGetTimeUnitObjects()
+        return self.jobsToGetTimeUnitObjects()
 if __name__ == '__main__':
     MRAnalysis.run()

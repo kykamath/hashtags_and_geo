@@ -3,7 +3,8 @@ Created on Nov 19, 2011
 
 @author: kykamath
 '''
-from settings import hdfsInputFolder, hashtagsWithoutEndingWindowFile, hashtagsWithEndingWindowFile
+from settings import hdfsInputFolder, hashtagsWithoutEndingWindowFile,\
+         hashtagsWithEndingWindowFile, timeUnitWithOccurrencesFile
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from library.mrjobwrapper import runMRJob
@@ -22,7 +23,8 @@ def getInputFiles(startTime, endTime, folderType='world'):
         current+=relativedelta(months=1)   
 
 def mr_analysis(startTime, endTime, outputFolder):
-    outputFile = hashtagsWithEndingWindowFile%outputFolder
+#    outputFile = hashtagsWithEndingWindowFile%outputFolder
+    outputFile = timeUnitWithOccurrencesFile%outputFolder
     runMRJob(MRAnalysis, outputFile, getInputFiles(startTime, endTime), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 
