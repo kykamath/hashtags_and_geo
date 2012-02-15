@@ -18,9 +18,6 @@ class Propagations:
         self.occurrences = defaultdict(list)
     def update(self, occurrences):
         for h, loc, t in occurrences: self.occurrences[loc].append([h, t])
-#        if not testEmptyPropagation(self):
-#            print 'there', self.occurrences
-#            exit()
             
 #def testEmptyPropagation(propagation):
 #    for loc, occs in propagation.occurrences.iteritems():
@@ -41,15 +38,6 @@ class EvaluationMetrics:
             bestHashtagsForLocation[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
         return bestHashtagsForLocation
     @staticmethod
-    def accuracy(hashtagsForLocation, actualPropagation, *args, **kwargs):
-        bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation), {}
-#        if actualPropagation.occurrences:
-#            for loc, occs in actualPropagation.occurrences.iteritems():
-#                bestHashtagsForLattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
-#        bestHashtagsForLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation)
-        for loc, hashtags in hashtagsForLocation.iteritems(): metricScorePerLocation[loc] = len(set(hashtags).intersection(set(bestHashtagsForLocation.get(loc, []))))/float(conf['noOfTargetHashtags'])
-        return (EvaluationMetrics.ACCURACY, metricScorePerLocation)
-    @staticmethod
     def _impact(loc, hashtags, actualPropagation):
         if loc in actualPropagation.occurrences: 
             totalOccs = len(actualPropagation.occurrences[loc])
@@ -57,26 +45,21 @@ class EvaluationMetrics:
             return float(occsOfTargetHashtags)/totalOccs
         else: return float('nan')
     @staticmethod
+    def accuracy(hashtagsForLocation, actualPropagation, *args, **kwargs):
+        bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation), {}
+        for loc, hashtags in hashtagsForLocation.iteritems(): metricScorePerLocation[loc] = len(set(hashtags).intersection(set(bestHashtagsForLocation.get(loc, []))))/float(conf['noOfTargetHashtags'])
+        return (EvaluationMetrics.ACCURACY, metricScorePerLocation)
+    @staticmethod
     def impact(hashtagsForLattice, actualPropagation, *args, **kwargs):
         metricScorePerLocation = {}
         for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = EvaluationMetrics._impact(loc, hashtags, actualPropagation)
-#            if loc in actualPropagation.occurrences: 
-#                totalOccs = len(actualPropagation.occurrences[loc])
-#                occsOfTargetHashtags = len([h for h, t in actualPropagation.occurrences[loc] if h in hashtags])
-#                metricScorePerLocation[loc] = float(occsOfTargetHashtags)/totalOccs
-#            else: metricScorePerLocation[loc] = float('nan')
         return (EvaluationMetrics.IMPACT, metricScorePerLocation)
     @staticmethod
     def impactDifference(hashtagsForLattice, actualPropagation, *args, **kwargs):
         bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation), {}
-        for loc, hashtags in hashtagsForLattice.iteritems(): 
-            metricScorePerLocation[loc] = EvaluationMetrics._impact(loc, bestHashtagsForLocation.get(loc, []), actualPropagation) - EvaluationMetrics._impact(loc, hashtags, actualPropagation)
-#            print metricScorePerLocation[loc]
-#            try:
-#                assert metricScorePerLocation[loc]>=0. or metricScorePerLocation[loc]==float('nan')
-#            except:
-#                pass
+        for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = EvaluationMetrics._impact(loc, bestHashtagsForLocation.get(loc, []), actualPropagation) - EvaluationMetrics._impact(loc, hashtags, actualPropagation)
         return (EvaluationMetrics.IMPACT_DIFFERENCE, metricScorePerLocation)
+
 class PredictionModels:
     RANDOM = 'random'
     GREEDY = 'greedy'
@@ -123,13 +106,7 @@ class ModelSimulator(object):
             timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
             timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
             if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
-#                if not testEmptyPropagation(predictionTimeUnitsMap[timeUnitForActualPropagation]):
-#                            print '1. here', predictionTimeUnitsMap[timeUnitForActualPropagation].occurrences
-#                else: print 'clrar'
                 for model in self.predictionModels:
-#                    if not testEmptyPropagation(predictionTimeUnitsMap[timeUnitForActualPropagation]):
-#                            print 'here', predictionTimeUnitsMap[timeUnitForActualPropagation].occurrences
-#                            exit() 
                     modelId, hashtagsForLattice = model(historicalTimeUnitsMap[timeUnitForPropagationForPrediction], **self.conf)
                     for metric in self.evaluationMetrics:
                         metricId, scoresPerLattice = metric(hashtagsForLattice, predictionTimeUnitsMap[timeUnitForActualPropagation], **self.conf)
