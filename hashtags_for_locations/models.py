@@ -22,19 +22,22 @@ class Propagations:
             self.occurrances[h].append([loc, t])
             
 class EvaluationMetrics:
-    pass
+    ACCURACY = 'accuracy'
+    @staticmethod
+    def accuracy():
+        pass
             
 class PredictionModels:
     RANDOM = 'random'
     @staticmethod
-    def random(propagationForPrediction, actualPropagation):
+    def random(propagationForPrediction, actualPropagation, evaluationMetrics, *args, **kwargs):
         print propagationForPrediction.startTime, propagationForPrediction.interval
         print actualPropagation.startTime, actualPropagation.interval
     
 class ModelSimulator(object):
-    def __init__(self, startTime, endTime, outputFolder, predictionModels, *args, **kwargs):
+    def __init__(self, startTime, endTime, outputFolder, predictionModels, evaluationMetrics, *args, **kwargs):
         self.startTime, self.endTime, self.outputFolder = startTime, endTime, outputFolder
-        self.predictionModels = predictionModels
+        self.predictionModels, self.evaluationMetrics = predictionModels, evaluationMetrics
     def run(self):
         currentTime = self.startTime
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
@@ -68,6 +71,7 @@ if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing'
     
     predictionModels = [PredictionModels.random]
+    evaluationMetrics = [EvaluationMetrics.accuracy]
     
     ModelSimulator(startTime, endTime, outputFolder, predictionModels).run()
 #for k, v in predictionTimeUnitsMap.iteritems():
