@@ -11,7 +11,7 @@ from settings import hashtagsWithoutEndingWindowFile, hashtagsLatticeGraphFile,\
     hashtagsClassifiersFolder, us_boundary, sub_world_boundary,\
     hashtagsImagesHastagSharingVsTransmittingProbabilityFolder,\
     targetSelectionRegressionClassifiersFolder
-from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
+from locations_for_hashtags.mr_area_analysis import getOccuranesInHighestActiveRegion,\
     TIME_UNIT_IN_SECONDS, LATTICE_ACCURACY, HashtagsClassifier,\
     getOccurranceDistributionInEpochs,\
     getRadius
