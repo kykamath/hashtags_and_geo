@@ -16,9 +16,19 @@ class Propagations:
     def __init__(self, startTime, interval):
         self.startTime, self.interval = startTime, interval
         self.occurrences = defaultdict(list)
-    def update(self, occurrances):
-        for h, loc, t in occurrances: 
-            self.occurrences[loc].append([h, t])
+    def update(self, occurrences):
+        for h, loc, t in occurrences: self.occurrences[loc].append([h, t])
+#        if not testEmptyPropagation(self):
+#            print 'there', self.occurrences
+#            exit()
+            
+#def testEmptyPropagation(propagation):
+#    for loc, occs in propagation.occurrences.iteritems():
+#        if not occs: 
+##            print propagation.occurrences
+##            exit()
+#            return False
+#    return True
             
 class EvaluationMetrics:
     ACCURACY = 'accuracy'
@@ -29,22 +39,32 @@ class EvaluationMetrics:
         bestHashtagsForLattice, metricScorePerLocation = defaultdict(list), {}
         if actualPropagation.occurrences:
             for loc, occs in actualPropagation.occurrences.iteritems():
-                print loc, occs
-                try:
-                    bestHashtagsForLattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
-                except:
-                    pass
+#                print loc, occs
+#                print testEmptyPropagation(actualPropagation)
+#                try:
+#                if not testEmptyPropagation(actualPropagation):
+#                    print actualPropagation.occurrences
+#                    exit()
+                bestHashtagsForLattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
+#                except:
+#                    pass
             for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = len(set(hashtags).intersection(set(bestHashtagsForLattice[loc])))/float(conf['noOfTargetHashtags'])
         return (EvaluationMetrics.ACCURACY, metricScorePerLocation)
     @staticmethod
     def impact(hashtagsForLattice, actualPropagation, *args, **kwargs):
+#        if not testEmptyPropagation(actualPropagation):
+#                            print 'start', actualPropagation.occurrences
+#                            exit() 
         metricScorePerLocation = {}
         for loc, hashtags in hashtagsForLattice.iteritems():
-            if actualPropagation.occurrences[loc]: 
+            if loc in actualPropagation.occurrences: 
                 totalOccs = len(actualPropagation.occurrences[loc])
                 occsOfTargetHashtags = len([h for h, t in actualPropagation.occurrences[loc] if h in hashtags])
                 metricScorePerLocation[loc] = float(occsOfTargetHashtags)/totalOccs
             else: metricScorePerLocation[loc] = float('nan')
+#        if not testEmptyPropagation(actualPropagation):
+#                            print 'end', actualPropagation.occurrences
+#                            exit() 
         return (EvaluationMetrics.IMPACT, metricScorePerLocation)
     @staticmethod
     def impactDifference(hashtagsForLattice, actualPropagation, *args, **kwargs):
@@ -96,7 +116,13 @@ class ModelSimulator(object):
             timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
             timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
             if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
-                for model in self.predictionModels: 
+#                if not testEmptyPropagation(predictionTimeUnitsMap[timeUnitForActualPropagation]):
+#                            print '1. here', predictionTimeUnitsMap[timeUnitForActualPropagation].occurrences
+#                else: print 'clrar'
+                for model in self.predictionModels:
+#                    if not testEmptyPropagation(predictionTimeUnitsMap[timeUnitForActualPropagation]):
+#                            print 'here', predictionTimeUnitsMap[timeUnitForActualPropagation].occurrences
+#                            exit() 
                     modelId, hashtagsForLattice = model(historicalTimeUnitsMap[timeUnitForPropagationForPrediction], **self.conf)
                     for metric in self.evaluationMetrics:
                         metricId, scoresPerLattice = metric(hashtagsForLattice, predictionTimeUnitsMap[timeUnitForActualPropagation], **self.conf)
