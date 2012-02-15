@@ -72,7 +72,7 @@ class ModelSimulator(object):
                         print modelId, metricId, scoresPerLattice
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
-    
+
 #    def process(self, propagationForPrediction, actualPropagation):
 #        print propagationForPrediction.startTime, propagationForPrediction.interval
 #        print actualPropagation.startTime, actualPropagation.interval
