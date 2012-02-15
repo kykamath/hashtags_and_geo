@@ -24,10 +24,16 @@ class EvaluationMetrics:
     ACCURACY = 'accuracy'
     @staticmethod
     def accuracy(hashtagsForLattice, actualPropagation, *args, **kwargs):
-        return (EvaluationMetrics.ACCURACY, 1.0)
+        bestHashtagsForLattice, metricScorePerLocation = defaultdict(list), {}
+        if actualPropagation.occurrences:
+            for loc, occs in actualPropagation.occurrences.iteritems():
+                bestHashtagsForLattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
+            for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = len(set(hashtags).intersection(set(bestHashtagsForLattice[loc])))/float(conf['noOfTargetHashtags'])
+        return (EvaluationMetrics.ACCURACY, metricScorePerLocation)
             
 class PredictionModels:
     RANDOM = 'random'
+    GREEDY = 'greedy'
     @staticmethod
     def random(propagationForPrediction, *args, **conf):
         hashtagsForLattice = defaultdict(list)
@@ -35,8 +41,14 @@ class PredictionModels:
             for loc, occs in propagationForPrediction.occurrences.iteritems():
                 uniqueHashtags = set(zip(*occs)[0])
                 hashtagsForLattice[loc] = random.sample(uniqueHashtags, min(len(uniqueHashtags), conf['noOfTargetHashtags']))
-#                hashtagsForLattice[loc] = sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(0))[-conf['noOfTargetHashtags']:]
         return (PredictionModels.RANDOM, hashtagsForLattice)
+    @staticmethod
+    def greedy(propagationForPrediction, *args, **conf):
+        hashtagsForLattice = defaultdict(list)
+        if propagationForPrediction.occurrences:
+            for loc, occs in propagationForPrediction.occurrences.iteritems():
+                hashtagsForLattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
+        return (PredictionModels.GREEDY, hashtagsForLattice)
     
 class ModelSimulator(object):
     def __init__(self, startTime, endTime, outputFolder, predictionModels, evaluationMetrics, *args, **conf):
@@ -79,13 +91,7 @@ if __name__ == '__main__':
                 predictionTimeInterval = timedelta(seconds=120*60),
                 noOfTargetHashtags = 3)
     
-    predictionModels = [PredictionModels.random]
+    predictionModels = [PredictionModels.random, PredictionModels.greedy]
     evaluationMetrics = [EvaluationMetrics.accuracy]
     
     ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-#for k, v in predictionTimeUnitsMap.iteritems():
-#    print k, v.count
-    
-#timeUnitsToDataMap = [(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%outputFolder)]
-#for i, data in enumerate(sorted(data, key=lambda d: d['tu'])):
-#    print i, data['tu'], datetime.fromtimestamp(data['tu'])
