@@ -52,9 +52,6 @@ class EvaluationMetrics:
         return (EvaluationMetrics.ACCURACY, metricScorePerLocation)
     @staticmethod
     def impact(hashtagsForLattice, actualPropagation, *args, **kwargs):
-#        if not testEmptyPropagation(actualPropagation):
-#                            print 'start', actualPropagation.occurrences
-#                            exit() 
         metricScorePerLocation = {}
         for loc, hashtags in hashtagsForLattice.iteritems():
             if loc in actualPropagation.occurrences: 
@@ -62,9 +59,6 @@ class EvaluationMetrics:
                 occsOfTargetHashtags = len([h for h, t in actualPropagation.occurrences[loc] if h in hashtags])
                 metricScorePerLocation[loc] = float(occsOfTargetHashtags)/totalOccs
             else: metricScorePerLocation[loc] = float('nan')
-#        if not testEmptyPropagation(actualPropagation):
-#                            print 'end', actualPropagation.occurrences
-#                            exit() 
         return (EvaluationMetrics.IMPACT, metricScorePerLocation)
     @staticmethod
     def impactDifference(hashtagsForLattice, actualPropagation, *args, **kwargs):
