@@ -73,10 +73,6 @@ class ModelSimulator(object):
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
 
-#    def process(self, propagationForPrediction, actualPropagation):
-#        print propagationForPrediction.startTime, propagationForPrediction.interval
-#        print actualPropagation.startTime, actualPropagation.interval
-
 if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing'
     conf = dict(historyTimeInterval = timedelta(seconds=30*60), 
