@@ -29,17 +29,22 @@ class EvaluationMetrics:
         bestHashtagsForLattice, metricScorePerLocation = defaultdict(list), {}
         if actualPropagation.occurrences:
             for loc, occs in actualPropagation.occurrences.iteritems():
-                bestHashtagsForLattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
+                print loc, occs
+                try:
+                    bestHashtagsForLattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
+                except:
+                    pass
             for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = len(set(hashtags).intersection(set(bestHashtagsForLattice[loc])))/float(conf['noOfTargetHashtags'])
         return (EvaluationMetrics.ACCURACY, metricScorePerLocation)
     @staticmethod
     def impact(hashtagsForLattice, actualPropagation, *args, **kwargs):
-        bestHashtagsForLattice, metricScorePerLocation = defaultdict(list), {}
-        if actualPropagation.occurrences:
-            for loc, hashtags in hashtagsForLattice.iteritems():
+        metricScorePerLocation = {}
+        for loc, hashtags in hashtagsForLattice.iteritems():
+            if actualPropagation.occurrences[loc]: 
                 totalOccs = len(actualPropagation.occurrences[loc])
                 occsOfTargetHashtags = len([h for h, t in actualPropagation.occurrences[loc] if h in hashtags])
                 metricScorePerLocation[loc] = float(occsOfTargetHashtags)/totalOccs
+            else: metricScorePerLocation[loc] = float('nan')
         return (EvaluationMetrics.IMPACT, metricScorePerLocation)
     @staticmethod
     def impactDifference(hashtagsForLattice, actualPropagation, *args, **kwargs):
