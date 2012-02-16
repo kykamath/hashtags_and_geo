@@ -4,13 +4,15 @@ Created on Feb 14, 2012
 @author: kykamath
 '''
 from analysis import iterateJsonFromFile
-from settings import timeUnitWithOccurrencesFile
+from settings import timeUnitWithOccurrencesFile, modelsFile
 from datetime import datetime, timedelta
 from mr_analysis import TIME_UNIT_IN_SECONDS
 import time, random
 from collections import defaultdict
 from itertools import groupby
 from operator import itemgetter
+from library.classes import GeneralMethods
+from library.file_io import FileIO
 
 class Propagations:
     def __init__(self, startTime, interval):
@@ -89,8 +91,10 @@ class ModelSimulator(object):
         currentTime = self.startTime
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
-        timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%outputFolder)])
+        timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%self.outputFolder)])
+        GeneralMethods.runCommand('rm -rf %s'%modelsFile)
         while currentTime<self.endTime:
+            print currentTime
             currentOccurrences = {}
             currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
             if currentTimeObject: 
@@ -110,9 +114,13 @@ class ModelSimulator(object):
                     modelId, hashtagsForLattice = model(historicalTimeUnitsMap[timeUnitForPropagationForPrediction], **self.conf)
                     for metric in self.evaluationMetrics:
                         metricId, scoresPerLattice = metric(hashtagsForLattice, predictionTimeUnitsMap[timeUnitForActualPropagation], **self.conf)
-                        print modelId, metricId, scoresPerLattice
+                        iterationData = {'tu': GeneralMethods.getEpochFromDateTimeObject(timeUnitForActualPropagation), 'modelId': modelId, 'metricId': metricId, 'scoresPerLattice': scoresPerLattice}
+                        FileIO.writeToFileAsJson(iterationData, modelsFile)
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
+    @staticmethod
+    def plotRunningTimes():
+        pass
 
 if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing'
