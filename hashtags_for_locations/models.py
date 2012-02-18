@@ -14,6 +14,8 @@ from operator import itemgetter
 from library.classes import GeneralMethods
 from library.file_io import FileIO
 
+NAN_VALUE = -1.0
+
 class Propagations:
     def __init__(self, startTime, interval):
         self.startTime, self.interval = startTime, interval
@@ -45,7 +47,7 @@ class EvaluationMetrics:
             totalOccs = len(actualPropagation.occurrences[loc])
             occsOfTargetHashtags = len([h for h, t in actualPropagation.occurrences[loc] if h in hashtags])
             return float(occsOfTargetHashtags)/totalOccs
-        else: return float('nan')
+        else: return NAN_VALUE
     @staticmethod
     def accuracy(hashtagsForLocation, actualPropagation, *args, **kwargs):
         bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation), {}
@@ -119,8 +121,25 @@ class ModelSimulator(object):
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
     @staticmethod
+    def loadIterationData():
+        iteration_results = {}
+        for data in FileIO.iterateJsonFromFile(modelsFile):
+            if data['tu'] not in iteration_results: iteration_results[data['tu']] = {}
+            if data['modelId'] not in iteration_results[data['tu']]: iteration_results[data['tu']][data['modelId']] = {}
+            iteration_results[data['tu']][data['modelId']][data['metricId']] = data['scoresPerLattice']
+        return iteration_results
+    @staticmethod
     def plotRunningTimes():
-        pass
+        iteration_results = ModelSimulator.loadIterationData()
+        metric_values_for_model = defaultdict(dict)
+        for _, data_for_time_unit in iteration_results.iteritems():
+            for model_id, data_for_model in data_for_time_unit.iteritems():
+                for metric_id, data_for_metric in data_for_model.iteritems():
+                    if metric_id not in metric_values_for_model[model_id]: metric_values_for_model[model_id][metric_id] = []
+                    metric_values_for_model[model_id][metric_id]+=data_for_metric.values()
+                    print 'x'
+#        for data in FileIO.iterateJsonFromFile(modelsFile):
+#            print data
 
 if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing'
@@ -132,3 +151,4 @@ if __name__ == '__main__':
     evaluationMetrics = [EvaluationMetrics.accuracy, EvaluationMetrics.impact, EvaluationMetrics.impactDifference]
     
     ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+#    ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
