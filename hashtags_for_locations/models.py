@@ -13,6 +13,7 @@ from itertools import groupby
 from operator import itemgetter
 from library.classes import GeneralMethods
 from library.file_io import FileIO
+import numpy as np
 
 NAN_VALUE = -1.0
 
@@ -136,8 +137,11 @@ class ModelSimulator(object):
             for model_id, data_for_model in data_for_time_unit.iteritems():
                 for metric_id, data_for_metric in data_for_model.iteritems():
                     if metric_id not in metric_values_for_model[model_id]: metric_values_for_model[model_id][metric_id] = []
-                    metric_values_for_model[model_id][metric_id]+=data_for_metric.values()
-                    print 'x'
+                    metric_values_for_model[model_id][metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
+        for model_id in metric_values_for_model:
+            for metric_id in metric_values_for_model[model_id]:
+                print model_id, metric_id, np.mean(metric_values_for_model[model_id][metric_id])
+#                    print 'x'
 #        for data in FileIO.iterateJsonFromFile(modelsFile):
 #            print data
 
@@ -150,5 +154,5 @@ if __name__ == '__main__':
     predictionModels = [PredictionModels.random, PredictionModels.greedy]
     evaluationMetrics = [EvaluationMetrics.accuracy, EvaluationMetrics.impact, EvaluationMetrics.impactDifference]
     
-    ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-#    ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+#    ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+    ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
