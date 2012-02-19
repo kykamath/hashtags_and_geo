@@ -17,21 +17,17 @@ from itertools import combinations
 from operator import itemgetter
 from library.stats import getOutliersRangeUsingIRQ
 
-#Local run parameters
-MIN_HASHTAG_OCCURENCES = 1
-START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 1, 1), datetime(2012, 1, 31), 'complete' # Complete duration
-
 # General parameters
 LOCATION_ACCURACY = 0.145
 
 # Paramters to filter hashtags.
-#MIN_HASHTAG_OCCURENCES = 100
+MIN_HASHTAG_OCCURENCES = 100
 
 # Time windows.
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 10, 31), 'training' # Training duration
-#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing' # Testing duration
+START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing' # Testing duration
 
 HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
 
@@ -52,6 +48,11 @@ PARAMS_DICT = dict(PARAMS_DICT = True,
                    MIN_NO_OF_UNIQUE_HASHTAGS_AT_A_LOCATION_PER_TIME_UNIT = MIN_NO_OF_UNIQUE_HASHTAGS_AT_A_LOCATION_PER_TIME_UNIT,
                    TIME_UNIT_IN_SECONDS = TIME_UNIT_IN_SECONDS,
                    )
+
+#Local run parameters
+#MIN_HASHTAG_OCCURENCES = 1
+#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 1, 1), datetime(2012, 1, 31), 'complete' # Complete duration
+
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
