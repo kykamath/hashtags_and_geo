@@ -18,28 +18,29 @@ from operator import itemgetter
 from library.stats import getOutliersRangeUsingIRQ
 
 #Local run parameters
-#MIN_HASHTAG_OCCURENCES = 1
-#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 1, 1), datetime(2012, 1, 31), 'complete' # Complete duration
+MIN_HASHTAG_OCCURENCES = 1
+START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 1, 1), datetime(2012, 1, 31), 'complete' # Complete duration
 
 # General parameters
 LOCATION_ACCURACY = 0.145
 
 # Paramters to filter hashtags.
-MIN_HASHTAG_OCCURENCES = 100
+#MIN_HASHTAG_OCCURENCES = 100
 
 # Time windows.
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 10, 31), 'training' # Training duration
-START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing' # Testing duration
+#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing' # Testing duration
 
 HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
 
 # Parameters to filter hashtags at a location.
 MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 3
+MIN_NO_OF_UNIQUE_HASHTAGS_AT_A_LOCATION_PER_TIME_UNIT = 5
 
 # Time unit.
-TIME_UNIT_IN_SECONDS = 15*60
+TIME_UNIT_IN_SECONDS =15*60
 
 
 # Parameters for the MR Job that will be logged.
@@ -48,6 +49,7 @@ PARAMS_DICT = dict(PARAMS_DICT = True,
                    MIN_HASHTAG_OCCURENCES=MIN_HASHTAG_OCCURENCES,
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
                    MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION,
+                   MIN_NO_OF_UNIQUE_HASHTAGS_AT_A_LOCATION_PER_TIME_UNIT = MIN_NO_OF_UNIQUE_HASHTAGS_AT_A_LOCATION_PER_TIME_UNIT,
                    TIME_UNIT_IN_SECONDS = TIME_UNIT_IN_SECONDS,
                    )
 
@@ -92,7 +94,9 @@ def getLocationObjectForLocationUnits(key, values):
 
 def getTimeUnitObjectFromTimeUnits(key, values):
     timeUnitObject = {'tu': key, 'oc': []}
-    for instance in values:  timeUnitObject['oc']+=instance['oc']
+    for instance in values:  
+        valid_locations = [l for l, occs in groupby(instance['oc'], key=itemgetter(1)) if len(set(zip(*occs)[0]))>=MIN_NO_OF_UNIQUE_HASHTAGS_AT_A_LOCATION_PER_TIME_UNIT]
+        timeUnitObject['oc']+=filter(lambda t: t[1] in valid_locations, instance['oc'])
     if timeUnitObject['oc']: return timeUnitObject
     
 
