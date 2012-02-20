@@ -19,7 +19,7 @@ from library.stats import getOutliersRangeUsingIRQ
 
 NAN_VALUE = -1.0
 
-LOCATIONS_LIST = [latticeObject['id'] for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile)]
+#LOCATIONS_LIST = [latticeObject['id'] for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile)]
 
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
@@ -196,6 +196,11 @@ class ModelSimulator(object):
 #        for data in FileIO.iterateJsonFromFile(modelsFile):
 #            print data
 
+def temp():
+    timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%'testing')])
+    for i, tu in enumerate(sorted(timeUnitsToDataMap)):
+        print i, datetime.fromtimestamp(tu), len(timeUnitsToDataMap[tu]['oc'])
+
 if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing'
     conf = dict(historyTimeInterval = timedelta(seconds=30*60), 
@@ -205,5 +210,7 @@ if __name__ == '__main__':
     predictionModels = [PredictionModels.random]
     evaluationMetrics = [EvaluationMetrics.accuracy, EvaluationMetrics.impact, EvaluationMetrics.impactDifference]
     
-    ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+    temp()
+    
+#    ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
 #    ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
