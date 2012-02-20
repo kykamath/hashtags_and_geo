@@ -19,6 +19,8 @@ from library.stats import getOutliersRangeUsingIRQ
 
 NAN_VALUE = -1.0
 
+LOCATIONS_LIST = [latticeObject['id'] for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile)]
+
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
         dataToReturn = [(hashtag, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
@@ -112,6 +114,7 @@ class EvaluationMetrics:
 class PredictionModels:
     RANDOM = 'random'
     GREEDY = 'greedy'
+    SHARING_PROBABILITY = 'sharing_probability'
     @staticmethod
     def random(propagationForPrediction, *args, **conf):
         hashtagsForLattice = defaultdict(list)
@@ -127,6 +130,11 @@ class PredictionModels:
             for loc, occs in propagationForPrediction.occurrences.iteritems():
                 hashtagsForLattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
         return (PredictionModels.GREEDY, hashtagsForLattice)
+    @staticmethod
+    def sharing_probability(propagationForPrediction, *args, **conf):
+        hashtagsForLattice = defaultdict(list)
+        return (PredictionModels.SHARING_PROBABILITY, hashtagsForLattice)
+
     
 class ModelSimulator(object):
     def __init__(self, startTime, endTime, outputFolder, predictionModels, evaluationMetrics, *args, **conf):
@@ -142,10 +150,9 @@ class ModelSimulator(object):
         GeneralMethods.runCommand('rm -rf %s'%modelsFile)
         while currentTime<self.endTime:
             print currentTime
-            currentOccurrences = {}
+            currentOccurrences = []
             currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
-            if currentTimeObject: 
-                currentOccurrences=currentTimeObject['oc']
+            if currentTimeObject: currentOccurrences=filter(lambda l: l[1] in LOCATIONS_LIST,currentTimeObject['oc'])
             for i in range(self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
                 historicalTimeUnit = currentTime-i*timeUnitDelta
                 if historicalTimeUnit not in historicalTimeUnitsMap: historicalTimeUnitsMap[historicalTimeUnit]=Propagations(historicalTimeUnit, self.historyTimeInterval)
@@ -195,8 +202,8 @@ if __name__ == '__main__':
                 predictionTimeInterval = timedelta(seconds=120*60),
                 noOfTargetHashtags = 3)
     
-    predictionModels = [PredictionModels.random, PredictionModels.greedy]
+    predictionModels = [PredictionModels.random]
     evaluationMetrics = [EvaluationMetrics.accuracy, EvaluationMetrics.impact, EvaluationMetrics.impactDifference]
     
-#    ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-    ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+    ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+#    ModelSimulator(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
