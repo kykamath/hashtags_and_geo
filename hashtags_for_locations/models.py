@@ -225,7 +225,7 @@ class Experiments(object):
                 print model_id, metric_id, np.mean(metric_values_for_model[metric_id])
 
 if __name__ == '__main__':
-    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing'
+    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     conf = dict(historyTimeInterval = timedelta(seconds=30*60), 
                 predictionTimeInterval = timedelta(seconds=120*60),
                 noOfTargetHashtags = 3)
@@ -237,5 +237,5 @@ if __name__ == '__main__':
     
 #    temp()
     
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
