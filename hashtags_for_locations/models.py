@@ -160,7 +160,7 @@ class PredictionModels:
                 for neighboring_location in SHARING_PROBABILITIES['neighborProbability'][loc]:
                     for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
                 hashtags_for_lattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
-                locations = zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
+                locations = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
                 while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and locations:
                     l = locations.pop()
                     if l not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(l)
