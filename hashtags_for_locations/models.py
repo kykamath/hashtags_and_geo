@@ -14,8 +14,52 @@ from operator import itemgetter
 from library.classes import GeneralMethods
 from library.file_io import FileIO
 import numpy as np
+from hashtags_for_locations.settings import locationsGraphFile
+from library.stats import getOutliersRangeUsingIRQ
 
 NAN_VALUE = -1.0
+
+def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
+    if findLag: 
+        dataToReturn = [(hashtag, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
+        _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[1])
+        return dict(filter(lambda t: t[1]<=upperRangeForTemporalDistance, dataToReturn))
+    else: 
+        dataToReturn = [(hashtag, timeTuple, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
+        _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[2])
+        return dict([(t[0], t[1]) for t in dataToReturn if t[2]<=upperRangeForTemporalDistance])
+
+def getSharingProbabiliites():
+    model = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
+    hashtagsObserved = []
+    for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile):
+        latticeHashtagsSet = set(latticeObject['hashtags'])
+        hashtagsObserved+=latticeObject['hashtags']
+        model['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
+        for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+            neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
+            neighborHashtagsSet = set(neighborHashtags)
+            model['neighborProbability'][latticeObject['id']][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
+        model['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
+    totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
+    for lattice in model['hashtagObservingProbability'].keys()[:]: model['hashtagObservingProbability'][lattice] = len(model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+
+def getTransmittingProbabilities():
+    model = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
+    hashtagsObserved = []
+    for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile):
+        latticeHashtagsSet = set(latticeObject['hashtags'])
+        hashtagsObserved+=latticeObject['hashtags']
+        model['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
+        for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+            neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags, findLag=False)
+#                neighborHashtagsSet = set(neighborHashtags)
+            transmittedHashtags = [k for k in neighborHashtags if k in latticeObject['hashtags'] and latticeObject['hashtags'][k][0]<neighborHashtags[k][0]]
+            model['neighborProbability'][latticeObject['id']][neighborLattice]=len(transmittedHashtags)/float(len(latticeHashtagsSet))
+        model['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
+    totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
+    for lattice in model['hashtagObservingProbability'].keys()[:]: model['hashtagObservingProbability'][lattice] = len(model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+        
 
 class Propagations:
     def __init__(self, startTime, interval):
