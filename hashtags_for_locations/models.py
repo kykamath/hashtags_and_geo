@@ -159,7 +159,8 @@ class PredictionModels:
                 hashtag_scores = defaultdict(float)
                 for neighboring_location in SHARING_PROBABILITIES['neighborProbability'][loc]:
                     for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
-                hashtags_for_lattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
+                hashtags_for_lattice[loc] = []
+#                hashtags_for_lattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
                 locations = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
                 while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and locations:
                     l = locations.pop()
@@ -229,14 +230,14 @@ class Experiments(object):
 
 if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
-    conf = dict(historyTimeInterval = timedelta(seconds=30*60), 
-                predictionTimeInterval = timedelta(seconds=120*60),
+    conf = dict(historyTimeInterval = timedelta(seconds=15*60), 
+                predictionTimeInterval = timedelta(seconds=300*60),
                 noOfTargetHashtags = 3)
     
     predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY]
     
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
-#    evaluationMetrics = [EvaluationMetrics.ACCURACY]
+#    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
     
     Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
 #    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
