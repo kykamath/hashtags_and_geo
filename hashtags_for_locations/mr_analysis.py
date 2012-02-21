@@ -25,7 +25,6 @@ LOCATION_ACCURACY = 0.145
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 8, 31), 'training' # Training duration
 START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing' # Testing duration
-HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
 
 # Paramters to filter hashtags.
 MIN_HASHTAG_OCCURENCES = 50
@@ -37,6 +36,11 @@ MIN_NO_OF_UNIQUE_HASHTAGS_AT_A_LOCATION_PER_TIME_UNIT = 0
 # Time unit.
 TIME_UNIT_IN_SECONDS =5*60
 
+#Local run parameters
+#MIN_HASHTAG_OCCURENCES = 1
+#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 1, 1), datetime(2012, 1, 31), 'complete' # Complete duration
+
+HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
 
 # Parameters for the MR Job that will be logged.
 PARAMS_DICT = dict(PARAMS_DICT = True,
@@ -47,10 +51,6 @@ PARAMS_DICT = dict(PARAMS_DICT = True,
                    MIN_NO_OF_UNIQUE_HASHTAGS_AT_A_LOCATION_PER_TIME_UNIT = MIN_NO_OF_UNIQUE_HASHTAGS_AT_A_LOCATION_PER_TIME_UNIT,
                    TIME_UNIT_IN_SECONDS = TIME_UNIT_IN_SECONDS,
                    )
-
-#Local run parameters
-#MIN_HASHTAG_OCCURENCES = 1
-#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 1, 1), datetime(2012, 1, 31), 'complete' # Complete duration
 
 
 def iterateHashtagObjectInstances(line):
@@ -81,7 +81,17 @@ def getHashtagWithEndingWindow(key, values):
         numberOfInstances=len(occurences)
         if numberOfInstances>=MIN_HASHTAG_OCCURENCES and \
             e[1]>=HASHTAG_STARTING_WINDOW and l[1]<=HASHTAG_ENDING_WINDOW: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
-            
+
+def getAllHashtagOccurrencesWithinWindows(key, values):
+    occurences = []
+    for instances in values: 
+        for oc in instances['oc']: occurences.append(oc)
+    if occurences:
+        occurences = filter(lambda t: t[1]>=HASHTAG_STARTING_WINDOW and t[1]<=HASHTAG_ENDING_WINDOW, occurences)
+        e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
+        numberOfInstances=len(occurences)
+        if numberOfInstances>=MIN_HASHTAG_OCCURENCES: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
+
 def getLocationObjectForLocationUnits(key, values):
     locationObject = {'loc': key, 'oc': []}
     hashtagObjects = defaultdict(list)
@@ -121,6 +131,9 @@ class MRAnalysis(ModifiedMRJob):
     def reduceHashtagInstancesWithEndingWindow(self, key, values):
         hashtagObject = getHashtagWithEndingWindow(key, values)
         if hashtagObject: yield key, hashtagObject 
+    def reduceHashtagInstancesAllOccurrencesWithinWindow(self, key, values):
+        hashtagObject = getAllHashtagOccurrencesWithinWindows(key, values)
+        if hashtagObject: yield key, hashtagObject 
     ''' End: Methods to get hashtag objects
     '''
     ''' Start: Methods to get location objects.
@@ -153,6 +166,7 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithoutEndingWindow)]
+    def jobsToGetHastagObjectsAllOccurrencesWithinWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesAllOccurrencesWithinWindow)]
     def jobsToGetLocationObjects(self): return self.jobsToGetHastagObjectsWithEndingWindow() + [self.mr(mapper=self.mapHashtagObjectsToLocationUnits, mapper_final=self.mapFinalHashtagObjectsToLocationUnits, reducer=self.reduceLocationUnitsToLocationObject)]
     def jobsToGetTimeUnitObjects(self): return self.jobsToGetLocationObjects() + \
                                                 [self.mr(mapper=self.mapLocationsObjectsToTimeUnits, mapper_final=self.mapFinalLocationsObjectsToTimeUnits, reducer=self.reduceTimeUnitsToTimeUnitObject)]
@@ -161,7 +175,8 @@ class MRAnalysis(ModifiedMRJob):
         pass
 #        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+        return self.jobsToGetHastagObjectsAllOccurrencesWithinWindow()
 #        return self.jobsToGetLocationObjects()
-        return self.jobsToGetTimeUnitObjects()
+#        return self.jobsToGetTimeUnitObjects()
 if __name__ == '__main__':
     MRAnalysis.run()
