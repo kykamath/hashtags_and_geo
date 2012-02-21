@@ -86,8 +86,8 @@ def getAllHashtagOccurrencesWithinWindows(key, values):
     occurences = []
     for instances in values: 
         for oc in instances['oc']: occurences.append(oc)
+    occurences = filter(lambda t: t[1]>=HASHTAG_STARTING_WINDOW and t[1]<=HASHTAG_ENDING_WINDOW, occurences)
     if occurences:
-        occurences = filter(lambda t: t[1]>=HASHTAG_STARTING_WINDOW and t[1]<=HASHTAG_ENDING_WINDOW, occurences)
         e, l = min(occurences, key=lambda t: t[1]), max(occurences, key=lambda t: t[1])
         numberOfInstances=len(occurences)
         if numberOfInstances>=MIN_HASHTAG_OCCURENCES: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
@@ -173,9 +173,9 @@ class MRAnalysis(ModifiedMRJob):
 
     def steps(self):
         pass
-        return self.jobsToGetHastagObjectsWithEndingWindow()
+#        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
-#        return self.jobsToGetHastagObjectsAllOccurrencesWithinWindow()
+        return self.jobsToGetHastagObjectsAllOccurrencesWithinWindow()
 #        return self.jobsToGetLocationObjects()
 #        return self.jobsToGetTimeUnitObjects()
 if __name__ == '__main__':

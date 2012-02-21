@@ -24,9 +24,9 @@ def getInputFiles(startTime, endTime, folderType='world'):
         current+=relativedelta(months=1)   
 
 def mr_analysis(startTime, endTime, outputFolder):
-    outputFile = hashtagsWithEndingWindowFile%outputFolder
+#    outputFile = hashtagsWithEndingWindowFile%outputFolder
 #    outputFile = hashtagsWithoutEndingWindowFile%outputFolder
-#    outputFile = hashtagsAllOccurrencesWithinWindowFile%outputFolder
+    outputFile = hashtagsAllOccurrencesWithinWindowFile%outputFolder
 #    outputFile = timeUnitWithOccurrencesFile%outputFolder
     runMRJob(MRAnalysis, outputFile, getInputFiles(startTime, endTime), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
