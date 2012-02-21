@@ -231,7 +231,7 @@ class Experiments(object):
 if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), 
-                predictionTimeInterval = timedelta(seconds=60*TIME_UNIT_IN_SECONDS),
+                predictionTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS),
                 noOfTargetHashtags = 10)
     
     predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY]
