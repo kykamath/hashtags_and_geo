@@ -101,7 +101,10 @@ class EvaluationMetrics:
     @staticmethod
     def accuracy(hashtagsForLocation, actualPropagation, *args, **kwargs):
         bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation), {}
-        for loc, hashtags in hashtagsForLocation.iteritems(): metricScorePerLocation[loc] = len(set(hashtags).intersection(set(bestHashtagsForLocation.get(loc, []))))/float(conf['noOfTargetHashtags'])
+        for loc, hashtags in hashtagsForLocation.iteritems(): 
+            bestSet = set(bestHashtagsForLocation.get(loc, []))
+            if bestSet: metricScorePerLocation[loc] = len(set(hashtags).intersection(bestSet))/float(len(bestSet))
+            else: metricScorePerLocation[loc] = NAN_VALUE
         return metricScorePerLocation
     @staticmethod
     def impact(hashtagsForLattice, actualPropagation, *args, **kwargs):
@@ -230,8 +233,8 @@ class Experiments(object):
 
 if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
-    conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), 
-                predictionTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS),
+    conf = dict(historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS), 
+                predictionTimeInterval = timedelta(seconds=60*TIME_UNIT_IN_SECONDS),
                 noOfTargetHashtags = 10)
     
     predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY]
@@ -239,5 +242,5 @@ if __name__ == '__main__':
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
 #    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
     
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
