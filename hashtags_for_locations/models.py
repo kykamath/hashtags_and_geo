@@ -243,6 +243,8 @@ def temp():
         
 if __name__ == '__main__':
     loadLocationsList()
+    print LOCATIONS_LIST
+    exit()
     temp()
     exit()
     
