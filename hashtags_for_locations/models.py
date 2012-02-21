@@ -19,8 +19,7 @@ from library.stats import getOutliersRangeUsingIRQ
 
 NAN_VALUE = -1.0
 
-LOCATIONS_LIST = [latticeObject['id'] for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile)]
-SHARING_PROBABILITIES = None
+LOCATIONS_LIST, SHARING_PROBABILITIES = None, None
 
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
@@ -31,6 +30,10 @@ def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, ne
         dataToReturn = [(hashtag, timeTuple, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
         _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[2])
         return dict([(t[0], t[1]) for t in dataToReturn if t[2]<=upperRangeForTemporalDistance])
+
+def loadLocationsList():
+    global LOCATIONS_LIST
+    if not LOCATIONS_LIST: LOCATIONS_LIST = [latticeObject['id'] for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile)]
 
 def loadSharingProbabilities():
     global SHARING_PROBABILITIES
@@ -185,6 +188,7 @@ class Experiments(object):
         currentTime = self.startTime
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
+        loadLocationsList()
         timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%self.outputFolder)])
         map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
         while currentTime<self.endTime:
@@ -233,8 +237,8 @@ class Experiments(object):
 
 if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
-    conf = dict(historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS), 
-                predictionTimeInterval = timedelta(seconds=60*TIME_UNIT_IN_SECONDS),
+    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
+                predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
                 noOfTargetHashtags = 10)
     
     predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY]
@@ -242,5 +246,5 @@ if __name__ == '__main__':
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
 #    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
     
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
