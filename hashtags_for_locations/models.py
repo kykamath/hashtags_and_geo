@@ -235,7 +235,14 @@ class Experiments(object):
             for metric_id in metric_values_for_model:
                 print model_id, metric_id, np.mean(metric_values_for_model[metric_id])
 
+def temp():
+    for e, data in enumerate(FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/timeUnitWithOccurrences')):
+        print e, data.keys()
+
 if __name__ == '__main__':
+    temp()
+    exit()
+    
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
                 predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
