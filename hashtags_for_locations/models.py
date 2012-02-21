@@ -12,7 +12,7 @@ import time, random, math
 from collections import defaultdict
 from itertools import groupby
 from operator import itemgetter
-from library.classes import GeneralMethods
+from library.classes import GeneralMethods, timeit
 from library.file_io import FileIO
 import numpy as np
 from library.stats import getOutliersRangeUsingIRQ
@@ -30,11 +30,11 @@ def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, ne
         dataToReturn = [(hashtag, timeTuple, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
         _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[2])
         return dict([(t[0], t[1]) for t in dataToReturn if t[2]<=upperRangeForTemporalDistance])
-
+@timeit
 def loadLocationsList():
     global LOCATIONS_LIST
     if not LOCATIONS_LIST: LOCATIONS_LIST = [latticeObject['id'] for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile)]
-
+@timeit
 def loadSharingProbabilities():
     global SHARING_PROBABILITIES
     if not SHARING_PROBABILITIES:
