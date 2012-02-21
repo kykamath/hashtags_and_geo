@@ -28,14 +28,14 @@ START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 9, 1), datetime(2011
 HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
 
 # Paramters to filter hashtags.
-MIN_HASHTAG_OCCURENCES = 100
+MIN_HASHTAG_OCCURENCES = 50
 
 # Parameters to filter hashtags at a location.
-MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 3
+MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 0
 MIN_NO_OF_UNIQUE_HASHTAGS_AT_A_LOCATION_PER_TIME_UNIT = 0
 
 # Time unit.
-TIME_UNIT_IN_SECONDS =15*60
+TIME_UNIT_IN_SECONDS =5*60
 
 
 # Parameters for the MR Job that will be logged.
