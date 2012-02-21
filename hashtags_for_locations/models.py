@@ -34,7 +34,7 @@ def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, ne
 def loadLocationsList():
     global LOCATIONS_LIST
     if not LOCATIONS_LIST: LOCATIONS_LIST = [latticeObject['id'] for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile)]
-@timeit
+
 def loadSharingProbabilities():
     global SHARING_PROBABILITIES
     if not SHARING_PROBABILITIES:
