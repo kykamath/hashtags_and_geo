@@ -230,8 +230,8 @@ class Experiments(object):
 
 if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
-    conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), 
-                predictionTimeInterval = timedelta(seconds=8*TIME_UNIT_IN_SECONDS),
+    conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), 
+                predictionTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS),
                 noOfTargetHashtags = 3)
     
     predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY]
@@ -239,5 +239,5 @@ if __name__ == '__main__':
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
 #    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
     
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
