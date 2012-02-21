@@ -239,12 +239,10 @@ def temp():
     d = {}
     for e, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/timeUnitWithOccurrences')):
         print e, data.keys()
-        d[data['tu']] = filter(lambda l: l[1] in LOCATIONS_LIST,data['oc'])
-        
+#        d[data['tu']] = filter(lambda l: l[1] in LOCATIONS_LIST,data['oc'])
+        d[data['tu']] = data['oc']
 if __name__ == '__main__':
-    loadLocationsList()
-    print LOCATIONS_LIST
-    exit()
+#    loadLocationsList()
     temp()
     exit()
     
