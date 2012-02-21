@@ -234,11 +234,13 @@ class Experiments(object):
 #            for model_id in metric_values_for_model:
             for metric_id in metric_values_for_model:
                 print model_id, metric_id, np.mean(metric_values_for_model[metric_id])
-
+@timeit
 def temp():
-    for e, data in enumerate(FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/timeUnitWithOccurrences')):
+    d = {}
+    for e, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/timeUnitWithOccurrences')):
         print e, data.keys()
-
+        d[data['tu']] = data
+        
 if __name__ == '__main__':
     temp()
     exit()
