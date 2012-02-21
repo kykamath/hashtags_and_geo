@@ -239,5 +239,5 @@ if __name__ == '__main__':
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
 #    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
     
-    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
