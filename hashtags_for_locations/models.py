@@ -241,7 +241,7 @@ def temp():
     d = {}
     d = [(datetime.fromtimestamp(data['tu']), data['oc']) for e, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/timeUnitWithOccurrences'))]
     d = sorted(d, key=itemgetter(0))
-    for t in d: print t[0], len(t[1])
+    for t in d: print t[0], len(t[1]), len(set(zip(*t[1])[1]))
 #        print e, data.keys()
 #        d[data['tu']] = filter(lambda l: l[1] in LOCATIONS_LIST,data['oc'])
 #        print datetime.fromtimestamp(data['tu']), len(data['oc'])
