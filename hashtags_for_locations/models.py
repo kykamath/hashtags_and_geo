@@ -19,7 +19,7 @@ from library.stats import getOutliersRangeUsingIRQ
 
 NAN_VALUE = -1.0
 
-LOCATIONS_LIST, SHARING_PROBABILITIES = None, None
+LOCATIONS_LIST, SHARING_PROBABILITIES, TRANSMITTING_PROBABILITIES = None, None, None
 
 def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, neighborHashtags, findLag=True):
     if findLag: 
@@ -30,7 +30,7 @@ def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, ne
         dataToReturn = [(hashtag, timeTuple, np.abs(latticeHashtags[hashtag][0]-timeTuple[0])/TIME_UNIT_IN_SECONDS) for hashtag, timeTuple in neighborHashtags.iteritems() if hashtag in latticeHashtags]
         _, upperRangeForTemporalDistance = getOutliersRangeUsingIRQ(zip(*(dataToReturn))[2])
         return dict([(t[0], t[1]) for t in dataToReturn if t[2]<=upperRangeForTemporalDistance])
-@timeit
+
 def loadLocationsList():
     global LOCATIONS_LIST
     if not LOCATIONS_LIST: LOCATIONS_LIST = [latticeObject['id'] for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile)]
@@ -52,21 +52,23 @@ def loadSharingProbabilities():
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in SHARING_PROBABILITIES['hashtagObservingProbability'].keys()[:]: SHARING_PROBABILITIES['hashtagObservingProbability'][lattice] = len(SHARING_PROBABILITIES['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
 
-def getTransmittingProbabilities():
-    model = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
-    hashtagsObserved = []
-    for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile):
-        latticeHashtagsSet = set(latticeObject['hashtags'])
-        hashtagsObserved+=latticeObject['hashtags']
-        model['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
-        for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
-            neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags, findLag=False)
-#                neighborHashtagsSet = set(neighborHashtags)
-            transmittedHashtags = [k for k in neighborHashtags if k in latticeObject['hashtags'] and latticeObject['hashtags'][k][0]<neighborHashtags[k][0]]
-            model['neighborProbability'][latticeObject['id']][neighborLattice]=len(transmittedHashtags)/float(len(latticeHashtagsSet))
-        model['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
-    totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
-    for lattice in model['hashtagObservingProbability'].keys()[:]: model['hashtagObservingProbability'][lattice] = len(model['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+def loadTransmittingProbabilities():
+    global TRANSMITTING_PROBABILITIES
+    if not TRANSMITTING_PROBABILITIES:
+        TRANSMITTING_PROBABILITIES = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
+        hashtagsObserved = []
+        for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile):
+            latticeHashtagsSet = set(latticeObject['hashtags'])
+            hashtagsObserved+=latticeObject['hashtags']
+            TRANSMITTING_PROBABILITIES['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
+            for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+                neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags, findLag=False)
+    #                neighborHashtagsSet = set(neighborHashtags)
+                transmittedHashtags = [k for k in neighborHashtags if k in latticeObject['hashtags'] and latticeObject['hashtags'][k][0]<neighborHashtags[k][0]]
+                TRANSMITTING_PROBABILITIES['neighborProbability'][latticeObject['id']][neighborLattice]=len(transmittedHashtags)/float(len(latticeHashtagsSet))
+            TRANSMITTING_PROBABILITIES['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
+        totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
+        for lattice in TRANSMITTING_PROBABILITIES['hashtagObservingProbability'].keys()[:]: TRANSMITTING_PROBABILITIES['hashtagObservingProbability'][lattice] = len(TRANSMITTING_PROBABILITIES['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
         
 
 class Propagations:
@@ -128,6 +130,7 @@ class PredictionModels:
     RANDOM = 'random'
     GREEDY = 'greedy'
     SHARING_PROBABILITY = 'sharing_probability'
+    TRANSMITTING_PROBABILITY = 'tranmitting_probability'
     @staticmethod
     def _hashtag_distribution_in_locations(occurrences):
         hashtag_distribution, hashtag_distribution_in_locations = defaultdict(dict), defaultdict(dict)
@@ -140,6 +143,23 @@ class PredictionModels:
             for l, v in hashtag_distribution[h].iteritems(): hashtag_distribution_in_locations[l][h] = v/total_occurrences
 #            hashtag_distribution[h] = dict([(l, v/float(sum(hashtag_distribution[h].values()))) for l, v in hashtag_distribution[h].iteritems()])
         return hashtag_distribution_in_locations
+    @staticmethod
+    def _hashtags_by_location_probabilities(propagation_for_prediction, location_probabilities, *args, **conf):
+        hashtags_for_lattice = defaultdict(list)
+        hashtag_distribution_in_locations = PredictionModels._hashtag_distribution_in_locations(propagation_for_prediction.occurrences)
+        if propagation_for_prediction.occurrences:
+            for loc, occs in propagation_for_prediction.occurrences.iteritems():
+                hashtag_scores = defaultdict(float)
+                for neighboring_location in SHARING_PROBABILITIES['neighborProbability'][loc]:
+#                    for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
+                    for h in hashtag_distribution_in_locations[neighboring_location]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
+#                hashtags_for_lattice[loc] = []
+                hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
+                    h = hashtags.pop()
+                    if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
+        return hashtags_for_lattice
     @staticmethod
     def random(propagation_for_prediction, *args, **conf):
         hashtags_for_lattice = defaultdict(list)
@@ -156,29 +176,27 @@ class PredictionModels:
                 hashtags_for_lattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
         return hashtags_for_lattice
     @staticmethod
-    def sharing_probability(propagation_for_prediction, *args, **conf):
-        hashtags_for_lattice = defaultdict(list)
-        loadSharingProbabilities()
-        hashtag_distribution_in_locations = PredictionModels._hashtag_distribution_in_locations(propagation_for_prediction.occurrences)
-        if propagation_for_prediction.occurrences:
-            for loc, occs in propagation_for_prediction.occurrences.iteritems():
-                hashtag_scores = defaultdict(float)
-                for neighboring_location in SHARING_PROBABILITIES['neighborProbability'][loc]:
-#                    for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
-                    for h in hashtag_distribution_in_locations[neighboring_location]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
-
-#                    if hashtag_distribution_in_locations[neighboring_location]:
-#                        print 'x'
-                hashtags_for_lattice[loc] = []
-                hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
-                    h = hashtags.pop()
-                    if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
-        return hashtags_for_lattice
+    def sharing_probability(propagation_for_prediction, *args, **conf): loadSharingProbabilities(); return PredictionModels._hashtags_by_location_probabilities(propagation_for_prediction, SHARING_PROBABILITIES, *args, **conf)
+#        hashtag_distribution_in_locations = PredictionModels._hashtag_distribution_in_locations(propagation_for_prediction.occurrences)
+#        if propagation_for_prediction.occurrences:
+#            for loc, occs in propagation_for_prediction.occurrences.iteritems():
+#                hashtag_scores = defaultdict(float)
+#                for neighboring_location in SHARING_PROBABILITIES['neighborProbability'][loc]:
+##                    for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
+#                    for h in hashtag_distribution_in_locations[neighboring_location]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
+#                hashtags_for_lattice[loc] = []
+#                hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+#                hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+#                while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
+#                    h = hashtags.pop()
+#                    if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
+#        return hashtags_for_lattice
+    @staticmethod
+    def transmitting_probability(propagation_for_prediction, *args, **conf): loadTransmittingProbabilities(); return PredictionModels._hashtags_by_location_probabilities(propagation_for_prediction, TRANSMITTING_PROBABILITIES, *args, **conf)
 PREDICTION_MODEL_METHODS = dict([(PredictionModels.RANDOM, PredictionModels.random),
                 (PredictionModels.GREEDY, PredictionModels.greedy),
                 (PredictionModels.SHARING_PROBABILITY, PredictionModels.sharing_probability),
+                (PredictionModels.TRANSMITTING_PROBABILITY, PredictionModels.transmitting_probability),
                 ])
     
 class Experiments(object):
