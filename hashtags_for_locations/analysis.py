@@ -26,8 +26,8 @@ def getInputFiles(startTime, endTime, folderType='world'):
 def mr_analysis(startTime, endTime, outputFolder):
 #    outputFile = hashtagsWithEndingWindowFile%outputFolder
 #    outputFile = hashtagsWithoutEndingWindowFile%outputFolder
-    outputFile = hashtagsAllOccurrencesWithinWindowFile%outputFolder
-#    outputFile = timeUnitWithOccurrencesFile%outputFolder
+#    outputFile = hashtagsAllOccurrencesWithinWindowFile%outputFolder
+    outputFile = timeUnitWithOccurrencesFile%outputFolder
     runMRJob(MRAnalysis, outputFile, getInputFiles(startTime, endTime), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 
