@@ -207,8 +207,8 @@ class Experiments(object):
             timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
             timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
             if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
-                print currentTime, len(historicalTimeUnitsMap[timeUnitForPropagationForPrediction].occurrences), len(predictionTimeUnitsMap[timeUnitForActualPropagation].occurrences)
-                continue
+#                print currentTime, len(historicalTimeUnitsMap[timeUnitForPropagationForPrediction].occurrences), len(predictionTimeUnitsMap[timeUnitForActualPropagation].occurrences)
+#                continue
                 for modelId in self.predictionModels:
                     hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](historicalTimeUnitsMap[timeUnitForPropagationForPrediction], **self.conf)
                     for metric_id in self.evaluationMetrics:
