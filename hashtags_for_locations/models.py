@@ -275,7 +275,7 @@ if __name__ == '__main__':
     predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
     
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
-#    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
+    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
     
-    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
