@@ -208,18 +208,21 @@ class Experiments(object):
         timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d')))])
         map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
         while currentTime<self.endTime:
-            print currentTime
-            currentOccurrences = []
-            currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
-            if currentTimeObject: currentOccurrences=currentTimeObject['oc']
-            for i in range(self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
-                historicalTimeUnit = currentTime-i*timeUnitDelta
-                if historicalTimeUnit not in historicalTimeUnitsMap: historicalTimeUnitsMap[historicalTimeUnit]=Propagations(historicalTimeUnit, self.historyTimeInterval)
-                historicalTimeUnitsMap[historicalTimeUnit].update(currentOccurrences)
-            for i in range(self.predictionTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
-                predictionTimeUnit = currentTime-i*timeUnitDelta
-                if predictionTimeUnit not in predictionTimeUnitsMap: predictionTimeUnitsMap[predictionTimeUnit]=Propagations(predictionTimeUnit, self.predictionTimeInterval)
-                predictionTimeUnitsMap[predictionTimeUnit].update(currentOccurrences)
+            @timeit
+            def entry_method():
+                print currentTime
+                currentOccurrences = []
+                currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
+                if currentTimeObject: currentOccurrences=currentTimeObject['oc']
+                for i in range(self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
+                    historicalTimeUnit = currentTime-i*timeUnitDelta
+                    if historicalTimeUnit not in historicalTimeUnitsMap: historicalTimeUnitsMap[historicalTimeUnit]=Propagations(historicalTimeUnit, self.historyTimeInterval)
+                    historicalTimeUnitsMap[historicalTimeUnit].update(currentOccurrences)
+                for i in range(self.predictionTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
+                    predictionTimeUnit = currentTime-i*timeUnitDelta
+                    if predictionTimeUnit not in predictionTimeUnitsMap: predictionTimeUnitsMap[predictionTimeUnit]=Propagations(predictionTimeUnit, self.predictionTimeInterval)
+                    predictionTimeUnitsMap[predictionTimeUnit].update(currentOccurrences)
+            entry_method()
             timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
             timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
             if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
@@ -264,7 +267,7 @@ if __name__ == '__main__':
 #    temp()
 #    exit()
     
-    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
+    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing'
     conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
                 predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
                 noOfTargetHashtags = 25)
@@ -274,5 +277,5 @@ if __name__ == '__main__':
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
 #    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
     
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
