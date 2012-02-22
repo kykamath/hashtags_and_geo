@@ -212,7 +212,7 @@ class Experiments(object):
             print currentTime
             currentOccurrences = []
             currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
-            if currentTimeObject: currentOccurrences=filter(lambda l: l[1] in LOCATIONS_LIST,currentTimeObject['oc'])
+            if currentTimeObject: currentOccurrences=currentTimeObject['oc']
             for i in range(self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
                 historicalTimeUnit = currentTime-i*timeUnitDelta
                 if historicalTimeUnit not in historicalTimeUnitsMap: historicalTimeUnitsMap[historicalTimeUnit]=Propagations(historicalTimeUnit, self.historyTimeInterval)
