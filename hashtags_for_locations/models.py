@@ -104,6 +104,7 @@ class EvaluationMetrics:
             return float(occsOfTargetHashtags)/totalOccs
         else: return NAN_VALUE
     @staticmethod
+    @timeit
     def accuracy(hashtagsForLocation, actualPropagation, *args, **kwargs):
         bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation), {}
         for loc, hashtags in hashtagsForLocation.iteritems(): 
@@ -112,11 +113,13 @@ class EvaluationMetrics:
             else: metricScorePerLocation[loc] = NAN_VALUE
         return metricScorePerLocation
     @staticmethod
+    @timeit
     def impact(hashtagsForLattice, actualPropagation, *args, **kwargs):
         metricScorePerLocation = {}
         for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = EvaluationMetrics._impact(loc, hashtags, actualPropagation)
         return metricScorePerLocation
     @staticmethod
+    @timeit
     def impactDifference(hashtagsForLattice, actualPropagation, *args, **kwargs):
         bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation), {}
         for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = EvaluationMetrics._impact(loc, bestHashtagsForLocation.get(loc, []), actualPropagation) - EvaluationMetrics._impact(loc, hashtags, actualPropagation)
@@ -126,6 +129,7 @@ EVALUATION_METRIC_METHODS = dict([
                                   (EvaluationMetrics.IMPACT, EvaluationMetrics.impact),
                                   (EvaluationMetrics.IMPACT_DIFFERENCE, EvaluationMetrics.impactDifference),
                             ])
+
 class PredictionModels:
     RANDOM = 'random'
     GREEDY = 'greedy'
@@ -153,9 +157,7 @@ class PredictionModels:
                 for neighboring_location in location_probabilities['neighborProbability'][loc]:
                     if location_probabilities['neighborProbability'][loc][neighboring_location]!=0.0:
     #                    for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
-                        for h in hashtag_distribution_in_locations[neighboring_location]: 
-#                            print hashtag_distribution_in_locations[neighboring_location][h], location_probabilities['neighborProbability'][loc][neighboring_location]
-                            hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
+                        for h in hashtag_distribution_in_locations[neighboring_location]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
 #                hashtags_for_lattice[loc] = []
                 hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
                 hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
@@ -164,6 +166,7 @@ class PredictionModels:
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
         return hashtags_for_lattice
     @staticmethod
+    @timeit
     def random(propagation_for_prediction, *args, **conf):
         hashtags_for_lattice = defaultdict(list)
         if propagation_for_prediction.occurrences:
@@ -172,6 +175,7 @@ class PredictionModels:
                 hashtags_for_lattice[loc] = random.sample(uniqueHashtags, min(len(uniqueHashtags), conf['noOfTargetHashtags']))
         return hashtags_for_lattice
     @staticmethod
+    @timeit
     def greedy(propagation_for_prediction, *args, **conf):
         hashtags_for_lattice = defaultdict(list)
         if propagation_for_prediction.occurrences:
@@ -179,8 +183,10 @@ class PredictionModels:
                 hashtags_for_lattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
         return hashtags_for_lattice
     @staticmethod
+    @timeit
     def sharing_probability(propagation_for_prediction, *args, **conf): loadSharingProbabilities(); return PredictionModels._hashtags_by_location_probabilities(propagation_for_prediction, SHARING_PROBABILITIES, *args, **conf)
     @staticmethod
+    @timeit
     def transmitting_probability(propagation_for_prediction, *args, **conf): loadTransmittingProbabilities(); return PredictionModels._hashtags_by_location_probabilities(propagation_for_prediction, TRANSMITTING_PROBABILITIES, *args, **conf)
 PREDICTION_MODEL_METHODS = dict([(PredictionModels.RANDOM, PredictionModels.random),
                 (PredictionModels.GREEDY, PredictionModels.greedy),
@@ -268,8 +274,8 @@ if __name__ == '__main__':
     
     predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
     
-#    evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
-    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
+    evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
+#    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
     
     Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
 #    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
