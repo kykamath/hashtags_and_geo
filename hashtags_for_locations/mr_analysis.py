@@ -188,8 +188,8 @@ class MRAnalysis(ModifiedMRJob):
         pass
 #        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
-#        return self.jobsToGetHastagObjectsAllOccurrencesWithinWindow()
+        return self.jobsToGetHastagObjectsAllOccurrencesWithinWindow()
 #        return self.jobsToGetLocationObjects()
-        return self.jobsToGetTimeUnitObjects()
+#        return self.jobsToGetTimeUnitObjects()
 if __name__ == '__main__':
     MRAnalysis.run()
