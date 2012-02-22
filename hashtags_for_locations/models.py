@@ -247,8 +247,8 @@ def temp():
 #        print datetime.fromtimestamp(data['tu']), len(data['oc'])
 if __name__ == '__main__':
 #    loadLocationsList()
-    temp()
-    exit()
+#    temp()
+#    exit()
     
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
