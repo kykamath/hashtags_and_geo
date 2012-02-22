@@ -239,14 +239,16 @@ class Experiments(object):
 @timeit
 def temp():
     d = {}
-    for e, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/timeUnitWithOccurrences')):
-        print e, data.keys()
+    d = [(datetime.fromtimestamp(data['tu']), data['oc']) for e, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/timeUnitWithOccurrences'))]
+    d = sorted(d, key=itemgetter(0))
+    for t in d: print t[0], len(t[1])
+#        print e, data.keys()
 #        d[data['tu']] = filter(lambda l: l[1] in LOCATIONS_LIST,data['oc'])
-        d[data['tu']] = data['oc']
+#        print datetime.fromtimestamp(data['tu']), len(data['oc'])
 if __name__ == '__main__':
 #    loadLocationsList()
-#    temp()
-#    exit()
+    temp()
+    exit()
     
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
