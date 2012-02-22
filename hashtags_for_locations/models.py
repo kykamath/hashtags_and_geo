@@ -164,13 +164,17 @@ class PredictionModels:
             for loc, occs in propagation_for_prediction.occurrences.iteritems():
                 hashtag_scores = defaultdict(float)
                 for neighboring_location in SHARING_PROBABILITIES['neighborProbability'][loc]:
-                    for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
-#                hashtags_for_lattice[loc] = []
-                hashtags_for_lattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
-                locations = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and locations:
-                    l = locations.pop()
-                    if l not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(l)
+#                    for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
+                    for h in hashtag_distribution_in_locations[neighboring_location]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
+
+#                    if hashtag_distribution_in_locations[neighboring_location]:
+#                        print 'x'
+                hashtags_for_lattice[loc] = []
+                hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
+                    h = hashtags.pop()
+                    if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
         return hashtags_for_lattice
 PREDICTION_MODEL_METHODS = dict([(PredictionModels.RANDOM, PredictionModels.random),
                 (PredictionModels.GREEDY, PredictionModels.greedy),
@@ -247,18 +251,18 @@ def temp():
 #        print datetime.fromtimestamp(data['tu']), len(data['oc'])
 if __name__ == '__main__':
 #    loadLocationsList()
-    temp()
-    exit()
+#    temp()
+#    exit()
     
-    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing'
+    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
     conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
                 predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
-                noOfTargetHashtags = 10)
+                noOfTargetHashtags = 25)
     
     predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY]
     
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
-#    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
+#    evaluationMetrics = [EvaluationMetrics.IMPACT]
     
-    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
