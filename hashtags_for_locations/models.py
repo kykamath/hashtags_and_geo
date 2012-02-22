@@ -69,7 +69,6 @@ def loadTransmittingProbabilities():
             TRANSMITTING_PROBABILITIES['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in TRANSMITTING_PROBABILITIES['hashtagObservingProbability'].keys()[:]: TRANSMITTING_PROBABILITIES['hashtagObservingProbability'][lattice] = len(TRANSMITTING_PROBABILITIES['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
-        
 
 class Propagations:
     def __init__(self, startTime, interval):
@@ -224,8 +223,6 @@ class Experiments(object):
             timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
             timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
             if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
-#                print currentTime, len(historicalTimeUnitsMap[timeUnitForPropagationForPrediction].occurrences), len(predictionTimeUnitsMap[timeUnitForActualPropagation].occurrences)
-#                continue
                 for modelId in self.predictionModels:
                     hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](historicalTimeUnitsMap[timeUnitForPropagationForPrediction], **self.conf)
                     for metric_id in self.evaluationMetrics:
@@ -267,7 +264,7 @@ if __name__ == '__main__':
 #    temp()
 #    exit()
     
-    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing'
+    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
     conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
                 predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
                 noOfTargetHashtags = 25)
@@ -277,5 +274,5 @@ if __name__ == '__main__':
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
 #    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
     
-    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
