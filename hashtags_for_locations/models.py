@@ -267,7 +267,7 @@ if __name__ == '__main__':
 #    temp()
 #    exit()
     
-    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 31), 'testing'
+    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 30), 'testing'
     conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
                 predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
                 noOfTargetHashtags = 25)
