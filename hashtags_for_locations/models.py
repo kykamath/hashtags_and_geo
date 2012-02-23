@@ -211,7 +211,7 @@ class Experiments(object):
         map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
         while currentTime<self.endTime:
             def entry_method():
-                print currentTime, self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS, self.predictionTimeInterval.seconds/TIME_UNIT_IN_SECONDS
+                print currentTime, self.historyTimeInterval.seconds, self.predictionTimeInterval.seconds
                 currentOccurrences = []
                 currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
                 if currentTimeObject: currentOccurrences=currentTimeObject['oc']
@@ -241,10 +241,9 @@ class Experiments(object):
         iteration_results = {}
         for data in FileIO.iterateJsonFromFile(self.getModelFile(modelId)):
             if data['tu'] not in iteration_results: iteration_results[data['tu']] = {}
-#            if data['modelId'] not in iteration_results[data['tu']]: iteration_results[data['tu']][data['modelId']] = {}
-            if data['metricId'] in self.evaluationMetrics: iteration_results[data['tu']][data['metricId']] = data['scoresPerLattice']
+            if data['metricId'] in self.evaluationMetrics: iteration_results[data['tu']][data['metricId']] = data
         return iteration_results
-    def plotRunningTimes(self):
+    def plotPerformanceForVaryingNoOfHashtags(self):
         for model_id in self.predictionModels:
             iteration_results = self.loadIterationData(model_id)
             metric_values_for_model = defaultdict(list)
@@ -256,6 +255,7 @@ class Experiments(object):
 #            for model_id in metric_values_for_model:
             for metric_id in metric_values_for_model:
                 print model_id, metric_id, np.mean(metric_values_for_model[metric_id])
+        
     @staticmethod
     def runExperiment():
         startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
@@ -266,6 +266,7 @@ class Experiments(object):
         predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
         evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
         Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, noOfHashtagsList=[5,10,15,20,25], **conf).run()
+        
         
 def temp():
     d = {}
@@ -280,17 +281,14 @@ if __name__ == '__main__':
 #    temp()
 #    exit()
 
-    Experiments.runExperiment()
+#    Experiments.runExperiment()
     
-#    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
-#    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
-#                predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
-#                noOfTargetHashtags = 25)
+    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
+    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
+                predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
+                noOfTargetHashtags = 25)
 #    
-#    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
+    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
 #    
-#    evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
-#    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
-#    
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, noOfHashtagsList=[5,10,15,20,25], **conf).run()
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
+    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotPerformanceForVaryingNoOfHashtags()
