@@ -260,7 +260,7 @@ class Experiments(object):
     def runExperiment():
         startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
         conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), 
-                    predictionTimeInterval = timedelta(seconds=8*TIME_UNIT_IN_SECONDS),
+                    predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS),
                     noOfTargetHashtags = 25)
         
         predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
