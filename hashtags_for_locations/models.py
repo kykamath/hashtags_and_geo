@@ -103,7 +103,6 @@ class EvaluationMetrics:
             return float(occsOfTargetHashtags)/totalOccs
         else: return NAN_VALUE
     @staticmethod
-    @timeit
     def accuracy(hashtagsForLocation, actualPropagation, *args, **kwargs):
         bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation), {}
         for loc, hashtags in hashtagsForLocation.iteritems(): 
@@ -112,13 +111,11 @@ class EvaluationMetrics:
             else: metricScorePerLocation[loc] = NAN_VALUE
         return metricScorePerLocation
     @staticmethod
-    @timeit
     def impact(hashtagsForLattice, actualPropagation, *args, **kwargs):
         metricScorePerLocation = {}
         for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = EvaluationMetrics._impact(loc, hashtags, actualPropagation)
         return metricScorePerLocation
     @staticmethod
-    @timeit
     def impactDifference(hashtagsForLattice, actualPropagation, *args, **kwargs):
         bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation), {}
         for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = EvaluationMetrics._impact(loc, bestHashtagsForLocation.get(loc, []), actualPropagation) - EvaluationMetrics._impact(loc, hashtags, actualPropagation)
@@ -165,7 +162,6 @@ class PredictionModels:
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
         return hashtags_for_lattice
     @staticmethod
-    @timeit
     def random(propagation_for_prediction, *args, **conf):
         hashtags_for_lattice = defaultdict(list)
         if propagation_for_prediction.occurrences:
@@ -174,7 +170,6 @@ class PredictionModels:
                 hashtags_for_lattice[loc] = random.sample(uniqueHashtags, min(len(uniqueHashtags), conf['noOfTargetHashtags']))
         return hashtags_for_lattice
     @staticmethod
-    @timeit
     def greedy(propagation_for_prediction, *args, **conf):
         hashtags_for_lattice = defaultdict(list)
         if propagation_for_prediction.occurrences:
@@ -182,10 +177,8 @@ class PredictionModels:
                 hashtags_for_lattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
         return hashtags_for_lattice
     @staticmethod
-    @timeit
     def sharing_probability(propagation_for_prediction, *args, **conf): loadSharingProbabilities(); return PredictionModels._hashtags_by_location_probabilities(propagation_for_prediction, SHARING_PROBABILITIES, *args, **conf)
     @staticmethod
-    @timeit
     def transmitting_probability(propagation_for_prediction, *args, **conf): loadTransmittingProbabilities(); return PredictionModels._hashtags_by_location_probabilities(propagation_for_prediction, TRANSMITTING_PROBABILITIES, *args, **conf)
 PREDICTION_MODEL_METHODS = dict([(PredictionModels.RANDOM, PredictionModels.random),
                 (PredictionModels.GREEDY, PredictionModels.greedy),
@@ -194,11 +187,19 @@ PREDICTION_MODEL_METHODS = dict([(PredictionModels.RANDOM, PredictionModels.rand
                 ])
     
 class Experiments(object):
-    def __init__(self, startTime, endTime, outputFolder, predictionModels, evaluationMetrics, *args, **conf):
+    def __init__(self, startTime, endTime, outputFolder, predictionModels, evaluationMetrics, noOfHashtagsList=None, *args, **conf):
         self.startTime, self.endTime, self.outputFolder = startTime, endTime, outputFolder
         self.predictionModels, self.evaluationMetrics = predictionModels, evaluationMetrics
         self.historyTimeInterval, self.predictionTimeInterval = conf['historyTimeInterval'], conf['predictionTimeInterval']
         self.conf = conf
+        self.noOfHashtagsList = noOfHashtagsList
+        if not self.noOfHashtagsList: self.noOfHashtagsList = [conf['noOfTargetHashtags']]
+    def _getSerializableConf(self):
+        conf_to_return = {}
+        for k, v in self.conf.iteritems(): conf_to_return[k]=v
+        conf_to_return['historyTimeInterval'] = conf_to_return['historyTimeInterval'].seconds
+        conf_to_return['predictionTimeInterval'] = conf_to_return['predictionTimeInterval'].seconds
+        return conf_to_return
     def getModelFile(self, modelId): return modelsFolder%self.outputFolder+'%s_%s/%s_%s/%s/%s'%(self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'), self.conf['historyTimeInterval'].seconds/60, self.conf['predictionTimeInterval'].seconds/60, self.conf['noOfTargetHashtags'], modelId)
     def run(self):
         currentTime = self.startTime
@@ -208,7 +209,6 @@ class Experiments(object):
         timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d')))])
         map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
         while currentTime<self.endTime:
-            @timeit
             def entry_method():
                 print currentTime
                 currentOccurrences = []
@@ -226,12 +226,14 @@ class Experiments(object):
             timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
             timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
             if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
-                for modelId in self.predictionModels:
-                    hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](historicalTimeUnitsMap[timeUnitForPropagationForPrediction], **self.conf)
-                    for metric_id in self.evaluationMetrics:
-                        scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](hashtagsForLattice, predictionTimeUnitsMap[timeUnitForActualPropagation], **self.conf)
-                        iterationData = {'tu': GeneralMethods.getEpochFromDateTimeObject(timeUnitForActualPropagation), 'modelId': modelId, 'metricId': metric_id, 'scoresPerLattice': scoresPerLattice}
-                        FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
+                for noOfTargetHashtags in self.noOfHashtagsList:
+                    self.conf['noOfTargetHashtags'] = noOfTargetHashtags
+                    for modelId in self.predictionModels:
+                        hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](historicalTimeUnitsMap[timeUnitForPropagationForPrediction], **self.conf)
+                        for metric_id in self.evaluationMetrics:
+                            scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](hashtagsForLattice, predictionTimeUnitsMap[timeUnitForActualPropagation], **self.conf)
+                            iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(timeUnitForActualPropagation), 'modelId': modelId, 'metricId': metric_id, 'scoresPerLattice': scoresPerLattice}
+                            FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
     def loadIterationData(self, modelId):
@@ -253,7 +255,17 @@ class Experiments(object):
 #            for model_id in metric_values_for_model:
             for metric_id in metric_values_for_model:
                 print model_id, metric_id, np.mean(metric_values_for_model[metric_id])
-@timeit
+    @staticmethod
+    def runExperiment():
+        startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
+        conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
+                    predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
+                    noOfTargetHashtags = 25)
+        
+        predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
+        evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
+        Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, noOfHashtagsList=[5,10,15,20,25], **conf).run()
+        
 def temp():
     d = {}
     d = [(datetime.fromtimestamp(data['tu']), data['oc']) for e, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/timeUnitWithOccurrences'))]
@@ -266,16 +278,18 @@ if __name__ == '__main__':
 #    loadLocationsList()
 #    temp()
 #    exit()
+
+    Experiments.runExperiment()
     
-    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 30), 'testing'
-    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
-                predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
-                noOfTargetHashtags = 25)
-    
-    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
-    
-    evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
-    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
-    
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
+#    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
+#    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
+#                predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
+#                noOfTargetHashtags = 25)
+#    
+#    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
+#    
+#    evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
+#    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
+#    
+#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, noOfHashtagsList=[5,10,15,20,25], **conf).run()
+#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotRunningTimes()
