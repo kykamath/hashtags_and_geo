@@ -197,8 +197,8 @@ class Experiments(object):
     def _getSerializableConf(self):
         conf_to_return = {}
         for k, v in self.conf.iteritems(): conf_to_return[k]=v
-        conf_to_return['historyTimeInterval'] = conf_to_return['historyTimeInterval'].seconds
-        conf_to_return['predictionTimeInterval'] = conf_to_return['predictionTimeInterval'].seconds
+        conf_to_return['historyTimeInterval'] = self.historyTimeInterval.seconds
+        conf_to_return['predictionTimeInterval'] = self.predictionTimeInterval.seconds
         return conf_to_return
     def getModelFile(self, modelId): return modelsFolder%self.outputFolder+'%s_%s/%s_%s/%s/%s'%(self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'), self.conf['historyTimeInterval'].seconds/60, self.conf['predictionTimeInterval'].seconds/60, self.conf['noOfTargetHashtags'], modelId)
     def run(self):
@@ -206,7 +206,7 @@ class Experiments(object):
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
         loadLocationsList()
-        print currentTime, self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS, self.predictionTimeInterval.seconds/TIME_UNIT_IN_SECONDS
+        print currentTime, self.historyTimeInterval.seconds, self.predictionTimeInterval.seconds
         timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d')))])
         map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
         while currentTime<self.endTime:
@@ -257,12 +257,9 @@ class Experiments(object):
                 print model_id, metric_id, np.mean(metric_values_for_model[metric_id])
         
     @staticmethod
-    def runExperiment():
-        startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
-        conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), 
-                    predictionTimeInterval = timedelta(seconds=8*TIME_UNIT_IN_SECONDS),
-                    noOfTargetHashtags = 25)
-        
+    def generateDataForVaryingNumberOfHastags():
+        startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
+        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS))
         predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
         evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
         Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, noOfHashtagsList=[5,10,15,20,25], **conf).run()
@@ -281,14 +278,15 @@ if __name__ == '__main__':
 #    temp()
 #    exit()
 
-#    Experiments.runExperiment()
+    Experiments.generateDataForVaryingNumberOfHastags()
+#    Experiments.plotDataForVaryingNumberOfHastags()
     
-    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
-    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
-                predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
-                noOfTargetHashtags = 25)
-#    
-    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
-#    
-    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
-    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotPerformanceForVaryingNoOfHashtags()
+#    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
+#    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
+#                predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
+#                noOfTargetHashtags = 25)
+##    
+#    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
+##    
+#    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
+#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotPerformanceForVaryingNoOfHashtags()
