@@ -90,7 +90,7 @@ class EvaluationMetrics:
     IMPACT = 'impact'
     IMPACT_DIFFERENCE = 'impact_difference'
     @staticmethod
-    def _bestHashtagsForLocation(actualPropagation):
+    def _bestHashtagsForLocation(actualPropagation, **conf):
         bestHashtagsForLocation = {}
         for loc, occs in actualPropagation.occurrences.iteritems():
             bestHashtagsForLocation[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
@@ -104,7 +104,7 @@ class EvaluationMetrics:
         else: return NAN_VALUE
     @staticmethod
     def accuracy(hashtagsForLocation, actualPropagation, *args, **kwargs):
-        bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation), {}
+        bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation, **kwargs), {}
         for loc, hashtags in hashtagsForLocation.iteritems(): 
             bestSet = set(bestHashtagsForLocation.get(loc, []))
             if bestSet: metricScorePerLocation[loc] = len(set(hashtags).intersection(bestSet))/float(len(bestSet))
