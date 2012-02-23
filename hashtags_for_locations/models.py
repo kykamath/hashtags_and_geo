@@ -187,13 +187,13 @@ PREDICTION_MODEL_METHODS = dict([(PredictionModels.RANDOM, PredictionModels.rand
                 ])
     
 class Experiments(object):
-    def __init__(self, startTime, endTime, outputFolder, predictionModels, evaluationMetrics, noOfHashtagsList=None, *args, **conf):
+    def __init__(self, startTime, endTime, outputFolder, predictionModels, evaluationMetrics, *args, **conf):
         self.startTime, self.endTime, self.outputFolder = startTime, endTime, outputFolder
         self.predictionModels, self.evaluationMetrics = predictionModels, evaluationMetrics
         self.historyTimeInterval, self.predictionTimeInterval = conf['historyTimeInterval'], conf['predictionTimeInterval']
         self.conf = conf
-        self.noOfHashtagsList = noOfHashtagsList
-        if not self.noOfHashtagsList: self.noOfHashtagsList = [conf['noOfTargetHashtags']]
+#        self.noOfHashtagsList = noOfHashtagsList
+        self.noOfHashtagsList = conf['noOfHashtagsList']
     def _getSerializableConf(self):
         conf_to_return = {}
         for k, v in self.conf.iteritems(): conf_to_return[k]=v
@@ -208,7 +208,11 @@ class Experiments(object):
         loadLocationsList()
         print currentTime, self.historyTimeInterval.seconds, self.predictionTimeInterval.seconds
         timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d')))])
-        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
+        for no_of_hashtags in self.noOfHashtagsList:
+            for model_id in self.predictionModels:
+                self.conf['noOfTargetHashtags'] = no_of_hashtags
+                GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(model_id))
+#        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
         while currentTime<self.endTime:
             def entry_method():
                 print currentTime, self.historyTimeInterval.seconds, self.predictionTimeInterval.seconds
@@ -258,11 +262,12 @@ class Experiments(object):
         
     @staticmethod
     def generateDataForVaryingNumberOfHastags():
+        noOfHashtagsList=[5,10,15,20,25]
         startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
-        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS))
+        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
         evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
-        Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, noOfHashtagsList=[5,10,15,20,25], **conf).run()
+        Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
         
         
 def temp():
