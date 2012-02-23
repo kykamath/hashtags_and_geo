@@ -258,8 +258,8 @@ class Experiments(object):
     @staticmethod
     def runExperiment():
         startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
-        conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
-                    predictionTimeInterval = timedelta(seconds=48*TIME_UNIT_IN_SECONDS),
+        conf = dict(historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS), 
+                    predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
                     noOfTargetHashtags = 25)
         
         predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
