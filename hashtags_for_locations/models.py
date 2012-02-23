@@ -117,7 +117,7 @@ class EvaluationMetrics:
         return metricScorePerLocation
     @staticmethod
     def impactDifference(hashtagsForLattice, actualPropagation, *args, **kwargs):
-        bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation), {}
+        bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation, **kwargs), {}
         for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = EvaluationMetrics._impact(loc, bestHashtagsForLocation.get(loc, []), actualPropagation) - EvaluationMetrics._impact(loc, hashtags, actualPropagation)
         return metricScorePerLocation
 EVALUATION_METRIC_METHODS = dict([
