@@ -210,7 +210,7 @@ class Experiments(object):
         map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
         while currentTime<self.endTime:
             def entry_method():
-                print currentTime, self.historyTimeInterval.seconds, self.predictionTimeInterval.seconds
+                print currentTime, self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS, self.predictionTimeInterval.seconds/TIME_UNIT_IN_SECONDS
                 currentOccurrences = []
                 currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
                 if currentTimeObject: currentOccurrences=currentTimeObject['oc']
