@@ -16,6 +16,7 @@ from library.classes import GeneralMethods, timeit
 from library.file_io import FileIO
 import numpy as np
 from library.stats import getOutliersRangeUsingIRQ
+import matplotlib.pyplot as plt
 
 NAN_VALUE = -1.0
 
@@ -245,30 +246,40 @@ class Experiments(object):
         iteration_results = {}
         for data in FileIO.iterateJsonFromFile(self.getModelFile(modelId)):
             if data['tu'] not in iteration_results: iteration_results[data['tu']] = {}
-            if data['metricId'] in self.evaluationMetrics: iteration_results[data['tu']][data['metricId']] = data
+            if data['metricId'] in self.evaluationMetrics: iteration_results[data['tu']][data['metricId']] = data['scoresPerLattice']
         return iteration_results
-    def plotPerformanceForVaryingNoOfHashtags(self):
-        for model_id in self.predictionModels:
-            iteration_results = self.loadIterationData(model_id)
-            metric_values_for_model = defaultdict(list)
-            for _, data_for_model in iteration_results.iteritems():
-#                for model_id, data_for_model in data_for_time_unit.iteritems():
-                for metric_id, data_for_metric in data_for_model.iteritems():
-#                    if metric_id not in metric_values_for_model[model_id]: metric_values_for_model[metric_id] = []
-                    metric_values_for_model[metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
-#            for model_id in metric_values_for_model:
-            for metric_id in metric_values_for_model:
-                print model_id, metric_id, np.mean(metric_values_for_model[metric_id])
-        
     @staticmethod
     def generateDataForVaryingNumberOfHastags():
-        noOfHashtagsList=[5,10,15,20,25]
+        noOfHashtagsList=map(lambda i: i*5, range(1,21))
         startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
         conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=8*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
         evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
         Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
-        
+    @staticmethod
+    def plotPerformanceForVaryingNoOfHashtags():
+        noOfHashtagsList=map(lambda i: i*5, range(1,21))
+        startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
+        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+        predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
+#        evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
+        evaluationMetrics = [EvaluationMetrics.ACCURACY]
+        experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
+        data_to_plot_by_model_id = defaultdict(dict)
+        for noOfTargetHashtags in experiments.noOfHashtagsList:
+            experiments.conf['noOfTargetHashtags'] = noOfTargetHashtags
+            for model_id in experiments.predictionModels:
+                iteration_results = experiments.loadIterationData(model_id)
+                metric_values_for_model = defaultdict(list)
+                for _, data_for_model in iteration_results.iteritems():
+                    for metric_id, data_for_metric in data_for_model.iteritems():
+                        metric_values_for_model[metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
+                for metric_id in metric_values_for_model: data_to_plot_by_model_id[model_id][noOfTargetHashtags] = np.mean(metric_values_for_model[metric_id])
+        for model_id, data_to_plot in data_to_plot_by_model_id.iteritems():
+            dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
+            plt.plot(dataX, dataY, label=model_id, lw=2)
+        plt.legend()
+        plt.savefig('images/plotPerformanceForVaryingNoOfHashtags.png')
         
 def temp():
     d = {}
@@ -283,8 +294,8 @@ if __name__ == '__main__':
 #    temp()
 #    exit()
 
-    Experiments.generateDataForVaryingNumberOfHastags()
-#    Experiments.plotDataForVaryingNumberOfHastags()
+#    Experiments.generateDataForVaryingNumberOfHastags()
+    Experiments.plotPerformanceForVaryingNoOfHashtags()
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
 #    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
