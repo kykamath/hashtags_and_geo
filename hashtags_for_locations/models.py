@@ -5,7 +5,7 @@ Created on Feb 14, 2012
 '''
 from analysis import iterateJsonFromFile
 from settings import timeUnitWithOccurrencesFile, locationsGraphFile,\
-                     modelsFolder
+                     modelsFolder, hashtagsAllOccurrencesWithinWindowFile
 from datetime import datetime, timedelta
 from mr_analysis import TIME_UNIT_IN_SECONDS
 import time, random, math
@@ -332,17 +332,20 @@ class Experiments(object):
 #    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
         
 def temp():
-    d = {}
-    d = [(datetime.fromtimestamp(data['tu']), data['oc']) for e, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/timeUnitWithOccurrences'))]
-    d = sorted(d, key=itemgetter(0))
-    for t in d: print t[0], len(t[1]), len(set(zip(*t[1])[1]))
+#    d = {}
+#    d = [(datetime.fromtimestamp(data['tu']), data['oc']) for e, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/timeUnitWithOccurrences'))]
+#    d = sorted(d, key=itemgetter(0))
+#    for t in d: print t[0], len(t[1]), len(set(zip(*t[1])[1]))
 #        print e, data.keys()
 #        d[data['tu']] = filter(lambda l: l[1] in LOCATIONS_LIST,data['oc'])
 #        print datetime.fromtimestamp(data['tu']), len(data['oc'])
+    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2012, 1, 31), 'testing'
+    for data in iterateJsonFromFile(hashtagsAllOccurrencesWithinWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))):
+        print unicode(data['h']).encode('utf-8'), data['t']
 if __name__ == '__main__':
 #    loadLocationsList()
-#    temp()
-#    exit()
+    temp()
+    exit()
 
     Experiments.generateDataForVaryingNumberOfHastags()
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(EvaluationMetrics.IMPACT_DIFFERENCE)
