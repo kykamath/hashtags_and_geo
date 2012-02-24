@@ -344,10 +344,10 @@ def temp():
         print unicode(data['h']).encode('utf-8'), data['t']
 if __name__ == '__main__':
 #    loadLocationsList()
-#    temp()
-#    exit()
+    temp()
+    exit()
 
-    Experiments.generateDataForVaryingNumberOfHastags()
+#    Experiments.generateDataForVaryingNumberOfHastags()
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(EvaluationMetrics.IMPACT_DIFFERENCE)
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
