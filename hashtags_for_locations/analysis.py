@@ -23,15 +23,17 @@ def getInputFiles(startTime, endTime, folderType='world'):
         yield hdfsInputFolder%folderType+'%s_%s'%(current.year, current.month)
         current+=relativedelta(months=1)   
 
-def mr_analysis(startTime, endTime, outputFolder):
+def mr_analysis(startTime, endTime, outputFolder, inputFilesStartTime=None, inputFilesEndTime=None):
+    if not inputFilesStartTime: inputFilesStartTime=startTime; inputFilesEndTime=endTime
     outputFile = hashtagsWithEndingWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
 #    outputFile = hashtagsWithoutEndingWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
 #    outputFile = hashtagsAllOccurrencesWithinWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
 #    outputFile = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
-    runMRJob(MRAnalysis, outputFile, getInputFiles(startTime, endTime), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, outputFile, getInputFiles(inputFilesStartTime, inputFilesEndTime), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 
 if __name__ == '__main__':
-    INPUT_START_TIME, INPUT_END_TIME = datetime(2011, 4, 1), datetime(2012, 1, 31)
-#    INPUT_START_TIME, INPUT_END_TIME = START_TIME, END_TIME 
-    mr_analysis(INPUT_START_TIME, INPUT_END_TIME, WINDOW_OUTPUT_FOLDER)
+#    inputFilesStartTime, inputFilesEndTime = None, None
+    inputFilesStartTime, inputFilesEndTime = datetime(2011, 4, 1), datetime(2012, 1, 31)
+    INPUT_START_TIME, INPUT_END_TIME = START_TIME, END_TIME 
+    mr_analysis(INPUT_START_TIME, INPUT_END_TIME, WINDOW_OUTPUT_FOLDER, inputFilesStartTime=inputFilesStartTime, inputFilesEndTime=inputFilesEndTime)
