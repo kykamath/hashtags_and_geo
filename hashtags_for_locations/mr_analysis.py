@@ -27,7 +27,7 @@ LOCATION_ACCURACY = 0.145
 START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 9, 1), datetime(2012, 12, 31), 'testing' # Testing duration
 
 # Paramters to filter hashtags.
-MIN_HASHTAG_OCCURENCES = 500
+MIN_HASHTAG_OCCURENCES = 100
 
 # Parameters to filter hashtags at a location.
 MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 3
@@ -182,16 +182,16 @@ class MRAnalysis(ModifiedMRJob):
     def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithoutEndingWindow)]
     def jobsToGetHastagObjectsAllOccurrencesWithinWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesAllOccurrencesWithinWindow)]
-    def jobsToGetLocationObjects(self): return self.jobsToGetHastagObjectsAllOccurrencesWithinWindow() + [self.mr(mapper=self.mapHashtagObjectsToLocationUnits, mapper_final=self.mapFinalHashtagObjectsToLocationUnits, reducer=self.reduceLocationUnitsToLocationObject)]
+    def jobsToGetLocationObjects(self): return self.jobsToGetHastagObjectsWithEndingWindow() + [self.mr(mapper=self.mapHashtagObjectsToLocationUnits, mapper_final=self.mapFinalHashtagObjectsToLocationUnits, reducer=self.reduceLocationUnitsToLocationObject)]
     def jobsToGetTimeUnitObjects(self): return self.jobsToGetLocationObjects() + \
                                                 [self.mr(mapper=self.mapLocationsObjectsToTimeUnits, mapper_final=self.mapFinalLocationsObjectsToTimeUnits, reducer=self.reduceTimeUnitsToTimeUnitObject)]
 
     def steps(self):
         pass
-        return self.jobsToGetHastagObjectsWithEndingWindow()
+#        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetHastagObjectsAllOccurrencesWithinWindow()
 #        return self.jobsToGetLocationObjects()
-#        return self.jobsToGetTimeUnitObjects()
+        return self.jobsToGetTimeUnitObjects()
 if __name__ == '__main__':
     MRAnalysis.run()
