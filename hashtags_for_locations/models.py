@@ -200,7 +200,7 @@ class Experiments(object):
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
         loadLocationsList()
-        print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
+        print 'Using file: ', timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'))
         timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d')))])
         for no_of_hashtags in self.noOfHashtagsList:
             for model_id in self.predictionModels:
@@ -209,7 +209,7 @@ class Experiments(object):
 #        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
         while currentTime<self.endTime:
             def entry_method():
-                print currentTime, self.historyTimeInterval.seconds, self.predictionTimeInterval.seconds
+                print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
                 currentOccurrences = []
                 currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
                 if currentTimeObject: currentOccurrences=currentTimeObject['oc']
@@ -244,8 +244,8 @@ class Experiments(object):
     @staticmethod
     def generateDataForVaryingNumberOfHastags():
         noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2012, 1, 31), 'testing'
-        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=10*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+        startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2012, 12, 31), 'testing'
+        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
         evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
         Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
@@ -344,10 +344,10 @@ def temp():
         print unicode(data['h']).encode('utf-8'), data['t']
 if __name__ == '__main__':
 #    loadLocationsList()
-    temp()
-    exit()
+#    temp()
+#    exit()
 
-#    Experiments.generateDataForVaryingNumberOfHastags()
+    Experiments.generateDataForVaryingNumberOfHastags()
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(EvaluationMetrics.IMPACT_DIFFERENCE)
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
