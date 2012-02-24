@@ -72,7 +72,9 @@ def iterateHashtagObjectInstances(line):
     else: l = data['bb']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
     point = getLattice(l, LOCATION_ACCURACY)
-    for h in data['h']: yield h.lower(), [point, t]
+    lattice_lid = getLatticeLid(point, LOCATION_ACCURACY)
+    if lattice_lid in VALID_LOCATIONS_LIST:
+        for h in data['h']: yield h.lower(), [point, t]
 
 def getHashtagWithoutEndingWindow(key, values):
     occurences = []
@@ -105,15 +107,15 @@ def getAllHashtagOccurrencesWithinWindows(key, values):
         if numberOfInstances>=MIN_HASHTAG_OCCURENCES: return {'h': key, 't': numberOfInstances, 'e':e, 'l':l, 'oc': sorted(occurences, key=lambda t: t[1])}
 
 def getLocationObjectForLocationUnits(key, values):
-    if key in VALID_LOCATIONS_LIST:
-        locationObject = {'loc': key, 'oc': []}
-        hashtagObjects = defaultdict(list)
-        for instances in values: 
-            for h, t in instances['oc']: hashtagObjects[h].append(t)
-        hashtagObjects = dict(filter(lambda (j, occs): len(occs)>=MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION, hashtagObjects.iteritems()))
-        for h, occs in hashtagObjects.iteritems():
-            for oc in occs: locationObject['oc'].append([h, oc])
-        if locationObject['oc']: return locationObject
+#    if key in VALID_LOCATIONS_LIST:
+    locationObject = {'loc': key, 'oc': []}
+    hashtagObjects = defaultdict(list)
+    for instances in values: 
+        for h, t in instances['oc']: hashtagObjects[h].append(t)
+    hashtagObjects = dict(filter(lambda (j, occs): len(occs)>=MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION, hashtagObjects.iteritems()))
+    for h, occs in hashtagObjects.iteritems():
+        for oc in occs: locationObject['oc'].append([h, oc])
+    if locationObject['oc']: return locationObject
 
 def getTimeUnitObjectFromTimeUnits(key, values):
     timeUnitObject = {'tu': key, 'oc': []}

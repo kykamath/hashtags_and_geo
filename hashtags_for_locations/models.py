@@ -260,7 +260,7 @@ class Experiments(object):
         evaluationMetrics = [metric]
         data_to_plot_by_model_id = defaultdict(dict)
         for predictionTimeInterval in predictionTimeIntervals:
-            startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
+            startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2012, 1, 31), 'testing'
             conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=predictionTimeInterval), noOfTargetHashtags=25)
             predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
             experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
@@ -302,7 +302,7 @@ class Experiments(object):
     @staticmethod
     def plotPerformanceForVaryingNoOfHashtags(metric):
         noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
+        startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2012, 1, 31), 'testing'
         conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
         evaluationMetrics = [metric]
@@ -347,8 +347,8 @@ if __name__ == '__main__':
 #    temp()
 #    exit()
 
-    Experiments.generateDataForVaryingNumberOfHastags()
-#    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(EvaluationMetrics.IMPACT_DIFFERENCE)
+#    Experiments.generateDataForVaryingNumberOfHastags()
+    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(EvaluationMetrics.IMPACT_DIFFERENCE)
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
 #    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
