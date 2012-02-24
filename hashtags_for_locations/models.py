@@ -339,7 +339,7 @@ def temp():
 #        print e, data.keys()
 #        d[data['tu']] = filter(lambda l: l[1] in LOCATIONS_LIST,data['oc'])
 #        print datetime.fromtimestamp(data['tu']), len(data['oc'])
-    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2012, 1, 31), 'testing'
+    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2012, 12, 31), 'testing'
     for i, data in enumerate(iterateJsonFromFile(hashtagsAllOccurrencesWithinWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d')))):
         print unicode(data['h']).encode('utf-8'), data['t']
 if __name__ == '__main__':
