@@ -244,8 +244,8 @@ class Experiments(object):
     @staticmethod
     def generateDataForVaryingNumberOfHastags():
         noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2012, 1, 31), 'testing'
-        conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+        startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2012, 1, 31), 'testing'
+        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
         evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
         Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
@@ -344,8 +344,8 @@ def temp():
         print unicode(data['h']).encode('utf-8'), data['t']
 if __name__ == '__main__':
 #    loadLocationsList()
-    temp()
-    exit()
+#    temp()
+#    exit()
 
     Experiments.generateDataForVaryingNumberOfHastags()
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(EvaluationMetrics.IMPACT_DIFFERENCE)
