@@ -17,6 +17,7 @@ from library.file_io import FileIO
 import numpy as np
 from library.stats import getOutliersRangeUsingIRQ
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
 
 NAN_VALUE = -1.0
 
@@ -77,15 +78,7 @@ class Propagations:
         self.occurrences = defaultdict(list)
     def update(self, occurrences):
         for h, loc, t in occurrences: self.occurrences[loc].append([h, t])
-            
-#def testEmptyPropagation(propagation):
-#    for loc, occs in propagation.occurrences.iteritems():
-#        if not occs: 
-##            print propagation.occurrences
-##            exit()
-#            return False
-#    return True
-            
+
 class EvaluationMetrics:
     ACCURACY = 'accuracy'
     IMPACT = 'impact'
@@ -185,8 +178,8 @@ PREDICTION_MODEL_METHODS = dict([(PredictionModels.RANDOM, PredictionModels.rand
                 (PredictionModels.GREEDY, PredictionModels.greedy),
                 (PredictionModels.SHARING_PROBABILITY, PredictionModels.sharing_probability),
                 (PredictionModels.TRANSMITTING_PROBABILITY, PredictionModels.transmitting_probability),
-                ])
-    
+                ])    
+
 class Experiments(object):
     def __init__(self, startTime, endTime, outputFolder, predictionModels, evaluationMetrics, *args, **conf):
         self.startTime, self.endTime, self.outputFolder = startTime, endTime, outputFolder
@@ -250,12 +243,17 @@ class Experiments(object):
         return iteration_results
     @staticmethod
     def generateDataForVaryingNumberOfHastags():
-        noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
-        conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=8*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
-        predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
-        evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
-        Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+#        noOfHashtagsList=map(lambda i: i*5, range(1,21))
+#        startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2012, 1, 31), 'testing'
+#        conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=8*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+#        predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
+#        evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
+#        Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+        po = Pool()
+        po.map_async(generateDataForVaryingNoOfHashtagsAtVaryingPredictionTimeInterval, ((1*TIME_UNIT_IN_SECONDS, i*2*TIME_UNIT_IN_SECONDS) for i in xrange(1,2)))
+        po.close()
+        po.join()
+
     @staticmethod
     def plotPerformanceForVaryingPredictionTimeIntervals(metric):
         predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [2,4,6,8])
@@ -324,6 +322,14 @@ class Experiments(object):
             plt.plot(dataX, dataY, label=model_id, lw=2)
         plt.legend()
         plt.savefig('images/plotPerformanceForVaryingNoOfHashtags.png')
+
+def generateDataForVaryingNoOfHashtagsAtVaryingPredictionTimeInterval(historyTimeInterval, predictionTimeInterval):
+    noOfHashtagsList=map(lambda i: i*5, range(1,21))
+    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
+    conf = dict(historyTimeInterval = timedelta(seconds=historyTimeInterval), predictionTimeInterval = timedelta(seconds=predictionTimeInterval), noOfHashtagsList=noOfHashtagsList)
+    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
+    evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
+    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
         
 def temp():
     d = {}
@@ -338,8 +344,8 @@ if __name__ == '__main__':
 #    temp()
 #    exit()
 
-#    Experiments.generateDataForVaryingNumberOfHastags()
-    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(EvaluationMetrics.IMPACT_DIFFERENCE)
+    Experiments.generateDataForVaryingNumberOfHastags()
+#    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(EvaluationMetrics.IMPACT_DIFFERENCE)
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
 #    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
