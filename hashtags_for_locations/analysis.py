@@ -32,6 +32,6 @@ def mr_analysis(startTime, endTime, outputFolder):
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 
 if __name__ == '__main__':
-#    INPUT_START_TIME, INPUT_END_TIME = datetime(2011, 4, 1), datetime(2012, 1, 31)
-    INPUT_START_TIME, INPUT_END_TIME = START_TIME, END_TIME 
+    INPUT_START_TIME, INPUT_END_TIME = datetime(2011, 4, 1), datetime(2012, 1, 31)
+#    INPUT_START_TIME, INPUT_END_TIME = START_TIME, END_TIME 
     mr_analysis(INPUT_START_TIME, INPUT_END_TIME, WINDOW_OUTPUT_FOLDER)

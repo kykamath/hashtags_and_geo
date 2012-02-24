@@ -340,15 +340,15 @@ def temp():
 #        d[data['tu']] = filter(lambda l: l[1] in LOCATIONS_LIST,data['oc'])
 #        print datetime.fromtimestamp(data['tu']), len(data['oc'])
     startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2012, 1, 31), 'testing'
-    for data in iterateJsonFromFile(hashtagsAllOccurrencesWithinWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))):
+    for i, data in enumerate(iterateJsonFromFile(hashtagsAllOccurrencesWithinWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d')))):
         print unicode(data['h']).encode('utf-8'), data['t']
 if __name__ == '__main__':
 #    loadLocationsList()
-#    temp()
-#    exit()
+    temp()
+    exit()
 
 #    Experiments.generateDataForVaryingNumberOfHastags()
-    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(EvaluationMetrics.IMPACT_DIFFERENCE)
+#    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(EvaluationMetrics.IMPACT_DIFFERENCE)
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
 #    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
