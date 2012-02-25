@@ -24,7 +24,7 @@ LOCATION_ACCURACY = 0.145
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 8, 31), 'training' # Training duration
-START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 9, 1), datetime(2012, 12, 31), 'testing' # Testing duration
+START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing' # Testing duration
 
 # Paramters to filter hashtags.
 MIN_HASHTAG_OCCURENCES = 100
@@ -188,10 +188,10 @@ class MRAnalysis(ModifiedMRJob):
 
     def steps(self):
         pass
-#        return self.jobsToGetHastagObjectsWithEndingWindow()
+        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetHastagObjectsAllOccurrencesWithinWindow()
 #        return self.jobsToGetLocationObjects()
-        return self.jobsToGetTimeUnitObjects()
+#        return self.jobsToGetTimeUnitObjects()
 if __name__ == '__main__':
     MRAnalysis.run()
