@@ -147,10 +147,13 @@ class PredictionModels:
                 for neighboring_location in location_probabilities['neighborProbability'][loc]:
                     if location_probabilities['neighborProbability'][loc][neighboring_location]!=0.0:
     #                    for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
-                        for h in hashtag_distribution_in_locations[neighboring_location]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
+                        for h in hashtag_distribution_in_locations[neighboring_location]: 
+                            hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
 #                hashtags_for_lattice[loc] = []
                 hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                if hashtag_scores: hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                if hashtag_scores: 
+                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                    print list(sorted(hashtag_scores.iteritems(), key=itemgetter(1))[-conf['noOfTargetHashtags']:])
                 while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
                     h = hashtags.pop()
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
@@ -171,9 +174,13 @@ class PredictionModels:
                 hashtags_for_lattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
         return hashtags_for_lattice
     @staticmethod
-    def sharing_probability(propagation_for_prediction, *args, **conf): loadSharingProbabilities(); return PredictionModels._hashtags_by_location_probabilities(propagation_for_prediction, SHARING_PROBABILITIES, *args, **conf)
+    def sharing_probability(propagation_for_prediction, *args, **conf): 
+        loadSharingProbabilities(); 
+        return PredictionModels._hashtags_by_location_probabilities(propagation_for_prediction, SHARING_PROBABILITIES, *args, **conf)
     @staticmethod
-    def transmitting_probability(propagation_for_prediction, *args, **conf): loadTransmittingProbabilities(); return PredictionModels._hashtags_by_location_probabilities(propagation_for_prediction, TRANSMITTING_PROBABILITIES, *args, **conf)
+    def transmitting_probability(propagation_for_prediction, *args, **conf): 
+        loadTransmittingProbabilities(); 
+        return PredictionModels._hashtags_by_location_probabilities(propagation_for_prediction, TRANSMITTING_PROBABILITIES, *args, **conf)
 PREDICTION_MODEL_METHODS = dict([(PredictionModels.RANDOM, PredictionModels.random),
                 (PredictionModels.GREEDY, PredictionModels.greedy),
                 (PredictionModels.SHARING_PROBABILITY, PredictionModels.sharing_probability),
@@ -270,29 +277,29 @@ class Experiments(object):
                 plt.plot(dataX, dataY, label=model_id, lw=2)
             plt.legend()
             plt.savefig(Experiments.getImageFileName(metric))
+            plt.clf()
     @staticmethod
-    def plotPerformanceForVaryingHistoricalTimeIntervals(metric):
-        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2])
-        evaluationMetrics = [metric]
-        data_to_plot_by_model_id = defaultdict(dict)
-        for historicalTimeInterval in historicalTimeIntervals:
-            startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
-            conf = dict(historyTimeInterval = timedelta(seconds=historicalTimeInterval), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=5)
-            predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
-            experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
-            for model_id in experiments.predictionModels:
-                iteration_results = experiments.loadIterationData(model_id)
-                metric_values_for_model = defaultdict(list)
-                for _, data_for_model in iteration_results.iteritems():
-                    for metric_id, data_for_metric in data_for_model.iteritems():
-                        metric_values_for_model[metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
-                for metric_id in metric_values_for_model: data_to_plot_by_model_id[model_id][historicalTimeInterval] = np.mean(metric_values_for_model[metric_id])
-        for model_id, data_to_plot in data_to_plot_by_model_id.iteritems():
-            dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
-            plt.plot(dataX, dataY, label=model_id, lw=2)
-        plt.legend()
-        plt.show()
-#        plt.savefig('images/plotPerformanceForVaryingPredictionTimeIntervals.png')
+    def plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
+        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2,3,4,5,6])
+        for metric in evaluationMetrics:
+            evaluationMetrics = [metric]
+            data_to_plot_by_model_id = defaultdict(dict)
+            for historicalTimeInterval in historicalTimeIntervals:
+                conf = dict(historyTimeInterval = timedelta(seconds=historicalTimeInterval), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=5)
+                experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
+                for model_id in experiments.predictionModels:
+                    iteration_results = experiments.loadIterationData(model_id)
+                    metric_values_for_model = defaultdict(list)
+                    for _, data_for_model in iteration_results.iteritems():
+                        for metric_id, data_for_metric in data_for_model.iteritems():
+                            metric_values_for_model[metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
+                    for metric_id in metric_values_for_model: data_to_plot_by_model_id[model_id][historicalTimeInterval] = np.mean(metric_values_for_model[metric_id])
+            for model_id, data_to_plot in data_to_plot_by_model_id.iteritems():
+                dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
+                plt.plot(dataX, dataY, label=model_id, lw=2)
+            plt.legend()
+            plt.savefig(Experiments.getImageFileName(metric))
+            plt.clf()
     @staticmethod
     def plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
         noOfHashtagsList=map(lambda i: i*5, range(1,21))
@@ -315,6 +322,7 @@ class Experiments(object):
                 plt.plot(dataX, dataY, label=model_id, lw=2)
             plt.legend()
             plt.savefig(Experiments.getImageFileName(metric))
+            plt.clf()
 
 #def generateDataForVaryingNoOfHashtagsAtVaryingPredictionTimeInterval(historyTimeInterval, predictionTimeInterval):
 #    noOfHashtagsList=map(lambda i: i*5, range(1,21))
@@ -340,13 +348,16 @@ if __name__ == '__main__':
 #    temp()
 #    exit()
 
-    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
-    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
+#    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
+    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
+#    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
+    predictionModels = [PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
     Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
 #    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
