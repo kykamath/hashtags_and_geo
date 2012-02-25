@@ -18,6 +18,7 @@ import numpy as np
 from library.stats import getOutliersRangeUsingIRQ
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
+from library.geo import getLocationFromLid, getHaversineDistance
 
 NAN_VALUE = -1.0
 
@@ -119,6 +120,28 @@ EVALUATION_METRIC_METHODS = dict([
                                   (EvaluationMetrics.IMPACT, EvaluationMetrics.impact),
                                   (EvaluationMetrics.IMPACT_DIFFERENCE, EvaluationMetrics.impactDifference),
                             ])
+
+class CoverageModel():
+    @staticmethod
+    def _probabilityDistributionForLattices(points):
+            points = sorted(points, key=itemgetter(0,1))
+            numberOfOccurrences = float(len(points))
+            return [(k, len(list(data))/numberOfOccurrences) for k, data in groupby(points, key=itemgetter(0,1))]
+    @staticmethod
+    def _probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice): return 1.01**(-getHaversineDistance(currentLattice, sourceLattice))*probabilityAtSourceLattice
+    @staticmethod
+    def spreadProbability(points):
+        latticeScores = {}
+        probabilityDistributionForObservedLattices = CoverageModel._probabilityDistributionForLattices(points)
+        for lattice in LOCATIONS_LIST:
+            score = 0.0
+            currentLattice = getLocationFromLid(lattice.replace('_', ' '))
+            latticeScores[lattice] = sum([CoverageModel._probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice)for sourceLattice, probabilityAtSourceLattice in probabilityDistributionForObservedLattices])
+        total = sum(latticeScores.values())
+        for k in latticeScores: 
+            if total==0: latticeScores[k]=1.0
+            else: latticeScores[k]/=total
+        return latticeScores
 
 class PredictionModels:
     RANDOM = 'random'
