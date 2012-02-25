@@ -79,6 +79,7 @@ class Propagations:
         self.occurrences = defaultdict(list)
     def update(self, occurrences):
         for h, loc, t in occurrences: self.occurrences[loc].append([h, t])
+    def getCoverageProbabilities(self): pass
 
 class EvaluationMetrics:
     ACCURACY = 'accuracy'
