@@ -143,14 +143,14 @@ class PredictionModels:
         hashtag_distribution_in_locations = PredictionModels._hashtag_distribution_in_locations(propagation_for_prediction.occurrences)
         if propagation_for_prediction.occurrences:
             for loc, occs in propagation_for_prediction.occurrences.iteritems():
-                hashtag_scores = defaultdict(float)
+                hashtag_scores, hashtags = defaultdict(float), []
                 for neighboring_location in location_probabilities['neighborProbability'][loc]:
                     if location_probabilities['neighborProbability'][loc][neighboring_location]!=0.0:
     #                    for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
                         for h in hashtag_distribution_in_locations[neighboring_location]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
 #                hashtags_for_lattice[loc] = []
                 hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                if hashtag_scores: hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
                 while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
                     h = hashtags.pop()
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
@@ -245,7 +245,7 @@ class Experiments(object):
     def generateDataForVaryingNumberOfHastags():
         noOfHashtagsList=map(lambda i: i*5, range(1,21))
         startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2012, 12, 31), 'testing'
-        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
         evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
         Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
@@ -344,10 +344,10 @@ def temp():
         print unicode(data['h']).encode('utf-8'), data['t']
 if __name__ == '__main__':
 #    loadLocationsList()
-    temp()
-    exit()
+#    temp()
+#    exit()
 
-#    Experiments.generateDataForVaryingNumberOfHastags()
+    Experiments.generateDataForVaryingNumberOfHastags()
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(EvaluationMetrics.IMPACT_DIFFERENCE)
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
