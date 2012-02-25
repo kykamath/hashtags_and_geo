@@ -244,8 +244,9 @@ class Experiments(object):
     @staticmethod
     def generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
         noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
-        Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+        for i in range(2,7):
+            conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+            Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
@@ -339,7 +340,7 @@ if __name__ == '__main__':
 #    temp()
 #    exit()
 
-    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2012, 1, 31), 'testing'
+    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
