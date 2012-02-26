@@ -84,7 +84,7 @@ class CoverageModel():
             numberOfOccurrences = float(len(points))
             return [(k, len(list(data))/numberOfOccurrences) for k, data in groupby(points, key=itemgetter(0,1))]
     @staticmethod
-    def _probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice): return 1.01**(-getHaversineDistance(currentLattice, sourceLattice))*probabilityAtSourceLattice
+    def _spreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice): return 1.01**(-getHaversineDistance(currentLattice, sourceLattice))*probabilityAtSourceLattice
     @staticmethod
     def spreadProbability(points):
         latticeScores = {}
@@ -92,13 +92,22 @@ class CoverageModel():
         for lattice in LOCATIONS_LIST:
             score = 0.0
             currentLattice = getLocationFromLid(lattice.replace('_', ' '))
-            latticeScores[lattice] = sum([CoverageModel._probabilitySpreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice)for sourceLattice, probabilityAtSourceLattice in probabilityDistributionForObservedLattices])
+            latticeScores[lattice] = sum([CoverageModel._spreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice)for sourceLattice, probabilityAtSourceLattice in probabilityDistributionForObservedLattices])
         total = sum(latticeScores.values())
         for k in latticeScores: 
             if total==0: latticeScores[k]=1.0
             else: latticeScores[k]/=total
         return latticeScores
-
+    @staticmethod
+    def spreadDistance(points):
+        latticeScores = {}
+        distribution_in_observed_lattices = [(k, len(list(data))) for k, data in groupby(sorted(points, key=itemgetter(0,1)), key=itemgetter(0,1))]
+        for lattice in LOCATIONS_LIST:
+            score = 0.0
+            currentLattice = getLocationFromLid(lattice.replace('_', ' '))
+            latticeScores[lattice] = sum([CoverageModel._spreadingFunction(currentLattice, sourceLattice, count_at_source_lattice)for sourceLattice, count_at_source_lattice in distribution_in_observed_lattices])
+        return latticeScores
+        
 class Propagations:
     def __init__(self, startTime, interval):
         self.startTime, self.interval = startTime, interval
@@ -109,6 +118,10 @@ class Propagations:
         if self.occurrences:
             occurrences = chain(*[zip(zip(*l)[0], [getLocationFromLid(k.replace('_', ' '))]*len(l)) for k,l in self.occurrences.iteritems()])
             return dict([(k, CoverageModel.spreadProbability(zip(*l)[1])) for k, l in groupby(sorted(occurrences, key=itemgetter(0)), key=itemgetter(0))])
+    def getCoverageDistances(self):
+        if self.occurrences:
+            occurrences = chain(*[zip(zip(*l)[0], [getLocationFromLid(k.replace('_', ' '))]*len(l)) for k,l in self.occurrences.iteritems()])
+            return dict([(k, CoverageModel.spreadDistance(zip(*l)[1])) for k, l in groupby(sorted(occurrences, key=itemgetter(0)), key=itemgetter(0))])
 
 class EvaluationMetrics:
     ACCURACY = 'accuracy'
@@ -159,6 +172,7 @@ class PredictionModels:
     COVERAGE_PROBABILITY = 'coverage_probability'
     SHARING_PROBABILITY_WITH_COVERAGE = 'sharing_probability_with_coverage'
     TRANSMITTING_PROBABILITY_WITH_COVERAGE = 'transmitting_probability_with_coverage'
+    COVERAGE_DISTANCE = 'coverage_distance'
     @staticmethod
     def _hashtag_distribution_in_locations(occurrences):
         hashtag_distribution, hashtag_distribution_in_locations = defaultdict(dict), defaultdict(dict)
@@ -176,7 +190,8 @@ class PredictionModels:
         hashtags_for_lattice = defaultdict(list)
         hashtag_distribution_in_locations = PredictionModels._hashtag_distribution_in_locations(propagation_for_prediction.occurrences)
         if propagation_for_prediction.occurrences:
-            for loc, occs in propagation_for_prediction.occurrences.iteritems():
+#            for loc, occs in propagation_for_prediction.occurrences.iteritems():
+            for loc in LOCATIONS_LIST:
                 hashtag_scores, hashtags = defaultdict(float), []
                 for neighboring_location in location_probabilities['neighborProbability'][loc]:
                     if location_probabilities['neighborProbability'][loc][neighboring_location]!=0.0:
@@ -184,8 +199,10 @@ class PredictionModels:
                         for h in hashtag_distribution_in_locations[neighboring_location]: 
 #                            hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
                             hashtag_scores[h]+=(hashtag_distribution_in_locations[neighboring_location][h] * location_probabilities['neighborProbability'][loc][neighboring_location])
-#                hashtags_for_lattice[loc] = []
-                hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                hashtags_for_lattice[loc] = []
+                if loc in propagation_for_prediction.occurrences:
+                    occs = propagation_for_prediction.occurrences[loc]
+                    hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
                 if hashtag_scores: 
                     hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
                     print list(sorted(hashtag_scores.iteritems(), key=itemgetter(1))[-conf['noOfTargetHashtags']:])
@@ -252,7 +269,17 @@ class PredictionModels:
         loadTransmittingProbabilities()
         hashtag_coverage_probabilities = propagation_for_prediction.getCoverageProbabilities()
         return PredictionModels._hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, TRANSMITTING_PROBABILITIES, hashtag_coverage_probabilities, *args, **conf)
-
+    @staticmethod
+    def coverage_distance(propagation_for_prediction, *args, **conf): 
+        hashtags_for_lattice = defaultdict(list)
+        coverage_distances_for_hashtags = propagation_for_prediction.getCoverageDistances()
+        if coverage_distances_for_hashtags:
+            for location in LOCATIONS_LIST:
+                hashtag_scores = dict([(hashtag, coverage_distances_for_hashtags[hashtag][location]) for hashtag in coverage_distances_for_hashtags])
+                total_score = sum(hashtag_scores.values())
+                for hashtag in hashtag_scores: hashtag_scores[hashtag]/=total_score
+                
+        return hashtags_for_lattice
 PREDICTION_MODEL_METHODS = dict([
                                 (PredictionModels.RANDOM, PredictionModels.random),
                                 (PredictionModels.GREEDY, PredictionModels.greedy),
@@ -261,6 +288,7 @@ PREDICTION_MODEL_METHODS = dict([
                                 (PredictionModels.COVERAGE_PROBABILITY, PredictionModels.coverage_probability),
                                 (PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.sharing_probability_with_coverage),
                                 (PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE, PredictionModels.transmitting_probability_with_coverage),
+                                (PredictionModels.COVERAGE_DISTANCE, PredictionModels.coverage_distance),
                             ]) 
 
 class Experiments(object):
@@ -427,7 +455,7 @@ if __name__ == '__main__':
 #    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
 #    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
-    predictionModels = [PredictionModels.COVERAGE_PROBABILITY]
+    predictionModels = [PredictionModels.COVERAGE_DISTANCE]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
     Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
