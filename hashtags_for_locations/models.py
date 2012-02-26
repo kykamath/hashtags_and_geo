@@ -2,6 +2,10 @@
 Created on Feb 14, 2012
 
 @author: kykamath
+
+@todo: Remove the hashtags occurrency term for sharing and transmitting.
+@todo: Think of new method for location coverage that gives location sum to 1.0.
+
 '''
 from analysis import iterateJsonFromFile
 from settings import timeUnitWithOccurrencesFile, locationsGraphFile,\
