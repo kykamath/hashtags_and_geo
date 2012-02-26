@@ -104,8 +104,7 @@ class Propagations:
     def getCoverageProbabilities(self): 
         if self.occurrences:
             occurrences = chain(*[zip(zip(*l)[0], [getLocationFromLid(k.replace('_', ' '))]*len(l)) for k,l in self.occurrences.iteritems()])
-            points_for_hashtags = [(k, zip(*l)[1]) for k, l in groupby(sorted(occurrences, key=itemgetter(0)), key=itemgetter(0))]
-            print 'comes here'
+            return dict([(k, CoverageModel.spreadProbability(zip(*l)[1])) for k, l in groupby(sorted(occurrences, key=itemgetter(0)), key=itemgetter(0))])
 
 class EvaluationMetrics:
     ACCURACY = 'accuracy'
