@@ -155,8 +155,10 @@ class PredictionModels:
     RANDOM = 'random'
     GREEDY = 'greedy'
     SHARING_PROBABILITY = 'sharing_probability'
-    TRANSMITTING_PROBABILITY = 'tranmitting_probability'
+    TRANSMITTING_PROBABILITY = 'transmitting_probability'
     COVERAGE_PROBABILITY = 'coverage_probability'
+    SHARING_PROBABILITY_WITH_COVERAGE = 'sharing_probability_with_coverage'
+    TRANSMITTING_PROBABILITY_WITH_COVERAGE = 'transmitting_probability_with_coverage'
     @staticmethod
     def _hashtag_distribution_in_locations(occurrences):
         hashtag_distribution, hashtag_distribution_in_locations = defaultdict(dict), defaultdict(dict)
@@ -192,6 +194,26 @@ class PredictionModels:
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
         return hashtags_for_lattice
     @staticmethod
+    def _hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, location_probabilities, hashtag_coverage_probabilities, *args, **conf):
+        hashtags_for_lattice = defaultdict(list)
+        hashtag_distribution_in_locations = PredictionModels._hashtag_distribution_in_locations(propagation_for_prediction.occurrences)
+        if propagation_for_prediction.occurrences:
+            for loc, occs in propagation_for_prediction.occurrences.iteritems():
+                hashtag_scores, hashtags = defaultdict(float), []
+                for neighboring_location in location_probabilities['neighborProbability'][loc]:
+                    if location_probabilities['neighborProbability'][loc][neighboring_location]!=0.0:
+                        for h in hashtag_distribution_in_locations[neighboring_location]: 
+#                            hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
+                            hashtag_scores[h]+=(hashtag_coverage_probabilities[h][neighboring_location] * location_probabilities['neighborProbability'][loc][neighboring_location])
+                hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                if hashtag_scores: 
+                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                    print list(sorted(hashtag_scores.iteritems(), key=itemgetter(1))[-conf['noOfTargetHashtags']:])
+                while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
+                    h = hashtags.pop()
+                    if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
+        return hashtags_for_lattice
+    @staticmethod
     def random(propagation_for_prediction, *args, **conf):
         hashtags_for_lattice = defaultdict(list)
         if propagation_for_prediction.occurrences:
@@ -218,16 +240,28 @@ class PredictionModels:
             hashtag_scores_for_location = {}
             for location in LOCATIONS_LIST:
                 hashtag_scores_for_location = dict([(hashtag, hashtag_coverage_probabilities[hashtag][location]) for hashtag in hashtag_coverage_probabilities])
-                total_score = sum(hashtag_scores_for_location.values())
-                for hashtag in hashtag_scores_for_location: hashtag_scores_for_location[hashtag]/=total_score
                 hashtags_for_lattice[location] = zip(*sorted(hashtag_scores_for_location.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
         return hashtags_for_lattice
-PREDICTION_MODEL_METHODS = dict([(PredictionModels.RANDOM, PredictionModels.random),
-                (PredictionModels.GREEDY, PredictionModels.greedy),
-                (PredictionModels.SHARING_PROBABILITY, PredictionModels.sharing_probability),
-                (PredictionModels.TRANSMITTING_PROBABILITY, PredictionModels.transmitting_probability),
-                (PredictionModels.COVERAGE_PROBABILITY, PredictionModels.coverage_probability),
-                ])    
+    @staticmethod
+    def sharing_probability_with_coverage(propagation_for_prediction, *args, **conf): 
+        loadSharingProbabilities()
+        hashtag_coverage_probabilities = propagation_for_prediction.getCoverageProbabilities()
+        return PredictionModels._hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, SHARING_PROBABILITIES, hashtag_coverage_probabilities, *args, **conf)
+    @staticmethod
+    def transmitting_probability_with_coverage(propagation_for_prediction, *args, **conf): 
+        loadTransmittingProbabilities()
+        hashtag_coverage_probabilities = propagation_for_prediction.getCoverageProbabilities()
+        return PredictionModels._hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, TRANSMITTING_PROBABILITIES, hashtag_coverage_probabilities, *args, **conf)
+
+PREDICTION_MODEL_METHODS = dict([
+                                (PredictionModels.RANDOM, PredictionModels.random),
+                                (PredictionModels.GREEDY, PredictionModels.greedy),
+                                (PredictionModels.SHARING_PROBABILITY, PredictionModels.sharing_probability),
+                                (PredictionModels.TRANSMITTING_PROBABILITY, PredictionModels.transmitting_probability),
+                                (PredictionModels.COVERAGE_PROBABILITY, PredictionModels.coverage_probability),
+                                (PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.sharing_probability_with_coverage),
+                                (PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE, PredictionModels.transmitting_probability_with_coverage),
+                            ]) 
 
 class Experiments(object):
     def __init__(self, startTime, endTime, outputFolder, predictionModels, evaluationMetrics, *args, **conf):
