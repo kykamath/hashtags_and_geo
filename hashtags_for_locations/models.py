@@ -275,9 +275,11 @@ class PredictionModels:
         coverage_distances_for_hashtags = propagation_for_prediction.getCoverageDistances()
         if coverage_distances_for_hashtags:
             for location in LOCATIONS_LIST:
-                hashtag_scores = dict([(hashtag, coverage_distances_for_hashtags[hashtag][location]) for hashtag in coverage_distances_for_hashtags])
-                total_score = sum(hashtag_scores.values())
-                for hashtag in hashtag_scores: hashtag_scores[hashtag]/=total_score
+                hashtag_scores_for_location = dict([(hashtag, coverage_distances_for_hashtags[hashtag][location]) for hashtag in coverage_distances_for_hashtags])
+                total_score = sum(hashtag_scores_for_location.values())
+                for hashtag in hashtag_scores_for_location: hashtag_scores_for_location[hashtag]/=total_score
+                hashtags_for_lattice[location] = zip(*sorted(hashtag_scores_for_location.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
+
                 
         return hashtags_for_lattice
 PREDICTION_MODEL_METHODS = dict([
