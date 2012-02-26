@@ -3,6 +3,8 @@ Created on Feb 14, 2012
 
 @author: kykamath
 
+@todo: For the probabilties make sure we are not limited by numberOfHashtags.
+
 '''
 from analysis import iterateJsonFromFile
 from settings import timeUnitWithOccurrencesFile, locationsGraphFile,\
@@ -200,8 +202,7 @@ class PredictionModels:
                 if loc in propagation_for_prediction.occurrences:
                     occs = propagation_for_prediction.occurrences[loc]
                     hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                if hashtag_scores: 
-                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                if hashtag_scores: hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
                 while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
                     h = hashtags.pop()
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
