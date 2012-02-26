@@ -3,9 +3,6 @@ Created on Feb 14, 2012
 
 @author: kykamath
 
-@todo: Remove the hashtags occurrency term for sharing and transmitting.
-@todo: Think of new method for location coverage that gives location sum to 1.0.
-
 '''
 from analysis import iterateJsonFromFile
 from settings import timeUnitWithOccurrencesFile, locationsGraphFile,\
@@ -205,7 +202,6 @@ class PredictionModels:
                     hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
                 if hashtag_scores: 
                     hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                    print list(sorted(hashtag_scores.iteritems(), key=itemgetter(1))[-conf['noOfTargetHashtags']:])
                 while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
                     h = hashtags.pop()
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
@@ -279,8 +275,6 @@ class PredictionModels:
                 total_score = sum(hashtag_scores_for_location.values())
                 for hashtag in hashtag_scores_for_location: hashtag_scores_for_location[hashtag]/=total_score
                 hashtags_for_lattice[location] = zip(*sorted(hashtag_scores_for_location.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
-
-                
         return hashtags_for_lattice
 PREDICTION_MODEL_METHODS = dict([
                                 (PredictionModels.RANDOM, PredictionModels.random),
