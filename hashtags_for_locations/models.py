@@ -180,7 +180,8 @@ class PredictionModels:
                     if location_probabilities['neighborProbability'][loc][neighboring_location]!=0.0:
     #                    for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
                         for h in hashtag_distribution_in_locations[neighboring_location]: 
-                            hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
+#                            hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
+                            hashtag_scores[h]+=(hashtag_distribution_in_locations[neighboring_location][h] * location_probabilities['neighborProbability'][loc][neighboring_location])
 #                hashtags_for_lattice[loc] = []
                 hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
                 if hashtag_scores: 
@@ -212,7 +213,14 @@ class PredictionModels:
     @staticmethod
     def coverage_probability(propagation_for_prediction, *args, **conf): 
         hashtags_for_lattice = defaultdict(list)
-        propagation_for_prediction.getCoverageProbabilities()
+        hashtag_coverage_probabilities = propagation_for_prediction.getCoverageProbabilities()
+        if hashtag_coverage_probabilities:
+            hashtag_scores_for_location = {}
+            for location in LOCATIONS_LIST:
+                hashtag_scores_for_location = dict([(hashtag, hashtag_coverage_probabilities[hashtag][location]) for hashtag in hashtag_coverage_probabilities])
+                total_score = sum(hashtag_scores_for_location.values())
+                for hashtag in hashtag_scores_for_location: hashtag_scores_for_location[hashtag]/=total_score
+                hashtags_for_lattice[location] = zip(*sorted(hashtag_scores_for_location.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
         return hashtags_for_lattice
 PREDICTION_MODEL_METHODS = dict([(PredictionModels.RANDOM, PredictionModels.random),
                 (PredictionModels.GREEDY, PredictionModels.greedy),
