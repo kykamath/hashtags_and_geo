@@ -172,6 +172,8 @@ class PredictionModels:
     SHARING_PROBABILITY_WITH_COVERAGE = 'sharing_probability_with_coverage'
     TRANSMITTING_PROBABILITY_WITH_COVERAGE = 'transmitting_probability_with_coverage'
     COVERAGE_DISTANCE = 'coverage_distance'
+    SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE = 'sharing_probability_with_coverage_distance'
+    TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE = 'transmitting_probability_with_coverage_distance'
     @staticmethod
     def _hashtag_distribution_in_locations(occurrences):
         hashtag_distribution, hashtag_distribution_in_locations = defaultdict(dict), defaultdict(dict)
@@ -202,7 +204,9 @@ class PredictionModels:
                 if loc in propagation_for_prediction.occurrences:
                     occs = propagation_for_prediction.occurrences[loc]
                     hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                if hashtag_scores: hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                if hashtag_scores: 
+#                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0])
                 while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
                     h = hashtags.pop()
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
@@ -221,8 +225,8 @@ class PredictionModels:
                             hashtag_scores[h]+=(hashtag_coverage_probabilities[h][neighboring_location] * location_probabilities['neighborProbability'][loc][neighboring_location])
                 hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
                 if hashtag_scores: 
-                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                    print list(sorted(hashtag_scores.iteritems(), key=itemgetter(1))[-conf['noOfTargetHashtags']:])
+#                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0])
                 while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
                     h = hashtags.pop()
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
@@ -277,6 +281,16 @@ class PredictionModels:
                 for hashtag in hashtag_scores_for_location: hashtag_scores_for_location[hashtag]/=total_score
                 hashtags_for_lattice[location] = zip(*sorted(hashtag_scores_for_location.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
         return hashtags_for_lattice
+    @staticmethod
+    def sharing_probability_with_coverage_distance(propagation_for_prediction, *args, **conf): 
+        loadSharingProbabilities()
+        coverage_distances_for_hashtags = propagation_for_prediction.getCoverageDistances()
+        return PredictionModels._hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, SHARING_PROBABILITIES, coverage_distances_for_hashtags, *args, **conf)
+    @staticmethod
+    def transmitting_probability_with_coverage_distance(propagation_for_prediction, *args, **conf): 
+        loadTransmittingProbabilities()
+        coverage_distances_for_hashtags = propagation_for_prediction.getCoverageDistances()
+        return PredictionModels._hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, TRANSMITTING_PROBABILITIES, coverage_distances_for_hashtags, *args, **conf)
 PREDICTION_MODEL_METHODS = dict([
                                 (PredictionModels.RANDOM, PredictionModels.random),
                                 (PredictionModels.GREEDY, PredictionModels.greedy),
@@ -286,6 +300,8 @@ PREDICTION_MODEL_METHODS = dict([
                                 (PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.sharing_probability_with_coverage),
                                 (PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE, PredictionModels.transmitting_probability_with_coverage),
                                 (PredictionModels.COVERAGE_DISTANCE, PredictionModels.coverage_distance),
+                                (PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.sharing_probability_with_coverage_distance),
+                                (PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE, PredictionModels.transmitting_probability_with_coverage_distance),
                             ]) 
 
 class Experiments(object):
@@ -351,9 +367,10 @@ class Experiments(object):
         return iteration_results
     @staticmethod
     def generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        noOfHashtagsList=map(lambda i: i*5, range(1,21))
+#        noOfHashtagsList=map(lambda i: i*5, range(1,21))
+        noOfHashtagsList = range(1,26)
         for i in range(2,7):
-            conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+            conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
@@ -449,10 +466,14 @@ if __name__ == '__main__':
 #    temp()
 #    exit()
 
-#    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
-    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
-#    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
-    predictionModels = [PredictionModels.COVERAGE_DISTANCE]
+    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
+#    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
+    predictionModels = [
+                        PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
+                        PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
+                        PredictionModels.COVERAGE_DISTANCE, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
+                        ]
+#    predictionModels = [PredictionModels.COVERAGE_DISTANCE]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
     Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
