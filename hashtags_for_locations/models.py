@@ -368,9 +368,9 @@ class Experiments(object):
     @staticmethod
     def generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        noOfHashtagsList = range(1,26)
+        noOfHashtagsList = filter(lambda i: i%2==0, range(1,26))
         for i in range(2,7):
-            conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+            conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
@@ -420,7 +420,8 @@ class Experiments(object):
             plt.clf()
     @staticmethod
     def plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        noOfHashtagsList=map(lambda i: i*5, range(1,21))
+#        noOfHashtagsList=map(lambda i: i*5, range(1,21))
+        noOfHashtagsList=range(1,26)
         conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         for metric in evaluationMetrics:
             evaluationMetrics = [metric]
@@ -469,9 +470,10 @@ if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 11, 3), 'testing'
     predictionModels = [
-                        PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
-                        PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
-                        PredictionModels.COVERAGE_DISTANCE, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
+                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+#                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
+#                        PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
+#                        PredictionModels.COVERAGE_DISTANCE, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
 #    predictionModels = [PredictionModels.COVERAGE_DISTANCE]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
