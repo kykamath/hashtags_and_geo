@@ -301,7 +301,7 @@ PREDICTION_MODEL_METHODS = dict([
                                 (PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE, PredictionModels.transmitting_probability_with_coverage),
                                 (PredictionModels.COVERAGE_DISTANCE, PredictionModels.coverage_distance),
                                 (PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.sharing_probability_with_coverage_distance),
-                                (PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE, PredictionModels.transmitting_probability_with_coverage_distance),
+                                (PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.transmitting_probability_with_coverage_distance),
                             ]) 
 
 class Experiments(object):
@@ -370,7 +370,7 @@ class Experiments(object):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
         noOfHashtagsList = range(1,26)
         for i in range(2,7):
-            conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+            conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
