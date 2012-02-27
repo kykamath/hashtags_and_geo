@@ -421,7 +421,7 @@ class Experiments(object):
     @staticmethod
     def plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        noOfHashtagsList=range(1,26)
+        noOfHashtagsList=filter(lambda i: i%2==0, range(1,26))
         conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         for metric in evaluationMetrics:
             evaluationMetrics = [metric]
@@ -460,26 +460,26 @@ def temp():
 #        d[data['tu']] = filter(lambda l: l[1] in LOCATIONS_LIST,data['oc'])
 #        print datetime.fromtimestamp(data['tu']), len(data['oc'])
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2012, 12, 31), 'testing'
-    for i, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/2011-09-01_2012-12-31/thashtagsWithEndingWindow')):
+    for i, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/2011-09-01_2011-09-16/hashtagsWithEndingWindow')):
         print unicode(data['h']).encode('utf-8'), data['t']
 if __name__ == '__main__':
 #    loadLocationsList()
-#    temp()
-#    exit()
+    temp()
+    exit()
 
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
 #    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 9, 16), 'testing'
-    predictionModels = [
+#    predictionModels = [
 #                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
-                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
+#                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
 #                        PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
 #                        PredictionModels.COVERAGE_DISTANCE, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
-                        ]
-#    predictionModels = [PredictionModels.COVERAGE_DISTANCE]
+#                        ]
+    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
-    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-#    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
