@@ -144,17 +144,23 @@ class EvaluationMetrics:
         for loc, hashtags in hashtagsForLocation.iteritems(): 
             bestSet = set(bestHashtagsForLocation.get(loc, []))
             if bestSet: metricScorePerLocation[loc] = len(set(hashtags).intersection(bestSet))/float(len(bestSet))
-            else: metricScorePerLocation[loc] = NAN_VALUE
+#            else: metricScorePerLocation[loc] = NAN_VALUE
         return metricScorePerLocation
     @staticmethod
     def impact(hashtagsForLattice, actualPropagation, *args, **kwargs):
         metricScorePerLocation = {}
-        for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = EvaluationMetrics._impact(loc, hashtags, actualPropagation)
+        for loc, hashtags in hashtagsForLattice.iteritems(): 
+            score_for_predicted_hashtags = EvaluationMetrics._impact(loc, hashtags, actualPropagation)
+            if score_for_predicted_hashtags!=NAN_VALUE: metricScorePerLocation[loc] = score_for_predicted_hashtags
         return metricScorePerLocation
     @staticmethod
     def impactDifference(hashtagsForLattice, actualPropagation, *args, **kwargs):
         bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation, **kwargs), {}
-        for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = EvaluationMetrics._impact(loc, bestHashtagsForLocation.get(loc, []), actualPropagation) - EvaluationMetrics._impact(loc, hashtags, actualPropagation)
+        for loc, hashtags in hashtagsForLattice.iteritems(): 
+            score_for_best_hashtags = EvaluationMetrics._impact(loc, bestHashtagsForLocation.get(loc, []), actualPropagation)
+            if score_for_best_hashtags != NAN_VALUE: 
+                score_for_predicted_hashtags = EvaluationMetrics._impact(loc, hashtags, actualPropagation)
+                metricScorePerLocation[loc] = score_for_best_hashtags - score_for_predicted_hashtags
         return metricScorePerLocation
 EVALUATION_METRIC_METHODS = dict([
                                   (EvaluationMetrics.ACCURACY, EvaluationMetrics.accuracy),
@@ -360,6 +366,7 @@ class Experiments(object):
             currentTime+=timeUnitDelta
     def loadIterationData(self, modelId):
         iteration_results = {}
+        print 'Loading data for: ', self.getModelFile(modelId)
         for data in FileIO.iterateJsonFromFile(self.getModelFile(modelId)):
             if data['tu'] not in iteration_results: iteration_results[data['tu']] = {}
             if data['metricId'] in self.evaluationMetrics: iteration_results[data['tu']][data['metricId']] = data['scoresPerLattice']
@@ -420,7 +427,7 @@ class Experiments(object):
     @staticmethod
     def plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        noOfHashtagsList=filter(lambda i: i%2==0, range(1,26))
+        noOfHashtagsList=filter(lambda i: i%4==0, range(1,26))
         conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         for metric in evaluationMetrics:
             evaluationMetrics = [metric]
@@ -463,18 +470,18 @@ def temp():
         print unicode(data['h']).encode('utf-8'), data['t']
 if __name__ == '__main__':
 #    loadLocationsList()
-    temp()
-    exit()
+#    temp()
+#    exit()
 
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
 #    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 9, 16), 'testing'
-#    predictionModels = [
-#                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
-#                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
+    predictionModels = [
+                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
 #                        PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
 #                        PredictionModels.COVERAGE_DISTANCE, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
-#                        ]
-    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
+                        ]
+#    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
 #    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
