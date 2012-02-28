@@ -187,9 +187,9 @@ class PredictionModels:
                 if location not in hashtag_distribution[h]: hashtag_distribution[h][location] = 0
                 hashtag_distribution[h][location]+=1
         for h in hashtag_distribution.keys()[:]: 
-            total_occurrences = float(sum(hashtag_distribution[h].values()))
-            for l, v in hashtag_distribution[h].iteritems(): hashtag_distribution_in_locations[l][h] = v/total_occurrences
-#            hashtag_distribution[h] = dict([(l, v/float(sum(hashtag_distribution[h].values()))) for l, v in hashtag_distribution[h].iteritems()])
+#            total_occurrences = float(sum(hashtag_distribution[h].values()))
+#            for l, v in hashtag_distribution[h].iteritems(): hashtag_distribution_in_locations[l][h] = v/total_occurrences
+            for l, v in hashtag_distribution[h].iteritems(): hashtag_distribution_in_locations[l][h] = v
         return hashtag_distribution_in_locations
     @staticmethod
     def _hashtags_by_location_probabilities(propagation_for_prediction, location_probabilities, *args, **conf):
@@ -374,7 +374,7 @@ class Experiments(object):
     @staticmethod
     def generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        noOfHashtagsList = filter(lambda i: i%2==0, range(1,26))
+        noOfHashtagsList = filter(lambda i: i%2==0, range(1,17))
         for i in range(2,7):
             conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
@@ -473,10 +473,10 @@ if __name__ == '__main__':
 #    temp()
 #    exit()
 
-    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
-#    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 9, 16), 'testing'
+#    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
+    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 9, 16), 'testing'
     predictionModels = [
-                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+#                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
                         PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
 #                        PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
 #                        PredictionModels.COVERAGE_DISTANCE, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
@@ -484,8 +484,8 @@ if __name__ == '__main__':
 #    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
-#    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
