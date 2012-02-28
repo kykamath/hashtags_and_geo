@@ -102,7 +102,6 @@ class CoverageModel():
         latticeScores = {}
         distribution_in_observed_lattices = [(k, len(list(data))) for k, data in groupby(sorted(points, key=itemgetter(0,1)), key=itemgetter(0,1))]
         for lattice in LOCATIONS_LIST:
-            score = 0.0
             currentLattice = getLocationFromLid(lattice.replace('_', ' '))
             latticeScores[lattice] = sum([CoverageModel._spreadingFunction(currentLattice, sourceLattice, count_at_source_lattice)for sourceLattice, count_at_source_lattice in distribution_in_observed_lattices])
         return latticeScores
