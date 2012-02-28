@@ -57,6 +57,7 @@ def loadSharingProbabilities():
             SHARING_PROBABILITIES['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in SHARING_PROBABILITIES['hashtagObservingProbability'].keys()[:]: SHARING_PROBABILITIES['hashtagObservingProbability'][lattice] = len(SHARING_PROBABILITIES['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+    return SHARING_PROBABILITIES
 
 def loadTransmittingProbabilities():
     global TRANSMITTING_PROBABILITIES
@@ -75,6 +76,7 @@ def loadTransmittingProbabilities():
             TRANSMITTING_PROBABILITIES['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in TRANSMITTING_PROBABILITIES['hashtagObservingProbability'].keys()[:]: TRANSMITTING_PROBABILITIES['hashtagObservingProbability'][lattice] = len(TRANSMITTING_PROBABILITIES['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+    return TRANSMITTING_PROBABILITIES
 
 class CoverageModel():
     @staticmethod
@@ -196,7 +198,6 @@ class PredictionModels:
         hashtags_for_lattice = defaultdict(list)
         hashtag_distribution_in_locations = PredictionModels._hashtag_distribution_in_locations(propagation_for_prediction.occurrences)
         if propagation_for_prediction.occurrences:
-#            for loc, occs in propagation_for_prediction.occurrences.iteritems():
             for loc in LOCATIONS_LIST:
                 hashtag_scores, hashtags = defaultdict(float), []
                 for neighboring_location in location_probabilities['neighborProbability'][loc]:
@@ -204,14 +205,13 @@ class PredictionModels:
     #                    for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
                         for h in hashtag_distribution_in_locations[neighboring_location]: 
 #                            hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
-                            hashtag_scores[h]+=(hashtag_distribution_in_locations[neighboring_location][h] * location_probabilities['neighborProbability'][loc][neighboring_location])
+#                            hashtag_scores[h]+=(hashtag_distribution_in_locations[neighboring_location][h] * location_probabilities['neighborProbability'][loc][neighboring_location])
+                            hashtag_scores[h]+=location_probabilities['neighborProbability'][loc][neighboring_location]
                 hashtags_for_lattice[loc] = []
-                if loc in propagation_for_prediction.occurrences:
-                    occs = propagation_for_prediction.occurrences[loc]
-                    hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                if hashtag_scores: 
-#                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0])
+#                if loc in propagation_for_prediction.occurrences:
+#                    occs = propagation_for_prediction.occurrences[loc]
+#                    hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                if hashtag_scores: hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0])
                 while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
                     h = hashtags.pop()
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
