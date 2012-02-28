@@ -364,12 +364,24 @@ class Experiments(object):
                             FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
-    def loadIterationData(self, modelId):
+    def loadExperimentsData(self):
         iteration_results = {}
-        print 'Loading data for: ', self.getModelFile(modelId)
-        for data in FileIO.iterateJsonFromFile(self.getModelFile(modelId)):
-            if data['tu'] not in iteration_results: iteration_results[data['tu']] = {}
-            if data['metricId'] in self.evaluationMetrics: iteration_results[data['tu']][data['metricId']] = data['scoresPerLattice']
+        model_ids = set(self.predictionModels)
+        model_ids.add(PredictionModels.COVERAGE_DISTANCE)
+        for model_id in model_ids:
+            print 'Loading data for: ', self.getModelFile(model_id)
+            for data in FileIO.iterateJsonFromFile(self.getModelFile(model_id)):
+                if data['tu'] not in iteration_results: iteration_results[data['tu']] = defaultdict(dict)
+                if data['metricId'] in self.evaluationMetrics: iteration_results[data['tu']][model_id][data['metricId']] = data['scoresPerLattice']
+        for time_unit in iteration_results:
+            for model_id in [PredictionModels.GREEDY, PredictionModels.RANDOM]:
+                for metric_id in self.evaluationMetrics:
+                    for location in iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE][EvaluationMetrics.IMPACT]:
+                        if metric_id in iteration_results[time_unit][model_id] and location not in iteration_results[time_unit][model_id][metric_id]: 
+                            if metric_id==EvaluationMetrics.IMPACT_DIFFERENCE: iteration_results[time_unit][model_id][metric_id][location] = 1.0
+                            else: iteration_results[time_unit][model_id][metric_id][location] = 0.0
+            
+#        for time_unit, results_for_time_unit in iteration_results.iteritems(): map_from_time_unit_to_max_no_of_locations_predictable[time_unit] = len(results_for_time_unit[PredictionModels.COVERAGE_DISTANCE][EvaluationMetrics.IMPACT])
         return iteration_results
     @staticmethod
     def generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
@@ -428,26 +440,35 @@ class Experiments(object):
     @staticmethod
     def plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        noOfHashtagsList=filter(lambda i: i%4==0, range(1,26))
-        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
-        for metric in evaluationMetrics:
-            evaluationMetrics = [metric]
-            experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
-            data_to_plot_by_model_id = defaultdict(dict)
-            for noOfTargetHashtags in experiments.noOfHashtagsList:
-                experiments.conf['noOfTargetHashtags'] = noOfTargetHashtags
+        noOfHashtagsList=filter(lambda i: i%2==0, range(1,17))
+        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+#        for metric in evaluationMetrics:
+        experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
+        data_to_plot_by_model_id = defaultdict(dict)
+        for noOfTargetHashtags in experiments.noOfHashtagsList:
+            experiments.conf['noOfTargetHashtags'] = noOfTargetHashtags
+#            for model_id in experiments.predictionModels:
+            iteration_results = experiments.loadExperimentsData()
+            metric_values_for_model = defaultdict(dict)
+#            for model_id in experiments.predictionModels:
+            for _, data_for_models in iteration_results.iteritems():
                 for model_id in experiments.predictionModels:
-                    iteration_results = experiments.loadIterationData(model_id)
-                    metric_values_for_model = defaultdict(list)
-                    for _, data_for_model in iteration_results.iteritems():
-                        for metric_id, data_for_metric in data_for_model.iteritems():
-                            metric_values_for_model[metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
-                    for metric_id in metric_values_for_model: data_to_plot_by_model_id[model_id][noOfTargetHashtags] = np.mean(metric_values_for_model[metric_id])
-            for model_id, data_to_plot in data_to_plot_by_model_id.iteritems():
+                    for metric_id, data_for_metric in data_for_models[model_id].iteritems():
+                        if metric_id not in metric_values_for_model[model_id]: metric_values_for_model[model_id][metric_id] = []
+                        metric_values_for_model[model_id][metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
+            for model_id in metric_values_for_model: 
+                for metric_id in metric_values_for_model[model_id]:
+                    if model_id not in data_to_plot_by_model_id[metric_id]: data_to_plot_by_model_id[metric_id][model_id] = {}
+                    data_to_plot_by_model_id[metric_id][model_id][noOfTargetHashtags] = np.mean(metric_values_for_model[model_id][metric_id])
+#                    for metric_id in metric_values_for_model: data_to_plot_by_model_id[model_id][noOfTargetHashtags] = metric_values_for_model[metric_id]
+#        print 'x'
+        for metric_id in experiments.evaluationMetrics:
+            for model_id, data_to_plot in data_to_plot_by_model_id[metric_id].iteritems():
                 dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
                 plt.plot(dataX, dataY, label=model_id, lw=2)
             plt.legend()
-            plt.savefig(Experiments.getImageFileName(metric))
+            plt.ylim(ymin=0.0, ymax=1.0)
+            plt.savefig(Experiments.getImageFileName(metric_id))
             plt.clf()
 
 #def generateDataForVaryingNoOfHashtagsAtVaryingPredictionTimeInterval(historyTimeInterval, predictionTimeInterval):
@@ -486,8 +507,8 @@ if __name__ == '__main__':
 #    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
-    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-#    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     

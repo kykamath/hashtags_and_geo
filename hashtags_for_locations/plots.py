@@ -39,7 +39,7 @@ def plotAllData(prediction_models):
             for location, no_of_occurrences_of_hashtag in list_of__tuple_of_location_and_no_of_occurrences_of_hashtag:
                 map_from_locations_to__list_of__tuple_of_hashtag_and_no_of_occurrences_of_hashtag[location].append((hashtag, no_of_occurrences_of_hashtag))
         
-        if len(map_from_locations_to__list_of__tuple_of_hashtag_and_no_of_occurrences_of_hashtag)>0:
+        if len(map_from_locations_to__list_of__tuple_of_hashtag_and_no_of_occurrences_of_hashtag)>100:
             conf = {'noOfTargetHashtags': 1}
             
             propagation = Propagations(None, None)
@@ -108,11 +108,12 @@ def plotAllData(prediction_models):
 
 prediction_models = [
 #                        PredictionModels.RANDOM , 
-                        PredictionModels.GREEDY, 
+#                        PredictionModels.GREEDY, 
                         PredictionModels.SHARING_PROBABILITY, 
                         PredictionModels.TRANSMITTING_PROBABILITY,
 #                        PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
-#                        PredictionModels.COVERAGE_DISTANCE, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
+                        PredictionModels.COVERAGE_DISTANCE, 
+#                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
 
 #prediction_models = [PredictionModels.COVERAGE_DISTANCE, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
