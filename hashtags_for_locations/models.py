@@ -386,9 +386,9 @@ class Experiments(object):
     @staticmethod
     def generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        noOfHashtagsList = filter(lambda i: i%2==0, range(1,17))
-#        for i in range(2,7):
-        for i in [2]:
+        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
+        for i in range(2,7):
+#        for i in [2]:
             conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
     @staticmethod
@@ -507,8 +507,8 @@ if __name__ == '__main__':
 #    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
-#    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
