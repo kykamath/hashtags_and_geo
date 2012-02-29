@@ -400,19 +400,25 @@ class Experiments(object):
             conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=10)
             experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
             iteration_results = experiments.loadExperimentsData()
-            for model_id in experiments.predictionModels:
-                    iteration_results = experiments.loadIterationData(model_id)
-                    metric_values_for_model = defaultdict(list)
-                    for _, data_for_model in iteration_results.iteritems():
-                        for metric_id, data_for_metric in data_for_model.iteritems():
-                            metric_values_for_model[metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
-                    for metric_id in metric_values_for_model: data_to_plot_by_model_id[model_id][historicalTimeInterval] = np.mean(metric_values_for_model[metric_id])
-        for model_id, data_to_plot in data_to_plot_by_model_id.iteritems():
-            dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
-            plt.plot(dataX, dataY, label=model_id, lw=2)
-        plt.legend()
-        plt.savefig(Experiments.getImageFileName(metric))
-        plt.clf()
+            exit()
+            metric_values_for_model = defaultdict(dict)
+            for _, data_for_models in iteration_results.iteritems():
+                for model_id in experiments.predictionModels:
+                    for metric_id, data_for_metric in data_for_models[model_id].iteritems():
+                        if metric_id not in metric_values_for_model[model_id]: metric_values_for_model[model_id][metric_id] = []
+                        metric_values_for_model[model_id][metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
+            for model_id in metric_values_for_model: 
+                for metric_id in metric_values_for_model[model_id]:
+                    if model_id not in data_to_plot_by_model_id[metric_id]: data_to_plot_by_model_id[metric_id][model_id] = {}
+                    data_to_plot_by_model_id[metric_id][model_id][noOfTargetHashtags] = np.mean(metric_values_for_model[model_id][metric_id])
+        for metric_id in experiments.evaluationMetrics:
+            for model_id, data_to_plot in data_to_plot_by_model_id[metric_id].iteritems():
+                dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
+                plt.plot(dataX, dataY, label=model_id, lw=2)
+            plt.legend()
+            plt.ylim(ymin=0.0, ymax=1.0)
+            plt.savefig(Experiments.getImageFileName(metric_id))
+            plt.clf()
         exit()
         for metric in evaluationMetrics:
             evaluationMetrics = [metric]
