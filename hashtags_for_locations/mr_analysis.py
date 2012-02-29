@@ -23,18 +23,18 @@ LOCATION_ACCURACY = 0.145
 # Time windows.
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
-START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 8, 31), 'training' # Training duration
-#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 9, 1), datetime(2011, 9, 16), 'testing' # Testing duration
+#START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 8, 31), 'training' # Training duration
+START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing' # Testing duration
 
 # Paramters to filter hashtags.
-MIN_HASHTAG_OCCURENCES = 500
+MIN_HASHTAG_OCCURENCES = 50
 
 # Parameters to filter hashtags at a location.
 MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 0
 MIN_NO_OF_UNIQUE_HASHTAGS_AT_A_LOCATION_PER_TIME_UNIT = 0
 
 # Time unit.
-TIME_UNIT_IN_SECONDS=180*60
+TIME_UNIT_IN_SECONDS=30*60
 
 #Local run parameters
 #MIN_HASHTAG_OCCURENCES = 1

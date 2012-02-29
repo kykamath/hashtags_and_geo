@@ -28,8 +28,8 @@ def mr_analysis(startTime, endTime, outputFolder, inputFilesStartTime=None, inpu
 #    outputFile = hashtagsWithEndingWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
 #    outputFile = hashtagsWithoutEndingWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
 #    outputFile = hashtagsAllOccurrencesWithinWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
-#    outputFile = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
-    outputFile = 'mr_Data/timeUnitWithOccurrences'
+    outputFile = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+#    outputFile = 'mr_Data/timeUnitWithOccurrences'
     runMRJob(MRAnalysis, outputFile, getInputFiles(inputFilesStartTime, inputFilesEndTime), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 

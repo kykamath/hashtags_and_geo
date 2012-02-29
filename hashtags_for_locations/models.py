@@ -57,6 +57,7 @@ def loadSharingProbabilities():
             SHARING_PROBABILITIES['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in SHARING_PROBABILITIES['hashtagObservingProbability'].keys()[:]: SHARING_PROBABILITIES['hashtagObservingProbability'][lattice] = len(SHARING_PROBABILITIES['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+    return SHARING_PROBABILITIES
 
 def loadTransmittingProbabilities():
     global TRANSMITTING_PROBABILITIES
@@ -75,6 +76,7 @@ def loadTransmittingProbabilities():
             TRANSMITTING_PROBABILITIES['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
         totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
         for lattice in TRANSMITTING_PROBABILITIES['hashtagObservingProbability'].keys()[:]: TRANSMITTING_PROBABILITIES['hashtagObservingProbability'][lattice] = len(TRANSMITTING_PROBABILITIES['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+    return TRANSMITTING_PROBABILITIES
 
 class CoverageModel():
     @staticmethod
@@ -144,17 +146,23 @@ class EvaluationMetrics:
         for loc, hashtags in hashtagsForLocation.iteritems(): 
             bestSet = set(bestHashtagsForLocation.get(loc, []))
             if bestSet: metricScorePerLocation[loc] = len(set(hashtags).intersection(bestSet))/float(len(bestSet))
-            else: metricScorePerLocation[loc] = NAN_VALUE
+#            else: metricScorePerLocation[loc] = NAN_VALUE
         return metricScorePerLocation
     @staticmethod
     def impact(hashtagsForLattice, actualPropagation, *args, **kwargs):
         metricScorePerLocation = {}
-        for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = EvaluationMetrics._impact(loc, hashtags, actualPropagation)
+        for loc, hashtags in hashtagsForLattice.iteritems(): 
+            score_for_predicted_hashtags = EvaluationMetrics._impact(loc, hashtags, actualPropagation)
+            if score_for_predicted_hashtags!=NAN_VALUE: metricScorePerLocation[loc] = score_for_predicted_hashtags
         return metricScorePerLocation
     @staticmethod
     def impactDifference(hashtagsForLattice, actualPropagation, *args, **kwargs):
         bestHashtagsForLocation, metricScorePerLocation = EvaluationMetrics._bestHashtagsForLocation(actualPropagation, **kwargs), {}
-        for loc, hashtags in hashtagsForLattice.iteritems(): metricScorePerLocation[loc] = EvaluationMetrics._impact(loc, bestHashtagsForLocation.get(loc, []), actualPropagation) - EvaluationMetrics._impact(loc, hashtags, actualPropagation)
+        for loc, hashtags in hashtagsForLattice.iteritems(): 
+            score_for_best_hashtags = EvaluationMetrics._impact(loc, bestHashtagsForLocation.get(loc, []), actualPropagation)
+            if score_for_best_hashtags != NAN_VALUE: 
+                score_for_predicted_hashtags = EvaluationMetrics._impact(loc, hashtags, actualPropagation)
+                metricScorePerLocation[loc] = score_for_best_hashtags - score_for_predicted_hashtags
         return metricScorePerLocation
 EVALUATION_METRIC_METHODS = dict([
                                   (EvaluationMetrics.ACCURACY, EvaluationMetrics.accuracy),
@@ -181,16 +189,15 @@ class PredictionModels:
                 if location not in hashtag_distribution[h]: hashtag_distribution[h][location] = 0
                 hashtag_distribution[h][location]+=1
         for h in hashtag_distribution.keys()[:]: 
-            total_occurrences = float(sum(hashtag_distribution[h].values()))
-            for l, v in hashtag_distribution[h].iteritems(): hashtag_distribution_in_locations[l][h] = v/total_occurrences
-#            hashtag_distribution[h] = dict([(l, v/float(sum(hashtag_distribution[h].values()))) for l, v in hashtag_distribution[h].iteritems()])
+#            total_occurrences = float(sum(hashtag_distribution[h].values()))
+#            for l, v in hashtag_distribution[h].iteritems(): hashtag_distribution_in_locations[l][h] = v/total_occurrences
+            for l, v in hashtag_distribution[h].iteritems(): hashtag_distribution_in_locations[l][h] = v
         return hashtag_distribution_in_locations
     @staticmethod
     def _hashtags_by_location_probabilities(propagation_for_prediction, location_probabilities, *args, **conf):
         hashtags_for_lattice = defaultdict(list)
         hashtag_distribution_in_locations = PredictionModels._hashtag_distribution_in_locations(propagation_for_prediction.occurrences)
         if propagation_for_prediction.occurrences:
-#            for loc, occs in propagation_for_prediction.occurrences.iteritems():
             for loc in LOCATIONS_LIST:
                 hashtag_scores, hashtags = defaultdict(float), []
                 for neighboring_location in location_probabilities['neighborProbability'][loc]:
@@ -198,14 +205,13 @@ class PredictionModels:
     #                    for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
                         for h in hashtag_distribution_in_locations[neighboring_location]: 
 #                            hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
-                            hashtag_scores[h]+=(hashtag_distribution_in_locations[neighboring_location][h] * location_probabilities['neighborProbability'][loc][neighboring_location])
+#                            hashtag_scores[h]+=(hashtag_distribution_in_locations[neighboring_location][h] * location_probabilities['neighborProbability'][loc][neighboring_location])
+                            hashtag_scores[h]+=location_probabilities['neighborProbability'][loc][neighboring_location]
                 hashtags_for_lattice[loc] = []
-                if loc in propagation_for_prediction.occurrences:
-                    occs = propagation_for_prediction.occurrences[loc]
-                    hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                if hashtag_scores: 
-#                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0])
+#                if loc in propagation_for_prediction.occurrences:
+#                    occs = propagation_for_prediction.occurrences[loc]
+#                    hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                if hashtag_scores: hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0])
                 while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
                     h = hashtags.pop()
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
@@ -358,17 +364,31 @@ class Experiments(object):
                             FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
-    def loadIterationData(self, modelId):
+    def loadExperimentsData(self):
         iteration_results = {}
-        for data in FileIO.iterateJsonFromFile(self.getModelFile(modelId)):
-            if data['tu'] not in iteration_results: iteration_results[data['tu']] = {}
-            if data['metricId'] in self.evaluationMetrics: iteration_results[data['tu']][data['metricId']] = data['scoresPerLattice']
+        model_ids = set(self.predictionModels)
+        model_ids.add(PredictionModels.COVERAGE_DISTANCE)
+        for model_id in model_ids:
+            print 'Loading data for: ', self.getModelFile(model_id)
+            for data in FileIO.iterateJsonFromFile(self.getModelFile(model_id)):
+                if data['tu'] not in iteration_results: iteration_results[data['tu']] = defaultdict(dict)
+                if data['metricId'] in self.evaluationMetrics: iteration_results[data['tu']][model_id][data['metricId']] = data['scoresPerLattice']
+        for time_unit in iteration_results:
+            for model_id in [PredictionModels.GREEDY, PredictionModels.RANDOM]:
+                for metric_id in self.evaluationMetrics:
+                    for location in iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE][EvaluationMetrics.IMPACT]:
+                        if metric_id in iteration_results[time_unit][model_id] and location not in iteration_results[time_unit][model_id][metric_id]: 
+                            if metric_id==EvaluationMetrics.IMPACT_DIFFERENCE: iteration_results[time_unit][model_id][metric_id][location] = 1.0
+                            else: iteration_results[time_unit][model_id][metric_id][location] = 0.0
+            
+#        for time_unit, results_for_time_unit in iteration_results.iteritems(): map_from_time_unit_to_max_no_of_locations_predictable[time_unit] = len(results_for_time_unit[PredictionModels.COVERAGE_DISTANCE][EvaluationMetrics.IMPACT])
         return iteration_results
     @staticmethod
     def generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        noOfHashtagsList = filter(lambda i: i%2==0, range(1,26))
+        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
         for i in range(2,7):
+#        for i in [2]:
             conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
     @staticmethod
@@ -420,26 +440,35 @@ class Experiments(object):
     @staticmethod
     def plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
-        noOfHashtagsList=filter(lambda i: i%2==0, range(1,26))
-        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
-        for metric in evaluationMetrics:
-            evaluationMetrics = [metric]
-            experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
-            data_to_plot_by_model_id = defaultdict(dict)
-            for noOfTargetHashtags in experiments.noOfHashtagsList:
-                experiments.conf['noOfTargetHashtags'] = noOfTargetHashtags
+        noOfHashtagsList=filter(lambda i: i%2==0, range(1,17))
+        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+#        for metric in evaluationMetrics:
+        experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
+        data_to_plot_by_model_id = defaultdict(dict)
+        for noOfTargetHashtags in experiments.noOfHashtagsList:
+            experiments.conf['noOfTargetHashtags'] = noOfTargetHashtags
+#            for model_id in experiments.predictionModels:
+            iteration_results = experiments.loadExperimentsData()
+            metric_values_for_model = defaultdict(dict)
+#            for model_id in experiments.predictionModels:
+            for _, data_for_models in iteration_results.iteritems():
                 for model_id in experiments.predictionModels:
-                    iteration_results = experiments.loadIterationData(model_id)
-                    metric_values_for_model = defaultdict(list)
-                    for _, data_for_model in iteration_results.iteritems():
-                        for metric_id, data_for_metric in data_for_model.iteritems():
-                            metric_values_for_model[metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
-                    for metric_id in metric_values_for_model: data_to_plot_by_model_id[model_id][noOfTargetHashtags] = np.mean(metric_values_for_model[metric_id])
-            for model_id, data_to_plot in data_to_plot_by_model_id.iteritems():
+                    for metric_id, data_for_metric in data_for_models[model_id].iteritems():
+                        if metric_id not in metric_values_for_model[model_id]: metric_values_for_model[model_id][metric_id] = []
+                        metric_values_for_model[model_id][metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
+            for model_id in metric_values_for_model: 
+                for metric_id in metric_values_for_model[model_id]:
+                    if model_id not in data_to_plot_by_model_id[metric_id]: data_to_plot_by_model_id[metric_id][model_id] = {}
+                    data_to_plot_by_model_id[metric_id][model_id][noOfTargetHashtags] = np.mean(metric_values_for_model[model_id][metric_id])
+#                    for metric_id in metric_values_for_model: data_to_plot_by_model_id[model_id][noOfTargetHashtags] = metric_values_for_model[metric_id]
+#        print 'x'
+        for metric_id in experiments.evaluationMetrics:
+            for model_id, data_to_plot in data_to_plot_by_model_id[metric_id].iteritems():
                 dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
                 plt.plot(dataX, dataY, label=model_id, lw=2)
             plt.legend()
-            plt.savefig(Experiments.getImageFileName(metric))
+            plt.ylim(ymin=0.0, ymax=1.0)
+            plt.savefig(Experiments.getImageFileName(metric_id))
             plt.clf()
 
 #def generateDataForVaryingNoOfHashtagsAtVaryingPredictionTimeInterval(historyTimeInterval, predictionTimeInterval):
@@ -463,22 +492,23 @@ def temp():
         print unicode(data['h']).encode('utf-8'), data['t']
 if __name__ == '__main__':
 #    loadLocationsList()
-    temp()
-    exit()
+#    temp()
+#    exit()
 
-    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
-#    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 9, 16), 'testing'
-#    predictionModels = [
-#                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
-#                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
+#    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
+    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
+    predictionModels = [
+                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
 #                        PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
-#                        PredictionModels.COVERAGE_DISTANCE, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
-#                        ]
-    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
+                        PredictionModels.COVERAGE_DISTANCE, 
+#                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
+                        ]
+#    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
-#    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
