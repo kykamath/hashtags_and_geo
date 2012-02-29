@@ -395,7 +395,7 @@ class Experiments(object):
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
     def plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [2,3,4,5,6])
+        predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [2,3,4,5])
         data_to_plot_by_model_id = defaultdict(dict)
         for prediction_time_interval in predictionTimeIntervals:
             conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=10)
@@ -416,18 +416,18 @@ class Experiments(object):
                 dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
                 plt.plot(dataX, dataY, label=model_id, lw=2)
             plt.legend()
-            plt.ylim(ymin=0.0, ymax=1.0)
+#            plt.ylim(ymin=0.0, ymax=1.0)
             plt.savefig(Experiments.getImageFileName(metric_id))
             plt.clf()
     @staticmethod
     def plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2,3,4,5,6])
+#        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2,3,4,5,6])
+        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2])
         data_to_plot_by_model_id = defaultdict(dict)
         for historical_time_interval in historicalTimeIntervals:
             conf = dict(historyTimeInterval = timedelta(seconds=historical_time_interval), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=10)
             experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
             iteration_results = experiments.loadExperimentsData()
-            exit()
             metric_values_for_model = defaultdict(dict)
             for _, data_for_models in iteration_results.iteritems():
                 for model_id in experiments.predictionModels:
