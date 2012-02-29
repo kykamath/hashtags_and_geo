@@ -396,8 +396,35 @@ class Experiments(object):
     @staticmethod
     def plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
         predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [2,3,4,5,6])
+        data_to_plot_by_model_id = defaultdict(dict)
         for prediction_time_interval in predictionTimeIntervals:
             conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=10)
+            experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
+            iteration_results = experiments.loadExperimentsData()
+            metric_values_for_model = defaultdict(dict)
+            for _, data_for_models in iteration_results.iteritems():
+                for model_id in experiments.predictionModels:
+                    for metric_id, data_for_metric in data_for_models[model_id].iteritems():
+                        if metric_id not in metric_values_for_model[model_id]: metric_values_for_model[model_id][metric_id] = []
+                        metric_values_for_model[model_id][metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
+            for model_id in metric_values_for_model: 
+                for metric_id in metric_values_for_model[model_id]:
+                    if model_id not in data_to_plot_by_model_id[metric_id]: data_to_plot_by_model_id[metric_id][model_id] = {}
+                    data_to_plot_by_model_id[metric_id][model_id][prediction_time_interval] = np.mean(metric_values_for_model[model_id][metric_id])
+        for metric_id in experiments.evaluationMetrics:
+            for model_id, data_to_plot in data_to_plot_by_model_id[metric_id].iteritems():
+                dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
+                plt.plot(dataX, dataY, label=model_id, lw=2)
+            plt.legend()
+            plt.ylim(ymin=0.0, ymax=1.0)
+            plt.savefig(Experiments.getImageFileName(metric_id))
+            plt.clf()
+    @staticmethod
+    def plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
+        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2,3,4,5,6])
+        data_to_plot_by_model_id = defaultdict(dict)
+        for historical_time_interval in historicalTimeIntervals:
+            conf = dict(historyTimeInterval = timedelta(seconds=historical_time_interval), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=10)
             experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
             iteration_results = experiments.loadExperimentsData()
             exit()
@@ -410,7 +437,7 @@ class Experiments(object):
             for model_id in metric_values_for_model: 
                 for metric_id in metric_values_for_model[model_id]:
                     if model_id not in data_to_plot_by_model_id[metric_id]: data_to_plot_by_model_id[metric_id][model_id] = {}
-                    data_to_plot_by_model_id[metric_id][model_id][noOfTargetHashtags] = np.mean(metric_values_for_model[model_id][metric_id])
+                    data_to_plot_by_model_id[metric_id][model_id][historical_time_interval] = np.mean(metric_values_for_model[model_id][metric_id])
         for metric_id in experiments.evaluationMetrics:
             for model_id, data_to_plot in data_to_plot_by_model_id[metric_id].iteritems():
                 dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
@@ -419,48 +446,28 @@ class Experiments(object):
             plt.ylim(ymin=0.0, ymax=1.0)
             plt.savefig(Experiments.getImageFileName(metric_id))
             plt.clf()
-        exit()
-        for metric in evaluationMetrics:
-            evaluationMetrics = [metric]
-            data_to_plot_by_model_id = defaultdict(dict)
-            for predictionTimeInterval in predictionTimeIntervals:
-                conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=predictionTimeInterval), noOfTargetHashtags=5)
-                experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
-                for model_id in experiments.predictionModels:
-                    iteration_results = experiments.loadIterationData(model_id)
-                    metric_values_for_model = defaultdict(list)
-                    for _, data_for_model in iteration_results.iteritems():
-                        for metric_id, data_for_metric in data_for_model.iteritems():
-                            metric_values_for_model[metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
-                    for metric_id in metric_values_for_model: data_to_plot_by_model_id[model_id][predictionTimeInterval] = np.mean(metric_values_for_model[metric_id])
-            for model_id, data_to_plot in data_to_plot_by_model_id.iteritems():
-                dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
-                plt.plot(dataX, dataY, label=model_id, lw=2)
-            plt.legend()
-            plt.savefig(Experiments.getImageFileName(metric))
-            plt.clf()
-    @staticmethod
-    def plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2,3,4,5,6])
-        for metric in evaluationMetrics:
-            evaluationMetrics = [metric]
-            data_to_plot_by_model_id = defaultdict(dict)
-            for historicalTimeInterval in historicalTimeIntervals:
-                conf = dict(historyTimeInterval = timedelta(seconds=historicalTimeInterval), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=5)
-                experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
-                for model_id in experiments.predictionModels:
-                    iteration_results = experiments.loadIterationData(model_id)
-                    metric_values_for_model = defaultdict(list)
-                    for _, data_for_model in iteration_results.iteritems():
-                        for metric_id, data_for_metric in data_for_model.iteritems():
-                            metric_values_for_model[metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
-                    for metric_id in metric_values_for_model: data_to_plot_by_model_id[model_id][historicalTimeInterval] = np.mean(metric_values_for_model[metric_id])
-            for model_id, data_to_plot in data_to_plot_by_model_id.iteritems():
-                dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
-                plt.plot(dataX, dataY, label=model_id, lw=2)
-            plt.legend()
-            plt.savefig(Experiments.getImageFileName(metric))
-            plt.clf()
+#    @staticmethod
+#    def plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
+#        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2,3,4,5,6])
+#        for metric in evaluationMetrics:
+#            evaluationMetrics = [metric]
+#            data_to_plot_by_model_id = defaultdict(dict)
+#            for historicalTimeInterval in historicalTimeIntervals:
+#                conf = dict(historyTimeInterval = timedelta(seconds=historicalTimeInterval), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=5)
+#                experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
+#                for model_id in experiments.predictionModels:
+#                    iteration_results = experiments.loadIterationData(model_id)
+#                    metric_values_for_model = defaultdict(list)
+#                    for _, data_for_model in iteration_results.iteritems():
+#                        for metric_id, data_for_metric in data_for_model.iteritems():
+#                            metric_values_for_model[metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
+#                    for metric_id in metric_values_for_model: data_to_plot_by_model_id[model_id][historicalTimeInterval] = np.mean(metric_values_for_model[metric_id])
+#            for model_id, data_to_plot in data_to_plot_by_model_id.iteritems():
+#                dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
+#                plt.plot(dataX, dataY, label=model_id, lw=2)
+#            plt.legend()
+#            plt.savefig(Experiments.getImageFileName(metric))
+#            plt.clf()
     @staticmethod
     def plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
         noOfHashtagsList=[1]+filter(lambda i: i%2==0, range(2,21))
@@ -527,8 +534,8 @@ if __name__ == '__main__':
     
 #    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-#    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
 #    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
