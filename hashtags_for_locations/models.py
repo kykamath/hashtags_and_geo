@@ -414,7 +414,7 @@ class Experiments(object):
         for metric_id in experiments.evaluationMetrics:
             for model_id, data_to_plot in data_to_plot_by_model_id[metric_id].iteritems():
                 dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
-                plt.plot(dataX, dataY, label=model_id, lw=2)
+                plt.plot([x/TIME_UNIT_IN_SECONDS for x in dataX], dataY, label=model_id, lw=2)
             plt.legend()
 #            plt.ylim(ymin=0.0, ymax=1.0)
             plt.savefig(Experiments.getImageFileName(metric_id))
@@ -443,7 +443,7 @@ class Experiments(object):
                 dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
                 plt.plot(dataX, dataY, label=model_id, lw=2)
             plt.legend()
-            plt.ylim(ymin=0.0, ymax=1.0)
+#            plt.ylim(ymin=0.0, ymax=1.0)
             plt.savefig(Experiments.getImageFileName(metric_id))
             plt.clf()
 #    @staticmethod
@@ -534,8 +534,8 @@ if __name__ == '__main__':
     
 #    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-#    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
 #    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
