@@ -7,7 +7,7 @@ from settings import hdfsInputFolder, hashtagsWithoutEndingWindowFile,\
          hashtagsWithEndingWindowFile, timeUnitWithOccurrencesFile, \
          hashtagsWithoutEndingWindowFile, hashtagsAllOccurrencesWithinWindowFile
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
+#from dateutil.relativedelta import relativedelta
 from library.mrjobwrapper import runMRJob
 from mr_analysis import MRAnalysis, PARAMS_DICT, START_TIME,\
                     END_TIME, WINDOW_OUTPUT_FOLDER
