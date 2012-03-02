@@ -389,13 +389,13 @@ class Experiments(object):
         noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
         for i in range(2,7):
 #        for i in [2]:
-            conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+            conf = dict(historyTimeInterval = timedelta(seconds=7*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
     def plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [2,3,4,5])
+        predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [2,3,4,5,6])
         data_to_plot_by_model_id = defaultdict(dict)
         for prediction_time_interval in predictionTimeIntervals:
             conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=10)
@@ -422,7 +422,7 @@ class Experiments(object):
     @staticmethod
     def plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2,3,4,5,6])
-        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2])
+        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2,3,4,5,6])
         data_to_plot_by_model_id = defaultdict(dict)
         for historical_time_interval in historicalTimeIntervals:
             conf = dict(historyTimeInterval = timedelta(seconds=historical_time_interval), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=10)
@@ -441,7 +441,7 @@ class Experiments(object):
         for metric_id in experiments.evaluationMetrics:
             for model_id, data_to_plot in data_to_plot_by_model_id[metric_id].iteritems():
                 dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
-                plt.plot(dataX, dataY, label=model_id, lw=2)
+                plt.plot([x/TIME_UNIT_IN_SECONDS for x in dataX], dataY, label=model_id, lw=2)
             plt.legend()
 #            plt.ylim(ymin=0.0, ymax=1.0)
             plt.savefig(Experiments.getImageFileName(metric_id))
@@ -525,16 +525,17 @@ if __name__ == '__main__':
     predictionModels = [
                         PredictionModels.RANDOM , PredictionModels.GREEDY, 
                         PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
-#                        PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
+#                        PredictionModels.COVERAGE_PROBABILITY, 
+#                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
                         PredictionModels.COVERAGE_DISTANCE, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
 #    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
-#    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
