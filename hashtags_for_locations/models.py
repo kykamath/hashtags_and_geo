@@ -389,7 +389,7 @@ class Experiments(object):
         noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
         for i in range(2,7):
 #        for i in [2]:
-            conf = dict(historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+            conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
@@ -523,11 +523,11 @@ if __name__ == '__main__':
 #    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
-                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
-                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
-#                        PredictionModels.COVERAGE_PROBABILITY, 
+#                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+#                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
+                        PredictionModels.COVERAGE_PROBABILITY, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
-                        PredictionModels.COVERAGE_DISTANCE, 
+#                        PredictionModels.COVERAGE_DISTANCE, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
 #    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
