@@ -324,7 +324,7 @@ class Experiments(object):
         conf_to_return['predictionTimeInterval'] = self.predictionTimeInterval.seconds
         return conf_to_return
     def getModelFile(self, modelId): return modelsFolder%self.outputFolder+'%s_%s/%s_%s/%s/%s'%(self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'), self.conf['historyTimeInterval'].seconds/60, self.conf['predictionTimeInterval'].seconds/60, self.conf['noOfTargetHashtags'], modelId)
-    def run(self):
+    def runToDetermineModelPerformance(self):
         currentTime = self.startTime
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
@@ -337,20 +337,20 @@ class Experiments(object):
                 GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(model_id))
 #        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
         while currentTime<self.endTime:
-            def entry_method():
-                print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
-                currentOccurrences = []
-                currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
-                if currentTimeObject: currentOccurrences=currentTimeObject['oc']
-                for i in range(self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
-                    historicalTimeUnit = currentTime-i*timeUnitDelta
-                    if historicalTimeUnit not in historicalTimeUnitsMap: historicalTimeUnitsMap[historicalTimeUnit]=Propagations(historicalTimeUnit, self.historyTimeInterval)
-                    historicalTimeUnitsMap[historicalTimeUnit].update(currentOccurrences)
-                for i in range(self.predictionTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
-                    predictionTimeUnit = currentTime-i*timeUnitDelta
-                    if predictionTimeUnit not in predictionTimeUnitsMap: predictionTimeUnitsMap[predictionTimeUnit]=Propagations(predictionTimeUnit, self.predictionTimeInterval)
-                    predictionTimeUnitsMap[predictionTimeUnit].update(currentOccurrences)
-            entry_method()
+#            def entry_method():
+            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
+            currentOccurrences = []
+            currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
+            if currentTimeObject: currentOccurrences=currentTimeObject['oc']
+            for i in range(self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
+                historicalTimeUnit = currentTime-i*timeUnitDelta
+                if historicalTimeUnit not in historicalTimeUnitsMap: historicalTimeUnitsMap[historicalTimeUnit]=Propagations(historicalTimeUnit, self.historyTimeInterval)
+                historicalTimeUnitsMap[historicalTimeUnit].update(currentOccurrences)
+            for i in range(self.predictionTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
+                predictionTimeUnit = currentTime-i*timeUnitDelta
+                if predictionTimeUnit not in predictionTimeUnitsMap: predictionTimeUnitsMap[predictionTimeUnit]=Propagations(predictionTimeUnit, self.predictionTimeInterval)
+                predictionTimeUnitsMap[predictionTimeUnit].update(currentOccurrences)
+#            entry_method()
             timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
             timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
             if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
@@ -363,6 +363,46 @@ class Experiments(object):
                             iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(timeUnitForActualPropagation), 'modelId': modelId, 'metricId': metric_id, 'scoresPerLattice': scoresPerLattice}
                             FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
+            currentTime+=timeUnitDelta
+    def runToDeterminePerformanceWithExpertAdvice(self):
+        currentTime = self.startTime
+        timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
+#        historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
+#        loadLocationsList()
+#        print 'Using file: ', timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'))
+#        timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d')))])
+#        for no_of_hashtags in self.noOfHashtagsList:
+#            for model_id in self.predictionModels:
+#                self.conf['noOfTargetHashtags'] = no_of_hashtags
+#                GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(model_id))
+#        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
+        while currentTime<self.endTime:
+#            def entry_method():
+            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
+#                currentOccurrences = []
+#                currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
+#                if currentTimeObject: currentOccurrences=currentTimeObject['oc']
+#                for i in range(self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
+#                    historicalTimeUnit = currentTime-i*timeUnitDelta
+#                    if historicalTimeUnit not in historicalTimeUnitsMap: historicalTimeUnitsMap[historicalTimeUnit]=Propagations(historicalTimeUnit, self.historyTimeInterval)
+#                    historicalTimeUnitsMap[historicalTimeUnit].update(currentOccurrences)
+#                for i in range(self.predictionTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
+#                    predictionTimeUnit = currentTime-i*timeUnitDelta
+#                    if predictionTimeUnit not in predictionTimeUnitsMap: predictionTimeUnitsMap[predictionTimeUnit]=Propagations(predictionTimeUnit, self.predictionTimeInterval)
+#                    predictionTimeUnitsMap[predictionTimeUnit].update(currentOccurrences)
+#            entry_method()
+            timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
+            timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
+#            if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
+#                for noOfTargetHashtags in self.noOfHashtagsList:
+#                    self.conf['noOfTargetHashtags'] = noOfTargetHashtags
+#                    for modelId in self.predictionModels:
+#                        hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](historicalTimeUnitsMap[timeUnitForPropagationForPrediction], **self.conf)
+#                        for metric_id in self.evaluationMetrics:
+#                            scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](hashtagsForLattice, predictionTimeUnitsMap[timeUnitForActualPropagation], **self.conf)
+#                            iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(timeUnitForActualPropagation), 'modelId': modelId, 'metricId': metric_id, 'scoresPerLattice': scoresPerLattice}
+#                            FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
+#                del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
     def loadExperimentsData(self):
         iteration_results = {}
@@ -390,7 +430,14 @@ class Experiments(object):
         for i in range(2,7):
 #        for i in [2]:
             conf = dict(historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
-            Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
+            Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
+    @staticmethod
+    def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
+#        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
+#        for i in range(2,7):
+##        for i in [2]:
+        conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfHashtagsList=[10])
+        Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
@@ -446,28 +493,6 @@ class Experiments(object):
 #            plt.ylim(ymin=0.0, ymax=1.0)
             plt.savefig(Experiments.getImageFileName(metric_id))
             plt.clf()
-#    @staticmethod
-#    def plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-#        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2,3,4,5,6])
-#        for metric in evaluationMetrics:
-#            evaluationMetrics = [metric]
-#            data_to_plot_by_model_id = defaultdict(dict)
-#            for historicalTimeInterval in historicalTimeIntervals:
-#                conf = dict(historyTimeInterval = timedelta(seconds=historicalTimeInterval), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=5)
-#                experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
-#                for model_id in experiments.predictionModels:
-#                    iteration_results = experiments.loadIterationData(model_id)
-#                    metric_values_for_model = defaultdict(list)
-#                    for _, data_for_model in iteration_results.iteritems():
-#                        for metric_id, data_for_metric in data_for_model.iteritems():
-#                            metric_values_for_model[metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
-#                    for metric_id in metric_values_for_model: data_to_plot_by_model_id[model_id][historicalTimeInterval] = np.mean(metric_values_for_model[metric_id])
-#            for model_id, data_to_plot in data_to_plot_by_model_id.iteritems():
-#                dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
-#                plt.plot(dataX, dataY, label=model_id, lw=2)
-#            plt.legend()
-#            plt.savefig(Experiments.getImageFileName(metric))
-#            plt.clf()
     @staticmethod
     def plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
         noOfHashtagsList=[1]+filter(lambda i: i%2==0, range(2,21))
@@ -523,20 +548,22 @@ if __name__ == '__main__':
 #    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
-#                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
-#                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
+                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
                         PredictionModels.COVERAGE_PROBABILITY, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
-#                        PredictionModels.COVERAGE_DISTANCE, 
+                        PredictionModels.COVERAGE_DISTANCE, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
 #    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
-    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+
+    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
 #    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
