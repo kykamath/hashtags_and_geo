@@ -367,6 +367,10 @@ class Experiments(object):
     def runToDeterminePerformanceWithExpertAdvice(self):
         currentTime = self.startTime
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
+        iteration_results, map_from_time_unit_to_model_performance = self.loadExperimentsData(), {}
+        for time_unit_in_epoch in iteration_results.keys(): 
+            map_from_time_unit_to_model_performance[datetime.fromtimestamp(time_unit_in_epoch)] = iteration_results[time_unit_in_epoch]; del iteration_results[time_unit_in_epoch]
+            
 #        historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
 #        loadLocationsList()
 #        print 'Using file: ', timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'))
@@ -436,7 +440,7 @@ class Experiments(object):
 #        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
 #        for i in range(2,7):
 ##        for i in [2]:
-        conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfHashtagsList=[10])
+        conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=10)
         Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
@@ -549,10 +553,10 @@ if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
                         PredictionModels.RANDOM , PredictionModels.GREEDY, 
-                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
-                        PredictionModels.COVERAGE_PROBABILITY, 
+#                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
+#                        PredictionModels.COVERAGE_PROBABILITY, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
-                        PredictionModels.COVERAGE_DISTANCE, 
+#                        PredictionModels.COVERAGE_DISTANCE, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
 #    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
