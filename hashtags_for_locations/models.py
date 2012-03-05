@@ -395,9 +395,10 @@ class Experiments(object):
 #                    if predictionTimeUnit not in predictionTimeUnitsMap: predictionTimeUnitsMap[predictionTimeUnit]=Propagations(predictionTimeUnit, self.predictionTimeInterval)
 #                    predictionTimeUnitsMap[predictionTimeUnit].update(currentOccurrences)
 #            entry_method()
-            timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
-            timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
-#            if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
+            time_unit_when_models_pick_hashtags = currentTime-self.predictionTimeInterval
+#            timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
+            if time_unit_when_models_pick_hashtags in map_from_time_unit_to_model_performance:
+                print time_unit_when_models_pick_hashtags, map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags].keys()
 #                for noOfTargetHashtags in self.noOfHashtagsList:
 #                    self.conf['noOfTargetHashtags'] = noOfTargetHashtags
 #                    for modelId in self.predictionModels:
