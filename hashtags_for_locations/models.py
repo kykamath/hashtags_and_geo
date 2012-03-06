@@ -439,7 +439,7 @@ class Experiments(object):
                             model_id_selected_by_learning_model = LEARNING_MODEL_METHODS[learning_model_id](model_selection_histories[learning_model_id].get_model_selection_distribution_for_location(location, metric_id), **self.conf)
                             if location in map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id]:
                                 map_from_location_to_learned_metric_score[location] = map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id][location]
-                                print location, best_model_id, model_id_selected_by_learning_model, metric_score, map_from_location_to_learned_metric_score[location]
+#                                print location, best_model_id, model_id_selected_by_learning_model, metric_score, map_from_location_to_learned_metric_score[location]
                             model_selection_histories[learning_model_id].update_model_for_location(location, metric_id, best_model_id)
                         iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 'scoresPerLattice': map_from_location_to_learned_metric_score}
                         FileIO.writeToFileAsJson(iterationData, self.getModelFile(learning_model_id))
