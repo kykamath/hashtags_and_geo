@@ -309,6 +309,20 @@ PREDICTION_MODEL_METHODS = dict([
                                 (PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.transmitting_probability_with_coverage_distance),
                             ]) 
 
+class ModelSelectionHistory:
+    def __init__(self):
+        self.map_from_location_to_model_selection_history = defaultdict(dict)
+    def update_model_for_location(self, location, model_id): 
+        if model_id not in self.map_from_location_to_model_selection_history: self.map_from_location_to_model_selection_history[location][model_id]=0.0
+        self.map_from_location_to_model_selection_history[location][model_id]+=1.0
+    def get_model_selection_distribution_for_location(self, location):
+        total_model_selections = sum(self.map_from_location_to_model_selection_history[location].values())
+        return dict([(model_id, model_selections/total_model_selections) for model_id, model_selections in self.map_from_location_to_model_selection_history[location].iteritems()])
+class LearningWithExpertAdviceModels:
+    FOLLOW_THE_LEADER = 'follow_the_leader'
+    @staticmethod
+    def follow_the_leader(_, *args, **conf):
+        pass
 class Experiments(object):
     def __init__(self, startTime, endTime, outputFolder, predictionModels, evaluationMetrics, *args, **conf):
         self.startTime, self.endTime, self.outputFolder = startTime, endTime, outputFolder
@@ -439,7 +453,7 @@ class Experiments(object):
     @staticmethod
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-#        for i in range(2,7):
+#        for i in range(2,7):    
 ##        for i in [2]:
         conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=10)
         Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
