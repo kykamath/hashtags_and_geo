@@ -334,12 +334,9 @@ PREDICTION_MODEL_METHODS = dict([
                             ]) 
 
 class ModelSelectionHistory:
+    FOLLOW_THE_LEADER = 'follow_the_leader'
     def __init__(self):
         self.map_from_location_to_model_selection_history = {}
-    def update_model_for_location(self, location, model_id, metric_id, metric_loss_score): 
-        if location not in self.map_from_location_to_model_selection_history: self.map_from_location_to_model_selection_history[location]=defaultdict(dict)
-        if model_id not in self.map_from_location_to_model_selection_history[location][metric_id]: self.map_from_location_to_model_selection_history[location][metric_id][model_id] = 0.0
-        self.map_from_location_to_model_selection_history[location][metric_id][model_id]+=metric_loss_score
     def get_model_selection_distribution_for_location(self, location, metric_id):
         if location not in self.map_from_location_to_model_selection_history or metric_id not in self.map_from_location_to_model_selection_history[location]: return None
         total_model_selections = sum(self.map_from_location_to_model_selection_history[location][metric_id].values())
@@ -347,10 +344,14 @@ class ModelSelectionHistory:
     def get_model_cumulative_loss_for_metric(self, location, metric_id):
         if location not in self.map_from_location_to_model_selection_history or metric_id not in self.map_from_location_to_model_selection_history[location]: return None
         return self.map_from_location_to_model_selection_history[location][metric_id]
+    @staticmethod
+    def follow_the_leader(model_selection_history, location, model_id, metric_id, metric_loss_score): 
+        if location not in model_selection_history.map_from_location_to_model_selection_history: model_selection_history.map_from_location_to_model_selection_history[location]=defaultdict(dict)
+        if model_id not in model_selection_history.map_from_location_to_model_selection_history[location][metric_id]: model_selection_history.map_from_location_to_model_selection_history[location][metric_id][model_id] = 0.0
+        model_selection_history.map_from_location_to_model_selection_history[location][metric_id][model_id]+=metric_loss_score
         
 class LearningWithExpertAdviceModels:
     RANDOM_LEARNER = 'random_learner'
-    FOLLOW_THE_LEADER = 'follow_the_leader'
     @staticmethod
     def random_learner(map_from_model_to_cumulative_losses, **conf):
         if not map_from_model_to_cumulative_losses: return random.sample(conf['modelsInOrder'], 1)[0]
