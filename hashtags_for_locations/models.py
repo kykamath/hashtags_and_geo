@@ -336,21 +336,34 @@ PREDICTION_MODEL_METHODS = dict([
 class ModelSelectionHistory:
     def __init__(self):
         self.map_from_location_to_model_selection_history = {}
-    def update_model_for_location(self, location, metric_id, model_id): 
+    def update_model_for_location(self, location, model_id, metric_id, metric_loss_score): 
         if location not in self.map_from_location_to_model_selection_history: self.map_from_location_to_model_selection_history[location]=defaultdict(dict)
         if model_id not in self.map_from_location_to_model_selection_history[location][metric_id]: self.map_from_location_to_model_selection_history[location][metric_id][model_id] = 0.0
-        self.map_from_location_to_model_selection_history[location][metric_id][model_id]+=1.0
+        self.map_from_location_to_model_selection_history[location][metric_id][model_id]+=metric_loss_score
     def get_model_selection_distribution_for_location(self, location, metric_id):
         if location not in self.map_from_location_to_model_selection_history or metric_id not in self.map_from_location_to_model_selection_history[location]: return None
         total_model_selections = sum(self.map_from_location_to_model_selection_history[location][metric_id].values())
         return dict([(model_id, model_selections/total_model_selections) for model_id, model_selections in self.map_from_location_to_model_selection_history[location][metric_id].iteritems()])
+    def get_model_cumulative_loss_for_metric(self, location, metric_id):
+        if location not in self.map_from_location_to_model_selection_history or metric_id not in self.map_from_location_to_model_selection_history[location]: return None
+        return self.map_from_location_to_model_selection_history[location][metric_id]
+        
 class LearningWithExpertAdviceModels:
+    RANDOM_LEARNER = 'random_learner'
     FOLLOW_THE_LEADER = 'follow_the_leader'
     @staticmethod
-    def follow_the_leader(map_from_model_id_to_percentage_of_times_a_model_is_selected, **conf):
-        if not map_from_model_id_to_percentage_of_times_a_model_is_selected: return random.sample(conf['modelsInOrder'], 1)[0]
-        else: return max(map_from_model_id_to_percentage_of_times_a_model_is_selected.iteritems(), key=itemgetter(1))[0]
+    def random_learner(map_from_model_to_cumulative_losses, **conf):
+        if not map_from_model_to_cumulative_losses: return random.sample(conf['modelsInOrder'], 1)[0]
+        else: return random.sample(map_from_model_to_cumulative_losses.keys(), 1)[0]
+    @staticmethod
+    def follow_the_leader(map_from_model_to_cumulative_losses, **conf):
+        if not map_from_model_to_cumulative_losses: return random.sample(conf['modelsInOrder'], 1)[0]
+        else: 
+            tuple_of_model_id_and_cumulative_loss = (None, ())
+            for model_id in reversed(conf['modelsInOrder']): tuple_of_model_id_and_cumulative_loss = min([tuple_of_model_id_and_cumulative_loss, (model_id, map_from_model_to_cumulative_losses[model_id])], key=itemgetter(1))
+            return tuple_of_model_id_and_cumulative_loss[0]
 LEARNING_MODEL_METHODS = dict([
+                               (LearningWithExpertAdviceModels.RANDOM_LEARNER, LearningWithExpertAdviceModels.random_learner),
                                (LearningWithExpertAdviceModels.FOLLOW_THE_LEADER, LearningWithExpertAdviceModels.follow_the_leader),
                                ])
 class Experiments(object):
@@ -370,12 +383,17 @@ class Experiments(object):
         return conf_to_return
     @staticmethod
     def _get_best_model(model_performances, metric_id, **conf):
-        map_from_location_to_tuple_of_model_id_and_metric_score = {}
+        map_from_location_to_list_of_tuple_of_model_id_and_metric_score = defaultdict(list)
         for model_id in conf['modelsInOrder']:
             model_performance = model_performances[model_id]
             for location, metric_score in model_performance[metric_id].iteritems():
-                map_from_location_to_tuple_of_model_id_and_metric_score[location] = max([(model_id, metric_score), map_from_location_to_tuple_of_model_id_and_metric_score.get(location, (None, NAN_VALUE))], key=itemgetter(1))
-        return map_from_location_to_tuple_of_model_id_and_metric_score
+#                map_from_location_to_tuple_of_model_id_and_metric_score[location] = max([(model_id, metric_score), map_from_location_to_tuple_of_model_id_and_metric_score.get(location, (None, NAN_VALUE))], key=itemgetter(1))
+                map_from_location_to_list_of_tuple_of_model_id_and_metric_score[location].append((model_id, metric_score))
+        return map_from_location_to_list_of_tuple_of_model_id_and_metric_score
+    @staticmethod
+    def _get_metric_loss_score(metric_id, metric_score):
+        if metric_id!=EvaluationMetrics.IMPACT_DIFFERENCE: return 1.0 - metric_score
+        else: return metric_score
     def getModelFile(self, modelId): return modelsFolder%self.outputFolder+'%s_%s/%s_%s/%s/%s'%(self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'), self.conf['historyTimeInterval'].seconds/60, self.conf['predictionTimeInterval'].seconds/60, self.conf['noOfTargetHashtags'], modelId)
     def runToDetermineModelPerformance(self):
         currentTime = self.startTime
@@ -425,7 +443,7 @@ class Experiments(object):
         for time_unit_in_epoch in iteration_results.keys(): map_from_time_unit_to_model_performance[datetime.fromtimestamp(time_unit_in_epoch)] = iteration_results[time_unit_in_epoch]; del iteration_results[time_unit_in_epoch]
         for learning_model_id in self.learning_models: 
             model_selection_histories[learning_model_id] = ModelSelectionHistory()
-            GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(learning_model_id))
+#            GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(learning_model_id))
         while currentTime<self.endTime:
 #            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
             time_unit_when_models_pick_hashtags = currentTime-self.predictionTimeInterval
@@ -433,15 +451,16 @@ class Experiments(object):
                 for learning_model_id in self.learning_models:
                     for metric_id in self.evaluationMetrics: 
                         map_from_location_to_learned_metric_score = {}
-                        map_from_location_to_tuple_of_model_id_and_metric_score = Experiments._get_best_model(map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags], metric_id, **self.conf)
-                        for location, (best_model_id, metric_score) in map_from_location_to_tuple_of_model_id_and_metric_score.iteritems():
-                            model_id_selected_by_learning_model = LEARNING_MODEL_METHODS[learning_model_id](model_selection_histories[learning_model_id].get_model_selection_distribution_for_location(location, metric_id), **self.conf)
+                        map_from_location_to_list_of_tuple_of_model_id_and_metric_score = Experiments._get_best_model(map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags], metric_id, **self.conf)
+                        for location, list_of_tuple_of_model_id_and_metric_score in map_from_location_to_list_of_tuple_of_model_id_and_metric_score.iteritems():
+                            model_id_selected_by_learning_model = LEARNING_MODEL_METHODS[learning_model_id](model_selection_histories[learning_model_id].get_model_cumulative_loss_for_metric(location, metric_id), **self.conf)
                             if location in map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id]:
                                 map_from_location_to_learned_metric_score[location] = map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id][location]
 #                                print location, best_model_id, model_id_selected_by_learning_model, metric_score, map_from_location_to_learned_metric_score[location]
-                            model_selection_histories[learning_model_id].update_model_for_location(location, metric_id, best_model_id)
+                            for model_id, metric_score in list_of_tuple_of_model_id_and_metric_score:
+                                model_selection_histories[learning_model_id].update_model_for_location(location, model_id, metric_id, Experiments._get_metric_loss_score(metric_id, metric_score))
                         iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 'scoresPerLattice': map_from_location_to_learned_metric_score}
-                        FileIO.writeToFileAsJson(iterationData, self.getModelFile(learning_model_id))
+#                        FileIO.writeToFileAsJson(iterationData, self.getModelFile(learning_model_id))
             currentTime+=timeUnitDelta
     def loadExperimentsData(self):
         iteration_results = {}
@@ -472,7 +491,8 @@ class Experiments(object):
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
     @staticmethod
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
+#        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
+        noOfHashtagsList = [10]
 #        for i in range(2,7):    
 ##        for i in [2]:
         for noOfTargetHashtags in noOfHashtagsList:
