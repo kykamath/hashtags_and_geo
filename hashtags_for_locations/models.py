@@ -217,25 +217,49 @@ class PredictionModels:
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
         return hashtags_for_lattice
     @staticmethod
-    def _hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, location_probabilities, hashtag_coverage_probabilities, *args, **conf):
+    def _hashtags_by_location_and_coverage_scores(propagation_for_prediction, location_probabilities, hashtag_coverage_scores, *args, **conf):
         hashtags_for_lattice = defaultdict(list)
         hashtag_distribution_in_locations = PredictionModels._hashtag_distribution_in_locations(propagation_for_prediction.occurrences)
         if propagation_for_prediction.occurrences:
-            for loc, occs in propagation_for_prediction.occurrences.iteritems():
+            for loc in LOCATIONS_LIST:
                 hashtag_scores, hashtags = defaultdict(float), []
                 for neighboring_location in location_probabilities['neighborProbability'][loc]:
                     if location_probabilities['neighborProbability'][loc][neighboring_location]!=0.0:
+    #                    for h in hashtag_distribution_in_locations[loc]: hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[loc][h]) + math.log(SHARING_PROBABILITIES['neighborProbability'][loc][neighboring_location])
                         for h in hashtag_distribution_in_locations[neighboring_location]: 
 #                            hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
-                            hashtag_scores[h]+=(hashtag_coverage_probabilities[h][neighboring_location] * location_probabilities['neighborProbability'][loc][neighboring_location])
-                hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                if hashtag_scores: 
-#                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0])
+#                            hashtag_scores[h]+=(hashtag_distribution_in_locations[neighboring_location][h] * location_probabilities['neighborProbability'][loc][neighboring_location])
+#                            hashtag_scores[h]+=location_probabilities['neighborProbability'][loc][neighboring_location]
+                            hashtag_scores[h]+=(hashtag_coverage_scores[h][neighboring_location] * location_probabilities['neighborProbability'][loc][neighboring_location])
+                hashtags_for_lattice[loc] = []
+#                if loc in propagation_for_prediction.occurrences:
+#                    occs = propagation_for_prediction.occurrences[loc]
+#                    hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+                if hashtag_scores: hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0])
                 while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
                     h = hashtags.pop()
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
         return hashtags_for_lattice
+#    @staticmethod
+#    def _hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, location_probabilities, hashtag_coverage_probabilities, *args, **conf):
+#        hashtags_for_lattice = defaultdict(list)
+#        hashtag_distribution_in_locations = PredictionModels._hashtag_distribution_in_locations(propagation_for_prediction.occurrences)
+#        if propagation_for_prediction.occurrences:
+#            for loc, occs in propagation_for_prediction.occurrences.iteritems():
+#                hashtag_scores, hashtags = defaultdict(float), []
+#                for neighboring_location in location_probabilities['neighborProbability'][loc]:
+#                    if location_probabilities['neighborProbability'][loc][neighboring_location]!=0.0:
+#                        for h in hashtag_distribution_in_locations[neighboring_location]: 
+##                            hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
+#                            hashtag_scores[h]+=(hashtag_coverage_probabilities[h][neighboring_location] * location_probabilities['neighborProbability'][loc][neighboring_location])
+##                hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+#                if hashtag_scores: 
+##                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
+#                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0])
+#                while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
+#                    h = hashtags.pop()
+#                    if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
+#        return hashtags_for_lattice
     @staticmethod
     def random(propagation_for_prediction, *args, **conf):
         hashtags_for_lattice = defaultdict(list)
@@ -269,12 +293,12 @@ class PredictionModels:
     def sharing_probability_with_coverage(propagation_for_prediction, *args, **conf): 
         loadSharingProbabilities()
         hashtag_coverage_probabilities = propagation_for_prediction.getCoverageProbabilities()
-        return PredictionModels._hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, SHARING_PROBABILITIES, hashtag_coverage_probabilities, *args, **conf)
+        return PredictionModels._hashtags_by_location_and_coverage_scores(propagation_for_prediction, SHARING_PROBABILITIES, hashtag_coverage_probabilities, *args, **conf)
     @staticmethod
     def transmitting_probability_with_coverage(propagation_for_prediction, *args, **conf): 
         loadTransmittingProbabilities()
         hashtag_coverage_probabilities = propagation_for_prediction.getCoverageProbabilities()
-        return PredictionModels._hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, TRANSMITTING_PROBABILITIES, hashtag_coverage_probabilities, *args, **conf)
+        return PredictionModels._hashtags_by_location_and_coverage_scores(propagation_for_prediction, TRANSMITTING_PROBABILITIES, hashtag_coverage_probabilities, *args, **conf)
     @staticmethod
     def coverage_distance(propagation_for_prediction, *args, **conf): 
         hashtags_for_lattice = defaultdict(list)
@@ -290,12 +314,12 @@ class PredictionModels:
     def sharing_probability_with_coverage_distance(propagation_for_prediction, *args, **conf): 
         loadSharingProbabilities()
         coverage_distances_for_hashtags = propagation_for_prediction.getCoverageDistances()
-        return PredictionModels._hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, SHARING_PROBABILITIES, coverage_distances_for_hashtags, *args, **conf)
+        return PredictionModels._hashtags_by_location_and_coverage_scores(propagation_for_prediction, SHARING_PROBABILITIES, coverage_distances_for_hashtags, *args, **conf)
     @staticmethod
     def transmitting_probability_with_coverage_distance(propagation_for_prediction, *args, **conf): 
         loadTransmittingProbabilities()
         coverage_distances_for_hashtags = propagation_for_prediction.getCoverageDistances()
-        return PredictionModels._hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, TRANSMITTING_PROBABILITIES, coverage_distances_for_hashtags, *args, **conf)
+        return PredictionModels._hashtags_by_location_and_coverage_scores(propagation_for_prediction, TRANSMITTING_PROBABILITIES, coverage_distances_for_hashtags, *args, **conf)
 PREDICTION_MODEL_METHODS = dict([
                                 (PredictionModels.RANDOM, PredictionModels.random),
                                 (PredictionModels.GREEDY, PredictionModels.greedy),
@@ -322,7 +346,13 @@ class ModelSelectionHistory:
 class LearningWithExpertAdviceModels:
     FOLLOW_THE_LEADER = 'follow_the_leader'
     @staticmethod
+    def get_best_model(model_performance, metric_id):
+        map_from_location_to_tuple_of_model_id_and_metric_score = {}
+        
+    @staticmethod
     def follow_the_leader(model_performance, metric_id, model_selection_history, *args, **conf):
+        model_ids = model_performance.keys()
+        
         pass
 LEARNING_MODEL_METHODS = dict([
                                (LearningWithExpertAdviceModels.FOLLOW_THE_LEADER, LearningWithExpertAdviceModels.follow_the_leader),
@@ -423,7 +453,7 @@ class Experiments(object):
         noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
         for i in range(2,7):
 #        for i in [2]:
-            conf = dict(historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+            conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
     @staticmethod
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
@@ -543,22 +573,22 @@ if __name__ == '__main__':
 #    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
-                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+#                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
 #                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
 #                        PredictionModels.COVERAGE_PROBABILITY, 
-#                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
+                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
 #                        PredictionModels.COVERAGE_DISTANCE, 
-#                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
+                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
 #    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
-#    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 
-    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
 #    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
 #    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
