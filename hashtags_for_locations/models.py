@@ -430,7 +430,6 @@ class Experiments(object):
             print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
             time_unit_when_models_pick_hashtags = currentTime-self.predictionTimeInterval
             if time_unit_when_models_pick_hashtags in map_from_time_unit_to_model_performance:
-                print time_unit_when_models_pick_hashtags, map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags].keys()
                 for learning_model_id in self.learning_models:
                     for metric_id in self.evaluationMetrics: 
                         map_from_location_to_learned_metric_score = {}
