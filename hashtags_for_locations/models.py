@@ -427,7 +427,7 @@ class Experiments(object):
             model_selection_histories[learning_model_id] = ModelSelectionHistory()
             GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(learning_model_id))
         while currentTime<self.endTime:
-            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
+#            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
             time_unit_when_models_pick_hashtags = currentTime-self.predictionTimeInterval
             if time_unit_when_models_pick_hashtags in map_from_time_unit_to_model_performance:
                 for learning_model_id in self.learning_models:
@@ -472,13 +472,15 @@ class Experiments(object):
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
     @staticmethod
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-#        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
+        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
 #        for i in range(2,7):    
 ##        for i in [2]:
-        conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=10)
-        conf['learningModels'] = [LearningWithExpertAdviceModels.FOLLOW_THE_LEADER]
-        conf['modelsInOrder'] = predictionModels
-        Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
+        for noOfTargetHashtags in noOfHashtagsList:
+            for i in range(2,7):
+                conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
+                conf['learningModels'] = [LearningWithExpertAdviceModels.FOLLOW_THE_LEADER]
+                conf['modelsInOrder'] = predictionModels
+                Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
@@ -599,9 +601,11 @@ if __name__ == '__main__':
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
 #    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    
+#    predictionModels+=[LearningWithExpertAdviceModels.FOLLOW_THE_LEADER]
+    
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-
-    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
