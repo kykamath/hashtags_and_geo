@@ -341,19 +341,15 @@ class ModelSelectionHistory:
         if model_id not in self.map_from_location_to_model_selection_history[location][metric_id]: self.map_from_location_to_model_selection_history[location][metric_id][model_id] = 0.0
         self.map_from_location_to_model_selection_history[location][metric_id][model_id]+=1.0
     def get_model_selection_distribution_for_location(self, location, metric_id):
-        total_model_selections = sum(self.map_from_location_to_model_selection_history[location].values())
-        return dict([(model_id, model_selections/total_model_selections) for model_id, model_selections in self.map_from_location_to_model_selection_history[location].iteritems()])
+        if location not in self.map_from_location_to_model_selection_history or metric_id not in self.map_from_location_to_model_selection_history[location]: return None
+        total_model_selections = sum(self.map_from_location_to_model_selection_history[location][metric_id].values())
+        return dict([(model_id, model_selections/total_model_selections) for model_id, model_selections in self.map_from_location_to_model_selection_history[location][metric_id].iteritems()])
 class LearningWithExpertAdviceModels:
     FOLLOW_THE_LEADER = 'follow_the_leader'
     @staticmethod
-    def get_best_model(model_performance, metric_id):
-        map_from_location_to_tuple_of_model_id_and_metric_score = {}
-        
-    @staticmethod
-    def follow_the_leader(model_performance, metric_id, model_selection_history, *args, **conf):
-        model_ids = model_performance.keys()
-        
-        pass
+    def follow_the_leader(map_from_model_id_to_percentage_of_times_a_model_is_selected, **conf):
+        if not map_from_model_id_to_percentage_of_times_a_model_is_selected: return random.sample(conf['modelsInOrder'], 1)[0]
+        else: return max(map_from_model_id_to_percentage_of_times_a_model_is_selected.iteritems(), key=itemgetter(1))[0]
 LEARNING_MODEL_METHODS = dict([
                                (LearningWithExpertAdviceModels.FOLLOW_THE_LEADER, LearningWithExpertAdviceModels.follow_the_leader),
                                ])
@@ -372,6 +368,14 @@ class Experiments(object):
         conf_to_return['historyTimeInterval'] = self.historyTimeInterval.seconds
         conf_to_return['predictionTimeInterval'] = self.predictionTimeInterval.seconds
         return conf_to_return
+    @staticmethod
+    def _get_best_model(model_performances, metric_id, **conf):
+        map_from_location_to_tuple_of_model_id_and_metric_score = {}
+        for model_id in conf['modelsInOrder']:
+            model_performance = model_performances[model_id]
+            for location, metric_score in model_performance[metric_id].iteritems():
+                map_from_location_to_tuple_of_model_id_and_metric_score[location] = max([(model_id, metric_score), map_from_location_to_tuple_of_model_id_and_metric_score.get(location, (None, NAN_VALUE))], key=itemgetter(1))
+        return map_from_location_to_tuple_of_model_id_and_metric_score
     def getModelFile(self, modelId): return modelsFolder%self.outputFolder+'%s_%s/%s_%s/%s/%s'%(self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'), self.conf['historyTimeInterval'].seconds/60, self.conf['predictionTimeInterval'].seconds/60, self.conf['noOfTargetHashtags'], modelId)
     def runToDetermineModelPerformance(self):
         currentTime = self.startTime
@@ -419,14 +423,26 @@ class Experiments(object):
         iteration_results, map_from_time_unit_to_model_performance = self.loadExperimentsData(), {}
         model_selection_histories = {}
         for time_unit_in_epoch in iteration_results.keys(): map_from_time_unit_to_model_performance[datetime.fromtimestamp(time_unit_in_epoch)] = iteration_results[time_unit_in_epoch]; del iteration_results[time_unit_in_epoch]
-        for learning_model_id in self.learning_models: model_selection_histories[learning_model_id] = ModelSelectionHistory()
+        for learning_model_id in self.learning_models: 
+            model_selection_histories[learning_model_id] = ModelSelectionHistory()
+            GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(learning_model_id))
         while currentTime<self.endTime:
             print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
             time_unit_when_models_pick_hashtags = currentTime-self.predictionTimeInterval
             if time_unit_when_models_pick_hashtags in map_from_time_unit_to_model_performance:
                 print time_unit_when_models_pick_hashtags, map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags].keys()
                 for learning_model_id in self.learning_models:
-                    for metric_id in self.evaluationMetrics: LEARNING_MODEL_METHODS[learning_model_id](map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags], metric_id, model_selection_histories[learning_model_id], **self.conf)
+                    for metric_id in self.evaluationMetrics: 
+                        map_from_location_to_learned_metric_score = {}
+                        map_from_location_to_tuple_of_model_id_and_metric_score = Experiments._get_best_model(map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags], metric_id, **self.conf)
+                        for location, (best_model_id, metric_score) in map_from_location_to_tuple_of_model_id_and_metric_score.iteritems():
+                            model_id_selected_by_learning_model = LEARNING_MODEL_METHODS[learning_model_id](model_selection_histories[learning_model_id].get_model_selection_distribution_for_location(location, metric_id), **self.conf)
+                            if location in map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id]:
+                                map_from_location_to_learned_metric_score[location] = map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id][location]
+                                print location, best_model_id, model_id_selected_by_learning_model, metric_score, map_from_location_to_learned_metric_score[location]
+                            model_selection_histories[learning_model_id].update_model_for_location(location, metric_id, best_model_id)
+                        iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 'scoresPerLattice': map_from_location_to_learned_metric_score}
+                        FileIO.writeToFileAsJson(iterationData, self.getModelFile(learning_model_id))
             currentTime+=timeUnitDelta
     def loadExperimentsData(self):
         iteration_results = {}
@@ -462,6 +478,7 @@ class Experiments(object):
 ##        for i in [2]:
         conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=10)
         conf['learningModels'] = [LearningWithExpertAdviceModels.FOLLOW_THE_LEADER]
+        conf['modelsInOrder'] = predictionModels
         Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
@@ -573,29 +590,19 @@ if __name__ == '__main__':
 #    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
-#                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
 #                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
 #                        PredictionModels.COVERAGE_PROBABILITY, 
-                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
-#                        PredictionModels.COVERAGE_DISTANCE, 
-                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
+#                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
+                        PredictionModels.COVERAGE_DISTANCE, 
+#                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
-#    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
-    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 
-#    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
-#    startTime, endTime, outputFolder = datetime(2011, 11, 1), datetime(2011, 12, 1), 'testing'
-#    conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), 
-#                predictionTimeInterval = timedelta(seconds=24*TIME_UNIT_IN_SECONDS),
-#                noOfTargetHashtags = 25)
-##    
-#    predictionModels = [PredictionModels.RANDOM , PredictionModels.GREEDY, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
-##    
-#    evaluationMetrics = [EvaluationMetrics.IMPACT_DIFFERENCE]
-#    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).plotPerformanceForVaryingNoOfHashtags()
