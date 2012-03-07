@@ -75,7 +75,7 @@ class MRCheckins(ModifiedMRJob):
             for social_network, lid_occurences_count in map_from_social_network_to_lid_occurences_count.iteritems(): 
                 aggregated_map_from_social_network_to_lid_occurences_count[social_network]+=lid_occurences_count
         if sum(map_from_social_network_to_lid_occurences_count.values())>=MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION:
-            yield lid, {'key': lid, 'distribution': map_from_social_network_to_lid_occurences_count}
+            yield lid, {'key': lid, 'distribution': aggregated_map_from_social_network_to_lid_occurences_count}
     ''' End: Methods to determine geo distribution of points across different social networks.
     '''
     def jobsToGetCheckinsInABoundaryPerUser(self): return [self.mr(mapper=self.mapCheckinsPerUser, mapper_final=self.mapCheckinsPerUserFinal, reducer=self.reducerCheckinsPerUser)]
