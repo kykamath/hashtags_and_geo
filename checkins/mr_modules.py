@@ -12,7 +12,8 @@ from library.mrjobwrapper import ModifiedMRJob
 import cjson
 from library.geo import isWithinBoundingBox, getLidFromLocation
 from collections import defaultdict
-from settings import FOURSQUARE_ID
+
+FOURSQUARE_ID = '4sq'
 
 LATTICE_ACCURACY = 0.145
 TIME_UNIT_IN_SECONDS = 6*60*60
@@ -70,8 +71,7 @@ class MRCheckins(ModifiedMRJob):
         for map_from_social_network_to_lid_occurences_count in iterator_of_map_from_social_network_to_lid_occurences_count:
             for social_network, lid_occurences_count in map_from_social_network_to_lid_occurences_count.iteritems(): 
                 aggregated_map_from_social_network_to_lid_occurences_count[social_network]+=lid_occurences_count
-        map_from_social_network_to_lid_occurences_count['key'] = lid
-        yield lid, map_from_social_network_to_lid_occurences_count
+        yield lid, {'key': lid, 'distribution': map_from_social_network_to_lid_occurences_count}
     ''' End: Methods to determine geo distribution of points across different social networks.
     '''
     def jobsToGetCheckinsInABoundaryPerUser(self): return [self.mr(mapper=self.mapCheckinsPerUser, mapper_final=self.mapCheckinsPerUserFinal, reducer=self.reducerCheckinsPerUser)]
