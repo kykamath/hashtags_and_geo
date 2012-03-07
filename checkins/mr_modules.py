@@ -10,7 +10,7 @@ reducer_tuple_of_<key>_and_iterator_of_<value>_to_tuple_of_<key>_and_<value>
 '''
 from library.mrjobwrapper import ModifiedMRJob
 import cjson
-from library.geo import isWithinBoundingBox, getLidFromLocation
+from library.geo import isWithinBoundingBox, getLatticeLid
 from collections import defaultdict
 
 FOURSQUARE_ID = '4sq'
@@ -62,9 +62,10 @@ class MRCheckins(ModifiedMRJob):
         checkin_object = getCheckinsObject(checkins_json)
         if checkin_object:
             social_network = get_socail_network(checkin_object['u'])
-            if social_network not in self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[getLidFromLocation(checkin_object['l'])]: 
-                self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[getLidFromLocation(checkin_object['l'])][social_network]=0.0
-            self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[getLidFromLocation(checkin_object['l'])][social_network]+=1
+            lid = getLatticeLid(checkin_object['l'], accuracy = LATTICE_ACCURACY)
+            if social_network not in self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[lid]: 
+                self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[lid][social_network]=0.0
+            self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[lid][social_network]+=1
         
     def mapper_final_checkins_json_to_tuple_of_lid_and_map_from_social_network_to_lid_occurences_count(self):
         for lid, map_from_social_network_to_lid_occurences_count in self.map_from_lid_to_map_from_social_network_to_lid_occurences_count.iteritems():
