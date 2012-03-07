@@ -485,6 +485,7 @@ class Experiments(object):
                         iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 'scoresPerLattice': map_from_location_to_learned_metric_score}
                         iteration_weights = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 
                                              'location_weights': dict([(location, model_selection_history[metric_id]) for location, model_selection_history in model_selection_histories[learning_model_id].map_from_location_to_model_selection_history.iteritems()])}
+                        print iterationData
                         FileIO.writeToFileAsJson(iterationData, self.getModelFile(learning_model_id))
                         FileIO.writeToFileAsJson(iteration_weights, self.getModelWeightsFile(learning_model_id))
             currentTime+=timeUnitDelta
