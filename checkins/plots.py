@@ -11,9 +11,9 @@ class DataAnalysis:
         total_checkins = 0.0
         for i, data in enumerate(FileIO.iterateJsonFromFile(lidsToDistributionInSocialNetworksMapFile)):
 #            if len(data['distribution']) > 1:
-            print i,total_checkins,  data, sum(data['distribution'].values())
+            print i,total_checkins, sum(data['distribution'].values())
             total_checkins+=sum(data['distribution'].values())
-            if i==100: break;
+#            if i==100: break;
         print total_checkins
     @staticmethod
     def run():
