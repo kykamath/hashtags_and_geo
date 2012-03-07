@@ -335,6 +335,8 @@ PREDICTION_MODEL_METHODS = dict([
 
 class ModelSelectionHistory:
     FOLLOW_THE_LEADER = 'follow_the_leader'
+    HEDGING_METHOD = 'hedging_method'
+    BETA = 0.5
     def __init__(self):
         self.map_from_location_to_model_selection_history = {}
     def get_model_selection_distribution_for_location(self, location, metric_id):
@@ -349,7 +351,12 @@ class ModelSelectionHistory:
         if location not in model_selection_history.map_from_location_to_model_selection_history: model_selection_history.map_from_location_to_model_selection_history[location]=defaultdict(dict)
         if model_id not in model_selection_history.map_from_location_to_model_selection_history[location][metric_id]: model_selection_history.map_from_location_to_model_selection_history[location][metric_id][model_id] = 0.0
         model_selection_history.map_from_location_to_model_selection_history[location][metric_id][model_id]+=metric_loss_score
-
+    @staticmethod
+    def hedging_method(model_selection_history, location, model_id, metric_id, metric_loss_score, **conf): 
+        if location not in model_selection_history.map_from_location_to_model_selection_history: model_selection_history.map_from_location_to_model_selection_history[location]=defaultdict(dict)
+        if model_id not in model_selection_history.map_from_location_to_model_selection_history[location][metric_id]: model_selection_history.map_from_location_to_model_selection_history[location][metric_id][model_id] = 1.0
+        model_selection_history.map_from_location_to_model_selection_history[location][metric_id][model_id]*=ModelSelectionHistory.BETA**metric_loss_score
+        pass
 class LearningWithExpertAdviceModels:
     MODEL_SCORING_FUNCTION = 'scoring_function'
     MODEL_SELECTION_FUNCTION = 'model_selection_function'
@@ -365,8 +372,12 @@ class LearningWithExpertAdviceModels:
             for model_id in reversed(conf['modelsInOrder']): 
                 if model_id in map_from_model_to_cumulative_losses: tuple_of_model_id_and_cumulative_loss = min([tuple_of_model_id_and_cumulative_loss, (model_id, map_from_model_to_cumulative_losses[model_id])], key=itemgetter(1))
             return tuple_of_model_id_and_cumulative_loss[0]
+    @staticmethod
+    def hedging_method(map_from_model_to_cumulative_losses, **conf):
+        pass
 LEARNING_MODEL_METHODS = dict([
                            (ModelSelectionHistory.FOLLOW_THE_LEADER, dict([(LearningWithExpertAdviceModels.MODEL_SCORING_FUNCTION, ModelSelectionHistory.follow_the_leader), (LearningWithExpertAdviceModels.MODEL_SELECTION_FUNCTION, LearningWithExpertAdviceModels.follow_the_leader)])),
+                           (ModelSelectionHistory.HEDGING_METHOD, dict([(LearningWithExpertAdviceModels.MODEL_SCORING_FUNCTION, ModelSelectionHistory.hedging_method), (LearningWithExpertAdviceModels.MODEL_SELECTION_FUNCTION, LearningWithExpertAdviceModels.hedging_method)])),
                            ])
 
 class Experiments(object):
@@ -509,7 +520,7 @@ class Experiments(object):
         for noOfTargetHashtags in noOfHashtagsList:
             for i in range(2,7):
                 conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
-                conf['learningModels'] = [ModelSelectionHistory.FOLLOW_THE_LEADER]
+                conf['learningModels'] = [ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
                 conf['modelsInOrder'] = predictionModels
                 Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
     @staticmethod
