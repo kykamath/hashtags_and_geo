@@ -642,11 +642,11 @@ if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
                         PredictionModels.RANDOM , PredictionModels.GREEDY, 
-#                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
-#                        PredictionModels.COVERAGE_PROBABILITY, 
-#                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
+                        PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
+                        PredictionModels.COVERAGE_PROBABILITY, 
+                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
                         PredictionModels.COVERAGE_DISTANCE, 
-#                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
+                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
