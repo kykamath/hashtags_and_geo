@@ -23,15 +23,15 @@ class RawDataProcessing():
         for i, data in enumerate(FileIO.iterateLinesFromFile('/mnt/chevron/kykamath/data/geo/4sq/checkin_data.txt')):
             FileIO.writeToFileAsJson(parse4SQData(data), checkinsJSONFile%FOURSQUARE_ID)
     @staticmethod
-    def parseJSONForGowallaAndBrightkite(line):
+    def parseJSONForGowallaAndBrightkite(line, uid=GOWALLA_ID):
         data = line.strip().split()
-        return {'u': '%s_%s'%(GOWALLA_ID, data[0]), 'l': [float(data[2]), float(data[3])], 't': GeneralMethods.getEpochFromDateTimeObject(datetime.strptime(data[1], '%Y-%m-%dT%H:%M:%SZ')), 'lid': data[4]}
+        return {'u': '%s_%s'%(uid, data[0]), 'l': [float(data[2]), float(data[3])], 't': GeneralMethods.getEpochFromDateTimeObject(datetime.strptime(data[1], '%Y-%m-%dT%H:%M:%SZ')), 'lid': data[4]}
     @staticmethod
     def convertBrightkiteDataToJSON():
         print 'Writing to: ', checkinsJSONFile%BRIGHTKITE_ID
         for i, line in enumerate(FileIO.iterateLinesFromFile('/mnt/chevron/kykamath/data/geo/checkins/raw_data/brightkite/loc-brightkite_totalCheckins.txt')):
             try:
-                FileIO.writeToFileAsJson(RawDataProcessing.parseJSONForGowallaAndBrightkite(line), checkinsJSONFile%BRIGHTKITE_ID)
+                FileIO.writeToFileAsJson(RawDataProcessing.parseJSONForGowallaAndBrightkite(line, uid=BRIGHTKITE_ID), checkinsJSONFile%BRIGHTKITE_ID)
             except: pass
     @staticmethod
     def convertGowallaDataToJSON():
@@ -44,5 +44,5 @@ def mr_driver():
     runMRJob(MRCheckins, userToCheckinsMapFile, getInputFiles(), jobconf={'mapred.reduce.tasks':60})
 
 if __name__ == '__main__':
-    mr_driver()
-#    RawDataProcessing.convertBrightkiteDataToJSON()
+#    mr_driver()
+    RawDataProcessing.convertBrightkiteDataToJSON()
