@@ -464,6 +464,10 @@ class Experiments(object):
         for learning_model_id in self.learning_models: 
             model_selection_histories[learning_model_id] = ModelSelectionHistory()
             GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(learning_model_id))
+        hard_end_time = self.conf.get('hard_end_time', None)
+        if hard_end_time: 
+            print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
+            self.endTime = hard_end_time
         while currentTime<self.endTime:
 #            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
             time_unit_when_models_pick_hashtags = currentTime-self.predictionTimeInterval
@@ -522,6 +526,7 @@ class Experiments(object):
                 conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
                 conf['learningModels'] = [ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
                 conf['modelsInOrder'] = predictionModels
+                conf['hard_end_time'] = datetime(2011, 9, 16)
                 Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
