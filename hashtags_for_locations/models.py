@@ -511,8 +511,8 @@ class Experiments(object):
     def generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
         noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-        for i in range(2,7):
-#        for i in [2]:
+#        for i in range(2,7):
+        for i in [2]:
             conf = dict(historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
     @staticmethod
@@ -520,14 +520,14 @@ class Experiments(object):
         noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
 #        noOfHashtagsList = [10]
 #        for i in range(2,7):    
-##        for i in [2]:
-        for noOfTargetHashtags in noOfHashtagsList:
-            for i in range(2,7):
-                conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
-                conf['learningModels'] = [ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
-                conf['modelsInOrder'] = predictionModels
-                conf['hard_end_time'] = datetime(2011, 9, 16)
-                Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
+        for i in [2]:
+            for noOfTargetHashtags in noOfHashtagsList:
+                for i in range(2,7):
+                    conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
+                    conf['learningModels'] = [ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
+                    conf['modelsInOrder'] = predictionModels
+                    conf['hard_end_time'] = datetime(2011, 9, 16)
+                    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
