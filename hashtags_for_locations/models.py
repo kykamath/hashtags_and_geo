@@ -465,11 +465,13 @@ class Experiments(object):
         for learning_model_id in self.learning_models: 
             model_selection_histories[learning_model_id] = ModelSelectionHistory()
             GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(learning_model_id))
+            GeneralMethods.runCommand('rm -rf %s'%self.getModelWeightsFile(learning_model_id))
         hard_end_time = self.conf.get('hard_end_time', None)
+        end_time = self.endTime
         if hard_end_time: 
             print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
-            self.endTime = hard_end_time
-        while currentTime<self.endTime:
+            end_time = hard_end_time
+        while currentTime<end_time:
 #            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
             time_unit_when_models_pick_hashtags = currentTime-self.predictionTimeInterval
             if time_unit_when_models_pick_hashtags in map_from_time_unit_to_model_performance:
