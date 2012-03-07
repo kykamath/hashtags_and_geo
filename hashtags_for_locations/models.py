@@ -414,6 +414,7 @@ class Experiments(object):
         if metric_id!=EvaluationMetrics.IMPACT_DIFFERENCE: return 1.0 - metric_score
         else: return metric_score
     def getModelFile(self, modelId): return modelsFolder%self.outputFolder+'%s_%s/%s_%s/%s/%s'%(self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'), self.conf['historyTimeInterval'].seconds/60, self.conf['predictionTimeInterval'].seconds/60, self.conf['noOfTargetHashtags'], modelId)
+    def getModelWeightsFile(self, modelId): return modelsFolder%self.outputFolder+'%s_%s/%s_%s/%s/%s'%(self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'), self.conf['historyTimeInterval'].seconds/60, self.conf['predictionTimeInterval'].seconds/60, self.conf['noOfTargetHashtags'], modelId+'_weights')
     def runToDetermineModelPerformance(self):
         currentTime = self.startTime
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
@@ -462,7 +463,7 @@ class Experiments(object):
         for time_unit_in_epoch in iteration_results.keys(): map_from_time_unit_to_model_performance[datetime.fromtimestamp(time_unit_in_epoch)] = iteration_results[time_unit_in_epoch]; del iteration_results[time_unit_in_epoch]
         for learning_model_id in self.learning_models: 
             model_selection_histories[learning_model_id] = ModelSelectionHistory()
-#            GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(learning_model_id))
+            GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(learning_model_id))
         while currentTime<self.endTime:
 #            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
             time_unit_when_models_pick_hashtags = currentTime-self.predictionTimeInterval
@@ -473,23 +474,15 @@ class Experiments(object):
                         map_from_location_to_list_of_tuple_of_model_id_and_metric_score = Experiments._get_best_model(map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags], metric_id, **self.conf)
                         for location, list_of_tuple_of_model_id_and_metric_score in map_from_location_to_list_of_tuple_of_model_id_and_metric_score.iteritems():
                             model_id_selected_by_learning_model = LEARNING_MODEL_METHODS[learning_model_id][LearningWithExpertAdviceModels.MODEL_SELECTION_FUNCTION](model_selection_histories[learning_model_id].get_model_cumulative_loss_for_metric(location, metric_id), **self.conf)
-#                            model_id_selected_by_learning_model, map_from_model_to_cumulative_losses = '', model_selection_histories[learning_model_id].get_model_cumulative_loss_for_metric(location, metric_id)
-#                            if not map_from_model_to_cumulative_losses: model_id_selected_by_learning_model = random.sample(self.conf['modelsInOrder'], 1)[0]
-#                            else: 
-#                                tuple_of_model_id_and_cumulative_loss = (None, ())
-#                                for model_id in reversed(self.conf['modelsInOrder']): 
-##                                    print map_from_model_to_cumulative_losses
-#                                    if model_id in map_from_model_to_cumulative_losses: tuple_of_model_id_and_cumulative_loss = min([tuple_of_model_id_and_cumulative_loss, (model_id, map_from_model_to_cumulative_losses[model_id])], key=itemgetter(1))
-#                                model_id_selected_by_learning_model = tuple_of_model_id_and_cumulative_loss[0]
-#                            if metric_id not in map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model]:
-#                                print 'x'
                             if location in map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id]:
                                 map_from_location_to_learned_metric_score[location] = map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id][location]
 #                                print location, best_model_id, model_id_selected_by_learning_model, metric_score, map_from_location_to_learned_metric_score[location]
                             for model_id, metric_score in list_of_tuple_of_model_id_and_metric_score: LEARNING_MODEL_METHODS[learning_model_id][LearningWithExpertAdviceModels.MODEL_SCORING_FUNCTION](model_selection_histories[learning_model_id], location, model_id, metric_id, Experiments._get_metric_loss_score(metric_id, metric_score))
                         iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 'scoresPerLattice': map_from_location_to_learned_metric_score}
-                        print iterationData
-#                        FileIO.writeToFileAsJson(iterationData, self.getModelFile(learning_model_id))
+                        iteration_weights = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 
+                                             'location_weights': dict([(location, model_selection_history[metric_id]) for location, model_selection_history in model_selection_histories[learning_model_id].map_from_location_to_model_selection_history.iteritems()])}
+                        FileIO.writeToFileAsJson(iterationData, self.getModelFile(learning_model_id))
+                        FileIO.writeToFileAsJson(iteration_weights, self.getModelWeightsFile(learning_model_id))
             currentTime+=timeUnitDelta
     def loadExperimentsData(self):
         iteration_results = {}
@@ -520,8 +513,8 @@ class Experiments(object):
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
     @staticmethod
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-#        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-        noOfHashtagsList = [10]
+        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
+#        noOfHashtagsList = [10]
 #        for i in range(2,7):    
 ##        for i in [2]:
         for noOfTargetHashtags in noOfHashtagsList:
