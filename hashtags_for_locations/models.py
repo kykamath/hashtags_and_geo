@@ -377,8 +377,9 @@ class LearningWithExpertAdviceModels:
         else:
             total_weight = sum(map_from_model_to_cumulative_losses.values())
             for model in map_from_model_to_cumulative_losses.keys(): map_from_model_to_cumulative_losses[model]/=total_weight 
-            [ADD STUFF HERE.]
-            pass
+            tuple_of_id_model_and_cumulative_losses = [(id, model, cumulative_loss) for id, (model, cumulative_loss) in enumerate(map_from_model_to_cumulative_losses.iteritems())]
+            selected_id = GeneralMethods.weightedChoice(zip(*tuple_of_id_model_and_cumulative_losses)[2])
+            return filter(lambda (id, model, _): id==selected_id, tuple_of_id_model_and_cumulative_losses)[0][1]
 LEARNING_MODEL_METHODS = dict([
                            (ModelSelectionHistory.FOLLOW_THE_LEADER, dict([(LearningWithExpertAdviceModels.MODEL_SCORING_FUNCTION, ModelSelectionHistory.follow_the_leader), (LearningWithExpertAdviceModels.MODEL_SELECTION_FUNCTION, LearningWithExpertAdviceModels.follow_the_leader)])),
                            (ModelSelectionHistory.HEDGING_METHOD, dict([(LearningWithExpertAdviceModels.MODEL_SCORING_FUNCTION, ModelSelectionHistory.hedging_method), (LearningWithExpertAdviceModels.MODEL_SELECTION_FUNCTION, LearningWithExpertAdviceModels.hedging_method)])),
