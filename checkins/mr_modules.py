@@ -16,7 +16,7 @@ from collections import defaultdict
 FOURSQUARE_ID = '4sq'
 
 #LATTICE_ACCURACY = 0.145
-LATTICE_ACCURACY = 10.
+LATTICE_ACCURACY = 100.
 TIME_UNIT_IN_SECONDS = 6*60*60
 
 BOUNDARY = [[-90,-180], [90, 180]] # World
