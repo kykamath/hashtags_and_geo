@@ -42,6 +42,7 @@ class RawDataProcessing():
     
 def mr_driver():
     def getInputFiles(): return map(lambda id: hdfsInputCheckinsFile%id, [GOWALLA_ID, BRIGHTKITE_ID, FOURSQUARE_ID])
+    print getInputFiles()
 #    output_file = userToCheckinsMapFile
     output_file = lidsToDistributionInSocialNetworksMapFile
     runMRJob(MRCheckins, output_file, getInputFiles(), jobconf={'mapred.reduce.tasks':60})
