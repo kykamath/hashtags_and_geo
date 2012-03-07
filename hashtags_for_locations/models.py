@@ -399,7 +399,7 @@ class Experiments(object):
         for k, v in self.conf.iteritems(): conf_to_return[k]=v
         conf_to_return['historyTimeInterval'] = self.historyTimeInterval.seconds
         conf_to_return['predictionTimeInterval'] = self.predictionTimeInterval.seconds
-        del conf_to_return['hard_end_time']
+        if 'hard_end_time' in conf_to_return: del conf_to_return['hard_end_time']
         return conf_to_return
     @staticmethod
     def _get_best_model(model_performances, metric_id, **conf):
