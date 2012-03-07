@@ -23,6 +23,7 @@ BOUNDARY = [[-90,-180], [90, 180]] # World
 #BOUNDARY = [[40.491, -74.356], [41.181, -72.612]] #NY
 
 MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 100
+MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = 25
 
 def getCheckinsObject(line):
     data = cjson.decode(line)
@@ -72,7 +73,8 @@ class MRCheckins(ModifiedMRJob):
         for map_from_social_network_to_lid_occurences_count in iterator_of_map_from_social_network_to_lid_occurences_count:
             for social_network, lid_occurences_count in map_from_social_network_to_lid_occurences_count.iteritems(): 
                 aggregated_map_from_social_network_to_lid_occurences_count[social_network]+=lid_occurences_count
-        yield lid, {'key': lid, 'distribution': map_from_social_network_to_lid_occurences_count}
+        if sum(map_from_social_network_to_lid_occurences_count.values())>=MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION:
+            yield lid, {'key': lid, 'distribution': map_from_social_network_to_lid_occurences_count}
     ''' End: Methods to determine geo distribution of points across different social networks.
     '''
     def jobsToGetCheckinsInABoundaryPerUser(self): return [self.mr(mapper=self.mapCheckinsPerUser, mapper_final=self.mapCheckinsPerUserFinal, reducer=self.reducerCheckinsPerUser)]
