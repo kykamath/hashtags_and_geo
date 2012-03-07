@@ -526,7 +526,7 @@ class Experiments(object):
         for i in [2]:
             for noOfTargetHashtags in noOfHashtagsList:
                 for i in range(2,7):
-                    conf = dict(historyTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
+                    conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
                     conf['learningModels'] = [ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
                     conf['modelsInOrder'] = predictionModels
                     conf['hard_end_time'] = datetime(2011, 9, 16)
