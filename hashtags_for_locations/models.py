@@ -356,7 +356,6 @@ class ModelSelectionHistory:
         if location not in model_selection_history.map_from_location_to_model_selection_history: model_selection_history.map_from_location_to_model_selection_history[location]=defaultdict(dict)
         if model_id not in model_selection_history.map_from_location_to_model_selection_history[location][metric_id]: model_selection_history.map_from_location_to_model_selection_history[location][metric_id][model_id] = 1.0
         model_selection_history.map_from_location_to_model_selection_history[location][metric_id][model_id]*=ModelSelectionHistory.BETA**metric_loss_score
-        pass
 class LearningWithExpertAdviceModels:
     MODEL_SCORING_FUNCTION = 'scoring_function'
     MODEL_SELECTION_FUNCTION = 'model_selection_function'
@@ -374,7 +373,12 @@ class LearningWithExpertAdviceModels:
             return tuple_of_model_id_and_cumulative_loss[0]
     @staticmethod
     def hedging_method(map_from_model_to_cumulative_losses, **conf):
-        pass
+        if not map_from_model_to_cumulative_losses: return random.sample(conf['modelsInOrder'], 1)[0]
+        else:
+            total_weight = sum(map_from_model_to_cumulative_losses.values())
+            for model in map_from_model_to_cumulative_losses.keys(): map_from_model_to_cumulative_losses[model]/=total_weight 
+            [ADD STUFF HERE.]
+            pass
 LEARNING_MODEL_METHODS = dict([
                            (ModelSelectionHistory.FOLLOW_THE_LEADER, dict([(LearningWithExpertAdviceModels.MODEL_SCORING_FUNCTION, ModelSelectionHistory.follow_the_leader), (LearningWithExpertAdviceModels.MODEL_SELECTION_FUNCTION, LearningWithExpertAdviceModels.follow_the_leader)])),
                            (ModelSelectionHistory.HEDGING_METHOD, dict([(LearningWithExpertAdviceModels.MODEL_SCORING_FUNCTION, ModelSelectionHistory.hedging_method), (LearningWithExpertAdviceModels.MODEL_SELECTION_FUNCTION, LearningWithExpertAdviceModels.hedging_method)])),
@@ -476,6 +480,8 @@ class Experiments(object):
 ##                                    print map_from_model_to_cumulative_losses
 #                                    if model_id in map_from_model_to_cumulative_losses: tuple_of_model_id_and_cumulative_loss = min([tuple_of_model_id_and_cumulative_loss, (model_id, map_from_model_to_cumulative_losses[model_id])], key=itemgetter(1))
 #                                model_id_selected_by_learning_model = tuple_of_model_id_and_cumulative_loss[0]
+#                            if metric_id not in map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model]:
+#                                print 'x'
                             if location in map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id]:
                                 map_from_location_to_learned_metric_score[location] = map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id][location]
 #                                print location, best_model_id, model_id_selected_by_learning_model, metric_score, map_from_location_to_learned_metric_score[location]
