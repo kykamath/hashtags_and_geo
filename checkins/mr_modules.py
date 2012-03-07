@@ -58,10 +58,11 @@ class MRCheckins(ModifiedMRJob):
     def mapper_checkins_json_to_tuple_of_lid_and_map_from_social_network_to_lid_occurences_count(self, key, checkins_json):
         if False: yield # I'm a generator!
         checkin_object = getCheckinsObject(checkins_json)
-        social_network = get_socail_network(checkin_object['u'])
-        if social_network not in self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[getLidFromLocation(checkin_object['l'])]: 
-            self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[getLidFromLocation(checkin_object['l'])][social_network]=0.0
-        self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[getLidFromLocation(checkin_object['l'])][social_network]+=1
+        if checkin_object:
+            social_network = get_socail_network(checkin_object['u'])
+            if social_network not in self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[getLidFromLocation(checkin_object['l'])]: 
+                self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[getLidFromLocation(checkin_object['l'])][social_network]=0.0
+            self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[getLidFromLocation(checkin_object['l'])][social_network]+=1
         
     def mapper_final_checkins_json_to_tuple_of_lid_and_map_from_social_network_to_lid_occurences_count(self):
         for lid, map_from_social_network_to_lid_occurences_count in self.map_from_lid_to_map_from_social_network_to_lid_occurences_count.iteritems():
