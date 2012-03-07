@@ -66,7 +66,6 @@ class MRCheckins(ModifiedMRJob):
             if social_network not in self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[lid]: 
                 self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[lid][social_network]=0.0
             self.map_from_lid_to_map_from_social_network_to_lid_occurences_count[lid][social_network]+=1
-        
     def mapper_final_checkins_json_to_tuple_of_lid_and_map_from_social_network_to_lid_occurences_count(self):
         for lid, map_from_social_network_to_lid_occurences_count in self.map_from_lid_to_map_from_social_network_to_lid_occurences_count.iteritems():
             yield lid, map_from_social_network_to_lid_occurences_count
