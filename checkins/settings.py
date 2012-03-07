@@ -15,3 +15,4 @@ checkinsAnalysisFolder = '/mnt/chevron/kykamath/data/geo/checkins/analysis/'
 
 checkinsJSONFile = checkinsFolder+'checkins.json'
 userToCheckinsMapFile = checkinsAnalysisFolder+'userToCheckinsMap'
+lidsToDistributionInSocialNetworksMapFile = checkinsAnalysisFolder + 'lidsToDistributionInSocialNetworksMap'

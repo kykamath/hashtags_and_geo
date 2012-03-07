@@ -11,7 +11,8 @@ from library.file_io import FileIO
 from checkins.mr_modules import MRCheckins
 from datetime import datetime
 from checkins.settings import checkinsJSONFile, userToCheckinsMapFile,\
-    hdfsInputCheckinsFile, FOURSQUARE_ID, GOWALLA_ID, BRIGHTKITE_ID
+    hdfsInputCheckinsFile, FOURSQUARE_ID, GOWALLA_ID, BRIGHTKITE_ID,\
+    lidsToDistributionInSocialNetworksMapFile
 
 class RawDataProcessing():
     @staticmethod    
@@ -41,8 +42,10 @@ class RawDataProcessing():
     
 def mr_driver():
     def getInputFiles(): return map(lambda id: hdfsInputCheckinsFile%id, [GOWALLA_ID, BRIGHTKITE_ID, FOURSQUARE_ID])
-    runMRJob(MRCheckins, userToCheckinsMapFile, getInputFiles(), jobconf={'mapred.reduce.tasks':60})
+#    output_file = userToCheckinsMapFile
+    output_file = lidsToDistributionInSocialNetworksMapFile
+    runMRJob(MRCheckins, output_file, getInputFiles(), jobconf={'mapred.reduce.tasks':60})
 
 if __name__ == '__main__':
-#    mr_driver()
-    RawDataProcessing.convertBrightkiteDataToJSON()
+    mr_driver()
+#    RawDataProcessing.convertBrightkiteDataToJSON()
