@@ -520,9 +520,9 @@ class Experiments(object):
     def generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
         noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-#        for i in range(2,7):
-        for i in [2]:
-            conf = dict(historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+        for i in range(3,7):
+#        for i in [2]:
+            conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             conf['hard_end_time'] = datetime(2011, 9, 16)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
     @staticmethod
