@@ -18,12 +18,12 @@ FOURSQUARE_ID = '4sq'
 LATTICE_ACCURACY = 0.0001
 TIME_UNIT_IN_SECONDS = 6*60*60
 
-#BOUNDARY_ID, BOUNDARY =  'world', [[-90,-180], [90, 180]]
-BOUNDARY_ID, BOUNDARY =  'usa', [[24.527135,-127.792969], [49.61071,-59.765625]]
+BOUNDARY_ID, BOUNDARY =  'world', [[-90,-180], [90, 180]]
+#BOUNDARY_ID, BOUNDARY =  'usa', [[24.527135,-127.792969], [49.61071,-59.765625]]
 #BOUNDARY_ID, BOUNDARY = 'ny', [[40.491, -74.356], [41.181, -72.612]]
 
 MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 100
-MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = 10
+MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = 25
 
 PARAMS_DICT = dict(
                    PARAMS_DICT = True,
@@ -49,6 +49,7 @@ class MRCheckins(ModifiedMRJob):
         super(MRCheckins, self).__init__(*args, **kwargs)
         self.userToCheckinsMap = defaultdict(list)
         self.map_from_lid_to_map_from_social_network_to_lid_occurences_count = defaultdict(dict)
+        self.map_from_lid_to_tuples_of_user_and_checkin_time = defaultdict(list)
     ''' Start: Methods to determine checkin distribution across users
     '''
     def mapCheckinsPerUser(self, key, line):
@@ -61,7 +62,7 @@ class MRCheckins(ModifiedMRJob):
         checkins = reduce(list.__add__, values, [])
         if len(checkins)>=MINIMUM_NUMBER_OF_CHECKINS_PER_USER: 
             checkins = sorted(checkins, key=lambda t: t[1])
-            yield key, {'u': key, 'c': len(checkins)}
+            yield key, {'u': key, 'c': checkins}
     ''' End: Methods to determine checkin distribution across users
     '''
     ''' Start: Methods to determine geo distribution of points across different social networks.
@@ -87,16 +88,37 @@ class MRCheckins(ModifiedMRJob):
             yield lid, {'key': lid, 'distribution': aggregated_map_from_social_network_to_lid_occurences_count}
     ''' End: Methods to determine geo distribution of points across different social networks.
     '''
+    ''' Start: Methods to get locations with minimum no. of checkins.
+    '''
+    def mapper_user_object_to_tuple_of_lid_and_tuple_of_user_and_checkin_time(self, key, user_object):
+        if False: yield # I'm a generator!
+        for location, checkin_time in user_object['c']: self.map_from_lid_to_tuples_of_user_and_checkin_time[getLatticeLid(location, accuracy = LATTICE_ACCURACY)].append([user_object['u'], checkin_time])
+    def mapper_final_user_object_to_tuple_of_lid_and_tuple_of_user_and_checkin_time(self):
+        for lid, tuples_of_user_and_checkin_time in self.map_from_lid_to_tuples_of_user_and_checkin_time.iteritems(): 
+            yield lid, tuples_of_user_and_checkin_time
+    def reducer_tuple_of_lid_and_iterator_of_tuples_of_user_and_checkin_time_to_tuple_of_lid_and_location_object(self, lid, iterator_of_tuples_of_user_and_checkin_time):
+        checkins = reduce(list.__add__,  iterator_of_tuples_of_user_and_checkin_time, [])
+        if len(checkins)>=MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION: yield lid, {'l': lid, 'c': checkins}
+    ''' End: Methods to get locations with minimum no. of checkins.
+    '''
     def jobsToGetCheckinsInABoundaryPerUser(self): return [self.mr(mapper=self.mapCheckinsPerUser, mapper_final=self.mapCheckinsPerUserFinal, reducer=self.reducerCheckinsPerUser)]
     def jobs_to_get_geo_distribution_of_points_across_social_networks(self): return [self.mr(
                                                                                              mapper=self.mapper_checkins_json_to_tuple_of_lid_and_map_from_social_network_to_lid_occurences_count, 
                                                                                              mapper_final=self.mapper_final_checkins_json_to_tuple_of_lid_and_map_from_social_network_to_lid_occurences_count, 
                                                                                              reducer=self.reducer_tuple_of_lid_and_iterator_of_map_from_social_network_to_lid_occurences_count_to_tuple_of_lid_and_map_from_social_network_to_lid_occurences_count
                                                                                              )]
+    def jobs_to_get_location_objects_with_minumum_checkins_at_both_location_and_users(self):
+        return self.jobsToGetCheckinsInABoundaryPerUser() + \
+                [self.mr(
+                     mapper=self.mapper_user_object_to_tuple_of_lid_and_tuple_of_user_and_checkin_time, 
+                     mapper_final=self.mapper_final_user_object_to_tuple_of_lid_and_tuple_of_user_and_checkin_time, 
+                     reducer=self.reducer_tuple_of_lid_and_iterator_of_tuples_of_user_and_checkin_time_to_tuple_of_lid_and_location_object
+                     )]
     def steps(self):
         pass
 #        return self.jobsToGetCheckinsInABoundaryPerUser()
-        return self.jobs_to_get_geo_distribution_of_points_across_social_networks()
+#        return self.jobs_to_get_geo_distribution_of_points_across_social_networks()
+        return self.jobs_to_get_location_objects_with_minumum_checkins_at_both_location_and_users()
     
 if __name__ == '__main__':
     MRCheckins.run()

@@ -11,8 +11,9 @@ GOWALLA_ID = 'gowalla'
 BRIGHTKITE_ID = 'brightkite'
  
 checkinsFolder = '/mnt/chevron/kykamath/data/geo/checkins/%s/'
-checkinsAnalysisFolder = '/mnt/chevron/kykamath/data/geo/checkins/analysis/%s/'
+checkinsAnalysisFolder = '/mnt/chevron/kykamath/data/geo/checkins/analysis/%s/%s/%s/'
 
 checkinsJSONFile = checkinsFolder+'checkins.json'
 userToCheckinsMapFile = checkinsAnalysisFolder+'userToCheckinsMap'
 lidsToDistributionInSocialNetworksMapFile = checkinsAnalysisFolder + 'lidsToDistributionInSocialNetworksMap'
+location_objects_with_minumum_checkins_at_both_location_and_users_file = checkinsAnalysisFolder + 'location_objects_with_minumum_checkins_at_both_location_and_users'
