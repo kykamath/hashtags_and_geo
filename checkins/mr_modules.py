@@ -12,6 +12,8 @@ from library.mrjobwrapper import ModifiedMRJob
 import cjson
 from library.geo import isWithinBoundingBox, getLatticeLid
 from collections import defaultdict
+from itertools import groupby
+from operator import itemgetter
 
 FOURSQUARE_ID = '4sq'
 
@@ -21,14 +23,17 @@ TIME_UNIT_IN_SECONDS = 6*60*60
 #BOUNDARY_ID, BOUNDARY =  'world', [[-90,-180], [90, 180]]
 #MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 100
 #MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = 25
+#MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER = 3
 
 #BOUNDARY_ID, BOUNDARY =  'usa', [[24.527135,-127.792969], [49.61071,-59.765625]]
 #MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 100
 #MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = 25
+#MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER = 3
 
 BOUNDARY_ID, BOUNDARY = 'ny', [[40.491, -74.356], [41.181, -72.612]]
 MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 100
 MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = 25
+MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER = 3
 
 PARAMS_DICT = dict(
                    PARAMS_DICT = True,
@@ -38,6 +43,7 @@ PARAMS_DICT = dict(
                    BOUNDARY = BOUNDARY,
                    MINIMUM_NUMBER_OF_CHECKINS_PER_USER = MINIMUM_NUMBER_OF_CHECKINS_PER_USER,
                    MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION,
+                   MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER = MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER
                )
 
 def getCheckinsObject(line):
@@ -111,8 +117,13 @@ class MRCheckins(ModifiedMRJob):
         for lid, tuples_of_user_and_checkin_time in self.map_from_lid_to_tuples_of_user_and_checkin_time.iteritems(): 
             yield lid, tuples_of_user_and_checkin_time
     def reducer_tuple_of_lid_and_iterator_of_tuples_of_user_and_checkin_time_to_tuple_of_lid_and_location_object(self, lid, iterator_of_tuples_of_user_and_checkin_time):
-        checkins = reduce(list.__add__,  iterator_of_tuples_of_user_and_checkin_time, [])
-        if len(checkins)>=MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION: yield lid, {'l': lid, 'c': checkins}
+        tuples_of_user_and_checkin_time = reduce(list.__add__,  iterator_of_tuples_of_user_and_checkin_time, [])
+        tuples_of_user_and_number_of_checkins_at_lid =[(user, len(list(iterator_of_tuples_of_user_and_checkin_time))) for user, iterator_of_tuples_of_user_and_checkin_time in groupby(sorted(tuples_of_user_and_checkin_time, key=itemgetter(0)), key=itemgetter(0))]
+        tuples_of_user_and_number_of_checkins_at_lid = filter(lambda (user, number_of_checkins_at_lid): number_of_checkins_at_lid>=MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER, tuples_of_user_and_number_of_checkins_at_lid)
+        if tuples_of_user_and_number_of_checkins_at_lid:
+            valid_users = zip(*tuples_of_user_and_number_of_checkins_at_lid)[0]
+            tuples_of_user_and_checkin_time = filter(lambda (user, _): user in valid_users, tuples_of_user_and_checkin_time)
+            if len(tuples_of_user_and_checkin_time)>=MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION: yield lid, {'l': lid, 'c': tuples_of_user_and_checkin_time}
     ''' End: Methods to get locations with minimum no. of checkins.
     '''
     ''' Start: Methods to get checkins graph.
@@ -190,8 +201,8 @@ class MRCheckins(ModifiedMRJob):
         pass
 #        return self.jobsToGetCheckinsInABoundaryPerUser()
 #        return self.jobs_to_get_geo_distribution_of_points_across_social_networks()
-#        return self.jobs_to_get_location_objects_with_minumum_checkins_at_both_location_and_users()
-        return self.jobs_to_get_checkins_graph()
+        return self.jobs_to_get_location_objects_with_minumum_checkins_at_both_location_and_users()
+#        return self.jobs_to_get_checkins_graph()
     
 if __name__ == '__main__':
     MRCheckins.run()

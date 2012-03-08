@@ -11,7 +11,7 @@ GOWALLA_ID = 'gowalla'
 BRIGHTKITE_ID = 'brightkite'
  
 checkinsFolder = '/mnt/chevron/kykamath/data/geo/checkins/%s/'
-checkinsAnalysisFolder = '/mnt/chevron/kykamath/data/geo/checkins/analysis/%s/%s/%s/'
+checkinsAnalysisFolder = '/mnt/chevron/kykamath/data/geo/checkins/analysis/%s/%s/%s/%s/'
 
 checkinsJSONFile = checkinsFolder+'checkins.json'
 userToCheckinsMapFile = checkinsAnalysisFolder+'userToCheckinsMap'
