@@ -35,6 +35,8 @@ MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 100
 MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = 100
 MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER = 3
 
+CHECKINS_GRAPH_EDGE_WEIGHT_METHOD_ID = 'jaccard_index'
+
 PARAMS_DICT = dict(
                    PARAMS_DICT = True,
                    LATTICE_ACCURACY = LATTICE_ACCURACY,
@@ -43,7 +45,8 @@ PARAMS_DICT = dict(
                    BOUNDARY = BOUNDARY,
                    MINIMUM_NUMBER_OF_CHECKINS_PER_USER = MINIMUM_NUMBER_OF_CHECKINS_PER_USER,
                    MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION,
-                   MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER = MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER
+                   MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER = MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER,
+                   CHECKINS_GRAPH_EDGE_WEIGHT_METHOD_ID=CHECKINS_GRAPH_EDGE_WEIGHT_METHOD_ID,
                )
 
 def getCheckinsObject(line):
@@ -60,6 +63,7 @@ class CheckinsGraphEdgeWeightMethod:
         set_of_user_1 = set([user for user,_ in tuples_of_user_checkin_times_1])
         set_of_user_2 = set([user for user,_ in tuples_of_user_checkin_times_2])
         return float(len(set_of_user_1.intersection(set_of_user_2)))/float(len(set_of_user_1.union(set_of_user_2)))
+CHECKINS_GRAPH_EDGE_WEIGHT_METHOD = getattr(CheckinsGraphEdgeWeightMethod, CHECKINS_GRAPH_EDGE_WEIGHT_METHOD_ID)
 
 class MRCheckins(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -157,7 +161,8 @@ class MRCheckins(ModifiedMRJob):
                 edge = '__'.join(sorted([lid, neighboring_lid]))
                 yield edge, {
                              'e':edge, 
-                             'w': CheckinsGraphEdgeWeightMethod.jaccard_index(lid, map_from_neighboring_lid_to_tuples_of_user_and_checkin_time[lid], neighboring_lid, map_from_neighboring_lid_to_tuples_of_user_and_checkin_time[neighboring_lid])
+#                             'w': CheckinsGraphEdgeWeightMethod.jaccard_index(lid, map_from_neighboring_lid_to_tuples_of_user_and_checkin_time[lid], neighboring_lid, map_from_neighboring_lid_to_tuples_of_user_and_checkin_time[neighboring_lid])
+                             'w': CHECKINS_GRAPH_EDGE_WEIGHT_METHOD(lid, map_from_neighboring_lid_to_tuples_of_user_and_checkin_time[lid], neighboring_lid, map_from_neighboring_lid_to_tuples_of_user_and_checkin_time[neighboring_lid])
                              }
     def mapper_edge_object_to_tuple_of_edge_and_edge_object(self, edge, edge_object): yield edge, edge_object
     def reducer_tuple_of_edge_and_iterator_of_edge_object_to_tuple_of_edge_and_edge_object(self, edge, iterator_of_edge_object):
@@ -201,8 +206,8 @@ class MRCheckins(ModifiedMRJob):
         pass
 #        return self.jobsToGetCheckinsInABoundaryPerUser()
 #        return self.jobs_to_get_geo_distribution_of_points_across_social_networks()
-        return self.jobs_to_get_location_objects_with_minumum_checkins_at_both_location_and_users()
-#        return self.jobs_to_get_checkins_graph()
+#        return self.jobs_to_get_location_objects_with_minumum_checkins_at_both_location_and_users()
+        return self.jobs_to_get_checkins_graph()
     
 if __name__ == '__main__':
     MRCheckins.run()

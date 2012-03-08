@@ -10,7 +10,8 @@ from library.mrjobwrapper import runMRJob
 from library.file_io import FileIO
 from checkins.mr_modules import MRCheckins, PARAMS_DICT, BOUNDARY_ID,\
     MINIMUM_NUMBER_OF_CHECKINS_PER_USER, MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION,\
-    MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER
+    MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER,\
+    CHECKINS_GRAPH_EDGE_WEIGHT_METHOD_ID
 from datetime import datetime
 from checkins.settings import checkinsJSONFile, userToCheckinsMapFile,\
     hdfsInputCheckinsFile, FOURSQUARE_ID, GOWALLA_ID, BRIGHTKITE_ID,\
@@ -49,17 +50,18 @@ class RawDataProcessing():
         for i, line in enumerate(FileIO.iterateLinesFromFile('/mnt/chevron/kykamath/data/geo/checkins/raw_data/gowalla/loc-gowalla_totalCheckins.txt')):
             FileIO.writeToFileAsJson(RawDataProcessing.parseJSONForGowallaAndBrightkite(line), checkinsJSONFile%GOWALLA_ID)
     
-def mr_driver(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user):
+def mr_driver(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user, checkins_graph_edge_weight_method_id):
     def getInputFiles(): return map(lambda id: hdfsInputCheckinsFile%id, [GOWALLA_ID, BRIGHTKITE_ID, FOURSQUARE_ID])
 #    output_file = userToCheckinsMapFile%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
 #    output_file = lidsToDistributionInSocialNetworksMapFile%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
-    output_file = location_objects_with_minumum_checkins_at_both_location_and_users_file%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
-#    output_file = checkins_graph_file%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
+#    output_file = location_objects_with_minumum_checkins_at_both_location_and_users_file%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
+    output_file = checkins_graph_file%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user, checkins_graph_edge_weight_method_id)
     runMRJob(MRCheckins, output_file, getInputFiles(), jobconf={'mapred.reduce.tasks':60})
     FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
 
 if __name__ == '__main__':
     boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location = BOUNDARY_ID, MINIMUM_NUMBER_OF_CHECKINS_PER_USER, MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION
     minimum_number_of_checkins_per_location_per_user = MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER
-    mr_driver(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
+    checkins_graph_edge_weight_method_id = CHECKINS_GRAPH_EDGE_WEIGHT_METHOD_ID
+    mr_driver(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user, checkins_graph_edge_weight_method_id)
 #    RawDataProcessing.convertBrightkiteDataToJSON()
