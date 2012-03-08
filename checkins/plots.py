@@ -7,7 +7,8 @@ from checkins.settings import lidsToDistributionInSocialNetworksMapFile,\
     FOURSQUARE_ID, BRIGHTKITE_ID, GOWALLA_ID,\
     location_objects_with_minumum_checkins_at_both_location_and_users_file
 from checkins.mr_modules import BOUNDARY_ID, MINIMUM_NUMBER_OF_CHECKINS_PER_USER,\
-    MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION
+    MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION,\
+    MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER
 from checkins.analysis import iterateJsonFromFile
 from library.geo import getLocationFromLid, plotPointsOnWorldMap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -37,8 +38,8 @@ class DataAnalysis:
             plt.show()
 #            exit()
     @staticmethod
-    def get_stats_from_valid_locations(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location):
-        input_file = location_objects_with_minumum_checkins_at_both_location_and_users_file%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location)
+    def get_stats_from_valid_locations(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user):
+        input_file = location_objects_with_minumum_checkins_at_both_location_and_users_file%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
         set_of_users, no_of_checkins, no_of_locations = set(), 0.0, 0.0
         for data in iterateJsonFromFile(input_file):
             for user, _ in data['c']: set_of_users.add(user)
@@ -48,11 +49,12 @@ class DataAnalysis:
         print 'No. of checkins: ', no_of_checkins
         print 'No. of valid locations: ', no_of_locations
     @staticmethod
-    def run(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location):
+    def run(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user):
 #        DataAnalysis.plot_geo_distribution_in_social_networks()
-        DataAnalysis.get_stats_from_valid_locations(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location)
+        DataAnalysis.get_stats_from_valid_locations(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
     
 if __name__ == '__main__':
     boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location = BOUNDARY_ID, MINIMUM_NUMBER_OF_CHECKINS_PER_USER, MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION
+    minimum_number_of_checkins_per_location_per_user = MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER
     
-    DataAnalysis.run(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location)
+    DataAnalysis.run(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
