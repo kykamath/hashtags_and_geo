@@ -428,7 +428,13 @@ class Experiments(object):
                 self.conf['noOfTargetHashtags'] = no_of_hashtags
                 GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(model_id))
 #        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
-        while currentTime<self.endTime:
+        hard_end_time = self.conf.get('hard_end_time', None)
+        end_time = self.endTime
+        if hard_end_time: 
+            print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
+            end_time = hard_end_time
+        while currentTime<end_time:
+#        while currentTime<self.endTime:
 #            def entry_method():
             print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
             currentOccurrences = []
@@ -517,6 +523,7 @@ class Experiments(object):
 #        for i in range(2,7):
         for i in [2]:
             conf = dict(historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+            conf['hard_end_time'] = datetime(2011, 9, 16)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
     @staticmethod
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
@@ -643,7 +650,7 @@ if __name__ == '__main__':
 #    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
-#                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
                         PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
                         PredictionModels.COVERAGE_PROBABILITY, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
@@ -652,8 +659,8 @@ if __name__ == '__main__':
                         ]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
-#    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
 #    predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
     
