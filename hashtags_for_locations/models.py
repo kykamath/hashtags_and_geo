@@ -523,14 +523,15 @@ class Experiments(object):
         noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
 #        noOfHashtagsList = [10]
 #        for i in range(2,7):    
-        for noOfTargetHashtags in noOfHashtagsList:
-            for i in range(2,7):
-#            for i in [2]:
-                conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
-                conf['learningModels'] = [ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
-                conf['modelsInOrder'] = predictionModels
-                conf['hard_end_time'] = datetime(2011, 9, 16)
-                Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
+        for j in range(1,13):
+            for noOfTargetHashtags in noOfHashtagsList:
+                for i in range(2,7):
+    #            for i in [2]:
+                    conf = dict(historyTimeInterval = timedelta(seconds=j*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
+                    conf['learningModels'] = [ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
+                    conf['modelsInOrder'] = predictionModels
+                    conf['hard_end_time'] = datetime(2011, 9, 16)
+                    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
