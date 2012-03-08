@@ -121,7 +121,7 @@ class MRCheckins(ModifiedMRJob):
         if False: yield # I'm a generator!
         for user, checkin_time in location_object['c']: self.map_from_user_to_tuples_of_lid_and_checkin_time[user].append([lid, checkin_time])
     def mapper_final_location_object_to_tuple_of_lid_and_tuple_of_user_and_checkin_time(self):
-        for user, tuples_of_lid_and_checkin_time in self.map_from_user_to_tuples_of_lid_and_checkin_time: yield user, tuples_of_lid_and_checkin_time
+        for user, tuples_of_lid_and_checkin_time in self.map_from_user_to_tuples_of_lid_and_checkin_time.iteritems(): yield user, tuples_of_lid_and_checkin_time
     def reducer_tuple_of_user_and_iterator_of_tuples_of_lid_and_checkin_time_to_tuple_of_user_and_user_object(self, user, iterator_of_tuples_of_lid_and_checkin_time):
         checkins = reduce(list.__add__,  iterator_of_tuples_of_lid_and_checkin_time, [])
         yield user, {'u': user, 'c': checkins}
