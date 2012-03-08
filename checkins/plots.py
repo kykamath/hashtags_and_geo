@@ -4,8 +4,10 @@ Created on Mar 7, 2012
 @author: kykamath
 '''
 from checkins.settings import lidsToDistributionInSocialNetworksMapFile,\
-    FOURSQUARE_ID, BRIGHTKITE_ID, GOWALLA_ID
-from checkins.mr_modules import BOUNDARY_ID
+    FOURSQUARE_ID, BRIGHTKITE_ID, GOWALLA_ID,\
+    location_objects_with_minumum_checkins_at_both_location_and_users_file
+from checkins.mr_modules import BOUNDARY_ID, MINIMUM_NUMBER_OF_CHECKINS_PER_USER,\
+    MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION
 from checkins.analysis import iterateJsonFromFile
 from library.geo import getLocationFromLid, plotPointsOnWorldMap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -35,8 +37,22 @@ class DataAnalysis:
             plt.show()
 #            exit()
     @staticmethod
-    def run():
-        DataAnalysis.plot_geo_distribution_in_social_networks()
+    def get_stats_from_valid_locations(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location):
+        input_file = location_objects_with_minumum_checkins_at_both_location_and_users_file%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location)
+        set_of_users, no_of_checkins, no_of_locations = set(), 0.0, 0.0
+        for data in iterateJsonFromFile(input_file):
+            for user, _ in data['c']: set_of_users.add(user)
+            no_of_checkins+=len(data['c'])
+            no_of_locations+=1
+        print 'No. of users: ', len(set_of_users)
+        print 'No. of checkins: ', no_of_checkins
+        print 'No. of valid locations: ', no_of_locations
+    @staticmethod
+    def run(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location):
+#        DataAnalysis.plot_geo_distribution_in_social_networks()
+        DataAnalysis.get_stats_from_valid_locations(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location)
     
 if __name__ == '__main__':
-    DataAnalysis.run()
+    boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location = BOUNDARY_ID, MINIMUM_NUMBER_OF_CHECKINS_PER_USER, MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION
+    
+    DataAnalysis.run(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location)

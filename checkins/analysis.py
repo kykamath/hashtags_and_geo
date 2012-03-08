@@ -14,7 +14,8 @@ from datetime import datetime
 from checkins.settings import checkinsJSONFile, userToCheckinsMapFile,\
     hdfsInputCheckinsFile, FOURSQUARE_ID, GOWALLA_ID, BRIGHTKITE_ID,\
     lidsToDistributionInSocialNetworksMapFile,\
-    location_objects_with_minumum_checkins_at_both_location_and_users_file
+    location_objects_with_minumum_checkins_at_both_location_and_users_file,\
+    checkins_graph_file
 
 
 def iterateJsonFromFile(file):
@@ -51,7 +52,8 @@ def mr_driver(boundary_id, minimum_number_of_checkins_per_user, minimum_number_o
     def getInputFiles(): return map(lambda id: hdfsInputCheckinsFile%id, [GOWALLA_ID, BRIGHTKITE_ID, FOURSQUARE_ID])
 #    output_file = userToCheckinsMapFile%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location)
 #    output_file = lidsToDistributionInSocialNetworksMapFile%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location)
-    output_file = location_objects_with_minumum_checkins_at_both_location_and_users_file%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location)
+#    output_file = location_objects_with_minumum_checkins_at_both_location_and_users_file%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location)
+    output_file = checkins_graph_file%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location)
     runMRJob(MRCheckins, output_file, getInputFiles(), jobconf={'mapred.reduce.tasks':60})
     FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
 

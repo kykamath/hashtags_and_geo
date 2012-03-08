@@ -18,17 +18,17 @@ FOURSQUARE_ID = '4sq'
 LATTICE_ACCURACY = 0.0001
 TIME_UNIT_IN_SECONDS = 6*60*60
 
-#BOUNDARY_ID, BOUNDARY =  'world', [[-90,-180], [90, 180]]
-#MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 100
-#MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = 25
+BOUNDARY_ID, BOUNDARY =  'world', [[-90,-180], [90, 180]]
+MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 100
+MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = 25
 
 #BOUNDARY_ID, BOUNDARY =  'usa', [[24.527135,-127.792969], [49.61071,-59.765625]]
 #MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 100
 #MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = 25
 
-BOUNDARY_ID, BOUNDARY = 'ny', [[40.491, -74.356], [41.181, -72.612]]
-MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 100
-MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = 25
+#BOUNDARY_ID, BOUNDARY = 'ny', [[40.491, -74.356], [41.181, -72.612]]
+#MINIMUM_NUMBER_OF_CHECKINS_PER_USER = 100
+#MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION = 25
 
 PARAMS_DICT = dict(
                    PARAMS_DICT = True,
@@ -48,6 +48,13 @@ def get_socail_network(user_id):
     if type(user_id)==type(1): return FOURSQUARE_ID
     else: return user_id.split('_')[0]
 
+class CheckinsGraphEdgeWeightMethod:
+    @staticmethod
+    def jaccard_index(location_1, tuples_of_user_checkin_times_1, location_2, tuples_of_user_checkin_times_2 ):
+        set_of_user_1 = set([user for user,_ in tuples_of_user_checkin_times_1])
+        set_of_user_2 = set([user for user,_ in tuples_of_user_checkin_times_2])
+        return float(len(set_of_user_1.intersection(set_of_user_2)))/float(len(set_of_user_1.union(set_of_user_2)))
+
 class MRCheckins(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
@@ -55,6 +62,8 @@ class MRCheckins(ModifiedMRJob):
         self.userToCheckinsMap = defaultdict(list)
         self.map_from_lid_to_map_from_social_network_to_lid_occurences_count = defaultdict(dict)
         self.map_from_lid_to_tuples_of_user_and_checkin_time = defaultdict(list)
+        self.map_from_user_to_tuples_of_lid_and_checkin_time = defaultdict(list)
+        self.map_from_lid_to_map_from_neighboring_lid_to_tuples_of_user_and_checkin_time = defaultdict(dict)
     ''' Start: Methods to determine checkin distribution across users
     '''
     def mapCheckinsPerUser(self, key, line):
@@ -106,6 +115,48 @@ class MRCheckins(ModifiedMRJob):
         if len(checkins)>=MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION: yield lid, {'l': lid, 'c': checkins}
     ''' End: Methods to get locations with minimum no. of checkins.
     '''
+    ''' Start: Methods to get checkins graph.
+    '''
+    def mapper_location_object_to_tuple_of_lid_and_tuple_of_user_and_checkin_time(self, lid, location_object):
+        if False: yield # I'm a generator!
+        for user, checkin_time in location_object['c']: self.map_from_user_to_tuples_of_lid_and_checkin_time[user].append([lid, checkin_time])
+    def mapper_final_location_object_to_tuple_of_lid_and_tuple_of_user_and_checkin_time(self):
+        for user, tuples_of_lid_and_checkin_time in self.map_from_user_to_tuples_of_lid_and_checkin_time: yield user, tuples_of_lid_and_checkin_time
+    def reducer_tuple_of_user_and_iterator_of_tuples_of_lid_and_checkin_time_to_tuple_of_user_and_user_object(self, user, iterator_of_tuples_of_lid_and_checkin_time):
+        checkins = reduce(list.__add__,  iterator_of_tuples_of_lid_and_checkin_time, [])
+        yield user, {'u': user, 'c': checkins}
+    def mapper_user_object_to_tuple_of_lid_and_tuple_of_neighborind_lid_and_tuples_of_user_checkins(self, user, user_object):
+        if False: yield # I'm a generator!
+        lids = list(set([lid for lid, _ in user_object['c']]))
+        for lid in lids:
+            for neighboring_lid, checkin_time in user_object['c']: 
+                if neighboring_lid not in self.map_from_lid_to_map_from_neighboring_lid_to_tuples_of_user_and_checkin_time[lid]:
+                    self.map_from_lid_to_map_from_neighboring_lid_to_tuples_of_user_and_checkin_time[lid][neighboring_lid] = []
+                self.map_from_lid_to_map_from_neighboring_lid_to_tuples_of_user_and_checkin_time[lid][neighboring_lid].append([user, checkin_time])
+    def mapper_final_user_object_to_tuple_of_lid_and_tuple_of_neighborind_lid_and_tuples_of_user_checkins(self):
+        for lid, map_from_neighboring_lid_to_tuples_of_user_and_checkin_time in self.map_from_lid_to_map_from_neighboring_lid_to_tuples_of_user_and_checkin_time.iteritems():
+            for neighboring_lid, tuples_of_user_and_checkin_time in map_from_neighboring_lid_to_tuples_of_user_and_checkin_time.iteritems():
+                yield lid, [neighboring_lid, tuples_of_user_and_checkin_time]
+    def reducer_tuple_of_lid_and_iterator_of_tuple_of_neighboring_lid_and_tuples_of_user_and_checkin_time_to_edge_object(self, lid, iterator_of_tuple_of_neighboring_lid_and_tuples_of_user_and_checkin_time):
+        map_from_neighboring_lid_to_tuples_of_user_and_checkin_time = defaultdict(list)
+        for neighboring_lid, tuples_of_user_and_checkin_time in iterator_of_tuple_of_neighboring_lid_and_tuples_of_user_and_checkin_time:
+            map_from_neighboring_lid_to_tuples_of_user_and_checkin_time[neighboring_lid]+=tuples_of_user_and_checkin_time
+        for neighboring_lid, tuples_of_user_and_checkin_time in map_from_neighboring_lid_to_tuples_of_user_and_checkin_time.iteritems():
+            if lid!=neighboring_lid:
+                edge = '__'.join(sorted([lid, neighboring_lid]))
+                yield edge, {
+                             'e':edge, 
+                             'w': CheckinsGraphEdgeWeightMethod.jaccard_index(lid, map_from_neighboring_lid_to_tuples_of_user_and_checkin_time[lid], neighboring_lid, map_from_neighboring_lid_to_tuples_of_user_and_checkin_time[neighboring_lid])
+                             }
+    def mapper_edge_object_to_tuple_of_edge_and_edge_object(self, edge, edge_object): yield edge, edge_object
+    def reducer_tuple_of_edge_and_iterator_of_edge_object_to_tuple_of_edge_and_edge_object(self, edge, iterator_of_edge_object):
+        edge_weight = ()
+        for edge_object in iterator_of_edge_object: edge_weight = min([edge_weight, edge_object['w']])
+        yield edge, { 'e': edge , 'w': edge_weight}
+                
+    ''' End: Methods to get checkins graph.
+    '''
+    
     def jobsToGetCheckinsInABoundaryPerUser(self): return [self.mr(mapper=self.mapCheckinsPerUser, mapper_final=self.mapCheckinsPerUserFinal, reducer=self.reducerCheckinsPerUser)]
     def jobs_to_get_geo_distribution_of_points_across_social_networks(self): return [self.mr(
                                                                                              mapper=self.mapper_checkins_json_to_tuple_of_lid_and_map_from_social_network_to_lid_occurences_count, 
@@ -119,11 +170,28 @@ class MRCheckins(ModifiedMRJob):
                      mapper_final=self.mapper_final_user_object_to_tuple_of_lid_and_tuple_of_user_and_checkin_time, 
                      reducer=self.reducer_tuple_of_lid_and_iterator_of_tuples_of_user_and_checkin_time_to_tuple_of_lid_and_location_object
                      )]
+    def jobs_to_get_checkins_graph(self):
+        return self.jobs_to_get_location_objects_with_minumum_checkins_at_both_location_and_users() + \
+            [self.mr(
+                     mapper=self.mapper_location_object_to_tuple_of_lid_and_tuple_of_user_and_checkin_time, 
+                     mapper_final=self.mapper_final_location_object_to_tuple_of_lid_and_tuple_of_user_and_checkin_time, 
+                     reducer=self.reducer_tuple_of_user_and_iterator_of_tuples_of_lid_and_checkin_time_to_tuple_of_user_and_user_object
+                     )] + \
+            [self.mr(
+                     mapper=self.mapper_user_object_to_tuple_of_lid_and_tuple_of_neighborind_lid_and_tuples_of_user_checkins, 
+                     mapper_final=self.mapper_final_user_object_to_tuple_of_lid_and_tuple_of_neighborind_lid_and_tuples_of_user_checkins, 
+                     reducer=self.reducer_tuple_of_lid_and_iterator_of_tuple_of_neighboring_lid_and_tuples_of_user_and_checkin_time_to_edge_object
+                     )] + \
+            [self.mr(
+                     mapper=self.mapper_edge_object_to_tuple_of_edge_and_edge_object, 
+                     reducer=self.reducer_tuple_of_edge_and_iterator_of_edge_object_to_tuple_of_edge_and_edge_object
+                     )]
     def steps(self):
         pass
 #        return self.jobsToGetCheckinsInABoundaryPerUser()
 #        return self.jobs_to_get_geo_distribution_of_points_across_social_networks()
-        return self.jobs_to_get_location_objects_with_minumum_checkins_at_both_location_and_users()
+#        return self.jobs_to_get_location_objects_with_minumum_checkins_at_both_location_and_users()
+        return self.jobs_to_get_checkins_graph()
     
 if __name__ == '__main__':
     MRCheckins.run()
