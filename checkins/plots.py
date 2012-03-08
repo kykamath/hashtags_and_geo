@@ -5,6 +5,7 @@ Created on Mar 7, 2012
 '''
 from library.file_io import FileIO
 from checkins.settings import lidsToDistributionInSocialNetworksMapFile
+from checkins.mr_modules import BOUNDARY_ID
 class DataAnalysis:
     @staticmethod
     def plot_geo_distribution_in_social_networks():
@@ -20,4 +21,5 @@ class DataAnalysis:
         DataAnalysis.plot_geo_distribution_in_social_networks()
     
 if __name__ == '__main__':
+    BOUNDARY_ID = BOUNDARY_ID
     DataAnalysis.run()

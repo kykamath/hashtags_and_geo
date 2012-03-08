@@ -8,11 +8,16 @@ sys.path.append('../')
 from library.classes import GeneralMethods
 from library.mrjobwrapper import runMRJob
 from library.file_io import FileIO
-from checkins.mr_modules import MRCheckins
+from checkins.mr_modules import MRCheckins, PARAMS_DICT, BOUNDARY_ID
 from datetime import datetime
 from checkins.settings import checkinsJSONFile, userToCheckinsMapFile,\
     hdfsInputCheckinsFile, FOURSQUARE_ID, GOWALLA_ID, BRIGHTKITE_ID,\
     lidsToDistributionInSocialNetworksMapFile
+
+
+def iterateJsonFromFile(file):
+    for data in FileIO.iterateJsonFromFile(file):
+        if 'PARAMS_DICT' not in data: yield data
 
 class RawDataProcessing():
     @staticmethod    
@@ -42,10 +47,11 @@ class RawDataProcessing():
     
 def mr_driver():
     def getInputFiles(): return map(lambda id: hdfsInputCheckinsFile%id, [GOWALLA_ID, BRIGHTKITE_ID, FOURSQUARE_ID])
-    print getInputFiles()
 #    output_file = userToCheckinsMapFile
     output_file = lidsToDistributionInSocialNetworksMapFile
+    output_file=output_file%BOUNDARY_ID
     runMRJob(MRCheckins, output_file, getInputFiles(), jobconf={'mapred.reduce.tasks':60})
+    FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
 
 if __name__ == '__main__':
     mr_driver()
