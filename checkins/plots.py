@@ -5,15 +5,19 @@ Created on Mar 7, 2012
 '''
 from checkins.settings import lidsToDistributionInSocialNetworksMapFile,\
     FOURSQUARE_ID, BRIGHTKITE_ID, GOWALLA_ID,\
-    location_objects_with_minumum_checkins_at_both_location_and_users_file
+    location_objects_with_minumum_checkins_at_both_location_and_users_file,\
+    checkins_graph_file
 from checkins.mr_modules import BOUNDARY_ID, MINIMUM_NUMBER_OF_CHECKINS_PER_USER,\
     MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION,\
-    MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER
+    MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER,\
+    CHECKINS_GRAPH_EDGE_WEIGHT_METHOD_ID
 from checkins.analysis import iterateJsonFromFile
 from library.geo import getLocationFromLid, plotPointsOnWorldMap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.pyplot as plt
 from operator import itemgetter
+import networkx as nx
+from library.graphs import plot
 
 class DataAnalysis:
     @staticmethod
@@ -49,12 +53,27 @@ class DataAnalysis:
         print 'No. of checkins: ', no_of_checkins
         print 'No. of valid locations: ', no_of_locations
     @staticmethod
-    def run(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user):
+    def load_checkins_graph(checkins_graph_file):
+        graph = nx.Graph()
+        for data in iterateJsonFromFile(checkins_graph_file):
+            (u, v) = data['e'].split('__')
+            graph.add_edge(u , v, {'w': data['w']})
+        plot(graph, draw_edge_labels=False, node_color='#A0CBE2',width=4,with_labels=False)
+        plt.show()
+
+    @staticmethod
+    def get_cluster_checkins_graph(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user, checkins_graph_edge_weight_method_id):
+        output_file = checkins_graph_file%(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user, checkins_graph_edge_weight_method_id)
+        DataAnalysis.load_checkins_graph(output_file)
+    @staticmethod
+    def run(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user, checkins_graph_edge_weight_method_id):
 #        DataAnalysis.plot_geo_distribution_in_social_networks()
-        DataAnalysis.get_stats_from_valid_locations(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
-    
+#        DataAnalysis.get_stats_from_valid_locations(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
+        DataAnalysis.get_cluster_checkins_graph(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user, checkins_graph_edge_weight_method_id)
+
 if __name__ == '__main__':
     boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location = BOUNDARY_ID, MINIMUM_NUMBER_OF_CHECKINS_PER_USER, MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION
     minimum_number_of_checkins_per_location_per_user = MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION_PER_USER
+    checkins_graph_edge_weight_method_id = CHECKINS_GRAPH_EDGE_WEIGHT_METHOD_ID
+    DataAnalysis.run(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user, checkins_graph_edge_weight_method_id)
     
-    DataAnalysis.run(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
