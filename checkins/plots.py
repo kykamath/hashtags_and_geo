@@ -72,7 +72,7 @@ class DataAnalysis:
         for u, v, data in graph.edges(data=True):
             if nodeToClusterIdMap[u]==nodeToClusterIdMap[v]:
                 color, u, v, w = colorMap[nodeToClusterIdMap[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
-                m.drawgreatcircle(u[1],u[0],v[1],v[0],color='k', alpha=0.5)
+                m.drawgreatcircle(u[1],u[0],v[1],v[0],color=color, alpha=1.5)
 #        plt.title(title)
         plt.show()
         print noOfClusters
@@ -88,8 +88,8 @@ class DataAnalysis:
     @staticmethod
     def run(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user, checkins_graph_edge_weight_method_id):
 #        DataAnalysis.plot_geo_distribution_in_social_networks()
-#        DataAnalysis.get_stats_from_valid_locations(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
-        DataAnalysis.get_cluster_checkins_graph(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user, checkins_graph_edge_weight_method_id)
+        DataAnalysis.get_stats_from_valid_locations(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user)
+#        DataAnalysis.get_cluster_checkins_graph(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user, checkins_graph_edge_weight_method_id)
 
 if __name__ == '__main__':
     boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location = BOUNDARY_ID, MINIMUM_NUMBER_OF_CHECKINS_PER_USER, MINIMUM_NUMBER_OF_CHECKINS_PER_LOCATION
