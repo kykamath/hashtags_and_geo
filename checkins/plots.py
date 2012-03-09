@@ -17,7 +17,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.pyplot as plt
 from operator import itemgetter
 import networkx as nx
-from library.graphs import plot
+from library.graphs import plot, clusterUsingAffinityPropagation
+from library.classes import GeneralMethods
+from itertools import groupby
 
 class DataAnalysis:
     @staticmethod
@@ -58,8 +60,26 @@ class DataAnalysis:
         for data in iterateJsonFromFile(checkins_graph_file):
             (u, v) = data['e'].split('__')
             graph.add_edge(u , v, {'w': data['w']})
-        plot(graph, draw_edge_labels=False, node_color='#A0CBE2',width=4,with_labels=False)
+        noOfClusters, clusters = clusterUsingAffinityPropagation(graph)
+#        for cluster in clusters:
+#            print len(cluster), cluster
+            
+        nodeToClusterIdMap = dict(clusters)
+        colorMap = dict([(i, GeneralMethods.getRandomColor()) for i in range(noOfClusters)])
+        clusters = [(c, list(l)) for c, l in groupby(sorted(clusters, key=itemgetter(1)), key=itemgetter(1))]
+        points, colors = zip(*map(lambda  l: (getLocationFromLid(l.replace('_', ' ')), colorMap[nodeToClusterIdMap[l]]), graph.nodes()))
+        _, m =plotPointsOnWorldMap(points[:1], s=0, lw=0, c=colors[:1], returnBaseMapObject=True)
+        for u, v, data in graph.edges(data=True):
+            if nodeToClusterIdMap[u]==nodeToClusterIdMap[v]:
+                color, u, v, w = colorMap[nodeToClusterIdMap[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
+                m.drawgreatcircle(u[1],u[0],v[1],v[0],color='k', alpha=0.5)
+#        plt.title(title)
         plt.show()
+        print noOfClusters
+        print graph.number_of_edges()
+        print graph.number_of_nodes()
+#        plot(graph, draw_edge_labels=False, node_color='#A0CBE2',width=4,with_labels=False)
+#        plt.show()
 
     @staticmethod
     def get_cluster_checkins_graph(boundary_id, minimum_number_of_checkins_per_user, minimum_number_of_checkins_per_location, minimum_number_of_checkins_per_location_per_user, checkins_graph_edge_weight_method_id):
