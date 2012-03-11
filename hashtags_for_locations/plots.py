@@ -109,7 +109,7 @@ def plotAllData(prediction_models):
 
 def plotLearningAnalysis(generate_data=True):
     if generate_data:
-        file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/10/follow_the_leader_weights'
+        file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/follow_the_leader_weights'
 #        file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/hedging_method_weights'
         final_map_from_location_to_map_from_model_to_weight = {}
         for data in iterateJsonFromFile(file):
@@ -125,7 +125,7 @@ def plotLearningAnalysis(generate_data=True):
                                                                             key=itemgetter(1)
                                                                             )
                                                                    ]
-            list_of_models_with_this_weight = max(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))[1]
+            list_of_models_with_this_weight = min(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))[1]
             tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
     #    map_from_best_models_to_its_occurrence_count = groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))
     #    print len(final_map_from_location_to_map_from_model_to_weight), len(tuples_of_location_and_best_model)
