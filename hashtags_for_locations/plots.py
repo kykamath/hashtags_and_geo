@@ -14,6 +14,9 @@ from models import loadLocationsList,\
     PredictionModels, Propagations, PREDICTION_MODEL_METHODS
 from mr_analysis import LOCATION_ACCURACY
 import random
+from library.file_io import FileIO
+from hashtags_for_locations.models import LearningWithExpertAdviceModels,\
+    ModelSelectionHistory
 
 
 def getHashtagColors(hashtag_and_occurrence_locations):
@@ -107,12 +110,14 @@ def plotAllData(prediction_models):
             
 #            plt.show()
 
-def plotLearningAnalysis(generate_data=True):
+def plotLearningAnalysis(learning_type, generate_data=True):
+    weights_analysis_file = 'data/%s_weights_analysis'%learning_type
     if generate_data:
-        file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/follow_the_leader_weights'
+        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/%s_weights'%learning_type
+#        file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/follow_the_leader_weights'
 #        file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/hedging_method_weights'
         final_map_from_location_to_map_from_model_to_weight = {}
-        for data in iterateJsonFromFile(file):
+        for data in iterateJsonFromFile(input_weight_file):
             map_from_location_to_map_from_model_to_weight = data['location_weights']
             for location, map_from_model_to_weight in map_from_location_to_map_from_model_to_weight.iteritems():
                 final_map_from_location_to_map_from_model_to_weight[location] = map_from_model_to_weight
@@ -127,8 +132,7 @@ def plotLearningAnalysis(generate_data=True):
                                                                    ]
             list_of_models_with_this_weight = min(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))[1]
             tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
-    #    map_from_best_models_to_its_occurrence_count = groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))
-    #    print len(final_map_from_location_to_map_from_model_to_weight), len(tuples_of_location_and_best_model)
+        for tuple_of_location_and_best_model in tuples_of_location_and_best_model: FileIO.writeToFileAsJson(tuple_of_location_and_best_model, weights_analysis_file)
         print [(model, len(list(iterator_for_models))) for model, iterator_for_models in groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))]
 
 prediction_models = [
@@ -146,5 +150,5 @@ prediction_models = [
 #getHashtagColors()
 #plotRealData()
 #plotCoverageDistance()
-plotLearningAnalysis()
+plotLearningAnalysis(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=True)
 
