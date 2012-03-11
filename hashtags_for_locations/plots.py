@@ -115,7 +115,14 @@ def plotLearningAnalysis():
         for location, map_from_model_to_weight in map_from_location_to_map_from_model_to_weight.iteritems():
             final_map_from_location_to_map_from_model_to_weight[location] = map_from_model_to_weight
     for location, map_from_model_to_weight in final_map_from_location_to_map_from_model_to_weight.iteritems():
-        print location, map_from_model_to_weight
+        tuples_of_weight_and_list_of_model_with_that_weight = [(weight, list(iterator_for_tuples_of_model_and_weight)) 
+                                                                for weight, iterator_for_tuples_of_model_and_weight in 
+                                                                groupby(
+                                                                        sorted(map_from_model_to_weight.iteritems(), key=itemgetter(1)), 
+                                                                        key=itemgetter(1)
+                                                                        )
+                                                               ]
+        print location, tuples_of_weight_and_list_of_model_with_that_weight
 
 prediction_models = [
 #                        PredictionModels.RANDOM , 
