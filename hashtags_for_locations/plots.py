@@ -126,8 +126,9 @@ def plotLearningAnalysis():
                                                                ]
         list_of_models_with_this_weight = max(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))[1]
         tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
-#        print location, random.sample(list_of_models_with_this_weight,1)[0]
-    print len(final_map_from_location_to_map_from_model_to_weight), len(tuples_of_location_and_best_model)
+#    map_from_best_models_to_its_occurrence_count = groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))
+#    print len(final_map_from_location_to_map_from_model_to_weight), len(tuples_of_location_and_best_model)
+    print groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))
 
 prediction_models = [
 #                        PredictionModels.RANDOM , 
