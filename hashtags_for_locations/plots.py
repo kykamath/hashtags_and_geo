@@ -109,7 +109,8 @@ def plotAllData(prediction_models):
 def plotLearningAnalysis():
     file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/10/follow_the_leader_weights'
     for data in iterateJsonFromFile(file):
-        print data.keys()
+        print data['location_weights']
+        exit()
 
 prediction_models = [
 #                        PredictionModels.RANDOM , 
