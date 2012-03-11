@@ -240,26 +240,6 @@ class PredictionModels:
                     h = hashtags.pop()
                     if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
         return hashtags_for_lattice
-#    @staticmethod
-#    def _hashtags_by_location_and_coverage_probabilities(propagation_for_prediction, location_probabilities, hashtag_coverage_probabilities, *args, **conf):
-#        hashtags_for_lattice = defaultdict(list)
-#        hashtag_distribution_in_locations = PredictionModels._hashtag_distribution_in_locations(propagation_for_prediction.occurrences)
-#        if propagation_for_prediction.occurrences:
-#            for loc, occs in propagation_for_prediction.occurrences.iteritems():
-#                hashtag_scores, hashtags = defaultdict(float), []
-#                for neighboring_location in location_probabilities['neighborProbability'][loc]:
-#                    if location_probabilities['neighborProbability'][loc][neighboring_location]!=0.0:
-#                        for h in hashtag_distribution_in_locations[neighboring_location]: 
-##                            hashtag_scores[h]+=math.log(hashtag_distribution_in_locations[neighboring_location][h]) + math.log(location_probabilities['neighborProbability'][loc][neighboring_location])
-#                            hashtag_scores[h]+=(hashtag_coverage_probabilities[h][neighboring_location] * location_probabilities['neighborProbability'][loc][neighboring_location])
-##                hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-#                if hashtag_scores: 
-##                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-#                    hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0])
-#                while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
-#                    h = hashtags.pop()
-#                    if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
-#        return hashtags_for_lattice
     @staticmethod
     def random(propagation_for_prediction, *args, **conf):
         hashtags_for_lattice = defaultdict(list)
@@ -651,7 +631,7 @@ if __name__ == '__main__':
 #    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
-                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+#                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
                         PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
                         PredictionModels.COVERAGE_PROBABILITY, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
@@ -661,11 +641,11 @@ if __name__ == '__main__':
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
 #    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-#    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
-    predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
+#    predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
     
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     

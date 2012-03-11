@@ -107,7 +107,7 @@ def plotAllData(prediction_models):
 #            plt.show()
 
 def plotLearningAnalysis():
-    file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/10/follow_the_leader_weights'
+    file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/3/follow_the_leader_weights'
     final_map_from_location_to_map_from_model_to_weight = {}
     for data in iterateJsonFromFile(file):
         map_from_location_to_map_from_model_to_weight = data['location_weights']
