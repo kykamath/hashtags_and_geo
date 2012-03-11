@@ -4,15 +4,15 @@ Created on Feb 27, 2012
 @author: kykamath
 '''
 from operator import itemgetter
-from hashtags_for_locations.analysis import iterateJsonFromFile
+from analysis import iterateJsonFromFile
 from itertools import groupby
 from library.geo import getLocationFromLid, plotPointsOnWorldMap, getLatticeLid
 from collections import defaultdict
 import matplotlib.pyplot as plt
 from library.classes import GeneralMethods
-from hashtags_for_locations.models import loadLocationsList,\
+from models import loadLocationsList,\
     PredictionModels, Propagations, PREDICTION_MODEL_METHODS
-from locations_for_hashtags.mr_analysis import ACCURACY
+from mr_analysis import ACCURACY
 
 
 def getHashtagColors(hashtag_and_occurrence_locations):
