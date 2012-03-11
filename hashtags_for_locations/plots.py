@@ -123,8 +123,7 @@ def plotLearningAnalysis():
                                                                         )
                                                                ]
         max_tuple_of_weight_and_list_of_model_with_this_weight = max(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))
-        print location, tuples_of_weight_and_list_of_model_with_this_weight
-        print max_tuple_of_weight_and_list_of_model_with_this_weight
+        print location, max_tuple_of_weight_and_list_of_model_with_this_weight[1]
 
 prediction_models = [
 #                        PredictionModels.RANDOM , 
