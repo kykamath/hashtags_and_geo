@@ -13,6 +13,7 @@ from library.classes import GeneralMethods
 from models import loadLocationsList,\
     PredictionModels, Propagations, PREDICTION_MODEL_METHODS
 from mr_analysis import LOCATION_ACCURACY
+import random
 
 
 def getHashtagColors(hashtag_and_occurrence_locations):
@@ -122,8 +123,8 @@ def plotLearningAnalysis():
                                                                         key=itemgetter(1)
                                                                         )
                                                                ]
-        max_tuple_of_weight_and_list_of_model_with_this_weight = max(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))
-        print location, max_tuple_of_weight_and_list_of_model_with_this_weight[1]
+        list_of_models_with_this_weight = max(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))[1]
+        print location, random.sample(list_of_models_with_this_weight,1)[0]
 
 prediction_models = [
 #                        PredictionModels.RANDOM , 
