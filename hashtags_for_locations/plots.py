@@ -135,7 +135,26 @@ def plotLearningAnalysis(learning_type, generate_data=True):
             tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
         for tuple_of_location_and_best_model in tuples_of_location_and_best_model: FileIO.writeToFileAsJson(tuple_of_location_and_best_model, weights_analysis_file)
         print [(model, len(list(iterator_for_models))) for model, iterator_for_models in groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))]
-
+    else:
+        tuples_of_location_and_best_model = [tuple_of_location_and_best_model for tuple_of_location_and_best_model in FileIO.iterateJsonFromFile(weights_analysis_file)]
+#        for tuple_of_location_and_best_model in tuples_of_location_and_best_model:
+#            print tuple_of_location_and_best_model
+        map_from_model_to_color = dict([('coverage_distance', 'b'), ('coverage_probability', 'm'), ('sharing_probability', 'r'), ('transmitting_probability', 'k')])
+        tuples_of_model_and_locations = [(model, zip(*iterator_of_tuples_of_location_and_models)[0]) 
+                                       for model, iterator_of_tuples_of_location_and_models in 
+                                       groupby(
+                                              sorted(tuples_of_location_and_best_model, key=itemgetter(1)),
+                                              key=itemgetter(1)
+                                              )
+                                       ]
+        for model, locations in tuples_of_model_and_locations:
+            locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
+#            locations, colors = zip(*[(getLocationFromLid(location.replace('_', ' ')), map_from_model_to_color[model]) for location, model in tuples_of_location_and_best_model])
+            plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=map_from_model_to_color[model], lw = 0)
+#            plt.show()
+            plt.savefig('images/learning_analysis/%s.png'%model)
+            plt.clf()
+        
 prediction_models = [
 #                        PredictionModels.RANDOM , 
 #                        PredictionModels.GREEDY, 
@@ -151,5 +170,5 @@ prediction_models = [
 #getHashtagColors()
 #plotRealData()
 #plotCoverageDistance()
-plotLearningAnalysis(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=True)
+plotLearningAnalysis(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=False)
 
