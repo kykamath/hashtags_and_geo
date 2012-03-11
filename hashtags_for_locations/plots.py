@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from library.classes import GeneralMethods
 from models import loadLocationsList,\
     PredictionModels, Propagations, PREDICTION_MODEL_METHODS
-from mr_analysis import ACCURACY
+from mr_analysis import LOCATION_ACCURACY
 
 
 def getHashtagColors(hashtag_and_occurrence_locations):
@@ -43,7 +43,7 @@ def plotAllData(prediction_models):
             conf = {'noOfTargetHashtags': 1}
             
             propagation = Propagations(None, None)
-            list_of_tuple_of_hashtag_and_location_and_time = [(hashtag, getLatticeLid(location, accuracy=ACCURACY), None) for hashtag, occurrence_locations in hashtag_and_occurrence_locations for location in occurrence_locations]
+            list_of_tuple_of_hashtag_and_location_and_time = [(hashtag, getLatticeLid(location, accuracy=LOCATION_ACCURACY), None) for hashtag, occurrence_locations in hashtag_and_occurrence_locations for location in occurrence_locations]
             propagation.update(list_of_tuple_of_hashtag_and_location_and_time)
             
             #Plot real data.
