@@ -107,28 +107,29 @@ def plotAllData(prediction_models):
             
 #            plt.show()
 
-def plotLearningAnalysis():
-#    file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/follow_the_leader_weights'
-    file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/hedging_method_weights'
-    final_map_from_location_to_map_from_model_to_weight = {}
-    for data in iterateJsonFromFile(file):
-        map_from_location_to_map_from_model_to_weight = data['location_weights']
-        for location, map_from_model_to_weight in map_from_location_to_map_from_model_to_weight.iteritems():
-            final_map_from_location_to_map_from_model_to_weight[location] = map_from_model_to_weight
-    tuples_of_location_and_best_model = []
-    for location, map_from_model_to_weight in final_map_from_location_to_map_from_model_to_weight.iteritems():
-        tuples_of_weight_and_list_of_model_with_this_weight = [(weight, zip(*iterator_for_tuples_of_model_and_weight)[0]) 
-                                                                for weight, iterator_for_tuples_of_model_and_weight in 
-                                                                groupby(
-                                                                        sorted(map_from_model_to_weight.iteritems(), key=itemgetter(1)), 
-                                                                        key=itemgetter(1)
-                                                                        )
-                                                               ]
-        list_of_models_with_this_weight = max(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))[1]
-        tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
-#    map_from_best_models_to_its_occurrence_count = groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))
-#    print len(final_map_from_location_to_map_from_model_to_weight), len(tuples_of_location_and_best_model)
-    print [(model, len(list(iterator_for_models))) for model, iterator_for_models in groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))]
+def plotLearningAnalysis(generate_data=True):
+    if generate_data:
+        file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/follow_the_leader_weights'
+#        file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/hedging_method_weights'
+        final_map_from_location_to_map_from_model_to_weight = {}
+        for data in iterateJsonFromFile(file):
+            map_from_location_to_map_from_model_to_weight = data['location_weights']
+            for location, map_from_model_to_weight in map_from_location_to_map_from_model_to_weight.iteritems():
+                final_map_from_location_to_map_from_model_to_weight[location] = map_from_model_to_weight
+        tuples_of_location_and_best_model = []
+        for location, map_from_model_to_weight in final_map_from_location_to_map_from_model_to_weight.iteritems():
+            tuples_of_weight_and_list_of_model_with_this_weight = [(weight, zip(*iterator_for_tuples_of_model_and_weight)[0]) 
+                                                                    for weight, iterator_for_tuples_of_model_and_weight in 
+                                                                    groupby(
+                                                                            sorted(map_from_model_to_weight.iteritems(), key=itemgetter(1)), 
+                                                                            key=itemgetter(1)
+                                                                            )
+                                                                   ]
+            list_of_models_with_this_weight = max(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))[1]
+            tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
+    #    map_from_best_models_to_its_occurrence_count = groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))
+    #    print len(final_map_from_location_to_map_from_model_to_weight), len(tuples_of_location_and_best_model)
+        print [(model, len(list(iterator_for_models))) for model, iterator_for_models in groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))]
 
 prediction_models = [
 #                        PredictionModels.RANDOM , 
