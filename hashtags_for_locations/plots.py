@@ -15,8 +15,7 @@ from models import loadLocationsList,\
 from mr_analysis import LOCATION_ACCURACY
 import random
 from library.file_io import FileIO
-from hashtags_for_locations.models import LearningWithExpertAdviceModels,\
-    ModelSelectionHistory
+from models import ModelSelectionHistory
 from settings import analysisFolder
 
 
