@@ -18,7 +18,11 @@ from library.file_io import FileIO
 from models import ModelSelectionHistory
 from settings import analysisFolder, timeUnitWithOccurrencesFile
 from datetime import datetime
+from library.stats import getOutliersRangeUsingIRQ
+import numpy as np
 
+
+MAP_FROM_MODEL_TO_COLOR = dict([('coverage_distance', 'b'), ('coverage_probability', 'm'), ('sharing_probability', 'r'), ('transmitting_probability', 'k')])
 
 def getHashtagColors(hashtag_and_occurrence_locations):
 #        hashtag_and_points = [(h, map(lambda lid: getLocationFromLid(lid.replace('_', ' ')), zip(*occs)[1])) for h, occs in groupby(sorted(data['oc'], key=itemgetter(0)), key=itemgetter(0))]
@@ -136,7 +140,6 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
         print [(model, len(list(iterator_for_models))) for model, iterator_for_models in groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))]
     else:
         tuples_of_location_and_best_model = [tuple_of_location_and_best_model for tuple_of_location_and_best_model in FileIO.iterateJsonFromFile(weights_analysis_file)]
-        map_from_model_to_color = dict([('coverage_distance', 'b'), ('coverage_probability', 'm'), ('sharing_probability', 'r'), ('transmitting_probability', 'k')])
         tuples_of_model_and_locations = [(model, zip(*iterator_of_tuples_of_location_and_models)[0]) 
                                        for model, iterator_of_tuples_of_location_and_models in 
                                        groupby(
@@ -146,12 +149,13 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
                                        ]
         for model, locations in tuples_of_model_and_locations:
             locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
-            plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=map_from_model_to_color[model], lw = 0)
+            plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=MAP_FROM_MODEL_TO_COLOR[model], lw = 0)
 #            plt.show()
             plt.savefig('images/learning_analysis/%s.png'%model)
             plt.clf()
             
 def plot_location_size_to_model_correlation(learning_type):
+    ACCURACY = 100
     weights_analysis_file = analysisFolder%'learning_analysis'+'/%s_weights_analysis'%(learning_type)
     tuples_of_location_and_best_model = [tuple_of_location_and_best_model for tuple_of_location_and_best_model in FileIO.iterateJsonFromFile(weights_analysis_file)]
     map_from_location_to_best_model = dict(tuples_of_location_and_best_model)
@@ -163,9 +167,32 @@ def plot_location_size_to_model_correlation(learning_type):
         for (_, location, _) in time_unit_object['oc']: 
             if location in map_from_location_to_best_model: map_from_location_to_no_of_occurrences_at_location[location]+=1
 #        print map_from_location_to_no_of_occurrences_at_location
-#        exit()
-    print len(map_from_location_to_best_model), len(map_from_location_to_no_of_occurrences_at_location)
-        
+    tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location = [(model, [(location, map_from_location_to_no_of_occurrences_at_location[location]) for location in zip(*iterator_of_tuples_of_location_and_models)[0]]) 
+                                                                                   for model, iterator_of_tuples_of_location_and_models in 
+                                                                                   groupby(
+                                                                                          sorted(tuples_of_location_and_best_model, key=itemgetter(1)),
+                                                                                          key=itemgetter(1)
+                                                                                          )
+                                                                               ]
+    map_from_model_to_map_from_population_to_population_distribution = defaultdict(dict)
+    for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
+        list_of_no_of_occurrences_at_location = zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]
+        for population in list_of_no_of_occurrences_at_location: 
+            population = population/ACCURACY*ACCURACY
+            if population not in map_from_model_to_map_from_population_to_population_distribution[model]:
+                map_from_model_to_map_from_population_to_population_distribution[model][population]=0
+            map_from_model_to_map_from_population_to_population_distribution[model][population]+=1
+    for model, map_from_population_to_population_distribution in map_from_model_to_map_from_population_to_population_distribution.iteritems():
+        dataX = sorted(map_from_population_to_population_distribution)
+        dataY = [map_from_population_to_population_distribution[x]for x in dataX]
+        plt.loglog(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
+    plt.legend()    
+    plt.show()
+#        print model, len(list_of_no_of_occurrences_at_location),
+#        _, upper_range_for_no_of_occurrences_at_location = getOutliersRangeUsingIRQ(list_of_no_of_occurrences_at_location)
+#        list_of_no_of_occurrences_at_location = filter(lambda no_of_occurrences_at_location: no_of_occurrences_at_location<=upper_range_for_no_of_occurrences_at_location, list_of_no_of_occurrences_at_location)
+#        print np.histogram(list_of_no_of_occurrences_at_location)
+#        print len(list_of_no_of_occurrences_at_location)
 prediction_models = [
 #                        PredictionModels.RANDOM , 
 #                        PredictionModels.GREEDY, 
