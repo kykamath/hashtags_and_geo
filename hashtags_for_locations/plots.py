@@ -151,12 +151,17 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
             plt.savefig('images/learning_analysis/%s.png'%model)
             plt.clf()
             
-def plot_location_size_to_model_correlation(generate_data=True):
+def plot_location_size_to_model_correlation(learning_type):
+    weights_analysis_file = analysisFolder%'learning_analysis'+'/%s_weights_analysis'%(learning_type)
+    tuples_of_location_and_best_model = [tuple_of_location_and_best_model for tuple_of_location_and_best_model in FileIO.iterateJsonFromFile(weights_analysis_file)]
+    map_from_location_to_best_model = dict(tuples_of_location_and_best_model)
+    
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     input_file = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
     map_from_location_to_no_of_occurrences_at_location = defaultdict(int)
     for time_unit_object in iterateJsonFromFile(input_file):
-        for (_, location, _) in time_unit_object['oc']: map_from_location_to_no_of_occurrences_at_location[location]+=1
+        for (_, location, _) in time_unit_object['oc']: 
+            if location in map_from_location_to_best_model: map_from_location_to_no_of_occurrences_at_location[location]+=1
         print map_from_location_to_no_of_occurrences_at_location
         exit()
         
