@@ -16,7 +16,8 @@ from mr_analysis import LOCATION_ACCURACY
 import random
 from library.file_io import FileIO
 from models import ModelSelectionHistory
-from settings import analysisFolder
+from settings import analysisFolder, timeUnitWithOccurrencesFile
+from datetime import datetime
 
 
 def getHashtagColors(hashtag_and_occurrence_locations):
@@ -110,13 +111,11 @@ def plotAllData(prediction_models):
             
 #            plt.show()
 
-def plotLearningAnalysis(learning_type, generate_data=True):
+def plot_model_distribution_on_world_map(learning_type, generate_data=True):
     weights_analysis_file = analysisFolder%'learning_analysis'+'/%s_weights_analysis'%(learning_type)
     if generate_data:
         GeneralMethods.runCommand('rm -rf %s'%weights_analysis_file)
         input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/%s_weights'%learning_type
-#        file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/follow_the_leader_weights'
-#        file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/hedging_method_weights'
         final_map_from_location_to_map_from_model_to_weight = {}
         for data in iterateJsonFromFile(input_weight_file):
             map_from_location_to_map_from_model_to_weight = data['location_weights']
@@ -137,8 +136,6 @@ def plotLearningAnalysis(learning_type, generate_data=True):
         print [(model, len(list(iterator_for_models))) for model, iterator_for_models in groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))]
     else:
         tuples_of_location_and_best_model = [tuple_of_location_and_best_model for tuple_of_location_and_best_model in FileIO.iterateJsonFromFile(weights_analysis_file)]
-#        for tuple_of_location_and_best_model in tuples_of_location_and_best_model:
-#            print tuple_of_location_and_best_model
         map_from_model_to_color = dict([('coverage_distance', 'b'), ('coverage_probability', 'm'), ('sharing_probability', 'r'), ('transmitting_probability', 'k')])
         tuples_of_model_and_locations = [(model, zip(*iterator_of_tuples_of_location_and_models)[0]) 
                                        for model, iterator_of_tuples_of_location_and_models in 
@@ -149,11 +146,16 @@ def plotLearningAnalysis(learning_type, generate_data=True):
                                        ]
         for model, locations in tuples_of_model_and_locations:
             locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
-#            locations, colors = zip(*[(getLocationFromLid(location.replace('_', ' ')), map_from_model_to_color[model]) for location, model in tuples_of_location_and_best_model])
             plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=map_from_model_to_color[model], lw = 0)
 #            plt.show()
             plt.savefig('images/learning_analysis/%s.png'%model)
             plt.clf()
+            
+def plot_location_size_to_model_correlation(generate_data=True):
+    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
+    input_file = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+    for data in iterateJsonFromFile(input_file):
+        print data.keys()
         
 prediction_models = [
 #                        PredictionModels.RANDOM , 
@@ -170,5 +172,7 @@ prediction_models = [
 #getHashtagColors()
 #plotRealData()
 #plotCoverageDistance()
-plotLearningAnalysis(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=False)
+
+#plot_model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=False)
+plot_location_size_to_model_correlation()
 
