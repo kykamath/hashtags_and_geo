@@ -162,8 +162,9 @@ def plot_location_size_to_model_correlation(learning_type):
     for time_unit_object in iterateJsonFromFile(input_file):
         for (_, location, _) in time_unit_object['oc']: 
             if location in map_from_location_to_best_model: map_from_location_to_no_of_occurrences_at_location[location]+=1
-        print map_from_location_to_no_of_occurrences_at_location
-        exit()
+#        print map_from_location_to_no_of_occurrences_at_location
+#        exit()
+    print len(map_from_location_to_best_model), len(map_from_location_to_no_of_occurrences_at_location)
         
 prediction_models = [
 #                        PredictionModels.RANDOM , 
