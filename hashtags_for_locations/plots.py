@@ -154,9 +154,9 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
 def plot_location_size_to_model_correlation(generate_data=True):
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     input_file = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
-    for map_from_time_unit_to_tuples_of_hashtag_and_location_and_time in iterateJsonFromFile(input_file):
-        for time_unit, tuples_of_hashtag_and_location_and_time in map_from_time_unit_to_tuples_of_hashtag_and_location_and_time.iteritems():
-            time_unit, tuples_of_hashtag_and_location_and_time
+    for time_unit_object in iterateJsonFromFile(input_file):
+        for tuples_of_hashtag_and_location_and_time in time_unit_object['oc']:
+            print tuples_of_hashtag_and_location_and_time
         exit()
         
 prediction_models = [
