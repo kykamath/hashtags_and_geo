@@ -182,5 +182,5 @@ prediction_models = [
 #plotCoverageDistance()
 
 #plot_model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=False)
-plot_location_size_to_model_correlation()
+plot_location_size_to_model_correlation(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 
