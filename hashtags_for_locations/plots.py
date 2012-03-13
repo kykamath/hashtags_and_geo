@@ -150,7 +150,8 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
                                                                    ]
             list_of_models_with_this_weight = min(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))[1]
             list_of_models_with_this_weight = set(map(lambda model: MAP_FROM_MODEL_TO_MODEL_TYPE[model], list_of_models_with_this_weight))
-            if len(list_of_models_with_this_weight)==1: tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
+#            if len(list_of_models_with_this_weight)==1: 
+            tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
         for tuple_of_location_and_best_model in tuples_of_location_and_best_model: FileIO.writeToFileAsJson(tuple_of_location_and_best_model, weights_analysis_file)
         print [(model, len(list(iterator_for_models))) for model, iterator_for_models in groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))]
     else:
@@ -197,11 +198,12 @@ def plot_location_size_to_model_correlation(learning_type):
                 map_from_model_to_map_from_population_to_population_distribution[model][population]=0
             map_from_model_to_map_from_population_to_population_distribution[model][population]+=1
     for model, map_from_population_to_population_distribution in map_from_model_to_map_from_population_to_population_distribution.iteritems():
+        total_locations = float(sum(map_from_population_to_population_distribution.values()))
         dataX = sorted(map_from_population_to_population_distribution)
-        dataY = [map_from_population_to_population_distribution[x]for x in dataX]
+        dataY = [map_from_population_to_population_distribution[x]/total_locations for x in dataX]
         print dataX
         print dataY
-        plt.semilogy(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
+        plt.loglog(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
     plt.legend()    
     plt.show()
 
@@ -216,12 +218,12 @@ def temp(learning_type):
                                                                                           key=itemgetter(1)
                                                                                           )
                                                                                ]
-    ############
-
-    map_from_model_type_to_locations = defaultdict(list)
-    for model, locations in tuples_of_model_and_locations: map_from_model_type_to_locations[map_from_model_to_model_type[model]]+=locations
-    tuples_of_model_and_locations = map_from_model_type_to_locations.iteritems()
-    #############
+#    ############
+#
+#    map_from_model_type_to_locations = defaultdict(list)
+#    for model, locations in tuples_of_model_and_locations: map_from_model_type_to_locations[map_from_model_to_model_type[model]]+=locations
+#    tuples_of_model_and_locations = map_from_model_type_to_locations.iteritems()
+#    #############
     
     for model, locations in tuples_of_model_and_locations:
         graph_of_locations = nx.Graph()
