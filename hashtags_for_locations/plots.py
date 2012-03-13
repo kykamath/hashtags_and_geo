@@ -139,7 +139,7 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
                                                                             )
                                                                    ]
             list_of_models_with_this_weight = min(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))[1]
-            tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
+            if len(list_of_models_with_this_weight)==1: tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
         for tuple_of_location_and_best_model in tuples_of_location_and_best_model: FileIO.writeToFileAsJson(tuple_of_location_and_best_model, weights_analysis_file)
         print [(model, len(list(iterator_for_models))) for model, iterator_for_models in groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))]
     else:
