@@ -510,14 +510,14 @@ class Experiments(object):
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
     @staticmethod
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-#        noOfHashtagsList = [10]
+#        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
+        noOfHashtagsList = [10]
 #        for i in range(2,7):    
-#        for j in range(1,13):
-        for j in [1]:
+        for j in range(1,13):
+#        for j in [1]:
             for noOfTargetHashtags in noOfHashtagsList:
-#                for i in range(2,7):
-                for i in [2]:
+                for i in range(2,7):
+#                for i in [2]:
                     conf = dict(historyTimeInterval = timedelta(seconds=j*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
                     conf['learningModels'] = [ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
                     conf['modelsInOrder'] = predictionModels
@@ -530,7 +530,7 @@ class Experiments(object):
         predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [2,3,4,5,6])
         data_to_plot_by_model_id = defaultdict(dict)
         for prediction_time_interval in predictionTimeIntervals:
-            conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=4)
+            conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=10)
             experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
             iteration_results = experiments.loadExperimentsData()
             metric_values_for_model = defaultdict(dict)
@@ -643,8 +643,8 @@ if __name__ == '__main__':
                         ]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
     
-    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-#    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
 #    predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
     
