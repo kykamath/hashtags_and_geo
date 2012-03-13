@@ -133,7 +133,7 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
     weights_analysis_file = analysisFolder%'learning_analysis'+'/%s_weights_analysis'%(learning_type)
     if generate_data:
         GeneralMethods.runCommand('rm -rf %s'%weights_analysis_file)
-        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/%s_weights'%learning_type
+        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/10/%s_weights'%learning_type
         final_map_from_location_to_map_from_model_to_weight = {}
         for data in iterateJsonFromFile(input_weight_file):
             map_from_location_to_map_from_model_to_weight = data['location_weights']
@@ -171,7 +171,7 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
             plt.clf()
             
 def plot_location_size_to_model_correlation(learning_type):
-    ACCURACY = 100
+    ACCURACY = 400
     weights_analysis_file = analysisFolder%'learning_analysis'+'/%s_weights_analysis'%(learning_type)
     tuples_of_location_and_best_model = [tuple_of_location_and_best_model for tuple_of_location_and_best_model in FileIO.iterateJsonFromFile(weights_analysis_file)]
     map_from_location_to_best_model = dict(tuples_of_location_and_best_model)
@@ -193,7 +193,7 @@ def plot_location_size_to_model_correlation(learning_type):
     for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
         list_of_no_of_occurrences_at_location = zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]
         for population in list_of_no_of_occurrences_at_location: 
-            population = population/ACCURACY*ACCURACY
+            population = population/ACCURACY*ACCURACY + ACCURACY
             if population not in map_from_model_to_map_from_population_to_population_distribution[model]:
                 map_from_model_to_map_from_population_to_population_distribution[model][population]=0
             map_from_model_to_map_from_population_to_population_distribution[model][population]+=1
@@ -203,8 +203,10 @@ def plot_location_size_to_model_correlation(learning_type):
         dataY = [map_from_population_to_population_distribution[x]/total_locations for x in dataX]
         print dataX
         print dataY
-        plt.loglog(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
-    plt.legend()    
+        plt.semilogx(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
+    plt.legend()
+    plt.xlim(xmin=0.0)
+    plt.ylim(ymin=-0.5)
     plt.show()
 
 def temp(learning_type):
