@@ -3,6 +3,9 @@ Created on Feb 12, 2012
 
 @author: kykamath
 '''
+US_BOUNDARY = [[24.527135,-127.792969], [49.61071,-59.765625]]
+PARTIAL_WORLD_BOUNDARY = [[-58.447733,-153.457031], [72.127936,75.410156]]
+
 hdfsInputFolder = 'hdfs:///user/kykamath/geo/hashtags/%s/'
 
 analysisFolder = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/%s/'

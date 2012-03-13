@@ -6,7 +6,8 @@ Created on Feb 27, 2012
 from operator import itemgetter
 from analysis import iterateJsonFromFile
 from itertools import groupby
-from library.geo import getLocationFromLid, plotPointsOnWorldMap, getLatticeLid
+from library.geo import getLocationFromLid, plotPointsOnWorldMap, \
+            getLatticeLid, plot_graph_clusters_on_world_map, isWithinBoundingBox
 from collections import defaultdict
 import matplotlib.pyplot as plt
 from library.classes import GeneralMethods
@@ -16,10 +17,13 @@ from mr_analysis import LOCATION_ACCURACY
 import random
 from library.file_io import FileIO
 from models import ModelSelectionHistory
-from settings import analysisFolder, timeUnitWithOccurrencesFile
+from settings import analysisFolder, timeUnitWithOccurrencesFile, \
+        PARTIAL_WORLD_BOUNDARY
 from datetime import datetime
 from library.stats import getOutliersRangeUsingIRQ
 import numpy as np
+from hashtags_for_locations.models import loadSharingProbabilities
+import networkx as nx
 
 
 MAP_FROM_MODEL_TO_COLOR = dict([('coverage_distance', 'b'), ('coverage_probability', 'm'), ('sharing_probability', 'r'), ('transmitting_probability', 'k')])
@@ -166,7 +170,6 @@ def plot_location_size_to_model_correlation(learning_type):
     for time_unit_object in iterateJsonFromFile(input_file):
         for (_, location, _) in time_unit_object['oc']: 
             if location in map_from_location_to_best_model: map_from_location_to_no_of_occurrences_at_location[location]+=1
-#        print map_from_location_to_no_of_occurrences_at_location
     tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location = [(model, [(location, map_from_location_to_no_of_occurrences_at_location[location]) for location in zip(*iterator_of_tuples_of_location_and_models)[0]]) 
                                                                                    for model, iterator_of_tuples_of_location_and_models in 
                                                                                    groupby(
@@ -190,11 +193,34 @@ def plot_location_size_to_model_correlation(learning_type):
         plt.semilogy(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
     plt.legend()    
     plt.show()
-#        print model, len(list_of_no_of_occurrences_at_location),
-#        _, upper_range_for_no_of_occurrences_at_location = getOutliersRangeUsingIRQ(list_of_no_of_occurrences_at_location)
-#        list_of_no_of_occurrences_at_location = filter(lambda no_of_occurrences_at_location: no_of_occurrences_at_location<=upper_range_for_no_of_occurrences_at_location, list_of_no_of_occurrences_at_location)
-#        print np.histogram(list_of_no_of_occurrences_at_location)
-#        print len(list_of_no_of_occurrences_at_location)
+
+def temp(learning_type):
+    map_from_location_to_map_from_neighboring_location_to_similarity_between_locations = loadSharingProbabilities()['neighborProbability']
+    weights_analysis_file = analysisFolder%'learning_analysis'+'/%s_weights_analysis'%(learning_type)
+    tuples_of_location_and_best_model = [tuple_of_location_and_best_model for tuple_of_location_and_best_model in FileIO.iterateJsonFromFile(weights_analysis_file)]
+    tuples_of_model_and_locations = [(model, zip(*iterator_of_tuples_of_location_and_models)[0]) 
+                                                                                   for model, iterator_of_tuples_of_location_and_models in 
+                                                                                   groupby(
+                                                                                          sorted(tuples_of_location_and_best_model, key=itemgetter(1)),
+                                                                                          key=itemgetter(1)
+                                                                                          )
+                                                                               ]
+    
+    for model, locations in tuples_of_model_and_locations:
+        graph_of_locations = nx.Graph()
+        for location in locations:
+            for neighboring_location, similarity_between_locations in map_from_location_to_map_from_neighboring_location_to_similarity_between_locations[location].iteritems():
+                if location!=neighboring_location \
+                    and isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), PARTIAL_WORLD_BOUNDARY) \
+                    and isWithinBoundingBox(getLocationFromLid(neighboring_location.replace('_', ' ')), PARTIAL_WORLD_BOUNDARY):
+                        if not graph_of_locations.has_edge(location, neighboring_location): graph_of_locations.add_edge(location, neighboring_location, {'w': similarity_between_locations})
+                        else: graph_of_locations[location][neighboring_location]['w']+=similarity_between_locations
+        plot_graph_clusters_on_world_map(graph_of_locations)
+        plt.title(model)
+#        plt.show()
+        plt.savefig('images/model_graph/%s.png'%model)
+        plt.clf()
+
 prediction_models = [
 #                        PredictionModels.RANDOM , 
 #                        PredictionModels.GREEDY, 
@@ -211,6 +237,7 @@ prediction_models = [
 #plotRealData()
 #plotCoverageDistance()
 
-#plot_model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=False)
-plot_location_size_to_model_correlation(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
+plot_model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=True)
+#plot_location_size_to_model_correlation(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
+#temp(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 
