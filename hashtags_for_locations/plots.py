@@ -185,7 +185,9 @@ def plot_location_size_to_model_correlation(learning_type):
     for model, map_from_population_to_population_distribution in map_from_model_to_map_from_population_to_population_distribution.iteritems():
         dataX = sorted(map_from_population_to_population_distribution)
         dataY = [map_from_population_to_population_distribution[x]for x in dataX]
-        plt.loglog(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
+        print dataX
+        print dataY
+        plt.semilogy(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
     plt.legend()    
     plt.show()
 #        print model, len(list_of_no_of_occurrences_at_location),
