@@ -150,8 +150,8 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
                                                                    ]
             list_of_models_with_this_weight = min(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))[1]
             list_of_models_with_this_weight = set(map(lambda model: MAP_FROM_MODEL_TO_MODEL_TYPE[model], list_of_models_with_this_weight))
-#            if len(list_of_models_with_this_weight)==1: 
-            tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
+            if len(list_of_models_with_this_weight)==1: 
+                tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
         for tuple_of_location_and_best_model in tuples_of_location_and_best_model: FileIO.writeToFileAsJson(tuple_of_location_and_best_model, weights_analysis_file)
         print [(model, len(list(iterator_for_models))) for model, iterator_for_models in groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))]
     else:
@@ -171,7 +171,7 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
             plt.clf()
             
 def plot_location_size_to_model_correlation(learning_type):
-    ACCURACY = 400
+    ACCURACY = 25
     weights_analysis_file = analysisFolder%'learning_analysis'+'/%s_weights_analysis'%(learning_type)
     tuples_of_location_and_best_model = [tuple_of_location_and_best_model for tuple_of_location_and_best_model in FileIO.iterateJsonFromFile(weights_analysis_file)]
     map_from_location_to_best_model = dict(tuples_of_location_and_best_model)
@@ -206,7 +206,7 @@ def plot_location_size_to_model_correlation(learning_type):
         plt.semilogx(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
     plt.legend()
     plt.xlim(xmin=0.0)
-    plt.ylim(ymin=-0.5)
+    plt.ylim(ymin=-0.4, ymax=0.8)
     plt.show()
 
 def temp(learning_type):
