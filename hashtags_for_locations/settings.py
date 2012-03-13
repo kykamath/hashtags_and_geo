@@ -15,8 +15,8 @@ hashtagsWithEndingWindowFile = analysisFolder+'%s_%s/hashtagsWithEndingWindow'
 hashtagsAllOccurrencesWithinWindowFile = analysisFolder+'%s_%s/hashtagsAllOccurrencesWithinWindow'
 locationsWithOccurrencesFile = analysisFolder+'%s_%s/locationsWithOccurrences'
 timeUnitWithOccurrencesFile = analysisFolder+'%s_%s/timeUnitWithOccurrences'
-modelsFolder = analysisFolder+'models/'
-#modelsFolder = analysisFolder+'models_1/'
+#modelsFolder = analysisFolder+'models/'
+modelsFolder = analysisFolder+'models_1/'
 
 locationsGraphFile = '/mnt/chevron/kykamath/data/geo/hashtags/analysis/training_world/2_11/latticeGraph'
 

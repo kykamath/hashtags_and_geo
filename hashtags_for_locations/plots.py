@@ -24,6 +24,7 @@ from library.stats import getOutliersRangeUsingIRQ
 import numpy as np
 from hashtags_for_locations.models import loadSharingProbabilities
 import networkx as nx
+from library.graphs import clusterUsingAffinityPropagation
 
 
 MAP_FROM_MODEL_TO_COLOR = dict([
@@ -236,12 +237,25 @@ def temp(learning_type):
                     and isWithinBoundingBox(getLocationFromLid(neighboring_location.replace('_', ' ')), PARTIAL_WORLD_BOUNDARY):
                         if not graph_of_locations.has_edge(location, neighboring_location): graph_of_locations.add_edge(location, neighboring_location, {'w': similarity_between_locations})
                         else: graph_of_locations[location][neighboring_location]['w']+=similarity_between_locations
-        no_of_clusters, _ = plot_graph_clusters_on_world_map(graph_of_locations)
-        plt.title(model + ' (%s)'%no_of_clusters )
-#        plt.show()
-        plt.savefig('images/model_graph/%s.png'%model)
-        plt.clf()
 
+#######################
+#        no_of_clusters, _ = plot_graph_clusters_on_world_map(graph_of_locations)
+#        plt.title(model + ' (%s)'%no_of_clusters )
+##        plt.show()
+#        plt.savefig('images/model_graph/%s.png'%model)
+#        plt.clf()
+#######################
+
+        no_of_clusters, tuples_of_location_and_cluster_id = clusterUsingAffinityPropagation(graph_of_locations)
+        tuples_of_cluster_id_and_locations_in_cluster = [(cluster_id, zip(*iterator_of_tuples_of_location_and_cluster_id)[0]) 
+                                                        for cluster_id, iterator_of_tuples_of_location_and_cluster_id in 
+                                                            groupby(
+                                                                    sorted(tuples_of_location_and_cluster_id, key=itemgetter(1)), 
+                                                                    key=itemgetter(1)
+                                                                    )
+                                                     ]
+        pass
+        
 prediction_models = [
 #                        PredictionModels.RANDOM , 
 #                        PredictionModels.GREEDY, 
@@ -258,7 +272,7 @@ prediction_models = [
 #plotRealData()
 #plotCoverageDistance()
 
-plot_model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=True)
+#plot_model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=True)
 #plot_location_size_to_model_correlation(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
-#temp(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
+temp(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 
