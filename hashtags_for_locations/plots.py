@@ -26,7 +26,17 @@ from hashtags_for_locations.models import loadSharingProbabilities
 import networkx as nx
 
 
-MAP_FROM_MODEL_TO_COLOR = dict([('coverage_distance', 'b'), ('coverage_probability', 'm'), ('sharing_probability', 'r'), ('transmitting_probability', 'k')])
+MAP_FROM_MODEL_TO_COLOR = dict([
+                                (PredictionModels.COVERAGE_DISTANCE, 'b'), (PredictionModels.COVERAGE_PROBABILITY, 'm'), (PredictionModels.SHARING_PROBABILITY, 'r'), (PredictionModels.TRANSMITTING_PROBABILITY, 'k')
+                                (PredictionModels.COMMUNITY_AFFINITY, '#436DFC'), (PredictionModels.SPATIAL, '#F15CFF')
+                                ])
+MAP_FROM_MODEL_TO_MODEL_TYPE = dict([
+                                     (PredictionModels.SHARING_PROBABILITY, PredictionModels.COMMUNITY_AFFINITY),
+                                     (PredictionModels.TRANSMITTING_PROBABILITY, PredictionModels.COMMUNITY_AFFINITY),
+                                     (PredictionModels.COVERAGE_DISTANCE, PredictionModels.SPATIAL),
+                                     (PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SPATIAL),
+                                     ])
+
 
 def getHashtagColors(hashtag_and_occurrence_locations):
 #        hashtag_and_points = [(h, map(lambda lid: getLocationFromLid(lid.replace('_', ' ')), zip(*occs)[1])) for h, occs in groupby(sorted(data['oc'], key=itemgetter(0)), key=itemgetter(0))]
@@ -139,6 +149,7 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
                                                                             )
                                                                    ]
             list_of_models_with_this_weight = min(tuples_of_weight_and_list_of_model_with_this_weight, key=itemgetter(0))[1]
+            list_of_models_with_this_weight = set(map(lambda model: MAP_FROM_MODEL_TO_MODEL_TYPE[model], list_of_models_with_this_weight))
             if len(list_of_models_with_this_weight)==1: tuples_of_location_and_best_model.append((location, random.sample(list_of_models_with_this_weight,1)[0]))
         for tuple_of_location_and_best_model in tuples_of_location_and_best_model: FileIO.writeToFileAsJson(tuple_of_location_and_best_model, weights_analysis_file)
         print [(model, len(list(iterator_for_models))) for model, iterator_for_models in groupby(sorted(zip(*tuples_of_location_and_best_model)[1]))]
@@ -205,6 +216,12 @@ def temp(learning_type):
                                                                                           key=itemgetter(1)
                                                                                           )
                                                                                ]
+    ############
+
+    map_from_model_type_to_locations = defaultdict(list)
+    for model, locations in tuples_of_model_and_locations: map_from_model_type_to_locations[map_from_model_to_model_type[model]]+=locations
+    tuples_of_model_and_locations = map_from_model_type_to_locations.iteritems()
+    #############
     
     for model, locations in tuples_of_model_and_locations:
         graph_of_locations = nx.Graph()
@@ -215,8 +232,8 @@ def temp(learning_type):
                     and isWithinBoundingBox(getLocationFromLid(neighboring_location.replace('_', ' ')), PARTIAL_WORLD_BOUNDARY):
                         if not graph_of_locations.has_edge(location, neighboring_location): graph_of_locations.add_edge(location, neighboring_location, {'w': similarity_between_locations})
                         else: graph_of_locations[location][neighboring_location]['w']+=similarity_between_locations
-        plot_graph_clusters_on_world_map(graph_of_locations)
-        plt.title(model)
+        no_of_clusters, _ = plot_graph_clusters_on_world_map(graph_of_locations)
+        plt.title(model + ' (%s)'%no_of_clusters )
 #        plt.show()
         plt.savefig('images/model_graph/%s.png'%model)
         plt.clf()

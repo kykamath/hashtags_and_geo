@@ -173,6 +173,8 @@ EVALUATION_METRIC_METHODS = dict([
 class PredictionModels:
     RANDOM = 'random'
     GREEDY = 'greedy'
+    COMMUNITY_AFFINITY = 'community_affinity'
+    SPATIAL = 'spatial'
     SHARING_PROBABILITY = 'sharing_probability'
     TRANSMITTING_PROBABILITY = 'transmitting_probability'
     COVERAGE_PROBABILITY = 'coverage_probability'
