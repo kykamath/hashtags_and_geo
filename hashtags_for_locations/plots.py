@@ -123,7 +123,7 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
     weights_analysis_file = analysisFolder%'learning_analysis'+'/%s_weights_analysis'%(learning_type)
     if generate_data:
         GeneralMethods.runCommand('rm -rf %s'%weights_analysis_file)
-        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/10/%s_weights'%learning_type
+        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/%s_weights'%learning_type
         final_map_from_location_to_map_from_model_to_weight = {}
         for data in iterateJsonFromFile(input_weight_file):
             map_from_location_to_map_from_model_to_weight = data['location_weights']
