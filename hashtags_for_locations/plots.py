@@ -166,7 +166,7 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
                                               )
                                        ]
         for model, locations in tuples_of_model_and_locations:
-            locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
+            locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations if isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), PARTIAL_WORLD_BOUNDARY)]
             plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=MAP_FROM_MODEL_TO_COLOR[model], lw = 0)
 #            plt.show()
             plt.savefig('images/learning_analysis/%s.png'%model)
@@ -219,6 +219,32 @@ def plot_location_size_to_model_correlation(learning_type):
     plt.show()
 
 def temp(learning_type):
+    def plot_graph_clusters_on_world_map1(graph_of_locations, s=0, lw=0, alpha=0.6, bkcolor='#CFCFCF', *args, **kwargs):  
+        no_of_clusters, tuples_of_location_and_cluster_id = clusterUsingAffinityPropagation(graph_of_locations)
+        map_from_location_to_cluster_id = dict(tuples_of_location_and_cluster_id)
+        map_from_cluster_id_to_cluster_color = dict([(i, GeneralMethods.getRandomColor()) for i in range(no_of_clusters)])
+        tuples_of_cluster_id_and_locations_in_cluster = [(cluster_id, zip(*iterator_of_tuples_of_location_and_cluster_id)[0]) 
+                                                        for cluster_id, iterator_of_tuples_of_location_and_cluster_id in 
+                                                            groupby(
+                                                                    sorted(tuples_of_location_and_cluster_id, key=itemgetter(1)), 
+                                                                    key=itemgetter(1)
+                                                                    )
+                                                     ]
+        nodes_in_order, edges_in_order = [], []
+        for cluster_id, locations_in_cluster in sorted(tuples_of_cluster_id_and_locations_in_cluster, key=lambda (_, locations_in_cluster): len(locations_in_cluster)):
+#            print cluster_id, len(locations_in_cluster)
+            subgraph_of_locations = nx.subgraph(graph_of_locations, locations_in_cluster)
+            nodes_in_order+=subgraph_of_locations.nodes()
+            edges_in_order+=subgraph_of_locations.edges(data=True)
+            
+        points, colors = zip(*map(lambda  location: (getLocationFromLid(location.replace('_', ' ')), map_from_cluster_id_to_cluster_color[map_from_location_to_cluster_id[location]]), nodes_in_order))
+        _, m = plotPointsOnWorldMap(points, c=colors, s=s, lw=lw, returnBaseMapObject=True,  *args, **kwargs)
+        for u, v, data in edges_in_order:
+            if map_from_location_to_cluster_id[u]==map_from_location_to_cluster_id[v]:
+                color, u, v, w = map_from_cluster_id_to_cluster_color[map_from_location_to_cluster_id[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
+                m.drawgreatcircle(u[1], u[0], v[1], v[0], color=color, alpha=alpha)
+        return (no_of_clusters, tuples_of_location_and_cluster_id)
+    
     map_from_location_to_map_from_neighboring_location_to_similarity_between_locations = loadSharingProbabilities()['neighborProbability']
     weights_analysis_file = analysisFolder%'learning_analysis'+'/%s_weights_analysis'%(learning_type)
     tuples_of_location_and_best_model = [tuple_of_location_and_best_model for tuple_of_location_and_best_model in FileIO.iterateJsonFromFile(weights_analysis_file)]
@@ -244,25 +270,24 @@ def temp(learning_type):
                     and isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), PARTIAL_WORLD_BOUNDARY) \
                     and isWithinBoundingBox(getLocationFromLid(neighboring_location.replace('_', ' ')), PARTIAL_WORLD_BOUNDARY):
                         if not graph_of_locations.has_edge(location, neighboring_location): graph_of_locations.add_edge(location, neighboring_location, {'w': similarity_between_locations})
-                        else: graph_of_locations[location][neighboring_location]['w']+=similarity_between_locations
+                        else: graph_of_locations[location][neighboring_location]['w']=min([similarity_between_locations, graph_of_locations[location][neighboring_location]['w']])
 
 #######################
-#        no_of_clusters, _ = plot_graph_clusters_on_world_map(graph_of_locations)
+        no_of_clusters, _ = plot_graph_clusters_on_world_map1(graph_of_locations)
 #        plt.title(model + ' (%s)'%no_of_clusters )
-##        plt.show()
-#        plt.savefig('images/model_graph/%s.png'%model)
-#        plt.clf()
+#        plt.show()
+        plt.savefig('images/model_graph/%s.png'%model)
+        plt.clf()
 #######################
 
-        no_of_clusters, tuples_of_location_and_cluster_id = clusterUsingAffinityPropagation(graph_of_locations)
-        tuples_of_cluster_id_and_locations_in_cluster = [(cluster_id, zip(*iterator_of_tuples_of_location_and_cluster_id)[0]) 
-                                                        for cluster_id, iterator_of_tuples_of_location_and_cluster_id in 
-                                                            groupby(
-                                                                    sorted(tuples_of_location_and_cluster_id, key=itemgetter(1)), 
-                                                                    key=itemgetter(1)
-                                                                    )
-                                                     ]
-        pass
+#        no_of_clusters, tuples_of_location_and_cluster_id = clusterUsingAffinityPropagation(graph_of_locations)
+#        tuples_of_cluster_id_and_locations_in_cluster = [(cluster_id, zip(*iterator_of_tuples_of_location_and_cluster_id)[0]) 
+#                                                        for cluster_id, iterator_of_tuples_of_location_and_cluster_id in 
+#                                                            groupby(
+#                                                                    sorted(tuples_of_location_and_cluster_id, key=itemgetter(1)), 
+#                                                                    key=itemgetter(1)
+#                                                                    )
+#                                                     ]
         
 prediction_models = [
 #                        PredictionModels.RANDOM , 
@@ -280,7 +305,7 @@ prediction_models = [
 #plotRealData()
 #plotCoverageDistance()
 
-#plot_model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=True)
-plot_location_size_to_model_correlation(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
+plot_model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=False)
+#plot_location_size_to_model_correlation(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 #temp(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 
