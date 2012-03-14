@@ -25,11 +25,12 @@ import numpy as np
 from hashtags_for_locations.models import loadSharingProbabilities
 import networkx as nx
 from library.graphs import clusterUsingAffinityPropagation
+from scipy.stats import ks_2samp
 
-
+ALL_LOCATIONS = 'all_locations'
 MAP_FROM_MODEL_TO_COLOR = dict([
                                 (PredictionModels.COVERAGE_DISTANCE, 'b'), (PredictionModels.COVERAGE_PROBABILITY, 'm'), (PredictionModels.SHARING_PROBABILITY, 'r'), (PredictionModels.TRANSMITTING_PROBABILITY, 'k'),
-                                (PredictionModels.COMMUNITY_AFFINITY, '#436DFC'), (PredictionModels.SPATIAL, '#F15CFF')
+                                (PredictionModels.COMMUNITY_AFFINITY, '#436DFC'), (PredictionModels.SPATIAL, '#F15CFF'), (ALL_LOCATIONS, '#FFB44A')
                                 ])
 MAP_FROM_MODEL_TO_MODEL_TYPE = dict([
                                      (PredictionModels.SHARING_PROBABILITY, PredictionModels.COMMUNITY_AFFINITY),
@@ -172,14 +173,14 @@ def plot_model_distribution_on_world_map(learning_type, generate_data=True):
             plt.clf()
             
 def plot_location_size_to_model_correlation(learning_type):
-    ACCURACY = 25
+    ACCURACY = 500
     weights_analysis_file = analysisFolder%'learning_analysis'+'/%s_weights_analysis'%(learning_type)
     tuples_of_location_and_best_model = [tuple_of_location_and_best_model for tuple_of_location_and_best_model in FileIO.iterateJsonFromFile(weights_analysis_file)]
     map_from_location_to_best_model = dict(tuples_of_location_and_best_model)
     
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     input_file = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
-    map_from_location_to_no_of_occurrences_at_location = defaultdict(int)
+    map_from_location_to_no_of_occurrences_at_location = defaultdict(float)
     for time_unit_object in iterateJsonFromFile(input_file):
         for (_, location, _) in time_unit_object['oc']: 
             if location in map_from_location_to_best_model: map_from_location_to_no_of_occurrences_at_location[location]+=1
@@ -190,11 +191,16 @@ def plot_location_size_to_model_correlation(learning_type):
                                                                                           key=itemgetter(1)
                                                                                           )
                                                                                ]
+
+    for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
+        print model, ks_2samp(map_from_location_to_no_of_occurrences_at_location.values(), list(zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]))
+        
+    tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location.append((ALL_LOCATIONS, map_from_location_to_no_of_occurrences_at_location.items()))
     map_from_model_to_map_from_population_to_population_distribution = defaultdict(dict)
     for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
         list_of_no_of_occurrences_at_location = zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]
         for population in list_of_no_of_occurrences_at_location: 
-            population = population/ACCURACY*ACCURACY + ACCURACY
+            population = int(population)/ACCURACY*ACCURACY + ACCURACY
             if population not in map_from_model_to_map_from_population_to_population_distribution[model]:
                 map_from_model_to_map_from_population_to_population_distribution[model][population]=0
             map_from_model_to_map_from_population_to_population_distribution[model][population]+=1
@@ -202,12 +208,14 @@ def plot_location_size_to_model_correlation(learning_type):
         total_locations = float(sum(map_from_population_to_population_distribution.values()))
         dataX = sorted(map_from_population_to_population_distribution)
         dataY = [map_from_population_to_population_distribution[x]/total_locations for x in dataX]
+        print model
         print dataX
         print dataY
-        plt.semilogx(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
+        plt.loglog(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
+    
     plt.legend()
-    plt.xlim(xmin=0.0)
-    plt.ylim(ymin=-0.4, ymax=0.8)
+#    plt.xlim(xmin=0.0)
+#    plt.ylim(ymin=-0.4, ymax=0.8)
     plt.show()
 
 def temp(learning_type):
@@ -273,6 +281,6 @@ prediction_models = [
 #plotCoverageDistance()
 
 #plot_model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=True)
-#plot_location_size_to_model_correlation(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
-temp(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
+plot_location_size_to_model_correlation(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
+#temp(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 

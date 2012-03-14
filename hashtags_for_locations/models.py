@@ -511,7 +511,7 @@ class Experiments(object):
     @staticmethod
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-        noOfHashtagsList = [10]
+        noOfHashtagsList = [4]
 #        for i in range(2,7):    
         for j in range(1,13):
 #        for j in [1]:
@@ -530,7 +530,7 @@ class Experiments(object):
         predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [2,3,4,5,6])
         data_to_plot_by_model_id = defaultdict(dict)
         for prediction_time_interval in predictionTimeIntervals:
-            conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=10)
+            conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=4)
             experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
             iteration_results = experiments.loadExperimentsData()
             metric_values_for_model = defaultdict(dict)
