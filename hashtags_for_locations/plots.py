@@ -2,6 +2,10 @@
 Created on Feb 27, 2012
 
 @author: kykamath
+
+How fast does each location learn?
+Variation of learning with varying beta both performance and speed?
+For both learning models.
 '''
 from operator import itemgetter
 from analysis import iterateJsonFromFile
