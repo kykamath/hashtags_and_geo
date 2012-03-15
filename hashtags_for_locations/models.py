@@ -530,7 +530,7 @@ class Experiments(object):
         predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [2,3,4,5,6])
         data_to_plot_by_model_id = defaultdict(dict)
         for prediction_time_interval in predictionTimeIntervals:
-            conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=4)
+            conf = dict(historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=4)
             experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
             iteration_results = experiments.loadExperimentsData()
             metric_values_for_model = defaultdict(dict)
@@ -554,10 +554,10 @@ class Experiments(object):
     @staticmethod
     def plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2,3,4,5,6])
-        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, range(1,10))
+        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, range(1,13))
         data_to_plot_by_model_id = defaultdict(dict)
         for historical_time_interval in historicalTimeIntervals:
-            conf = dict(historyTimeInterval = timedelta(seconds=historical_time_interval), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=10)
+            conf = dict(historyTimeInterval = timedelta(seconds=historical_time_interval), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=4)
             experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
             iteration_results = experiments.loadExperimentsData()
             metric_values_for_model = defaultdict(dict)
@@ -580,7 +580,7 @@ class Experiments(object):
             plt.clf()
     @staticmethod
     def plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        noOfHashtagsList=[1]+filter(lambda i: i%2==0, range(2,21))
+        noOfHashtagsList=[1]+filter(lambda i: i%2==0, range(2,11))
         conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
         data_to_plot_by_model_id = defaultdict(dict)
@@ -646,9 +646,9 @@ if __name__ == '__main__':
 #    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
-#    predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
+    predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
     
-#    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     

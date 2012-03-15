@@ -136,11 +136,11 @@ def plotAllData(prediction_models):
             
 #            plt.show()
 
-def plot_model_distribution_on_world_map(learning_type, generate_data=True):
+def plot_model_distribution_on_world_map(learning_type, no_of_hashtags, generate_data=True):
     weights_analysis_file = analysisFolder%'learning_analysis'+'/%s_weights_analysis'%(learning_type)
     if generate_data:
         GeneralMethods.runCommand('rm -rf %s'%weights_analysis_file)
-        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/4/%s_weights'%learning_type
+        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
         final_map_from_location_to_map_from_model_to_weight = {}
         for data in iterateJsonFromFile(input_weight_file):
             map_from_location_to_map_from_model_to_weight = data['location_weights']
@@ -238,7 +238,7 @@ def plot_location_size_to_model_correlation(learning_type):
 #    plt.ylim(ymin=-0.4, ymax=0.8)
     plt.show()
 
-def temp(learning_type):
+def plot_model_learning_graphs(learning_type):
     def plot_graph_clusters_on_world_map1(graph_of_locations, s=0, lw=0, alpha=0.6, bkcolor='#CFCFCF', *args, **kwargs):  
         no_of_clusters, tuples_of_location_and_cluster_id = clusterUsingAffinityPropagation(graph_of_locations)
         map_from_location_to_cluster_id = dict(tuples_of_location_and_cluster_id)
@@ -252,7 +252,6 @@ def temp(learning_type):
                                                      ]
         nodes_in_order, edges_in_order = [], []
         for cluster_id, locations_in_cluster in sorted(tuples_of_cluster_id_and_locations_in_cluster, key=lambda (_, locations_in_cluster): len(locations_in_cluster)):
-#            print cluster_id, len(locations_in_cluster)
             subgraph_of_locations = nx.subgraph(graph_of_locations, locations_in_cluster)
             nodes_in_order+=subgraph_of_locations.nodes()
             edges_in_order+=subgraph_of_locations.edges(data=True)
@@ -292,23 +291,17 @@ def temp(learning_type):
                         if not graph_of_locations.has_edge(location, neighboring_location): graph_of_locations.add_edge(location, neighboring_location, {'w': similarity_between_locations})
                         else: graph_of_locations[location][neighboring_location]['w']=min([similarity_between_locations, graph_of_locations[location][neighboring_location]['w']])
 
-#######################
         no_of_clusters, _ = plot_graph_clusters_on_world_map1(graph_of_locations)
 #        plt.title(model + ' (%s)'%no_of_clusters )
 #        plt.show()
         plt.savefig('images/model_graph/%s.png'%model)
         plt.clf()
-#######################
 
-#        no_of_clusters, tuples_of_location_and_cluster_id = clusterUsingAffinityPropagation(graph_of_locations)
-#        tuples_of_cluster_id_and_locations_in_cluster = [(cluster_id, zip(*iterator_of_tuples_of_location_and_cluster_id)[0]) 
-#                                                        for cluster_id, iterator_of_tuples_of_location_and_cluster_id in 
-#                                                            groupby(
-#                                                                    sorted(tuples_of_location_and_cluster_id, key=itemgetter(1)), 
-#                                                                    key=itemgetter(1)
-#                                                                    )
-#                                                     ]
-        
+def temp(learning_type, no_of_hashtags):
+    input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
+    for data in iterateJsonFromFile(input_weight_file):
+        print data.keys()
+    
 prediction_models = [
 #                        PredictionModels.RANDOM , 
 #                        PredictionModels.GREEDY, 
@@ -326,6 +319,7 @@ prediction_models = [
 #plotCoverageDistance()
 
 #plot_model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=False)
-plot_location_size_to_model_correlation(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
-#temp(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
+#plot_location_size_to_model_correlation(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
+#plot_model_learning_graphs(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
+temp(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=4)
 
