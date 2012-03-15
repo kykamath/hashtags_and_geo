@@ -6,6 +6,11 @@ Created on Feb 27, 2012
 How fast does each location learn?
 Variation of learning with varying beta both performance and speed?
 For both learning models.
+
+Run these two methods:
+plot_model_learning_time_series
+plot_model_learning_time_on_map
+
 '''
 from operator import itemgetter
 from analysis import iterateJsonFromFile
@@ -18,7 +23,7 @@ from library.classes import GeneralMethods
 from models import loadLocationsList,\
     PredictionModels, Propagations, PREDICTION_MODEL_METHODS
 from mr_analysis import LOCATION_ACCURACY
-import random
+import random, matplotlib
 from library.file_io import FileIO
 from models import ModelSelectionHistory
 from settings import analysisFolder, timeUnitWithOccurrencesFile, \
@@ -46,16 +51,6 @@ MAP_FROM_MODEL_TO_MODEL_TYPE = dict([
 
 
 def getHashtagColors(hashtag_and_occurrence_locations):
-#        hashtag_and_points = [(h, map(lambda lid: getLocationFromLid(lid.replace('_', ' ')), zip(*occs)[1])) for h, occs in groupby(sorted(data['oc'], key=itemgetter(0)), key=itemgetter(0))]
-#        print zip(*sorted([(hashtag, len(points)) for hashtag, points in hashtag_and_points if len(points)>25], key=itemgetter(1), reverse=True))[0]
-#        return dict([
-#                     ('replace1wordinamoviewithgrind', 'g'), 
-#                     ('palmeirascampeaomundial51', 'm'), 
-#                     ('11million', 'y'), 
-#                     ('prayfornorway', 'k'), 
-#                     ('happybirthdayselena', 'r'), 
-#                     ])
-#    cmaps = [matplotlib.cm.Blues, matplotlib.cm.Purples, matplotlib.cm.gist_yarg]
     return dict([(hashtag, GeneralMethods.getRandomColor()) for hashtag, occurrence_locations in hashtag_and_occurrence_locations if len(occurrence_locations)>0])
 
 def plotAllData(prediction_models):
@@ -297,10 +292,51 @@ def plot_model_learning_graphs(learning_type):
         plt.savefig('images/model_graph/%s.png'%model)
         plt.clf()
 
-def temp(learning_type, no_of_hashtags):
-    input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
+def get_location_learning_times(input_weight_file):
+    def get_final_model_change((reduced_time_unit, reduced_model), (current_time_unit, current_model)): 
+        if reduced_model!=current_model: return (current_time_unit, current_model)
+        else: return (reduced_time_unit, reduced_model)
+    map_from_location_to_tuples_of_time_unit_and_model_selected = defaultdict([])
+    epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = None, []
     for data in iterateJsonFromFile(input_weight_file):
-        print data.keys()
+        map_from_location_to_map_from_model_to_weight = data['location_weights']
+        epoch_time_unit = data['tu']
+        for location, map_from_model_to_weight in map_from_location_to_map_from_model_to_weight: 
+            map_from_location_to_tuples_of_time_unit_and_model_selected[location].append([epoch_time_unit, min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]])
+        if not epoch_first_time_unit: epoch_first_time_unit = epoch_time_unit
+    for location, tuples_of_time_unit_and_model_selected in map_from_location_to_tuples_of_time_unit_and_model_selected.iteritems():
+        last_time_unit, last_model_selected = reduce(get_final_model_change, tuples_of_time_unit_and_model_selected)
+        tuples_of_location_and_last_time_unit_and_last_model_selected.append([location, last_time_unit, last_model_selected])
+    return epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected
+
+def plot_model_learning_time_series(learning_type, no_of_hashtags):
+    input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
+    epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = get_location_learning_times(input_weight_file)
+    total_locations = float(len(tuples_of_location_and_last_time_unit_and_last_model_selected))
+    tuples_of_time_unit_and_percentage_of_locations = [(time_unit, len(list(iterator_of_tuples_of_location_and_last_time_unit_and_last_model_selected)))/total_locations
+                                                           for time_unit, iterator_of_tuples_of_location_and_last_time_unit_and_last_model_selected in
+                                                               groupby(
+                                                                   sorted(tuples_of_location_and_last_time_unit_and_last_model_selected, key=itemgetter(1)),
+                                                                   key=itemgetter(1)
+                                                               )
+                                                       ]
+    assert(1.0, sum(tuples_of_time_unit_and_percentage_of_locations, key=itemgetter(1)))
+    dataX, dataY = zip(*sorted(tuples_of_time_unit_and_percentage_of_locations, key=itemgetter(0)))
+    plt.plot_date([datetime.fromtimestamp(x) for x in dataX], dataY)
+    plt.xlim(xmin = datetime.fromtimestamp(epoch_first_time_unit))
+    plt.show()
+
+def plot_model_learning_time_on_map(learning_type, no_of_hashtags):
+    input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
+    epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = get_location_learning_times(input_weight_file) 
+    tuples_of_location_and_learning_time = [(location, last_time_unit-epoch_first_time_unit)
+                                            for location, last_time_unit, _ in tuples_of_location_and_last_time_unit_and_last_model_selected
+                                            ]
+    locations, colors = zip(*[(getLocationFromLid(location.replace('_', ' ')), learning_time) for location, learning_time in tuples_of_location_and_learning_time])
+    plt.subplot(111)
+    sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.autumn, lw = 0, alpha=1.0)
+    plt.colorbar(sc)
+    plt.show()
     
 prediction_models = [
 #                        PredictionModels.RANDOM , 
@@ -321,5 +357,7 @@ prediction_models = [
 #plot_model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, generate_data=False)
 #plot_location_size_to_model_correlation(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 #plot_model_learning_graphs(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
-temp(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=4)
+
+#plot_model_learning_time_series(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=4)
+#plot_model_learning_time_on_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=4)
 
