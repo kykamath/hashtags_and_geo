@@ -5,6 +5,7 @@ Created on Dec 7, 2011
 '''
 import sys
 from library.classes import GeneralMethods
+import matplotlib
 sys.path.append('../')
 from settings import hashtagsLatticeGraphFile, hashtagsFile
 from models import filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance,\
@@ -338,11 +339,23 @@ class Coverage:
 #        Coverage.temp()
         
 def temp():
-    for count, data in enumerate(FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/complete/hashtagsWithEndingWindow')):
-        print count
-        FileIO.writeToFileAsJson({'c': count, 'h': data['h']}, './temp_hashtags_file')
+    MINUTES = 15
+    hashtag = 'ripstevejobs'
+    for hashtag_object in FileIO.iterateJsonFromFile('./data/%s.json'%hashtag):
+        map_from_epoch_time_unit_to_tuples_of_location_and_epoch_occurrence_time =  getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtag_object), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
+        tuples_of_epoch_time_unit_and_tuples_of_location_and_epoch_occurrence_time = sorted(map_from_epoch_time_unit_to_tuples_of_location_and_epoch_occurrence_time.iteritems(), key=itemgetter(0))
+        for epoch_time_unit, tuples_of_location_and_epoch_occurrence_time in tuples_of_epoch_time_unit_and_tuples_of_location_and_epoch_occurrence_time:
+            locations = zip(*tuples_of_location_and_epoch_occurrence_time)[0]
+            tuples_of_locations_and_no_of_occurrences = [(location, len(list(iterator_of_locations)))
+                   for location, iterator_of_locations in 
+                   groupby(sorted(locations, key=itemgetter(0,1)), key=itemgetter(0,1))
+                ]
+            locations, colors = zip(*sorted(tuples_of_locations_and_no_of_occurrences, key=itemgetter(1)))
+            plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors, cmap=matplotlib.cm.cool, lw = 0)
+            plt.show()
+#            exit()
+        pass
         
-
 if __name__ == '__main__':
 #    PlotGraphsOnMap.run()
 #    Locality.run()

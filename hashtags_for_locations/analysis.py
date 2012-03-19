@@ -7,7 +7,7 @@ from settings import hdfsInputFolder, hashtagsWithoutEndingWindowFile,\
          hashtagsWithEndingWindowFile, timeUnitWithOccurrencesFile, \
          hashtagsWithoutEndingWindowFile, hashtagsAllOccurrencesWithinWindowFile
 from datetime import datetime
-#from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta
 from library.mrjobwrapper import runMRJob
 from mr_analysis import MRAnalysis, PARAMS_DICT, START_TIME,\
                     END_TIME, WINDOW_OUTPUT_FOLDER
@@ -26,9 +26,9 @@ def getInputFiles(startTime, endTime, folderType='world'):
 def mr_analysis(startTime, endTime, outputFolder, inputFilesStartTime=None, inputFilesEndTime=None):
     if not inputFilesStartTime: inputFilesStartTime=startTime; inputFilesEndTime=endTime
 #    outputFile = hashtagsWithEndingWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
-#    outputFile = hashtagsWithoutEndingWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+    outputFile = hashtagsWithoutEndingWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
 #    outputFile = hashtagsAllOccurrencesWithinWindowFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
-    outputFile = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+#    outputFile = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
 #    outputFile = 'mr_Data/timeUnitWithOccurrences'
     runMRJob(MRAnalysis, outputFile, getInputFiles(inputFilesStartTime, inputFilesEndTime), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
