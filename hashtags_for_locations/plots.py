@@ -23,7 +23,7 @@ from library.classes import GeneralMethods
 from models import loadLocationsList,\
     PredictionModels, Propagations, PREDICTION_MODEL_METHODS
 from mr_analysis import LOCATION_ACCURACY
-import random, matplotlib
+import random, matplotlib, inspect
 from library.file_io import FileIO
 from models import ModelSelectionHistory
 from settings import analysisFolder, timeUnitWithOccurrencesFile, \
@@ -35,11 +35,12 @@ from hashtags_for_locations.models import loadSharingProbabilities
 import networkx as nx
 from library.graphs import clusterUsingAffinityPropagation
 from scipy.stats import ks_2samp
-from library.plotting import CurveFit
+from library.plotting import CurveFit, splineSmooth
 
 ALL_LOCATIONS = 'all_locations'
 MAP_FROM_MODEL_TO_COLOR = dict([
                                 (PredictionModels.COVERAGE_DISTANCE, 'b'), (PredictionModels.COVERAGE_PROBABILITY, 'm'), (PredictionModels.SHARING_PROBABILITY, 'r'), (PredictionModels.TRANSMITTING_PROBABILITY, 'k'),
+                                (ModelSelectionHistory.FOLLOW_THE_LEADER, '#FF0A0A'), (ModelSelectionHistory.HEDGING_METHOD, '#9661FF'),
                                 (PredictionModels.COMMUNITY_AFFINITY, '#436DFC'), (PredictionModels.SPATIAL, '#F15CFF'), (ALL_LOCATIONS, '#FFB44A')
                                 ])
 MAP_FROM_MODEL_TO_MODEL_TYPE = dict([
@@ -292,52 +293,105 @@ def plot_model_learning_graphs(learning_type):
         plt.savefig('images/model_graph/%s.png'%model)
         plt.clf()
 
-def get_location_learning_times(input_weight_file):
-    def get_final_model_change((reduced_time_unit, reduced_model), (current_time_unit, current_model)): 
-        if reduced_model!=current_model: return (current_time_unit, current_model)
-        else: return (reduced_time_unit, reduced_model)
-    map_from_location_to_tuples_of_time_unit_and_model_selected = defaultdict(list)
-    epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = None, []
-    for data in iterateJsonFromFile(input_weight_file):
-        map_from_location_to_map_from_model_to_weight = data['location_weights']
-        epoch_time_unit = data['tu']
-        for location, map_from_model_to_weight in map_from_location_to_map_from_model_to_weight.iteritems(): 
-            map_from_location_to_tuples_of_time_unit_and_model_selected[location].append([epoch_time_unit, min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]])
-        if not epoch_first_time_unit: epoch_first_time_unit = epoch_time_unit
-    for location, tuples_of_time_unit_and_model_selected in map_from_location_to_tuples_of_time_unit_and_model_selected.iteritems():
-        last_time_unit, last_model_selected = reduce(get_final_model_change, tuples_of_time_unit_and_model_selected)
-        tuples_of_location_and_last_time_unit_and_last_model_selected.append([location, last_time_unit, last_model_selected])
-    return epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected
-
-def plot_model_learning_time_series(learning_type, no_of_hashtags):
-    input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
-    epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = get_location_learning_times(input_weight_file)
-    total_locations = float(len(tuples_of_location_and_last_time_unit_and_last_model_selected))
-    tuples_of_time_unit_and_percentage_of_locations = [(time_unit, len(list(iterator_of_tuples_of_location_and_last_time_unit_and_last_model_selected))/total_locations)
-                                                           for time_unit, iterator_of_tuples_of_location_and_last_time_unit_and_last_model_selected in
-                                                               groupby(
-                                                                   sorted(tuples_of_location_and_last_time_unit_and_last_model_selected, key=itemgetter(1)),
-                                                                   key=itemgetter(1)
-                                                               )
-                                                       ]
-    dataX, dataY = zip(*sorted(tuples_of_time_unit_and_percentage_of_locations, key=itemgetter(0)))
-    plt.plot([(x-epoch_first_time_unit)/(60*60) for x in dataX], dataY)
-    plt.xlim(xmin = epoch_first_time_unit-epoch_first_time_unit)
-    plt.show()
-
-def plot_model_learning_time_on_map(learning_type, no_of_hashtags):
-    input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
-    epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = get_location_learning_times(input_weight_file) 
-    tuples_of_location_and_learning_time = [(location, (last_time_unit-epoch_first_time_unit)/(60*60))
-                                            for location, last_time_unit, _ in tuples_of_location_and_last_time_unit_and_last_model_selected
-                                            ]
-    tuples_of_locations_and_colors = [(getLocationFromLid(location.replace('_', ' ')), learning_time) for location, learning_time in tuples_of_location_and_learning_time]
-    locations, colors = zip(*sorted(tuples_of_locations_and_colors, key=itemgetter(1)))
-    plt.subplot(111)
-    sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.autumn, lw = 0, alpha=1.0)
-    plt.colorbar(sc)
-    plt.show()
+def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
+def hedging_method(map_from_model_to_weight):
+    total_weight = sum(map_from_model_to_weight.values())
+    for model in map_from_model_to_weight.keys(): map_from_model_to_weight[model]/=total_weight 
+    tuple_of_id_model_and_cumulative_losses = [(id, model, cumulative_loss) for id, (model, cumulative_loss) in enumerate(map_from_model_to_weight.iteritems())]
+    selected_id = GeneralMethods.weightedChoice(zip(*tuple_of_id_model_and_cumulative_losses)[2])
+    return filter(lambda (id, model, _): id==selected_id, tuple_of_id_model_and_cumulative_losses)[0][1]
     
+class LearningAnalysis():
+    MAP_FROM_LEARNING_TYPE_TO_MODEL_SELECION_METHOD = dict([(ModelSelectionHistory.FOLLOW_THE_LEADER, follow_the_leader_method), (ModelSelectionHistory.HEDGING_METHOD, hedging_method)])
+    @staticmethod
+    def _get_location_learning_times(input_weight_file):
+        def get_final_model_change((reduced_time_unit, reduced_model), (current_time_unit, current_model)): 
+            if reduced_model!=current_model: return (current_time_unit, current_model)
+            else: return (reduced_time_unit, reduced_model)
+        map_from_location_to_tuples_of_time_unit_and_model_selected = defaultdict(list)
+        epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = None, []
+        for data in iterateJsonFromFile(input_weight_file):
+            map_from_location_to_map_from_model_to_weight = data['location_weights']
+            epoch_time_unit = data['tu']
+            for location, map_from_model_to_weight in map_from_location_to_map_from_model_to_weight.iteritems(): 
+                map_from_location_to_tuples_of_time_unit_and_model_selected[location].append([epoch_time_unit, min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]])
+            if not epoch_first_time_unit: epoch_first_time_unit = epoch_time_unit
+        for location, tuples_of_time_unit_and_model_selected in map_from_location_to_tuples_of_time_unit_and_model_selected.iteritems():
+            last_time_unit, last_model_selected = reduce(get_final_model_change, tuples_of_time_unit_and_model_selected)
+            tuples_of_location_and_last_time_unit_and_last_model_selected.append([location, last_time_unit, last_model_selected])
+        return epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected
+    @staticmethod
+    def plot_model_learning_time_series(learning_type, no_of_hashtags):
+        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
+        epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = LearningAnalysis._get_location_learning_times(input_weight_file)
+        total_locations = float(len(tuples_of_location_and_last_time_unit_and_last_model_selected))
+        tuples_of_time_unit_and_percentage_of_locations = [(time_unit, len(list(iterator_of_tuples_of_location_and_last_time_unit_and_last_model_selected)))
+                                                               for time_unit, iterator_of_tuples_of_location_and_last_time_unit_and_last_model_selected in
+                                                                   groupby(
+                                                                       sorted(tuples_of_location_and_last_time_unit_and_last_model_selected, key=itemgetter(1)),
+                                                                       key=itemgetter(1)
+                                                                   )
+                                                           ]
+        tuples_of_time_unit_and_cumulative_of_percentage_of_locations = []
+        cumulative_of_percentage_of_locations = 0.0
+        for time_unit, percentage_of_locations in sorted(tuples_of_time_unit_and_percentage_of_locations, key=itemgetter(0)):
+            cumulative_of_percentage_of_locations+=percentage_of_locations
+            tuples_of_time_unit_and_cumulative_of_percentage_of_locations.append((time_unit, cumulative_of_percentage_of_locations/total_locations))
+        dataX, dataY = zip(*sorted(tuples_of_time_unit_and_cumulative_of_percentage_of_locations, key=itemgetter(0)))
+    #    newDataX, dataY = splineSmooth(dataX, dataY)
+        plt.plot([(x-epoch_first_time_unit)/(60*60) for x in dataX], dataY)
+        plt.xlim(xmin = epoch_first_time_unit-epoch_first_time_unit)
+        plt.ylim(ymin=0, ymax=1.0)
+        plt.show()
+    @staticmethod
+    def plot_model_learning_time_on_map(learning_type, no_of_hashtags):
+        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
+        epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = LearningAnalysis._get_location_learning_times(input_weight_file) 
+        tuples_of_location_and_learning_time = [(location, (last_time_unit-epoch_first_time_unit)/(60*60))
+                                                for location, last_time_unit, _ in tuples_of_location_and_last_time_unit_and_last_model_selected
+                                                ]
+        tuples_of_locations_and_colors = [(getLocationFromLid(location.replace('_', ' ')), learning_time) for location, learning_time in tuples_of_location_and_learning_time]
+        locations, colors = zip(*sorted(tuples_of_locations_and_colors, key=itemgetter(1)))
+        plt.subplot(111)
+        sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.autumn, lw = 0, alpha=1.0)
+        plt.colorbar(sc)
+        plt.show()
+    @staticmethod
+    def plot_learning_flicker(learning_types, no_of_hashtags):
+        for learning_type in learning_types:
+            input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
+            map_from_ep_time_unit_to_no_of_locations_that_didnt_flip = {}
+            map_from_location_to_previously_selected_model = {}
+            for data in iterateJsonFromFile(input_weight_file):
+                map_from_location_to_map_from_model_to_weight = data['location_weights']
+                ep_time_unit = data['tu']
+                no_of_locations_that_didnt_flip = 0.0 
+                for location, map_from_model_to_weight in map_from_location_to_map_from_model_to_weight.iteritems():
+    #                model_selected = LearningAnalysis.MAP_FROM_LEARNING_TYPE_TO_MODEL_SELECION_METHOD[learning_type](map_from_model_to_weight)
+                    model_selected = MAP_FROM_MODEL_TO_MODEL_TYPE[LearningAnalysis.MAP_FROM_LEARNING_TYPE_TO_MODEL_SELECION_METHOD[learning_type](map_from_model_to_weight)]
+                    if location in map_from_location_to_previously_selected_model and map_from_location_to_previously_selected_model[location]==model_selected: 
+                        no_of_locations_that_didnt_flip+=1
+                    map_from_location_to_previously_selected_model[location] = model_selected
+                map_from_ep_time_unit_to_no_of_locations_that_didnt_flip[ep_time_unit] = no_of_locations_that_didnt_flip
+            total_no_of_locations = len(map_from_location_to_previously_selected_model)
+            tuples_of_ep_time_unit_and_percentage_of_locations_that_flipped = [(ep_time_unit, 1.0 - (map_from_ep_time_unit_to_no_of_locations_that_didnt_flip[ep_time_unit]/total_no_of_locations)) 
+                                                                               for ep_time_unit in sorted(map_from_ep_time_unit_to_no_of_locations_that_didnt_flip)
+                                                                            ]
+            ep_first_time_unit = tuples_of_ep_time_unit_and_percentage_of_locations_that_flipped[0][0]
+            x_data, y_data = zip(*tuples_of_ep_time_unit_and_percentage_of_locations_that_flipped)
+            x_data, y_data = splineSmooth(x_data, y_data)
+            plt.plot([(x-ep_first_time_unit)/(60*60) for x in x_data], y_data, c=MAP_FROM_MODEL_TO_COLOR[learning_type], label=learning_type, lw=2)
+        plt.legend()
+#        plt.show()
+        file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
+        FileIO.createDirectoryForFile(file_learning_analysis)
+        plt.savefig(file_learning_analysis)
+        plt.clf()
+    @staticmethod
+    def run():
+        no_of_hashtags = 4
+        LearningAnalysis.plot_learning_flicker([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
+            
 prediction_models = [
 #                        PredictionModels.RANDOM , 
 #                        PredictionModels.GREEDY, 
@@ -358,6 +412,4 @@ prediction_models = [
 #plot_location_size_to_model_correlation(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 #plot_model_learning_graphs(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 
-#plot_model_learning_time_series(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=10)
-plot_model_learning_time_on_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=10)
-
+LearningAnalysis.run()
