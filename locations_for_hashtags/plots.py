@@ -340,7 +340,7 @@ class Coverage:
 def temp():
     for count, data in enumerate(FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/complete/hashtagsWithEndingWindow')):
         print count
-        FileIO.writeToFile({'c': count, 'h': data['h']}, 'temp_hashtags_file')
+        FileIO.writeToFileAsJson({'c': count, 'h': data['h']}, './temp_hashtags_file')
         
 
 if __name__ == '__main__':
