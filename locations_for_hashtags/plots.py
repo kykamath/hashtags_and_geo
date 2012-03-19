@@ -7,14 +7,14 @@ import sys
 from library.classes import GeneralMethods
 sys.path.append('../')
 from settings import hashtagsLatticeGraphFile, hashtagsFile
-from experiments.models import filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance,\
+from models import filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance,\
     getLattices, CoverageBasedLatticeSelectionModel
 from library.stats import getOutliersRangeUsingIRQ
 from library.plotting import getLatexForString
 from itertools import groupby
 from operator import itemgetter
 from library.file_io import FileIO
-from experiments.mr_area_analysis import getOccuranesInHighestActiveRegion,\
+from mr_area_analysis import getOccuranesInHighestActiveRegion,\
     LATTICE_ACCURACY, getOccurranceDistributionInEpochs, getRadius
 from library.geo import getLocationFromLid, getLatticeLid, plotPointsOnWorldMap,\
     getHaversineDistanceForLids, getHaversineDistance
@@ -337,10 +337,17 @@ class Coverage:
         Coverage.coverageIndication()
 #        Coverage.temp()
         
+def temp():
+    for count, data in enumerate(FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/complete/hashtagsWithEndingWindow')):
+        print count
+        FileIO.writeToFile({'c': count, 'h': data['h']}, 'temp_hashtags_file')
+        
 
 if __name__ == '__main__':
 #    PlotGraphsOnMap.run()
 #    Locality.run()
-    Coverage.run()
+#    Coverage.run()
 #    print getLatticeLid([-23.549569,-46.639173],  0.145)
+
+    temp()
     
