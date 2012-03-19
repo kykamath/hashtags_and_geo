@@ -338,23 +338,66 @@ class Coverage:
         Coverage.coverageIndication()
 #        Coverage.temp()
         
-def temp():
+def plot_locations_on_world_map():
     MINUTES = 15
-    hashtag = 'ripstevejobs'
-    for hashtag_object in FileIO.iterateJsonFromFile('./data/%s.json'%hashtag):
-        map_from_epoch_time_unit_to_tuples_of_location_and_epoch_occurrence_time =  getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtag_object), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
-        tuples_of_epoch_time_unit_and_tuples_of_location_and_epoch_occurrence_time = sorted(map_from_epoch_time_unit_to_tuples_of_location_and_epoch_occurrence_time.iteritems(), key=itemgetter(0))
-        for epoch_time_unit, tuples_of_location_and_epoch_occurrence_time in tuples_of_epoch_time_unit_and_tuples_of_location_and_epoch_occurrence_time:
-            locations = zip(*tuples_of_location_and_epoch_occurrence_time)[0]
-            tuples_of_locations_and_no_of_occurrences = [(location, len(list(iterator_of_locations)))
-                   for location, iterator_of_locations in 
-                   groupby(sorted(locations, key=itemgetter(0,1)), key=itemgetter(0,1))
-                ]
-            locations, colors = zip(*sorted(tuples_of_locations_and_no_of_occurrences, key=itemgetter(1)))
+    hashtags = ['ripstevejobs', 'cnbcdebate']
+    MAP_FROM_HASHTAG_TO_SUBPLOT = dict([('ripstevejobs', 211), ('cnbcdebate', 212)])
+    map_from_epoch_lag_to_map_from_hashtag_to_tuples_of_location_and_epoch_lag = defaultdict(dict)
+    for hashtag in hashtags:
+        for hashtag_object in FileIO.iterateJsonFromFile('./data/%s.json'%hashtag):
+            map_from_epoch_time_unit_to_tuples_of_location_and_epoch_occurrence_time =  getOccurranceDistributionInEpochs(getOccuranesInHighestActiveRegion(hashtag_object), timeUnit=MINUTES*60, fillInGaps=True, occurancesCount=False)
+            tuples_of_epoch_time_unit_and_tuples_of_location_and_epoch_occurrence_time = sorted(map_from_epoch_time_unit_to_tuples_of_location_and_epoch_occurrence_time.iteritems(), key=itemgetter(0))
+#            GeneralMethods.runCommand('rm -rf ./images/plot_locations_on_world_map/%s'%hashtag)
+    #        time_starting_time_unit = datetime.fromtimestamp(tuples_of_epoch_time_unit_and_tuples_of_location_and_epoch_occurrence_time[0][0])
+            epoch_starting_time_unit = tuples_of_epoch_time_unit_and_tuples_of_location_and_epoch_occurrence_time[0][0]
+            epoch_ending_time_unit = epoch_starting_time_unit+25*60*60
+            for epoch_time_unit, tuples_of_location_and_epoch_occurrence_time in tuples_of_epoch_time_unit_and_tuples_of_location_and_epoch_occurrence_time:
+                if epoch_time_unit<=epoch_ending_time_unit:
+                    if tuples_of_location_and_epoch_occurrence_time:
+        #                file_world_map_plot = './images/plot_locations_on_world_map/%s/%s.png'%(hashtag, str(datetime.fromtimestamp(epoch_time_unit) - epoch_starting_time_unit))
+                        epoch_lag = epoch_time_unit - epoch_starting_time_unit
+        #                print file_world_map_plot
+#                        locations = zip(*tuples_of_location_and_epoch_occurrence_time)[0]
+#                        tuples_of_locations_and_no_of_occurrences = [(location, len(list(iterator_of_locations)))
+#                               for location, iterator_of_locations in 
+#                               groupby(sorted(locations, key=itemgetter(0,1)), key=itemgetter(0,1))
+#                            ]
+        #                locations, colors = zip(*sorted(tuples_of_locations_and_no_of_occurrences, key=itemgetter(1)))
+                        tuples_of_location_and_epoch_occurrence_time = sorted(tuples_of_location_and_epoch_occurrence_time, key=itemgetter(1))
+                        map_from_epoch_lag_to_map_from_hashtag_to_tuples_of_location_and_epoch_lag[epoch_lag][hashtag] = [(getLatticeLid(location, 0.145), epoch_occurrence_time-epoch_starting_time_unit)for location, epoch_occurrence_time in tuples_of_location_and_epoch_occurrence_time]
+        #                plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors, cmap=matplotlib.cm.cool, lw = 0)
+        #                plt.show()
+        #                FileIO.createDirectoryForFile(file_world_map_plot)
+        #                plt.savefig(file_world_map_plot)
+        #                plt.clf()
+    
+    map_from_hashtag_to_accumulated_tuples_of_location_and_epoch_lag = defaultdict(list)
+    GeneralMethods.runCommand('rm -rf ./images/plot_locations_on_world_map/')
+    for epoch_lag in sorted(map_from_epoch_lag_to_map_from_hashtag_to_tuples_of_location_and_epoch_lag):
+        file_world_map_plot = './images/plot_locations_on_world_map/%s.png'%(epoch_lag)
+        print file_world_map_plot
+        map_from_hashtag_to_tuples_of_location_and_epoch_lag = map_from_epoch_lag_to_map_from_hashtag_to_tuples_of_location_and_epoch_lag[epoch_lag]
+#        print epoch_lag, map_from_hashtag_to_tuples_of_location_and_epoch_lag.keys()
+        for hashtag, tuples_of_location_and_epoch_lag in map_from_hashtag_to_tuples_of_location_and_epoch_lag.iteritems():
+            map_from_hashtag_to_accumulated_tuples_of_location_and_epoch_lag[hashtag]+=tuples_of_location_and_epoch_lag
+#        for k in map_from_hashtag_to_accumulated_tuples_of_location_and_epoch_occurrence_time:
+#            print k, len(map_from_hashtag_to_accumulated_tuples_of_location_and_epoch_occurrence_time[k]),
+        for hashtag, accumulated_tuples_of_location_and_epoch_lag in map_from_hashtag_to_accumulated_tuples_of_location_and_epoch_lag.iteritems():
+#            print accumulated_tuples_of_location_and_epoch_lag
+            plt.subplot(MAP_FROM_HASHTAG_TO_SUBPLOT[hashtag])
+            tuples_of_location_and_epoch_max_lag= [(location, max(zip(*iterator_of_tuples_of_location_and_epoch_lag)[1]))
+                               for location, iterator_of_tuples_of_location_and_epoch_lag in 
+                               groupby(sorted(accumulated_tuples_of_location_and_epoch_lag, key=itemgetter(0)), key=itemgetter(0))
+                            ]
+            locations, colors = zip(*[(getLocationFromLid(location.replace('_', ' ')), epoch_max_lag) for location, epoch_max_lag in sorted(tuples_of_location_and_epoch_max_lag, key=itemgetter(1))])
             plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors, cmap=matplotlib.cm.cool, lw = 0)
-            plt.show()
-#            exit()
-        pass
+            plt.title('%s      (%s hours)'%(hashtag, epoch_lag/(60.*60)))
+#        plt.show()
+        FileIO.createDirectoryForFile(file_world_map_plot)
+        plt.savefig(file_world_map_plot)
+        plt.clf()
+#        exit()
+    pass
         
 if __name__ == '__main__':
 #    PlotGraphsOnMap.run()
@@ -362,5 +405,5 @@ if __name__ == '__main__':
 #    Coverage.run()
 #    print getLatticeLid([-23.549569,-46.639173],  0.145)
 
-    temp()
+    plot_locations_on_world_map()
     
