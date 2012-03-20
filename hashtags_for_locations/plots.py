@@ -44,12 +44,14 @@ MAP_FROM_MODEL_TO_COLOR = dict([
                                 (ModelSelectionHistory.FOLLOW_THE_LEADER, '#FF0A0A'), (ModelSelectionHistory.HEDGING_METHOD, '#9661FF'),
                                 (PredictionModels.COMMUNITY_AFFINITY, '#436DFC'), (PredictionModels.SPATIAL, '#F15CFF'), (ALL_LOCATIONS, '#FFB44A')
                                 ])
+MAP_FROM_MODEL_TO_MARKER = dict([ (ModelSelectionHistory.FOLLOW_THE_LEADER, 'x'), (ModelSelectionHistory.HEDGING_METHOD, 'o')])
 MAP_FROM_MODEL_TO_MODEL_TYPE = dict([
                                      (PredictionModels.SHARING_PROBABILITY, PredictionModels.COMMUNITY_AFFINITY),
                                      (PredictionModels.TRANSMITTING_PROBABILITY, PredictionModels.COMMUNITY_AFFINITY),
                                      (PredictionModels.COVERAGE_DISTANCE, PredictionModels.SPATIAL),
                                      (PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SPATIAL),
                                      ])
+MAP_FROM_MODEL_TO_SUBPLOT_ID = dict([ (ModelSelectionHistory.FOLLOW_THE_LEADER, 211), (ModelSelectionHistory.HEDGING_METHOD, 212)])
 
 def getHashtagColors(hashtag_and_occurrence_locations):
     return dict([(hashtag, GeneralMethods.getRandomColor()) for hashtag, occurrence_locations in hashtag_and_occurrence_locations if len(occurrence_locations)>0])
@@ -304,33 +306,49 @@ class LearningAnalysis():
             ep_first_time_unit = tuples_of_ep_time_unit_and_percentage_of_locations_that_flipped[0][0]
             x_data, y_data = zip(*tuples_of_ep_time_unit_and_percentage_of_locations_that_flipped)
             x_data, y_data = splineSmooth(x_data, y_data)
-            plt.plot([(x-ep_first_time_unit)/(60*60) for x in x_data], y_data, c=MAP_FROM_MODEL_TO_COLOR[learning_type], label=learning_type, lw=2)
+            plt.plot([(x-ep_first_time_unit)/(60*60) for x in x_data], y_data, c=MAP_FROM_MODEL_TO_COLOR[learning_type], label=learning_type, lw=2, marker = MAP_FROM_MODEL_TO_MARKER[learning_type])
         plt.legend()
+        plt.xlabel('Learning lag (hours)', fontsize=20), plt.ylabel('Percentage of locations that flipped', fontsize=20)
 #        plt.show()
         file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
         FileIO.createDirectoryForFile(file_learning_analysis)
         plt.savefig(file_learning_analysis)
         plt.clf()
     @staticmethod
-    def flipping_ratio_on_world_map(learning_type, no_of_hashtags):
-        tuples_of_location_and_flipping_ratio = LearningAnalysis._get_flipping_ratio_for_all_locations(learning_type, no_of_hashtags)
-        locations, colors = zip(*[(getLocationFromLid(location.replace('_', ' ')), color)
-                                  for location, color in sorted(tuples_of_location_and_flipping_ratio, key=itemgetter(1))])
-        plt.subplot(111)
-        sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
-        plt.colorbar(sc)
+    def flipping_ratio_on_world_map(learning_types, no_of_hashtags):
+        for learning_type in learning_types:
+            tuples_of_location_and_flipping_ratio = LearningAnalysis._get_flipping_ratio_for_all_locations(learning_type, no_of_hashtags)
+            locations, colors = zip(*[(getLocationFromLid(location.replace('_', ' ')), color)
+                                      for location, color in sorted(tuples_of_location_and_flipping_ratio, key=itemgetter(1))])
+            plt.subplot(MAP_FROM_MODEL_TO_SUBPLOT_ID[learning_type])
+            sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
+            plt.title(learning_type)
+            plt.colorbar(sc)
 #        plt.show()
         file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
         FileIO.createDirectoryForFile(file_learning_analysis)
         plt.savefig(file_learning_analysis)
         plt.clf()
+        
+#        ax = plt.subplot(111)
+#        im = ax.imshow(np.arange(100).reshape((10,10)))
+#        
+#        # create an axes on the right side of ax. The width of cax will be 5%
+#        # of ax and the padding between cax and ax will be fixed at 0.05 inch.
+#        divider = make_axes_locatable(ax)
+#        cax = divider.append_axes("right", size="5%", pad=0.05)
+#        
+#        plt.colorbar(im, cax=cax)
+        
+        
     @staticmethod
     def flipping_ratio_correlation_with_no_of_occurrences_at_location(learning_type, no_of_hashtags):
-        NO_OF_OCCURRENCES_BIN_SIZE= 5
+        NO_OF_OCCURRENCES_BIN_SIZE= 3000
         # Load flipping ratio data.
         map_from_location_to_flipping_ratio = dict(LearningAnalysis._get_flipping_ratio_for_all_locations(learning_type, no_of_hashtags))
         # Load no. of occurrences data
-        startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
+#        startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
+        startTime, endTime, outputFolder = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
         input_file = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
         map_from_location_to_no_of_occurrences_at_location = defaultdict(float)
         for time_unit_object in iterateJsonFromFile(input_file):
@@ -350,9 +368,9 @@ class LearningAnalysis():
                                                                                             no_of_occurrences_at_location<=upper_range_no_of_occurrences_at_location,
                                                                                          tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location)
         print len(tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location)
-        for x, y, z in tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location:
-            print x, z
-        exit()
+#        for x, y, z in tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location:
+#            print x, z
+#        exit()
         # Bin no. of occurrences.
         map_from_no_of_occurrences_at_location_bin_to_flipping_ratios = defaultdict(list)
         for _, flipping_ratio, no_of_occurrences_at_location in tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location:
@@ -361,15 +379,16 @@ class LearningAnalysis():
         for no_of_occurrences_at_location_bin in sorted(map_from_no_of_occurrences_at_location_bin_to_flipping_ratios):
             flipping_ratios = map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin]
             flipping_ratios = filter_outliers(flipping_ratios)
-            if len(flipping_ratios) >= 5 and no_of_occurrences_at_location_bin<=300:  
+            if len(flipping_ratios) >= 5:  
                 map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin] = flipping_ratios
+                print no_of_occurrences_at_location_bin, len(flipping_ratios)
             else: del map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin]
         # Plot data.
         x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios = zip(*[ (no_of_occurrences_at_location_bin, np.mean(flipping_ratios)) 
               for no_of_occurrences_at_location_bin, flipping_ratios in 
               sorted(map_from_no_of_occurrences_at_location_bin_to_flipping_ratios.iteritems(), key=itemgetter(0))
               ])
-#        x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios = splineSmooth(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios)
+        x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios = splineSmooth(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios)
 #        _, y_flipping_ratio, x_no_of_occurrences_at_location = zip(*tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location)
 #        plt.scatter(x_no_of_occurrences_at_location, y_flipping_ratio)
 #        plt.semilogx([1],[1])
@@ -388,7 +407,7 @@ class LearningAnalysis():
 #        LearningAnalysis.correlation_between_model_type_and_location_size(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 #        LearningAnalysis.model_learning_graphs_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 #        LearningAnalysis.learner_flipping_time_series([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
-#        LearningAnalysis.flipping_ratio_on_world_map(ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags)
+#        LearningAnalysis.flipping_ratio_on_world_map([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
         LearningAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location(ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags)
             
 prediction_models = [
