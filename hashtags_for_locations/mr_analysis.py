@@ -27,7 +27,7 @@ START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing' # Testing duration
 
 # Paramters to filter hashtags.
-MIN_HASHTAG_OCCURENCES = 500
+MIN_HASHTAG_OCCURENCES = 50
 
 # Parameters to filter hashtags at a location.
 MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 0
@@ -189,9 +189,9 @@ class MRAnalysis(ModifiedMRJob):
     def steps(self):
         pass
 #        return self.jobsToGetHastagObjectsWithEndingWindow()
-        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+#        return self.jobsToGetHastagObjectsWithoutEndingWindow()
 #        return self.jobsToGetHastagObjectsAllOccurrencesWithinWindow()
 #        return self.jobsToGetLocationObjects()
-#        return self.jobsToGetTimeUnitObjects()
+        return self.jobsToGetTimeUnitObjects()
 if __name__ == '__main__':
     MRAnalysis.run()
