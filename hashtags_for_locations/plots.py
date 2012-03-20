@@ -303,61 +303,82 @@ def hedging_method(map_from_model_to_weight):
     
 class LearningAnalysis():
     MAP_FROM_LEARNING_TYPE_TO_MODEL_SELECION_METHOD = dict([(ModelSelectionHistory.FOLLOW_THE_LEADER, follow_the_leader_method), (ModelSelectionHistory.HEDGING_METHOD, hedging_method)])
+#    @staticmethod
+#    def _get_location_learning_times(input_weight_file):
+#        def get_final_model_change((reduced_time_unit, reduced_model), (current_time_unit, current_model)): 
+#            if reduced_model!=current_model: return (current_time_unit, current_model)
+#            else: return (reduced_time_unit, reduced_model)
+#        map_from_location_to_tuples_of_time_unit_and_model_selected = defaultdict(list)
+#        epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = None, []
+#        for data in iterateJsonFromFile(input_weight_file):
+#            map_from_location_to_map_from_model_to_weight = data['location_weights']
+#            epoch_time_unit = data['tu']
+#            for location, map_from_model_to_weight in map_from_location_to_map_from_model_to_weight.iteritems(): 
+#                map_from_location_to_tuples_of_time_unit_and_model_selected[location].append([epoch_time_unit, min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]])
+#            if not epoch_first_time_unit: epoch_first_time_unit = epoch_time_unit
+#        for location, tuples_of_time_unit_and_model_selected in map_from_location_to_tuples_of_time_unit_and_model_selected.iteritems():
+#            last_time_unit, last_model_selected = reduce(get_final_model_change, tuples_of_time_unit_and_model_selected)
+#            tuples_of_location_and_last_time_unit_and_last_model_selected.append([location, last_time_unit, last_model_selected])
+#        return epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected
+#    @staticmethod
+#    def plot_model_learning_time_series(learning_type, no_of_hashtags):
+#        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
+#        epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = LearningAnalysis._get_location_learning_times(input_weight_file)
+#        total_locations = float(len(tuples_of_location_and_last_time_unit_and_last_model_selected))
+#        tuples_of_time_unit_and_percentage_of_locations = [(time_unit, len(list(iterator_of_tuples_of_location_and_last_time_unit_and_last_model_selected)))
+#                                                               for time_unit, iterator_of_tuples_of_location_and_last_time_unit_and_last_model_selected in
+#                                                                   groupby(
+#                                                                       sorted(tuples_of_location_and_last_time_unit_and_last_model_selected, key=itemgetter(1)),
+#                                                                       key=itemgetter(1)
+#                                                                   )
+#                                                           ]
+#        tuples_of_time_unit_and_cumulative_of_percentage_of_locations = []
+#        cumulative_of_percentage_of_locations = 0.0
+#        for time_unit, percentage_of_locations in sorted(tuples_of_time_unit_and_percentage_of_locations, key=itemgetter(0)):
+#            cumulative_of_percentage_of_locations+=percentage_of_locations
+#            tuples_of_time_unit_and_cumulative_of_percentage_of_locations.append((time_unit, cumulative_of_percentage_of_locations/total_locations))
+#        dataX, dataY = zip(*sorted(tuples_of_time_unit_and_cumulative_of_percentage_of_locations, key=itemgetter(0)))
+#    #    newDataX, dataY = splineSmooth(dataX, dataY)
+#        plt.plot([(x-epoch_first_time_unit)/(60*60) for x in dataX], dataY)
+#        plt.xlim(xmin = epoch_first_time_unit-epoch_first_time_unit)
+#        plt.ylim(ymin=0, ymax=1.0)
+#        plt.show()
+#    @staticmethod
+#    def plot_model_learning_time_on_map(learning_type, no_of_hashtags):
+#        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
+#        epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = LearningAnalysis._get_location_learning_times(input_weight_file) 
+#        tuples_of_location_and_learning_time = [(location, (last_time_unit-epoch_first_time_unit)/(60*60))
+#                                                for location, last_time_unit, _ in tuples_of_location_and_last_time_unit_and_last_model_selected
+#                                                ]
+#        tuples_of_locations_and_colors = [(getLocationFromLid(location.replace('_', ' ')), learning_time) for location, learning_time in tuples_of_location_and_learning_time]
+#        locations, colors = zip(*sorted(tuples_of_locations_and_colors, key=itemgetter(1)))
+#        plt.subplot(111)
+#        sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.autumn, lw = 0, alpha=1.0)
+#        plt.colorbar(sc)
+#        plt.show()
     @staticmethod
-    def _get_location_learning_times(input_weight_file):
-        def get_final_model_change((reduced_time_unit, reduced_model), (current_time_unit, current_model)): 
-            if reduced_model!=current_model: return (current_time_unit, current_model)
-            else: return (reduced_time_unit, reduced_model)
-        map_from_location_to_tuples_of_time_unit_and_model_selected = defaultdict(list)
-        epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = None, []
+    def _get_flipping_ratio_for_all_locations(learning_type, no_of_hashtags):
+        def count_non_flips((reduced_no_of_non_flips, reduced_previously_selected_model), (current_ep_time_unit, current_selected_model)):
+            if reduced_previously_selected_model==current_selected_model: reduced_no_of_non_flips+=1.0 
+            return (reduced_no_of_non_flips, current_selected_model)
+        map_from_location_to_tuples_of_ep_time_unit_and_selected_model = defaultdict(list)
+        tuples_of_location_and_flipping_ratio = []
+        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
+        set_of_ep_time_units = set()
         for data in iterateJsonFromFile(input_weight_file):
             map_from_location_to_map_from_model_to_weight = data['location_weights']
-            epoch_time_unit = data['tu']
-            for location, map_from_model_to_weight in map_from_location_to_map_from_model_to_weight.iteritems(): 
-                map_from_location_to_tuples_of_time_unit_and_model_selected[location].append([epoch_time_unit, min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]])
-            if not epoch_first_time_unit: epoch_first_time_unit = epoch_time_unit
-        for location, tuples_of_time_unit_and_model_selected in map_from_location_to_tuples_of_time_unit_and_model_selected.iteritems():
-            last_time_unit, last_model_selected = reduce(get_final_model_change, tuples_of_time_unit_and_model_selected)
-            tuples_of_location_and_last_time_unit_and_last_model_selected.append([location, last_time_unit, last_model_selected])
-        return epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected
+            ep_time_unit = data['tu']
+            set_of_ep_time_units.add(ep_time_unit)
+            for location, map_from_model_to_weight in map_from_location_to_map_from_model_to_weight.iteritems():
+                selected_model = MAP_FROM_MODEL_TO_MODEL_TYPE[LearningAnalysis.MAP_FROM_LEARNING_TYPE_TO_MODEL_SELECION_METHOD[learning_type](map_from_model_to_weight)]
+                map_from_location_to_tuples_of_ep_time_unit_and_selected_model[location].append([ep_time_unit, selected_model])
+            total_no_of_time_units = len(set_of_ep_time_units)
+            for location, tuples_of_ep_time_unit_and_selected_model in map_from_location_to_tuples_of_ep_time_unit_and_selected_model.iteritems():
+                non_flips_for_location, _ = reduce(count_non_flips, tuples_of_ep_time_unit_and_selected_model, (0.0, None))
+                tuples_of_location_and_flipping_ratio.append([location, 1.0-(non_flips_for_location/total_no_of_time_units) ])
+        return tuples_of_location_and_flipping_ratio
     @staticmethod
-    def plot_model_learning_time_series(learning_type, no_of_hashtags):
-        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
-        epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = LearningAnalysis._get_location_learning_times(input_weight_file)
-        total_locations = float(len(tuples_of_location_and_last_time_unit_and_last_model_selected))
-        tuples_of_time_unit_and_percentage_of_locations = [(time_unit, len(list(iterator_of_tuples_of_location_and_last_time_unit_and_last_model_selected)))
-                                                               for time_unit, iterator_of_tuples_of_location_and_last_time_unit_and_last_model_selected in
-                                                                   groupby(
-                                                                       sorted(tuples_of_location_and_last_time_unit_and_last_model_selected, key=itemgetter(1)),
-                                                                       key=itemgetter(1)
-                                                                   )
-                                                           ]
-        tuples_of_time_unit_and_cumulative_of_percentage_of_locations = []
-        cumulative_of_percentage_of_locations = 0.0
-        for time_unit, percentage_of_locations in sorted(tuples_of_time_unit_and_percentage_of_locations, key=itemgetter(0)):
-            cumulative_of_percentage_of_locations+=percentage_of_locations
-            tuples_of_time_unit_and_cumulative_of_percentage_of_locations.append((time_unit, cumulative_of_percentage_of_locations/total_locations))
-        dataX, dataY = zip(*sorted(tuples_of_time_unit_and_cumulative_of_percentage_of_locations, key=itemgetter(0)))
-    #    newDataX, dataY = splineSmooth(dataX, dataY)
-        plt.plot([(x-epoch_first_time_unit)/(60*60) for x in dataX], dataY)
-        plt.xlim(xmin = epoch_first_time_unit-epoch_first_time_unit)
-        plt.ylim(ymin=0, ymax=1.0)
-        plt.show()
-    @staticmethod
-    def plot_model_learning_time_on_map(learning_type, no_of_hashtags):
-        input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
-        epoch_first_time_unit, tuples_of_location_and_last_time_unit_and_last_model_selected = LearningAnalysis._get_location_learning_times(input_weight_file) 
-        tuples_of_location_and_learning_time = [(location, (last_time_unit-epoch_first_time_unit)/(60*60))
-                                                for location, last_time_unit, _ in tuples_of_location_and_last_time_unit_and_last_model_selected
-                                                ]
-        tuples_of_locations_and_colors = [(getLocationFromLid(location.replace('_', ' ')), learning_time) for location, learning_time in tuples_of_location_and_learning_time]
-        locations, colors = zip(*sorted(tuples_of_locations_and_colors, key=itemgetter(1)))
-        plt.subplot(111)
-        sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.autumn, lw = 0, alpha=1.0)
-        plt.colorbar(sc)
-        plt.show()
-    @staticmethod
-    def plot_learning_flicker(learning_types, no_of_hashtags):
+    def learner_flipping_time_series(learning_types, no_of_hashtags):
         for learning_type in learning_types:
             input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
             map_from_ep_time_unit_to_no_of_locations_that_didnt_flip = {}
@@ -388,9 +409,16 @@ class LearningAnalysis():
         plt.savefig(file_learning_analysis)
         plt.clf()
     @staticmethod
+    def flipping_ratio_on_world_map(learning_type, no_of_hashtags):
+        tuples_of_location_and_flipping_ratio = LearningAnalysis._get_flipping_ratio_for_all_locations(learning_type, no_of_hashtags)
+        for x, y in tuples_of_location_and_flipping_ratio:
+            print x, y
+        pass
+    @staticmethod
     def run():
         no_of_hashtags = 4
-        LearningAnalysis.plot_learning_flicker([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
+#        LearningAnalysis.learner_flipping_time_series([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
+        LearningAnalysis.flipping_ratio_on_world_map(ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags)
             
 prediction_models = [
 #                        PredictionModels.RANDOM , 
