@@ -204,7 +204,7 @@ class LearningAnalysis():
             list_of_no_of_occurrences_at_location = zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]
             print model, len(list_of_no_of_occurrences_at_location)
             print list_of_no_of_occurrences_at_location
-            list_of_no_of_occurrences_at_location = list(filter_outliers(tuples_of_location_and_no_of_occurrences_at_location))
+            list_of_no_of_occurrences_at_location = filter_outliers(list(tuples_of_location_and_no_of_occurrences_at_location))
             print model, len(list_of_no_of_occurrences_at_location)
         exit()
             
