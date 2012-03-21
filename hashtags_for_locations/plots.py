@@ -46,7 +46,10 @@ MAP_FROM_MODEL_TO_COLOR = dict([
                                 (ModelSelectionHistory.FOLLOW_THE_LEADER, '#FF0A0A'), (ModelSelectionHistory.HEDGING_METHOD, '#9661FF'),
                                 (PredictionModels.COMMUNITY_AFFINITY, '#436DFC'), (PredictionModels.SPATIAL, '#F15CFF'), (ALL_LOCATIONS, '#FFB44A')
                                 ])
-MAP_FROM_MODEL_TO_MARKER = dict([ (ModelSelectionHistory.FOLLOW_THE_LEADER, 'd'), (ModelSelectionHistory.HEDGING_METHOD, 'o')])
+MAP_FROM_MODEL_TO_MARKER = dict([ 
+                                 (ModelSelectionHistory.FOLLOW_THE_LEADER, 'd'), (ModelSelectionHistory.HEDGING_METHOD, 'o'),
+                                 (PredictionModels.COMMUNITY_AFFINITY, 'x'), (PredictionModels.SPATIAL, 'o'), (ALL_LOCATIONS, 'd'),
+                                 ])
 MAP_FROM_MODEL_TO_MODEL_TYPE = dict([
                                      (PredictionModels.SHARING_PROBABILITY, PredictionModels.COMMUNITY_AFFINITY),
                                      (PredictionModels.TRANSMITTING_PROBABILITY, PredictionModels.COMMUNITY_AFFINITY),
@@ -191,18 +194,20 @@ class LearningAnalysis():
                                                                                    ])
         map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location[ALL_LOCATIONS] = map_from_location_to_no_of_occurrences_at_location.items()
     #    for model, tuples_of_location_and_no_of_occurrences_at_location in map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location.items()[:]: print model, len(tuples_of_location_and_no_of_occurrences_at_location)
-        for model, tuples_of_location_and_no_of_occurrences_at_location in map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location.items()[:]:
-            _, upper_range_for_no_of_occurrences_at_location = getOutliersRangeUsingIRQ(zip(*tuples_of_location_and_no_of_occurrences_at_location)[1])
-            map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location[model] = filter(
-                                                                                                   lambda (location, no_of_occurrences_at_location): no_of_occurrences_at_location < upper_range_for_no_of_occurrences_at_location, 
-                                                                                                   tuples_of_location_and_no_of_occurrences_at_location)
+#        for model, tuples_of_location_and_no_of_occurrences_at_location in map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location.items()[:]:
+#            _, upper_range_for_no_of_occurrences_at_location = getOutliersRangeUsingIRQ(zip(*tuples_of_location_and_no_of_occurrences_at_location)[1])
+#            map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location[model] = filter(
+#                                                                                                   lambda (location, no_of_occurrences_at_location): no_of_occurrences_at_location < upper_range_for_no_of_occurrences_at_location, 
+#                                                                                                   tuples_of_location_and_no_of_occurrences_at_location)
         tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location = map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location.items()
 #        for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
 #            print model, ks_2samp(zip(*map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location[ALL_LOCATIONS])[1], list(zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]))
             
         for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
+            print model, len(tuples_of_location_and_no_of_occurrences_at_location)
+            total_no_of_locations = float(len(tuples_of_location_and_no_of_occurrences_at_location))
             list_of_no_of_occurrences_at_location = zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]
-            list_of_no_of_occurrences_at_location = filter_outliers(list_of_no_of_occurrences_at_location)
+#            list_of_no_of_occurrences_at_location = filter_outliers(list_of_no_of_occurrences_at_location)
             tuples_of_bin_of_no_of_occurrences_at_location_and_no_of_occurrences_at_location = [((int(no_of_occurrences_at_location/NO_OF_OCCURRENCES_BIN_SIZE)*NO_OF_OCCURRENCES_BIN_SIZE)+ NO_OF_OCCURRENCES_BIN_SIZE, 
                                                                                                no_of_occurrences_at_location) 
                                                                                                for no_of_occurrences_at_location in list_of_no_of_occurrences_at_location]
@@ -217,52 +222,23 @@ class LearningAnalysis():
                                                                                     )
                                                                                ]
             
-            x_bin_of_no_of_occurrences, y_distribution = zip(*[(bin_of_no_of_occurrences_at_location, distribution)
+            x_bin_of_no_of_occurrences, y_distribution = zip(*[(bin_of_no_of_occurrences_at_location, distribution/total_no_of_locations)
                                                                for bin_of_no_of_occurrences_at_location, distribution in
                                                                sorted(
                                                                       tuples_of_bin_of_no_of_occurrences_at_location_and_distribution,
                                                                       key=itemgetter(0)
                                                                       )
                                                                ])
-            plt.scatter(x_bin_of_no_of_occurrences, y_distribution, c=MAP_FROM_MODEL_TO_COLOR[model], label=model)
+#            print zip(x_bin_of_no_of_occurrences, y_distribution)
+#            x_bin_of_no_of_occurrences, y_distribution = splineSmooth(x_bin_of_no_of_occurrences, y_distribution)
+            plt.semilogx(x_bin_of_no_of_occurrences, y_distribution, c=MAP_FROM_MODEL_TO_COLOR[model], label=model, marker=MAP_FROM_MODEL_TO_MARKER[model], lw=2)
         plt.legend()
-    #    plt.xlim(xmin=0.0)
-    #    plt.ylim(ymin=-0.4, ymax=0.8)
+        plt.xlabel('No. of occurrences', fontsize=20), plt.ylabel('Percentage of locations', fontsize=20)
+#        plt.show()
         file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
         FileIO.createDirectoryForFile(file_learning_analysis)
         plt.savefig(file_learning_analysis)
         plt.clf()
-        
-#        map_from_model_to_map_from_population_to_population_distribution = defaultdict(dict)
-#        for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
-#            list_of_no_of_occurrences_at_location = zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]
-#            for population in list_of_no_of_occurrences_at_location: 
-#                population = int(population)/ACCURACY*ACCURACY + ACCURACY
-#                if population not in map_from_model_to_map_from_population_to_population_distribution[model]:
-#                    map_from_model_to_map_from_population_to_population_distribution[model][population]=0
-#                map_from_model_to_map_from_population_to_population_distribution[model][population]+=1
-#        for model, map_from_population_to_population_distribution in map_from_model_to_map_from_population_to_population_distribution.iteritems():
-#    #        dataX = filter(lambda x: x<1000, sorted(map_from_population_to_population_distribution))
-#            dataX = sorted([x for x in map_from_population_to_population_distribution if map_from_population_to_population_distribution[x]>10])
-#            total_locations = float(sum(map_from_population_to_population_distribution[x] for x in dataX))
-#            dataY = [map_from_population_to_population_distribution[x]/total_locations for x in dataX]
-#            print model
-#            print dataX
-#            print [map_from_population_to_population_distribution[x] for x in dataX]
-#            print dataY
-#            parameters_after_fitting = CurveFit.getParamsAfterFittingData(dataX, dataY, CurveFit.decreasingExponentialFunction, [0., 0.])
-#            print CurveFit.getYValues(CurveFit.decreasingExponentialFunction, parameters_after_fitting, range(ACCURACY, 2400/ACCURACY*ACCURACY))
-#            plt.scatter(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
-#            plt.loglog(range(ACCURACY, 2400/ACCURACY*ACCURACY), CurveFit.getYValues(CurveFit.decreasingExponentialFunction, parameters_after_fitting, range(ACCURACY, 2400/ACCURACY*ACCURACY)), color=MAP_FROM_MODEL_TO_COLOR[model])
-    #        plt.loglog(dataX[0], dataY[0])
-        
-#        plt.legend()
-#    #    plt.xlim(xmin=0.0)
-#    #    plt.ylim(ymin=-0.4, ymax=0.8)
-#        file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
-#        FileIO.createDirectoryForFile(file_learning_analysis)
-#        plt.savefig(file_learning_analysis)
-#        plt.clf()
     @staticmethod
     def model_learning_graphs_on_world_map(learning_type):
         def plot_graph_clusters_on_world_map1(graph_of_locations, s=0, lw=0, alpha=0.6, bkcolor='#CFCFCF', *args, **kwargs):  
