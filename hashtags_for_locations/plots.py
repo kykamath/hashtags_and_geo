@@ -206,7 +206,7 @@ class LearningAnalysis():
             tuples_of_bin_of_no_of_occurrences_at_location_and_no_of_occurrences_at_location = [((int(no_of_occurrences_at_location/NO_OF_OCCURRENCES_BIN_SIZE)*NO_OF_OCCURRENCES_BIN_SIZE)+ NO_OF_OCCURRENCES_BIN_SIZE, 
                                                                                                no_of_occurrences_at_location) 
                                                                                                for no_of_occurrences_at_location in list_of_no_of_occurrences_at_location]
-            tuples_of_bin_of_no_of_occurrences_at_location_and_distribution = [(bin_of_no_of_occurrences_at_location, list(iterator_for_tuples_of_bin_of_no_of_occurrences_at_location_and_no_of_occurrences_at_location))
+            tuples_of_bin_of_no_of_occurrences_at_location_and_distribution = [(bin_of_no_of_occurrences_at_location, len(list(iterator_for_tuples_of_bin_of_no_of_occurrences_at_location_and_no_of_occurrences_at_location)))
                                                                                 for bin_of_no_of_occurrences_at_location, iterator_for_tuples_of_bin_of_no_of_occurrences_at_location_and_no_of_occurrences_at_location in
                                                                                     groupby(
                                                                                         sorted(
@@ -216,11 +216,23 @@ class LearningAnalysis():
                                                                                         key=itemgetter(0)
                                                                                     )
                                                                                ]
-            for k, v in tuples_of_bin_of_no_of_occurrences_at_location_and_distribution:
-                print k, v
-                                                                                      
-            exit()
             
+            x_bin_of_no_of_occurrences, y_distribution = zip(*[(bin_of_no_of_occurrences_at_location, distribution)
+                                                               for bin_of_no_of_occurrences_at_location, distribution in
+                                                               sorted(
+                                                                      tuples_of_bin_of_no_of_occurrences_at_location_and_distribution,
+                                                                      key=itemgetter(0)
+                                                                      )
+                                                               ])
+            plt.scatter(x_bin_of_no_of_occurrences, y_distribution, c=MAP_FROM_MODEL_TO_COLOR[model], label=model)
+        plt.legend()
+    #    plt.xlim(xmin=0.0)
+    #    plt.ylim(ymin=-0.4, ymax=0.8)
+        file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
+        FileIO.createDirectoryForFile(file_learning_analysis)
+        plt.savefig(file_learning_analysis)
+        plt.clf()
+        
 #        map_from_model_to_map_from_population_to_population_distribution = defaultdict(dict)
 #        for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
 #            list_of_no_of_occurrences_at_location = zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]
@@ -244,13 +256,13 @@ class LearningAnalysis():
 #            plt.loglog(range(ACCURACY, 2400/ACCURACY*ACCURACY), CurveFit.getYValues(CurveFit.decreasingExponentialFunction, parameters_after_fitting, range(ACCURACY, 2400/ACCURACY*ACCURACY)), color=MAP_FROM_MODEL_TO_COLOR[model])
     #        plt.loglog(dataX[0], dataY[0])
         
-        plt.legend()
-    #    plt.xlim(xmin=0.0)
-    #    plt.ylim(ymin=-0.4, ymax=0.8)
-        file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
-        FileIO.createDirectoryForFile(file_learning_analysis)
-        plt.savefig(file_learning_analysis)
-        plt.clf()
+#        plt.legend()
+#    #    plt.xlim(xmin=0.0)
+#    #    plt.ylim(ymin=-0.4, ymax=0.8)
+#        file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
+#        FileIO.createDirectoryForFile(file_learning_analysis)
+#        plt.savefig(file_learning_analysis)
+#        plt.clf()
     @staticmethod
     def model_learning_graphs_on_world_map(learning_type):
         def plot_graph_clusters_on_world_map1(graph_of_locations, s=0, lw=0, alpha=0.6, bkcolor='#CFCFCF', *args, **kwargs):  
