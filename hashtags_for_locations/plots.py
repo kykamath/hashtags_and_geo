@@ -202,11 +202,24 @@ class LearningAnalysis():
             
         for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
             list_of_no_of_occurrences_at_location = zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]
-            print model, len(list_of_no_of_occurrences_at_location)
-            print list_of_no_of_occurrences_at_location
             list_of_no_of_occurrences_at_location = filter_outliers(list_of_no_of_occurrences_at_location)
-            print model, len(list_of_no_of_occurrences_at_location)
-        exit()
+            tuples_of_bin_of_no_of_occurrences_at_location_and_no_of_occurrences_at_location = [((int(no_of_occurrences_at_location/NO_OF_OCCURRENCES_BIN_SIZE)*NO_OF_OCCURRENCES_BIN_SIZE)+ NO_OF_OCCURRENCES_BIN_SIZE, 
+                                                                                               no_of_occurrences_at_location) 
+                                                                                               for no_of_occurrences_at_location in list_of_no_of_occurrences_at_location]
+            tuples_of_bin_of_no_of_occurrences_at_location_and_distribution = [(bin_of_no_of_occurrences_at_location, list(iterator_for_tuples_of_bin_of_no_of_occurrences_at_location_and_no_of_occurrences_at_location))
+                                                                                for bin_of_no_of_occurrences_at_location, iterator_for_tuples_of_bin_of_no_of_occurrences_at_location_and_no_of_occurrences_at_location in
+                                                                                    groupby(
+                                                                                        sorted(
+                                                                                               tuples_of_bin_of_no_of_occurrences_at_location_and_no_of_occurrences_at_location,
+                                                                                               key=itemgetter(0)
+                                                                                         ),
+                                                                                        key=itemgetter(0)
+                                                                                    )
+                                                                               ]
+            for k, v in tuples_of_bin_of_no_of_occurrences_at_location_and_distribution:
+                print k, v
+                                                                                      
+            exit()
             
 #        map_from_model_to_map_from_population_to_population_distribution = defaultdict(dict)
 #        for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
