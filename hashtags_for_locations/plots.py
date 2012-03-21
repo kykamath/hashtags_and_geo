@@ -169,7 +169,7 @@ class LearningAnalysis():
                 plt.clf()
     @staticmethod
     def correlation_between_model_type_and_location_size(learning_type):
-        ACCURACY = 100
+        NO_OF_OCCURRENCES_BIN_SIZE = 2000
         weights_analysis_file = analysisFolder%'learning_analysis'+'/%s_weights_analysis'%(learning_type)
         tuples_of_location_and_best_model = [tuple_of_location_and_best_model for tuple_of_location_and_best_model in FileIO.iterateJsonFromFile(weights_analysis_file)]
         map_from_location_to_best_model = dict(tuples_of_location_and_best_model)
@@ -196,39 +196,38 @@ class LearningAnalysis():
             map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location[model] = filter(
                                                                                                    lambda (location, no_of_occurrences_at_location): no_of_occurrences_at_location < upper_range_for_no_of_occurrences_at_location, 
                                                                                                    tuples_of_location_and_no_of_occurrences_at_location)
-    #    print '**********'
-    #    for model, tuples_of_location_and_no_of_occurrences_at_location in map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location.items()[:]: print model, len(tuples_of_location_and_no_of_occurrences_at_location)
-    #    exit()
         tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location = map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location.items()
 #        for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
 #            print model, ks_2samp(zip(*map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location[ALL_LOCATIONS])[1], list(zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]))
             
         for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
-            for location, no_of_occurrences_at_location in tuples_of_location_and_no_of_occurrences_at_location:
-                print location, no_of_occurrences_at_location
-            exit()
-            
-        map_from_model_to_map_from_population_to_population_distribution = defaultdict(dict)
-        for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
             list_of_no_of_occurrences_at_location = zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]
-            for population in list_of_no_of_occurrences_at_location: 
-                population = int(population)/ACCURACY*ACCURACY + ACCURACY
-                if population not in map_from_model_to_map_from_population_to_population_distribution[model]:
-                    map_from_model_to_map_from_population_to_population_distribution[model][population]=0
-                map_from_model_to_map_from_population_to_population_distribution[model][population]+=1
-        for model, map_from_population_to_population_distribution in map_from_model_to_map_from_population_to_population_distribution.iteritems():
-    #        dataX = filter(lambda x: x<1000, sorted(map_from_population_to_population_distribution))
-            dataX = sorted([x for x in map_from_population_to_population_distribution if map_from_population_to_population_distribution[x]>10])
-            total_locations = float(sum(map_from_population_to_population_distribution[x] for x in dataX))
-            dataY = [map_from_population_to_population_distribution[x]/total_locations for x in dataX]
-            print model
-            print dataX
-            print [map_from_population_to_population_distribution[x] for x in dataX]
-            print dataY
-            parameters_after_fitting = CurveFit.getParamsAfterFittingData(dataX, dataY, CurveFit.decreasingExponentialFunction, [0., 0.])
-            print CurveFit.getYValues(CurveFit.decreasingExponentialFunction, parameters_after_fitting, range(ACCURACY, 2400/ACCURACY*ACCURACY))
-            plt.scatter(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
-            plt.loglog(range(ACCURACY, 2400/ACCURACY*ACCURACY), CurveFit.getYValues(CurveFit.decreasingExponentialFunction, parameters_after_fitting, range(ACCURACY, 2400/ACCURACY*ACCURACY)), color=MAP_FROM_MODEL_TO_COLOR[model])
+            print model, len(list_of_no_of_occurrences_at_location)
+            list_of_no_of_occurrences_at_location = filter_outliers(tuples_of_location_and_no_of_occurrences_at_location)
+            print model, len(list_of_no_of_occurrences_at_location)
+        exit()
+            
+#        map_from_model_to_map_from_population_to_population_distribution = defaultdict(dict)
+#        for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
+#            list_of_no_of_occurrences_at_location = zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]
+#            for population in list_of_no_of_occurrences_at_location: 
+#                population = int(population)/ACCURACY*ACCURACY + ACCURACY
+#                if population not in map_from_model_to_map_from_population_to_population_distribution[model]:
+#                    map_from_model_to_map_from_population_to_population_distribution[model][population]=0
+#                map_from_model_to_map_from_population_to_population_distribution[model][population]+=1
+#        for model, map_from_population_to_population_distribution in map_from_model_to_map_from_population_to_population_distribution.iteritems():
+#    #        dataX = filter(lambda x: x<1000, sorted(map_from_population_to_population_distribution))
+#            dataX = sorted([x for x in map_from_population_to_population_distribution if map_from_population_to_population_distribution[x]>10])
+#            total_locations = float(sum(map_from_population_to_population_distribution[x] for x in dataX))
+#            dataY = [map_from_population_to_population_distribution[x]/total_locations for x in dataX]
+#            print model
+#            print dataX
+#            print [map_from_population_to_population_distribution[x] for x in dataX]
+#            print dataY
+#            parameters_after_fitting = CurveFit.getParamsAfterFittingData(dataX, dataY, CurveFit.decreasingExponentialFunction, [0., 0.])
+#            print CurveFit.getYValues(CurveFit.decreasingExponentialFunction, parameters_after_fitting, range(ACCURACY, 2400/ACCURACY*ACCURACY))
+#            plt.scatter(dataX, dataY, color=MAP_FROM_MODEL_TO_COLOR[model], label=model, lw=2)
+#            plt.loglog(range(ACCURACY, 2400/ACCURACY*ACCURACY), CurveFit.getYValues(CurveFit.decreasingExponentialFunction, parameters_after_fitting, range(ACCURACY, 2400/ACCURACY*ACCURACY)), color=MAP_FROM_MODEL_TO_COLOR[model])
     #        plt.loglog(dataX[0], dataY[0])
         
         plt.legend()
@@ -374,11 +373,8 @@ class LearningAnalysis():
             for no_of_occurrences_at_location_bin in sorted(map_from_no_of_occurrences_at_location_bin_to_flipping_ratios):
                 flipping_ratios = map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin]
                 flipping_ratios = filter_outliers(flipping_ratios)
-                if len(flipping_ratios) >= 5:  
-                    map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin] = flipping_ratios
-#                    print no_of_occurrences_at_location_bin, len(flipping_ratios)
+                if len(flipping_ratios) >= 5: map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin] = flipping_ratios
                 else: del map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin]
-#            exit()
             # Plot data.
             x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios = zip(*[ (no_of_occurrences_at_location_bin, np.mean(flipping_ratios)) 
                   for no_of_occurrences_at_location_bin, flipping_ratios in 
