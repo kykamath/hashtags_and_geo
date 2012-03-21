@@ -180,7 +180,8 @@ class LearningAnalysis():
         map_from_location_to_no_of_occurrences_at_location = defaultdict(float)
         for time_unit_object in iterateJsonFromFile(input_file):
             for (_, location, _) in time_unit_object['oc']: 
-                if location in map_from_location_to_best_model: map_from_location_to_no_of_occurrences_at_location[location]+=1
+                if location in map_from_location_to_best_model: map_from_location_to_no_of_occurrences_at_location[location]+=1.0
+                
         map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location = dict([(model, [(location, map_from_location_to_no_of_occurrences_at_location[location]) for location in zip(*iterator_of_tuples_of_location_and_models)[0]]) 
                                                                                        for model, iterator_of_tuples_of_location_and_models in 
                                                                                        groupby(
@@ -199,8 +200,13 @@ class LearningAnalysis():
     #    for model, tuples_of_location_and_no_of_occurrences_at_location in map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location.items()[:]: print model, len(tuples_of_location_and_no_of_occurrences_at_location)
     #    exit()
         tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location = map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location.items()
+#        for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
+#            print model, ks_2samp(zip(*map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location[ALL_LOCATIONS])[1], list(zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]))
+            
         for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
-            print model, ks_2samp(zip(*map_from_model_to_tuples_of_location_and_no_of_occurrences_at_location[ALL_LOCATIONS])[1], list(zip(*tuples_of_location_and_no_of_occurrences_at_location)[1]))
+            for location, no_of_occurrences_at_location in tuples_of_location_and_no_of_occurrences_at_location:
+                print location, no_of_occurrences_at_location
+            exit()
             
         map_from_model_to_map_from_population_to_population_distribution = defaultdict(dict)
         for model, tuples_of_location_and_no_of_occurrences_at_location in tuples_of_model_and_tuples_of_location_and_no_of_occurrences_at_location:
