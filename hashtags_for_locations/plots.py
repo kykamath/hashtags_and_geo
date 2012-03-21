@@ -37,6 +37,8 @@ import networkx as nx
 from library.graphs import clusterUsingAffinityPropagation
 from scipy.stats import ks_2samp
 from library.plotting import CurveFit, splineSmooth
+import scipy
+from scipy.optimize import curve_fit
 
 ALL_LOCATIONS = 'all_locations'
 MAP_FROM_MODEL_TO_COLOR = dict([
@@ -44,7 +46,7 @@ MAP_FROM_MODEL_TO_COLOR = dict([
                                 (ModelSelectionHistory.FOLLOW_THE_LEADER, '#FF0A0A'), (ModelSelectionHistory.HEDGING_METHOD, '#9661FF'),
                                 (PredictionModels.COMMUNITY_AFFINITY, '#436DFC'), (PredictionModels.SPATIAL, '#F15CFF'), (ALL_LOCATIONS, '#FFB44A')
                                 ])
-MAP_FROM_MODEL_TO_MARKER = dict([ (ModelSelectionHistory.FOLLOW_THE_LEADER, 'x'), (ModelSelectionHistory.HEDGING_METHOD, 'o')])
+MAP_FROM_MODEL_TO_MARKER = dict([ (ModelSelectionHistory.FOLLOW_THE_LEADER, 'd'), (ModelSelectionHistory.HEDGING_METHOD, 'o')])
 MAP_FROM_MODEL_TO_MODEL_TYPE = dict([
                                      (PredictionModels.SHARING_PROBABILITY, PredictionModels.COMMUNITY_AFFINITY),
                                      (PredictionModels.TRANSMITTING_PROBABILITY, PredictionModels.COMMUNITY_AFFINITY),
@@ -329,75 +331,66 @@ class LearningAnalysis():
         FileIO.createDirectoryForFile(file_learning_analysis)
         plt.savefig(file_learning_analysis)
         plt.clf()
-        
-#        ax = plt.subplot(111)
-#        im = ax.imshow(np.arange(100).reshape((10,10)))
-#        
-#        # create an axes on the right side of ax. The width of cax will be 5%
-#        # of ax and the padding between cax and ax will be fixed at 0.05 inch.
-#        divider = make_axes_locatable(ax)
-#        cax = divider.append_axes("right", size="5%", pad=0.05)
-#        
-#        plt.colorbar(im, cax=cax)
-        
-        
     @staticmethod
-    def flipping_ratio_correlation_with_no_of_occurrences_at_location(learning_type, no_of_hashtags):
-        NO_OF_OCCURRENCES_BIN_SIZE= 3000
-        # Load flipping ratio data.
-        map_from_location_to_flipping_ratio = dict(LearningAnalysis._get_flipping_ratio_for_all_locations(learning_type, no_of_hashtags))
-        # Load no. of occurrences data
-#        startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
-        startTime, endTime, outputFolder = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
-        input_file = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
-        map_from_location_to_no_of_occurrences_at_location = defaultdict(float)
-        for time_unit_object in iterateJsonFromFile(input_file):
-            for (_, location, _) in time_unit_object['oc']: 
-                if location in map_from_location_to_flipping_ratio: map_from_location_to_no_of_occurrences_at_location[location]+=1
-        tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location = [(
-                                                                                    location, 
-                                                                                    map_from_location_to_flipping_ratio[location],
-                                                                                    map_from_location_to_no_of_occurrences_at_location[location],
-                                                                                    )
-                                                                                   for location in map_from_location_to_no_of_occurrences_at_location]
-        # Filter locations for no. of occurrences.
-        no_of_occurrences_at_location = zip(*tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location)[2]
-        print len(tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location)
-        _, upper_range_no_of_occurrences_at_location = getOutliersRangeUsingIRQ(no_of_occurrences_at_location)
-        tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location = filter(lambda (_,__,no_of_occurrences_at_location): 
-                                                                                            no_of_occurrences_at_location<=upper_range_no_of_occurrences_at_location,
-                                                                                         tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location)
-        print len(tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location)
-#        for x, y, z in tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location:
-#            print x, z
-#        exit()
-        # Bin no. of occurrences.
-        map_from_no_of_occurrences_at_location_bin_to_flipping_ratios = defaultdict(list)
-        for _, flipping_ratio, no_of_occurrences_at_location in tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location:
-            no_of_occurrences_at_location_bin = int(no_of_occurrences_at_location/NO_OF_OCCURRENCES_BIN_SIZE)*NO_OF_OCCURRENCES_BIN_SIZE
-            map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin].append(flipping_ratio)
-        for no_of_occurrences_at_location_bin in sorted(map_from_no_of_occurrences_at_location_bin_to_flipping_ratios):
-            flipping_ratios = map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin]
-            flipping_ratios = filter_outliers(flipping_ratios)
-            if len(flipping_ratios) >= 5:  
-                map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin] = flipping_ratios
-                print no_of_occurrences_at_location_bin, len(flipping_ratios)
-            else: del map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin]
-        # Plot data.
-        x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios = zip(*[ (no_of_occurrences_at_location_bin, np.mean(flipping_ratios)) 
-              for no_of_occurrences_at_location_bin, flipping_ratios in 
-              sorted(map_from_no_of_occurrences_at_location_bin_to_flipping_ratios.iteritems(), key=itemgetter(0))
-              ])
-        x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios = splineSmooth(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios)
-#        _, y_flipping_ratio, x_no_of_occurrences_at_location = zip(*tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location)
-#        plt.scatter(x_no_of_occurrences_at_location, y_flipping_ratio)
-#        plt.semilogx([1],[1])
-        plt.scatter(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios)
-        plt.show()
-#        file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
-#        FileIO.createDirectoryForFile(file_learning_analysis)
-#        plt.savefig(file_learning_analysis)
-#        plt.clf()
+    def flipping_ratio_correlation_with_no_of_occurrences_at_location(learning_types, no_of_hashtags):
+        for learning_type in learning_types:
+            NO_OF_OCCURRENCES_BIN_SIZE= 2000
+            # Load flipping ratio data.
+            map_from_location_to_flipping_ratio = dict(LearningAnalysis._get_flipping_ratio_for_all_locations(learning_type, no_of_hashtags))
+            # Load no. of occurrences data
+            #        startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
+            startTime, endTime, outputFolder = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
+            input_file = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+            map_from_location_to_no_of_occurrences_at_location = defaultdict(float)
+            for time_unit_object in iterateJsonFromFile(input_file):
+                for (_, location, _) in time_unit_object['oc']: 
+                    if location in map_from_location_to_flipping_ratio: map_from_location_to_no_of_occurrences_at_location[location]+=1
+            tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location = [(
+                                                                                        location, 
+                                                                                        map_from_location_to_flipping_ratio[location],
+                                                                                        map_from_location_to_no_of_occurrences_at_location[location],
+                                                                                        )
+                                                                                       for location in map_from_location_to_no_of_occurrences_at_location]
+            # Filter locations for no. of occurrences.
+            no_of_occurrences_at_location = zip(*tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location)[2]
+            print len(tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location)
+            _, upper_range_no_of_occurrences_at_location = getOutliersRangeUsingIRQ(no_of_occurrences_at_location)
+            tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location = filter(lambda (_,__,no_of_occurrences_at_location): 
+                                                                                                no_of_occurrences_at_location<=upper_range_no_of_occurrences_at_location,
+                                                                                             tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location)
+            print len(tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location)
+            # Bin no. of occurrences.
+            map_from_no_of_occurrences_at_location_bin_to_flipping_ratios = defaultdict(list)
+            for _, flipping_ratio, no_of_occurrences_at_location in tuples_of_location_and_flipping_ratio_and_no_of_occurrences_at_location:
+                no_of_occurrences_at_location_bin = int(no_of_occurrences_at_location/NO_OF_OCCURRENCES_BIN_SIZE)*NO_OF_OCCURRENCES_BIN_SIZE + NO_OF_OCCURRENCES_BIN_SIZE + 0.0
+                map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin].append(flipping_ratio)
+            for no_of_occurrences_at_location_bin in sorted(map_from_no_of_occurrences_at_location_bin_to_flipping_ratios):
+                flipping_ratios = map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin]
+                flipping_ratios = filter_outliers(flipping_ratios)
+                if len(flipping_ratios) >= 5:  
+                    map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin] = flipping_ratios
+#                    print no_of_occurrences_at_location_bin, len(flipping_ratios)
+                else: del map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin]
+#            exit()
+            # Plot data.
+            x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios = zip(*[ (no_of_occurrences_at_location_bin, np.mean(flipping_ratios)) 
+                  for no_of_occurrences_at_location_bin, flipping_ratios in 
+                  sorted(map_from_no_of_occurrences_at_location_bin_to_flipping_ratios.iteritems(), key=itemgetter(0))
+                  ])
+            pearsonCoeff, p_value = scipy.stats.pearsonr(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios)
+            print round(pearsonCoeff,2), round(p_value, 2)
+            x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios = np.array(list(x_no_of_occurrences_at_location_bins)), np.array(list(y_mean_flipping_ratios))
+            parameters_after_fitting = CurveFit.getParamsAfterFittingData(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios, CurveFit.lineFunction, [0., 0.])
+            y_fitted_mean_flipping_ratios = CurveFit.getYValues(CurveFit.lineFunction, parameters_after_fitting, x_no_of_occurrences_at_location_bins)
+            plt.scatter(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios, lw=0, c=MAP_FROM_MODEL_TO_COLOR[learning_type], label=learning_type, marker=MAP_FROM_MODEL_TO_MARKER[learning_type])
+            plt.plot(x_no_of_occurrences_at_location_bins, y_fitted_mean_flipping_ratios, lw=2, c=MAP_FROM_MODEL_TO_COLOR[learning_type])
+        plt.xlabel('No. of occurrences', fontsize=20), plt.ylabel('Flipping ratio', fontsize=20)
+#        plt.show()
+        plt.legend()
+        file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
+        FileIO.createDirectoryForFile(file_learning_analysis)
+        plt.savefig(file_learning_analysis)
+        plt.clf()
             
         
     @staticmethod
@@ -406,9 +399,9 @@ class LearningAnalysis():
 #        LearningAnalysis.model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=no_of_hashtags, generate_data=False)
 #        LearningAnalysis.correlation_between_model_type_and_location_size(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 #        LearningAnalysis.model_learning_graphs_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
-#        LearningAnalysis.learner_flipping_time_series([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
+        LearningAnalysis.learner_flipping_time_series([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
 #        LearningAnalysis.flipping_ratio_on_world_map([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
-        LearningAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location(ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags)
+#        LearningAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
             
 prediction_models = [
 #                        PredictionModels.RANDOM , 
