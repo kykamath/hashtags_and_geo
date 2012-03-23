@@ -169,7 +169,6 @@ class MRCheckins(ModifiedMRJob):
         edge_weight = ()
         for edge_object in iterator_of_edge_object: edge_weight = min([edge_weight, edge_object['w']])
         yield edge, { 'e': edge , 'w': edge_weight}
-                
     ''' End: Methods to get checkins graph.
     '''
     
