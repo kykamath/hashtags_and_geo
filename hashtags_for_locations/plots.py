@@ -91,48 +91,29 @@ def plotAllData(prediction_models):
                 plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors, lw = 0)
                 plt.title(prediction_model)
             plt.show()
-
-#def plotPointsOnNYMap(points, blueMarble=False, bkcolor='#85A6D9', returnBaseMapObject = False, pointLabels=[], *args, **kwargs):
-#    from mpl_toolkits.basemap import Basemap
-#    m = Basemap(llcrnrlon=-74.415894, llcrnrlat=40.467845, urcrnrlon=-71.740723, urcrnrlat=41.265421, projection='lcc', lat_1=40, lat_2=42, lon_0=-73.152466, resolution='l', area_thresh=10000)
-#    m.drawmapboundary(fill_color='#85A6D9')
-#    
-#    m.fillcontinents(color='white',lake_color='#85A6D9')
-#    m.drawstates(color='#6D5F47', linewidth=.4)
-#    m.drawcoastlines(color='#6D5F47', linewidth=.4)
-#    m.drawcountries(color='#6D5F47', linewidth=.4)
-#    
-#    m.drawmeridians(np.arange(-180, 180, 30), color='#bbbbbb')
-#    m.drawparallels(np.arange(-90, 90, 30), color='#bbbbbb')
-#    lats, lngs = zip(*points)
-#    
-#    x,y = m(lngs,lats)
-#    scatterPlot = m.scatter(x, y, zorder = 2, *args, **kwargs)
-#    
-#    for population, xpt, ypt in zip(pointLabels, x, y):
-#        label_txt = str(population)
-#        plt.text( xpt, ypt, label_txt, color = 'black', size='small', horizontalalignment='center', verticalalignment='center', zorder = 3)
-#    if not returnBaseMapObject: return scatterPlot
-#    else: return (scatterPlot, m)
-
-def grid_visualization():
-    BIN_ACCURACY = 1.45
-    map_from_location_bin_to_color = {}
-    set_of_observed_location_ids = set()
-    tuples_of_location_and_bin_color = []
-    for count, data in enumerate(iterateJsonFromFile(hashtagsWithoutEndingWindowWithoutLatticeApproximationFile%('complete', '2011-04-01', '2012-01-31'))):
-        for location, time in data['oc']:
-            location_id = getLatticeLid(location, LOCATION_ACCURACY)
-            if location_id not in set_of_observed_location_ids:
-                set_of_observed_location_ids.add(location_id)
-                location_bin = getLatticeLid(location, BIN_ACCURACY)
-                if location_bin not in map_from_location_bin_to_color: map_from_location_bin_to_color[location_bin] = GeneralMethods.getRandomColor()
-                tuples_of_location_and_bin_color.append((location, map_from_location_bin_to_color[location_bin]))
-        print count
-        if count==1000: break
-    locations, colors = zip(*tuples_of_location_and_bin_color)
-    plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors, lw = 0)
-    plt.show()
+class GeneralAnalysis():
+    @staticmethod
+    def grid_visualization():
+        BIN_ACCURACY = 1.45
+        map_from_location_bin_to_color = {}
+        set_of_observed_location_ids = set()
+        tuples_of_location_and_bin_color = []
+        for count, data in enumerate(iterateJsonFromFile(hashtagsWithoutEndingWindowWithoutLatticeApproximationFile%('complete', '2011-04-01', '2012-01-31'))):
+            for location, time in data['oc']:
+                location_id = getLatticeLid(location, LOCATION_ACCURACY)
+                if location_id not in set_of_observed_location_ids:
+                    set_of_observed_location_ids.add(location_id)
+                    location_bin = getLatticeLid(location, BIN_ACCURACY)
+                    if location_bin not in map_from_location_bin_to_color: map_from_location_bin_to_color[location_bin] = GeneralMethods.getRandomColor()
+                    tuples_of_location_and_bin_color.append((location, map_from_location_bin_to_color[location_bin]))
+            print count
+            if count==1000: break
+        locations, colors = zip(*tuples_of_location_and_bin_color)
+        plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors, lw = 0)
+    #    plt.show()
+        file_learning_analysis = './images/%s.png'%(GeneralMethods.get_method_id())
+        FileIO.createDirectoryForFile(file_learning_analysis)
+        plt.savefig(file_learning_analysis)
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
 def hedging_method(map_from_model_to_weight):
@@ -467,5 +448,5 @@ prediction_models = [
 #plotRealData()
 #plotCoverageDistance()
 
-grid_visualization()
+GeneralAnalysis.grid_visualization()
 #LearningAnalysis.run()
