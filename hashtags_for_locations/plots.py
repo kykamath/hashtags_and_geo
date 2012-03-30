@@ -27,7 +27,8 @@ import random, matplotlib, inspect
 from library.file_io import FileIO
 from models import ModelSelectionHistory
 from settings import analysisFolder, timeUnitWithOccurrencesFile, \
-        PARTIAL_WORLD_BOUNDARY, hashtagsWithoutEndingWindowFile
+        PARTIAL_WORLD_BOUNDARY, hashtagsWithoutEndingWindowFile, \
+        hashtagsWithoutEndingWindowWithoutLatticeApproximationFile
 from datetime import datetime
 from library.stats import getOutliersRangeUsingIRQ, filter_outliers
 import numpy as np
@@ -119,7 +120,7 @@ def grid_visualization():
     map_from_location_bin_to_color = {}
     set_of_observed_location_ids = set()
     tuples_of_location_and_bin_color = []
-    for count, data in enumerate(iterateJsonFromFile(hashtagsWithoutEndingWindowFile%('complete', '2011-04-01', '2012-01-31'))):
+    for count, data in enumerate(iterateJsonFromFile(hashtagsWithoutEndingWindowWithoutLatticeApproximationFile%('complete', '2011-04-01', '2012-01-31'))):
         for location, time in data['oc']:
             location_id = getLatticeLid(location, LOCATION_ACCURACY)
             if location_id not in set_of_observed_location_ids:
