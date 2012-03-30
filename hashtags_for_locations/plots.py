@@ -95,10 +95,11 @@ class GeneralAnalysis():
     @staticmethod
     def grid_visualization():
         BIN_ACCURACY = 1.45
+#        BIN_ACCURACY = 0.145
         map_from_location_bin_to_color = {}
         set_of_observed_location_ids = set()
         tuples_of_location_and_bin_color = []
-        for count, data in enumerate(iterateJsonFromFile(hashtagsWithoutEndingWindowWithoutLatticeApproximationFile%('complete', '2011-04-01', '2012-01-31'))):
+        for count, data in enumerate(iterateJsonFromFile(hashtagsWithoutEndingWindowWithoutLatticeApproximationFile%('testing', '2011-09-01', '2011-11-01'))):
             for location, time in data['oc']:
                 location_id = getLatticeLid(location, LOCATION_ACCURACY)
                 if location_id not in set_of_observed_location_ids:
@@ -110,10 +111,10 @@ class GeneralAnalysis():
             if count==1000: break
         locations, colors = zip(*tuples_of_location_and_bin_color)
         plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors, lw = 0)
-    #    plt.show()
-        file_learning_analysis = './images/%s.png'%(GeneralMethods.get_method_id())
-        FileIO.createDirectoryForFile(file_learning_analysis)
-        plt.savefig(file_learning_analysis)
+        plt.show()
+#        file_learning_analysis = './images/%s.png'%(GeneralMethods.get_method_id())
+#        FileIO.createDirectoryForFile(file_learning_analysis)
+#        plt.savefig(file_learning_analysis)
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
 def hedging_method(map_from_model_to_weight):
