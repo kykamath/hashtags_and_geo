@@ -169,6 +169,7 @@ class LearningAnalysis():
                 file_learning_analysis = './images/%s_%s.png'%(GeneralMethods.get_method_id(), model)
                 FileIO.createDirectoryForFile(file_learning_analysis)
                 plt.savefig(file_learning_analysis)
+#                plt.show()
                 plt.clf()
     @staticmethod
     def correlation_between_model_type_and_location_size(learning_type):
@@ -401,8 +402,8 @@ class LearningAnalysis():
     @staticmethod
     def run():
         no_of_hashtags = 4
-#        LearningAnalysis.model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=no_of_hashtags, generate_data=False)
-        LearningAnalysis.correlation_between_model_type_and_location_size(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
+        LearningAnalysis.model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=no_of_hashtags, generate_data=False)
+#        LearningAnalysis.correlation_between_model_type_and_location_size(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 #        LearningAnalysis.model_learning_graphs_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 #        LearningAnalysis.learner_flipping_time_series([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
 #        LearningAnalysis.flipping_ratio_on_world_map([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)

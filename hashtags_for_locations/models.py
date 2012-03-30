@@ -603,8 +603,8 @@ class Experiments(object):
                 plt.plot(dataX, dataY, label=model_id, lw=2)
             plt.legend()
             plt.ylim(ymin=0.0, ymax=1.0)
-            plt.savefig(Experiments.getImageFileName(metric_id))
-#            plt.show()
+#            plt.savefig(Experiments.getImageFileName(metric_id))
+            plt.show()
             plt.clf()
 
 #def generateDataForVaryingNoOfHashtagsAtVaryingPredictionTimeInterval(historyTimeInterval, predictionTimeInterval):
