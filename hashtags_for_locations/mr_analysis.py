@@ -75,6 +75,14 @@ def iterateHashtagObjectInstances(line):
     lattice_lid = getLatticeLid(point, LOCATION_ACCURACY)
     if lattice_lid in VALID_LOCATIONS_LIST:
         for h in data['h']: yield h.lower(), [point, t]
+        
+def iterateHashtagObjectInstancesWithoutLatticeApproximation(line):
+    data = cjson.decode(line)
+    l = None
+    if 'geo' in data: l = data['geo']
+    else: l = data['bb']
+    t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
+    for h in data['h']: yield h.lower(), [l, t]
 
 def getHashtagWithoutEndingWindow(key, values):
     occurences = []
@@ -137,6 +145,9 @@ class MRAnalysis(ModifiedMRJob):
     def mapParseHashtagObjects(self, key, line):
         if False: yield # I'm a generator!
         for h, d in iterateHashtagObjectInstances(line): self.hashtags[h].append(d)
+    def mapParseHashtagObjectsWithoutLatticeApproximation(self, key, line):
+        if False: yield # I'm a generator!
+        for h, d in iterateHashtagObjectInstancesWithoutLatticeApproximation(line): self.hashtags[h].append(d)
     def mapFinalParseHashtagObjects(self):
         for h, instances in self.hashtags.iteritems(): # e = earliest, l = latest
             yield h, {'oc': instances, 'e': min(instances, key=lambda t: t[1]), 'l': max(instances, key=lambda t: t[1])}
@@ -181,6 +192,7 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def jobsToGetHastagObjectsWithEndingWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]
     def jobsToGetHastagObjectsWithoutEndingWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithoutEndingWindow)]
+    def jobsToGetHastagObjectsWithoutEndingWindowWithoutLatticeApproximation(self): return [self.mr(mapper=self.mapParseHashtagObjectsWithoutLatticeApproximation, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithoutEndingWindow)]
     def jobsToGetHastagObjectsAllOccurrencesWithinWindow(self): return [self.mr(mapper=self.mapParseHashtagObjects, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesAllOccurrencesWithinWindow)]
     def jobsToGetLocationObjects(self): return self.jobsToGetHastagObjectsWithEndingWindow() + [self.mr(mapper=self.mapHashtagObjectsToLocationUnits, mapper_final=self.mapFinalHashtagObjectsToLocationUnits, reducer=self.reduceLocationUnitsToLocationObject)]
     def jobsToGetTimeUnitObjects(self): return self.jobsToGetLocationObjects() + \
@@ -190,8 +202,9 @@ class MRAnalysis(ModifiedMRJob):
         pass
 #        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
+        return self.jobsToGetHastagObjectsWithoutEndingWindowWithoutLatticeApproximation()
 #        return self.jobsToGetHastagObjectsAllOccurrencesWithinWindow()
 #        return self.jobsToGetLocationObjects()
-        return self.jobsToGetTimeUnitObjects()
+#        return self.jobsToGetTimeUnitObjects()
 if __name__ == '__main__':
     MRAnalysis.run()
