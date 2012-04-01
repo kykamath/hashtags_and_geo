@@ -111,10 +111,10 @@ class GeneralAnalysis():
             if count==1000: break
         locations, colors = zip(*tuples_of_location_and_bin_color)
         plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors, lw = 0)
-        plt.show()
-#        file_learning_analysis = './images/%s.png'%(GeneralMethods.get_method_id())
-#        FileIO.createDirectoryForFile(file_learning_analysis)
-#        plt.savefig(file_learning_analysis)
+#        plt.show()
+        file_learning_analysis = './images/%s.png'%(GeneralMethods.get_method_id())
+        FileIO.createDirectoryForFile(file_learning_analysis)
+        plt.savefig(file_learning_analysis)
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
 def hedging_method(map_from_model_to_weight):
@@ -433,6 +433,60 @@ class LearningAnalysis():
 #        LearningAnalysis.flipping_ratio_on_world_map([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
 #        LearningAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
             
+            
+class PaperPlots:
+    @staticmethod
+    def temp():
+        currentTime = self.startTime
+        timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
+        historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
+        loadLocationsList()
+        print 'Using file: ', timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'))
+        timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d')))])
+        for no_of_hashtags in self.noOfHashtagsList:
+            for model_id in self.predictionModels:
+                self.conf['noOfTargetHashtags'] = no_of_hashtags
+                GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(model_id))
+#        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
+        hard_end_time = self.conf.get('hard_end_time', None)
+        end_time = self.endTime
+        if hard_end_time: 
+            print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
+            end_time = hard_end_time
+        while currentTime<end_time:
+#        while currentTime<self.endTime:
+#            def entry_method():
+            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
+            currentOccurrences = []
+            currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
+            if currentTimeObject: currentOccurrences=currentTimeObject['oc']
+            for i in range(self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
+                historicalTimeUnit = currentTime-i*timeUnitDelta
+                if historicalTimeUnit not in historicalTimeUnitsMap: historicalTimeUnitsMap[historicalTimeUnit]=Propagations(historicalTimeUnit, self.historyTimeInterval)
+                historicalTimeUnitsMap[historicalTimeUnit].update(currentOccurrences)
+            for i in range(self.predictionTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
+                predictionTimeUnit = currentTime-i*timeUnitDelta
+                if predictionTimeUnit not in predictionTimeUnitsMap: predictionTimeUnitsMap[predictionTimeUnit]=Propagations(predictionTimeUnit, self.predictionTimeInterval)
+                predictionTimeUnitsMap[predictionTimeUnit].update(currentOccurrences)
+#            entry_method()
+            timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
+            timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
+            if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
+                for noOfTargetHashtags in self.noOfHashtagsList:
+                    self.conf['noOfTargetHashtags'] = noOfTargetHashtags
+                    for modelId in self.predictionModels:
+                        hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](historicalTimeUnitsMap[timeUnitForPropagationForPrediction], **self.conf)
+                        for metric_id in self.evaluationMetrics:
+                            scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](hashtagsForLattice, predictionTimeUnitsMap[timeUnitForActualPropagation], **self.conf)
+                            iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(timeUnitForActualPropagation), 'modelId': modelId, 'metricId': metric_id, 'scoresPerLattice': scoresPerLattice}
+                            FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
+                del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
+            currentTime+=timeUnitDelta
+    @staticmethod
+    def run():
+        PaperPlots.temp()
+        pass
+    
 prediction_models = [
 #                        PredictionModels.RANDOM , 
 #                        PredictionModels.GREEDY, 
@@ -449,5 +503,6 @@ prediction_models = [
 #plotRealData()
 #plotCoverageDistance()
 
-GeneralAnalysis.grid_visualization()
+#GeneralAnalysis.grid_visualization()
 #LearningAnalysis.run()
+PaperPlots.run()
