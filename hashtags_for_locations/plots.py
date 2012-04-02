@@ -440,7 +440,7 @@ class PaperPlots:
     @staticmethod
     def temp():
         currentTime, end_time = datetime(2011, 9, 1), datetime(2011, 11, 1)
-        historyTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS)
+        historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS)
         predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS)
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
