@@ -486,8 +486,11 @@ class PaperPlots:
 #                            scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](hashtagsForLattice, predictionTimeUnitsMap[timeUnitForActualPropagation], **self.conf)
 #                            iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(timeUnitForActualPropagation), 'modelId': modelId, 'metricId': metric_id, 'scoresPerLattice': scoresPerLattice}
 #                            FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
+                tuples_of_location_and_hashtag_and_time = []
                 for location, tuples_of_hashtag_and_time in historicalTimeUnitsMap[timeUnitForPropagationForPrediction].occurrences.iteritems():
-                    print location, tuples_of_hashtag_and_time
+                    tuples_of_location_and_hashtag_and_time+= [[getLocationFromLid(location.replace('_', ' ')), hashtag, time]
+                                                             for hashtag, time in tuples_of_hashtag_and_time]
+                print tuples_of_location_and_hashtag_and_time
                 exit()
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; #del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
