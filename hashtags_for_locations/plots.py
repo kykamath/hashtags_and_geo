@@ -491,13 +491,15 @@ class PaperPlots:
                     tuples_of_location_and_hashtag_and_occurrence_time+= [[getLocationFromLid(location.replace('_', ' ')), hashtag, occurrence_time]
                                                              for hashtag, occurrence_time in tuples_of_hashtag_and_occurrence_time]
                     
-                print [(hashtag, list(iterator_for_tuples_of_location_and_hashtag_and_occurrence_time))
+                tuples_of_hashtag_and_tuples_of_location_and_hashtag_and_occurrence_time = [(hashtag, list(iterator_for_tuples_of_location_and_hashtag_and_occurrence_time))
                         for hashtag, iterator_for_tuples_of_location_and_hashtag_and_occurrence_time in 
                             groupby(
                                 sorted(tuples_of_location_and_hashtag_and_occurrence_time, key=itemgetter(1)),
                                 key=itemgetter(1)
                             )
                        ]
+                for hashtag, tuples_of_location_and_hashtag_and_occurrence_time in tuples_of_hashtag_and_tuples_of_location_and_hashtag_and_occurrence_time:
+                    print hashtag, zip(*tuples_of_location_and_hashtag_and_occurrence_time)[0]
 #                print len(tuples_of_location_and_hashtag_and_occurrence_time)
                 exit()
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; #del predictionTimeUnitsMap[timeUnitForActualPropagation]
