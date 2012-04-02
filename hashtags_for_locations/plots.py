@@ -16,7 +16,8 @@ from operator import itemgetter
 from analysis import iterateJsonFromFile
 from itertools import groupby
 from library.geo import getLocationFromLid, plotPointsOnWorldMap, \
-            getLatticeLid, plot_graph_clusters_on_world_map, isWithinBoundingBox
+            getLatticeLid, plot_graph_clusters_on_world_map, isWithinBoundingBox,\
+    plotPointsOnUSMap
 from collections import defaultdict
 import matplotlib.pyplot as plt
 from library.classes import GeneralMethods
@@ -33,12 +34,13 @@ from datetime import datetime
 from library.stats import getOutliersRangeUsingIRQ, filter_outliers
 import numpy as np
 from hashtags_for_locations.models import loadSharingProbabilities,\
-    EvaluationMetrics
+    EvaluationMetrics, CoverageModel, LOCATIONS_LIST, PredictionModels
 import networkx as nx
 from library.graphs import clusterUsingAffinityPropagation
 from scipy.stats import ks_2samp
 from library.plotting import CurveFit, splineSmooth
 import scipy
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.optimize import curve_fit
 from datetime import datetime, timedelta
 from mr_analysis import TIME_UNIT_IN_SECONDS
@@ -437,66 +439,108 @@ class LearningAnalysis():
             
             
 class PaperPlots:
+    hashtag_ditribution_on_world_map_file = 'data/hashtag_ditribution_on_world_map'
+    map_from_hahstags_to_hashtag_properties = {
+                                               'usopen' : {'color': '#0011FF'}, 
+                                               'cnnteaparty' : {'color': '#FF00EE'}
+                                               }
     @staticmethod
-    def hashtag_ditribution_on_world_map_by_time_units():
-        currentTime, end_time = datetime(2011, 9, 1), datetime(2011, 11, 1)
-        historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS)
-        predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS)
-        output_file_format = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/hashtag_ditribution_on_world_map_by_time_units/%s/%s.png'
-        timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
-        historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
-        loadLocationsList()
-        time_unit_with_occurrences_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/2011-09-01_2011-11-01/timeUnitWithOccurrences'
+    def get_tuples_of_hashtag_and_location_and_occurrence_time(): 
+        tuples_of_hashtag_and_location_and_occurrence_time = [data for data in iterateJsonFromFile(PaperPlots.hashtag_ditribution_on_world_map_file)][0]['oc']
+        return sorted(tuples_of_hashtag_and_location_and_occurrence_time, key=itemgetter(0))
+    @staticmethod
+    def hashtag_ditribution_on_world_map_by_time_units(generate_data=True):
+        '''
+        2011-09-04 13/00/00
+        2011-09-12 19:00:00
+        '''
+        startTime, endTime, outputFolder = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete'
+        time_unit_with_occurrences_file = timeUnitWithOccurrencesFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
         print 'Using file: ', time_unit_with_occurrences_file 
-        timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(time_unit_with_occurrences_file)])
-        while currentTime<end_time:
-            print currentTime, historyTimeInterval.seconds/60#, self.predictionTimeInterval.seconds/60
-            currentOccurrences = []
-            currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
-            if currentTimeObject: currentOccurrences=currentTimeObject['oc']
-            for i in range(historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
-                historicalTimeUnit = currentTime-i*timeUnitDelta
-                if historicalTimeUnit not in historicalTimeUnitsMap: historicalTimeUnitsMap[historicalTimeUnit]=Propagations(historicalTimeUnit, historyTimeInterval)
-                historicalTimeUnitsMap[historicalTimeUnit].update(currentOccurrences)
-            timeUnitForActualPropagation = currentTime-predictionTimeInterval
-            timeUnitForPropagationForPrediction = timeUnitForActualPropagation-historyTimeInterval
-            if timeUnitForPropagationForPrediction in historicalTimeUnitsMap:
-                tuples_of_location_and_hashtag_and_occurrence_time = []
-                for location, tuples_of_hashtag_and_occurrence_time in historicalTimeUnitsMap[timeUnitForPropagationForPrediction].occurrences.iteritems():
-                    tuples_of_location_and_hashtag_and_occurrence_time+= [[getLocationFromLid(location.replace('_', ' ')), hashtag, occurrence_time]
-                                                             for hashtag, occurrence_time in tuples_of_hashtag_and_occurrence_time]
-                    
-                tuples_of_hashtag_and_tuples_of_location_and_hashtag_and_occurrence_time = [(hashtag, list(iterator_for_tuples_of_location_and_hashtag_and_occurrence_time))
-                        for hashtag, iterator_for_tuples_of_location_and_hashtag_and_occurrence_time in 
-                            groupby(
-                                sorted(tuples_of_location_and_hashtag_and_occurrence_time, key=itemgetter(1)),
-                                key=itemgetter(1)
-                            )
-                       ]
-                for hashtag, tuples_of_location_and_hashtag_and_occurrence_time in tuples_of_hashtag_and_tuples_of_location_and_hashtag_and_occurrence_time:
-                    tuples_of_location_and_no_of_occurrences = [(location, len(list(iterator_of_locations)))
-                             for location, iterator_of_locations in groupby(
-                                     sorted(zip(*tuples_of_location_and_hashtag_and_occurrence_time)[0], key=itemgetter(0,1)),
-                                     key=itemgetter(0,1)
-                                     )
-                             ]
-                    locations, colors = zip(*tuples_of_location_and_no_of_occurrences)
-                    sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
-                    output_file = output_file_format%(timeUnitForPropagationForPrediction, unicode(hashtag).encode('utf-8'))
-                    print output_file
-                    FileIO.createDirectoryForFile(output_file)
-                    plt.colorbar(sc)
-                    plt.savefig(output_file)
-#                    plt.show()               
-                    plt.clf()
-#                exit()
-                del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; #del predictionTimeUnitsMap[timeUnitForActualPropagation]
-            currentTime+=timeUnitDelta
+        if not generate_data:
+            output_file_format = '/data/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/hashtag_ditribution_on_world_map_by_time_units/%s/%s.png'
+            for data in iterateJsonFromFile(time_unit_with_occurrences_file):
+                tuples_of_hashtag_and_location_and_occurrence_time = sorted(data['oc'], key=itemgetter(0))
+                tuples_of_hashtag_and_locations = [ (hashtag, zip(*iterator_of_tuples_of_hashtag_and_location_and_occurrence_time)[1])
+                                                    for hashtag, iterator_of_tuples_of_hashtag_and_location_and_occurrence_time in 
+                                                    groupby(tuples_of_hashtag_and_location_and_occurrence_time, key=itemgetter(0))
+                                                ]
+                for hashtag, locations in tuples_of_hashtag_and_locations:
+                    tuples_of_location_and_occurrences_count = [(getLocationFromLid(location.replace('_', ' ')), len(list(itertor_of_locations))) for location, itertor_of_locations in groupby(sorted(locations))]
+                    if len(tuples_of_location_and_occurrences_count)>25:
+                        locations, colors = zip(*sorted(tuples_of_location_and_occurrences_count, key=itemgetter(1)))
+                        sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
+                        output_file = output_file_format%(datetime.fromtimestamp(data['tu']), unicode(hashtag).encode('utf-8'))
+                        print output_file
+                        FileIO.createDirectoryForFile(output_file)
+                        plt.colorbar(sc)
+                        plt.savefig(output_file)
+    #                    plt.show()               
+                        plt.clf()
+        else:
+            time_unit_to_output = '2011-09-12 19:00:00'
+            for data in iterateJsonFromFile(time_unit_with_occurrences_file):
+                if time_unit_to_output==str(datetime.fromtimestamp(data['tu'])):
+                    FileIO.writeToFileAsJson(data, PaperPlots.hashtag_ditribution_on_world_map_file)
+    @staticmethod
+    def raw_data_on_world_map():
+        tuples_of_hashtag_and_location_and_occurrence_time = PaperPlots.get_tuples_of_hashtag_and_location_and_occurrence_time()
+        tuples_of_hashtag_and_locations = [ (hashtag, zip(*iterator_of_tuples_of_hashtag_and_location_and_occurrence_time)[1])
+                                                    for hashtag, iterator_of_tuples_of_hashtag_and_location_and_occurrence_time in 
+                                                        groupby(tuples_of_hashtag_and_location_and_occurrence_time, key=itemgetter(0))
+                                                    if hashtag in PaperPlots.map_from_hahstags_to_hashtag_properties
+                                                ]
+        for hashtag, locations in tuples_of_hashtag_and_locations:
+            tuples_of_location_and_occurrences_count = [(getLocationFromLid(location.replace('_', ' ')), len(list(itertor_of_locations))) for location, itertor_of_locations in groupby(sorted(locations))]
+            locations, colors = zip(*sorted(tuples_of_location_and_occurrences_count, key=itemgetter(1)))
+            ax=plt.subplot(111)
+            sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
+            output_file = 'images/%s_%s.png'%(GeneralMethods.get_method_id(), hashtag)
+            print output_file
+            FileIO.createDirectoryForFile(output_file)
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="5%", pad=0.05)
+            plt.colorbar(sc, cax)
+            plt.savefig(output_file)
+#                plt.show()               
+            plt.clf()
+    @staticmethod
+    def coverage_metrics_on_world_map():
+        LOCATIONS_LIST = loadLocationsList()
+        for coverage_metric_method, coverage_metric_id in [(CoverageModel.spreadProbability, PredictionModels.COVERAGE_PROBABILITY), (CoverageModel.spreadDistance, PredictionModels.COVERAGE_DISTANCE)]:
+            tuples_of_hashtag_and_location_and_occurrence_time = PaperPlots.get_tuples_of_hashtag_and_location_and_occurrence_time()
+            tuples_of_hashtag_and_locations = [ (hashtag, zip(*iterator_of_tuples_of_hashtag_and_location_and_occurrence_time)[1])
+                                                        for hashtag, iterator_of_tuples_of_hashtag_and_location_and_occurrence_time in 
+                                                            groupby(tuples_of_hashtag_and_location_and_occurrence_time, key=itemgetter(0))
+                                                        if hashtag in PaperPlots.map_from_hahstags_to_hashtag_properties
+                                                    ]
+            map_from_hashtag_to_map_from_location_to_coverage_metric = defaultdict(dict)
+            for hashtag, locations in tuples_of_hashtag_and_locations:
+                locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
+                map_from_hashtag_to_map_from_location_to_coverage_metric[hashtag] = coverage_metric_method(locations, LOCATIONS_LIST)
+            map_from_location_to_tuple_of_coverage_metric_and_hashtag = {}
+            for hashtag, map_from_location_to_coverage_metric in map_from_hashtag_to_map_from_location_to_coverage_metric.iteritems():
+                for location, coverage_metric in map_from_location_to_coverage_metric.iteritems():
+                    if location not in map_from_location_to_tuple_of_coverage_metric_and_hashtag: map_from_location_to_tuple_of_coverage_metric_and_hashtag[location] = [coverage_metric, hashtag]
+                    elif map_from_location_to_tuple_of_coverage_metric_and_hashtag[location][0]<coverage_metric: map_from_location_to_tuple_of_coverage_metric_and_hashtag[location] = [coverage_metric, hashtag]
+            tuples_of_location_and_color = [(getLocationFromLid(location.replace('_', ' ')), PaperPlots.map_from_hahstags_to_hashtag_properties[hashtag]['color']) 
+                                      for location, (coverage_metric, hashtag) in 
+                                      map_from_location_to_tuple_of_coverage_metric_and_hashtag.iteritems()
+                                  ]
+            locations, colors = zip(*sorted(tuples_of_location_and_color, key=itemgetter(1), reverse=True))
+            plotPointsOnUSMap(locations, c=colors, lw = 0, s=80, alpha=1.0)
+            output_file = 'images/%s_%s.png'%(GeneralMethods.get_method_id(), coverage_metric_id)
+            print output_file
+            FileIO.createDirectoryForFile(output_file)
+            plt.savefig(output_file)
+#            plt.show()
+            plt.clf()
+            
     @staticmethod
     def run():
-        PaperPlots.hashtag_ditribution_on_world_map_by_time_units()
-        pass
-    
+#        PaperPlots.hashtag_ditribution_on_world_map_by_time_units()
+#        PaperPlots.raw_data_on_world_map()    
+        PaperPlots.coverage_metrics_on_world_map()
 prediction_models = [
 #                        PredictionModels.RANDOM , 
 #                        PredictionModels.GREEDY, 

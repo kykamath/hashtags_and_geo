@@ -40,7 +40,8 @@ def filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeHashtags, ne
 def loadLocationsList():
     global LOCATIONS_LIST
     if not LOCATIONS_LIST: LOCATIONS_LIST = [latticeObject['id'] for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile)]
-
+    return LOCATIONS_LIST
+    
 def loadSharingProbabilities():
     global SHARING_PROBABILITIES
     if not SHARING_PROBABILITIES:
@@ -87,10 +88,11 @@ class CoverageModel():
     @staticmethod
     def _spreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice): return 1.01**(-getHaversineDistance(currentLattice, sourceLattice))*probabilityAtSourceLattice
     @staticmethod
-    def spreadProbability(points):
+    def spreadProbability(points, locations = None):
         latticeScores = {}
         probabilityDistributionForObservedLattices = CoverageModel._probabilityDistributionForLattices(points)
-        for lattice in LOCATIONS_LIST:
+        if LOCATIONS_LIST: locations = LOCATIONS_LIST
+        for lattice in locations:
             score = 0.0
             currentLattice = getLocationFromLid(lattice.replace('_', ' '))
             latticeScores[lattice] = sum([CoverageModel._spreadingFunction(currentLattice, sourceLattice, probabilityAtSourceLattice)for sourceLattice, probabilityAtSourceLattice in probabilityDistributionForObservedLattices])
@@ -100,10 +102,11 @@ class CoverageModel():
             else: latticeScores[k]/=total
         return latticeScores
     @staticmethod
-    def spreadDistance(points):
+    def spreadDistance(points, locations = None):
         latticeScores = {}
         distribution_in_observed_lattices = [(k, len(list(data))) for k, data in groupby(sorted(points, key=itemgetter(0,1)), key=itemgetter(0,1))]
-        for lattice in LOCATIONS_LIST:
+        if LOCATIONS_LIST: locations = LOCATIONS_LIST
+        for lattice in locations:
             currentLattice = getLocationFromLid(lattice.replace('_', ' '))
             latticeScores[lattice] = sum([CoverageModel._spreadingFunction(currentLattice, sourceLattice, count_at_source_lattice)for sourceLattice, count_at_source_lattice in distribution_in_observed_lattices])
         return latticeScores
