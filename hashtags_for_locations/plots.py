@@ -482,8 +482,8 @@ class PaperPlots:
                              ]
                     locations, colors = zip(*tuples_of_location_and_no_of_occurrences)
 #                    plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
-                    print timeUnitForPropagationForPrediction
-                    print output_file%(timeUnitForPropagationForPrediction, hashtag)
+#                    print timeUnitForPropagationForPrediction
+                    print output_file%(timeUnitForPropagationForPrediction, unicode(hashtag).encode('utf-8'))
 #                    plt.show()               
 #                exit()
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; #del predictionTimeUnitsMap[timeUnitForActualPropagation]
