@@ -490,7 +490,7 @@ class PaperPlots:
             currentTime+=timeUnitDelta
     @staticmethod
     def run():
-        PaperPlots.temp()
+        PaperPlots.hashtag_ditribution_on_world_map_by_time_units()
         pass
     
 prediction_models = [
