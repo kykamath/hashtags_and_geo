@@ -490,8 +490,8 @@ class PaperPlots:
                 for location, tuples_of_hashtag_and_occurrence_time in historicalTimeUnitsMap[timeUnitForPropagationForPrediction].occurrences.iteritems():
                     tuples_of_location_and_hashtag_and_occurrence_time+= [[getLocationFromLid(location.replace('_', ' ')), hashtag, occurrence_time]
                                                              for hashtag, occurrence_time in tuples_of_hashtag_and_occurrence_time]
-                print tuples_of_location_and_hashtag_and_occurrence_time
-                exit()
+                print len(tuples_of_location_and_hashtag_and_occurrence_time)
+#                exit()
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; #del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
     @staticmethod
