@@ -499,7 +499,14 @@ class PaperPlots:
                             )
                        ]
                 for hashtag, tuples_of_location_and_hashtag_and_occurrence_time in tuples_of_hashtag_and_tuples_of_location_and_hashtag_and_occurrence_time:
-                    print hashtag, zip(*tuples_of_location_and_hashtag_and_occurrence_time)[0]
+                    print hashtag, \
+                                [(location, len(list(iterator_of_locations)))
+                                 for location, iterator_of_locations in groupby(
+                                         sorted(zip(*tuples_of_location_and_hashtag_and_occurrence_time)[0], key=itemgetter(0,1)),
+                                         key=itemgetter(0,1)
+                                         )
+                                 ]
+                                         
 #                print len(tuples_of_location_and_hashtag_and_occurrence_time)
                 exit()
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; #del predictionTimeUnitsMap[timeUnitForActualPropagation]
