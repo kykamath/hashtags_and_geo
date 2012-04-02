@@ -442,7 +442,7 @@ class PaperPlots:
         currentTime, end_time = datetime(2011, 9, 1), datetime(2011, 11, 1)
         historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS)
         predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS)
-        output_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/hashtag_ditribution_on_world_map_by_time_units/%s/%s.png'
+        output_file_format = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/hashtag_ditribution_on_world_map_by_time_units/%s/%s.png'
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
         loadLocationsList()
@@ -481,11 +481,15 @@ class PaperPlots:
                                      )
                              ]
                     locations, colors = zip(*tuples_of_location_and_no_of_occurrences)
-#                    plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
-#                    print timeUnitForPropagationForPrediction
-                    print output_file%(timeUnitForPropagationForPrediction, unicode(hashtag).encode('utf-8'))
+                    sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
+                    output_file = output_file_format%(timeUnitForPropagationForPrediction, unicode(hashtag).encode('utf-8'))
+                    print output_file
+                    FileIO.createDirectoryForFile(output_file)
+                    plt.colorbar(sc)
+                    plt.savefig(output_file)
 #                    plt.show()               
-#                exit()
+                    plt.clf()
+                exit()
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; #del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
     @staticmethod
