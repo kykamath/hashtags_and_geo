@@ -489,7 +489,7 @@ class PaperPlots:
                     plt.savefig(output_file)
 #                    plt.show()               
                     plt.clf()
-                exit()
+#                exit()
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; #del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
     @staticmethod
