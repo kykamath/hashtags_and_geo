@@ -438,29 +438,18 @@ class LearningAnalysis():
             
 class PaperPlots:
     @staticmethod
-    def temp():
+    def hashtag_ditribution_on_world_map_by_time_units():
         currentTime, end_time = datetime(2011, 9, 1), datetime(2011, 11, 1)
         historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS)
         predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS)
+        output_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/hashtag_ditribution_on_world_map_by_time_units/%s/%s.png'
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
         loadLocationsList()
         time_unit_with_occurrences_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/2011-09-01_2011-11-01/timeUnitWithOccurrences'
         print 'Using file: ', time_unit_with_occurrences_file 
-#        timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d')))])
         timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(time_unit_with_occurrences_file)])
-#        for no_of_hashtags in self.noOfHashtagsList:
-#            for model_id in self.predictionModels:
-#                self.conf['noOfTargetHashtags'] = no_of_hashtags
-#                GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(model_id))
-#        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
-#        hard_end_time = self.conf.get('hard_end_time', None)
-#        if hard_end_time: 
-#            print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
-#            end_time = hard_end_time
         while currentTime<end_time:
-#        while currentTime<self.endTime:
-#            def entry_method():
             print currentTime, historyTimeInterval.seconds/60#, self.predictionTimeInterval.seconds/60
             currentOccurrences = []
             currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
@@ -469,23 +458,9 @@ class PaperPlots:
                 historicalTimeUnit = currentTime-i*timeUnitDelta
                 if historicalTimeUnit not in historicalTimeUnitsMap: historicalTimeUnitsMap[historicalTimeUnit]=Propagations(historicalTimeUnit, historyTimeInterval)
                 historicalTimeUnitsMap[historicalTimeUnit].update(currentOccurrences)
-#            for i in range(predictionTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
-#                predictionTimeUnit = currentTime-i*timeUnitDelta
-#                if predictionTimeUnit not in predictionTimeUnitsMap: predictionTimeUnitsMap[predictionTimeUnit]=Propagations(predictionTimeUnit, self.predictionTimeInterval)
-#                predictionTimeUnitsMap[predictionTimeUnit].update(currentOccurrences)
-#            entry_method()
             timeUnitForActualPropagation = currentTime-predictionTimeInterval
             timeUnitForPropagationForPrediction = timeUnitForActualPropagation-historyTimeInterval
-#            if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
             if timeUnitForPropagationForPrediction in historicalTimeUnitsMap:
-#                for noOfTargetHashtags in self.noOfHashtagsList:
-#                    self.conf['noOfTargetHashtags'] = noOfTargetHashtags
-#                    for modelId in self.predictionModels:
-#                        hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](historicalTimeUnitsMap[timeUnitForPropagationForPrediction], **self.conf)
-#                        for metric_id in self.evaluationMetrics:
-#                            scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](hashtagsForLattice, predictionTimeUnitsMap[timeUnitForActualPropagation], **self.conf)
-#                            iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(timeUnitForActualPropagation), 'modelId': modelId, 'metricId': metric_id, 'scoresPerLattice': scoresPerLattice}
-#                            FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
                 tuples_of_location_and_hashtag_and_occurrence_time = []
                 for location, tuples_of_hashtag_and_occurrence_time in historicalTimeUnitsMap[timeUnitForPropagationForPrediction].occurrences.iteritems():
                     tuples_of_location_and_hashtag_and_occurrence_time+= [[getLocationFromLid(location.replace('_', ' ')), hashtag, occurrence_time]
@@ -499,16 +474,18 @@ class PaperPlots:
                             )
                        ]
                 for hashtag, tuples_of_location_and_hashtag_and_occurrence_time in tuples_of_hashtag_and_tuples_of_location_and_hashtag_and_occurrence_time:
-                    print hashtag, \
-                                [(location, len(list(iterator_of_locations)))
-                                 for location, iterator_of_locations in groupby(
-                                         sorted(zip(*tuples_of_location_and_hashtag_and_occurrence_time)[0], key=itemgetter(0,1)),
-                                         key=itemgetter(0,1)
-                                         )
-                                 ]
-                                         
-#                print len(tuples_of_location_and_hashtag_and_occurrence_time)
-                exit()
+                    tuples_of_location_and_no_of_occurrences = [(location, len(list(iterator_of_locations)))
+                             for location, iterator_of_locations in groupby(
+                                     sorted(zip(*tuples_of_location_and_hashtag_and_occurrence_time)[0], key=itemgetter(0,1)),
+                                     key=itemgetter(0,1)
+                                     )
+                             ]
+                    locations, colors = zip(*tuples_of_location_and_no_of_occurrences)
+#                    plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
+                    print timeUnitForPropagationForPrediction
+                    print output_file(timeUnitForPropagationForPrediction, hashtag)
+#                    plt.show()               
+#                exit()
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; #del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
     @staticmethod
