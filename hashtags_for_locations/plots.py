@@ -35,7 +35,8 @@ from library.stats import getOutliersRangeUsingIRQ, filter_outliers
 import numpy as np
 from hashtags_for_locations.models import loadSharingProbabilities,\
     EvaluationMetrics, CoverageModel, LOCATIONS_LIST, PredictionModels,\
-    loadTransmittingProbabilities
+    loadTransmittingProbabilities,\
+    filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance
 import networkx as nx
 from library.graphs import clusterUsingAffinityPropagation
 from scipy.stats import ks_2samp
@@ -97,6 +98,7 @@ def plotAllData(prediction_models):
                 plt.title(prediction_model)
             plt.show()
 class GeneralAnalysis():
+    locationsGraphFile = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/complete_prop/2011-05-01_2011-12-31/latticeGraph'
     @staticmethod
     def grid_visualization():
         BIN_ACCURACY = 1.45
@@ -120,6 +122,54 @@ class GeneralAnalysis():
         file_learning_analysis = './images/%s.png'%(GeneralMethods.get_method_id())
         FileIO.createDirectoryForFile(file_learning_analysis)
 #        plt.savefig(file_learning_analysis)
+    @staticmethod
+    def transmitting_sharing_relationships():
+        def loadSharingProbabilities():
+            sharing_probabilities = None
+            if not sharing_probabilities:
+                sharing_probabilities = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
+                hashtagsObserved = []
+                for latticeObject in iterateJsonFromFile(GeneralAnalysis.locationsGraphFile):
+                    latticeHashtagsSet = set(latticeObject['hashtags'])
+                    hashtagsObserved+=latticeObject['hashtags']
+                    sharing_probabilities['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
+                    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+                        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
+                        neighborHashtagsSet = set(neighborHashtags)
+                        sharing_probabilities['neighborProbability'][latticeObject['id']][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
+                    sharing_probabilities['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
+                totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
+                for lattice in sharing_probabilities['hashtagObservingProbability'].keys()[:]: sharing_probabilities['hashtagObservingProbability'][lattice] = len(sharing_probabilities['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+            return sharing_probabilities
+        def loadTransmittingProbabilities():
+            transmitting_probabilities = None
+            if not transmitting_probabilities:
+                transmitting_probabilities = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
+                hashtagsObserved = []
+                for latticeObject in iterateJsonFromFile(GeneralAnalysis.locationsGraphFile):
+                    latticeHashtagsSet = set(latticeObject['hashtags'])
+                    hashtagsObserved+=latticeObject['hashtags']
+                    transmitting_probabilities['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
+                    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+                        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags, findLag=False)
+            #                neighborHashtagsSet = set(neighborHashtags)
+                        transmittedHashtags = [k for k in neighborHashtags if k in latticeObject['hashtags'] and latticeObject['hashtags'][k][0]<neighborHashtags[k][0]]
+                        transmitting_probabilities['neighborProbability'][latticeObject['id']][neighborLattice]=len(transmittedHashtags)/float(len(latticeHashtagsSet))
+                    transmitting_probabilities['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
+                totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
+                for lattice in transmitting_probabilities['hashtagObservingProbability'].keys()[:]: transmitting_probabilities['hashtagObservingProbability'][lattice] = len(transmitting_probabilities['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+            return transmitting_probabilities
+        sharing_probabilities = loadSharingProbabilities()
+        locations = []
+        for location in sharing_probabilities['neighborProbability']: locations.append(location)
+        locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
+        plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c='r', lw = 0)
+        plt.show()
+    @staticmethod
+    def run():
+#        GeneralAnalysis.grid_visualization()
+        GeneralAnalysis.transmitting_sharing_relationships()
+        
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
 def hedging_method(map_from_model_to_weight):
@@ -569,6 +619,6 @@ prediction_models = [
 #plotRealData()
 #plotCoverageDistance()
 
-GeneralAnalysis.grid_visualization()
+GeneralAnalysis.run()
 #LearningAnalysis.run()
 #PaperPlots.run()

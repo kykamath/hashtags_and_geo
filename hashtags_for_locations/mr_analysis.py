@@ -76,15 +76,18 @@ VALID_LOCATIONS_LIST = ['-22.4750_-43.0650', '-22.6200_-43.2100', '-25.2300_-51.
                    '-8.5550_116.0000', '19.1400_-98.8900', '27.6950_-83.6650', '33.4950_-112.0850', '36.6850_-75.9800', '39.4400_-0.2900', '53.0700_5.8000', '-7.6850_110.3450', '3.0450_101.6450', '50.3150_-4.0600', '-23.4900_-46.1100', '-8.1200_-35.9600', '32.7700_-97.1500', '38.8600_-76.8500', '41.7600_-71.3400', '53.7950_-1.4500', '57.1300_-2.1750', '-22.6200_-41.9050', '-23.3450_-46.8350', '51.6200_0.2900', '19.1400_-99.0350', '19.2850_-97.8750', '32.7700_-90.3350', '40.4550_-3.7700', '40.4550_-74.3850', '41.0350_-80.6200', '51.4750_-2.4650', '-22.1850_-45.8200', '18.1250_-66.8450', '40.8900_-74.0950', '41.1800_-73.0800', '41.7600_-87.5800', '41.9050_-87.7250', '51.4750_0.2900', '51.7650_0.5800', '-20.3000_-48.8650', '-8.4100_114.9850', '16.8200_-99.6150', '33.4950_-84.2450', '52.7800_-1.3050', '-15.3700_-55.8250', '33.4950_-80.9100', '38.1350_13.3400', '42.4850_-82.9400', '53.6500_-2.6100', '54.8100_-1.4500', '55.8250_-3.1900', '-7.3950_112.6650', '52.3450_-1.8850', '52.4900_-8.7000', '24.9400_-101.0650', '35.9600_-115.1300', '38.2800_-81.6350', '41.6150_-0.8700', '52.9250_-2.0300', '41.3250_-104.9800', '43.6450_-79.3150', '37.5550_-0.8700', '38.8600_-76.7050', '-20.0100_-44.8050', '20.7350_-103.3850', '33.9300_-118.0300', '40.4550_-88.8850', '43.0650_-77.5750', '-3.7700_-38.4250', '28.8550_-111.3600', '30.1600_-91.9300', '36.6850_-4.6400', '40.4550_-3.6250', '41.1800_-95.9900', '48.5750_-123.6850', '50.7500_0.0000', '52.0550_0.0000', '33.3500_-81.9250', '41.4700_-81.6350', '42.7750_-78.7350', '43.2100_-5.8000', 
                    '51.0400_1.1600', '51.3300_0.0000', '51.4750_0.1450', '53.5050_-2.4650', '53.6500_9.2800', '-27.5500_-51.0400', '20.8800_-89.6100', '24.6500_-107.3000', '33.3500_-86.8550', '41.4700_2.0300', '51.4750_5.0750', '51.6200_5.2200', '-5.8000_-35.0900', '36.6850_-119.7700', '55.8250_-3.0450', '42.3400_-70.9050', '59.3050_17.9800', '-17.8350_-43.6450', '-6.0900_106.4300', '10.1500_-64.5250', '38.1350_24.5050', '39.0050_-84.3900', '25.8100_-80.1850', '33.9300_-117.8850', '34.9450_-90.7700', '38.5700_-90.1900', '61.4800_0.0000', '-29.0000_-50.8950', '-6.3800_106.8650', '59.3050_18.1250', '-23.3450_-46.6900', '18.1250_-94.3950', '41.4700_1.8850', '60.3200_5.3650', '-19.8650_-43.9350', '-22.7650_-45.3850', '23.6350_-99.1800', '32.6250_-83.0850']
 
-def iterateHashtagObjectInstances(line):
+def iterateHashtagObjectInstances(line, all_locations = False):
     data = cjson.decode(line)
     l = None
     if 'geo' in data: l = data['geo']
     else: l = data['bb']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
     point = getLattice(l, LOCATION_ACCURACY)
-    lattice_lid = getLatticeLid(point, LOCATION_ACCURACY)
-    if lattice_lid in VALID_LOCATIONS_LIST:
+    if not all_locations:
+        lattice_lid = getLatticeLid(point, LOCATION_ACCURACY)
+        if lattice_lid in VALID_LOCATIONS_LIST:
+            for h in data['h']: yield h.lower(), [point, t]
+    else:
         for h in data['h']: yield h.lower(), [point, t]
         
 def iterateHashtagObjectInstancesWithoutLatticeApproximation(line):
@@ -156,6 +159,9 @@ class MRAnalysis(ModifiedMRJob):
     def mapParseHashtagObjects(self, key, line):
         if False: yield # I'm a generator!
         for h, d in iterateHashtagObjectInstances(line): self.hashtags[h].append(d)
+    def mapParseHashtagObjectsForAllLocations(self, key, line):
+        if False: yield # I'm a generator!
+        for h, d in iterateHashtagObjectInstances(line, all_locations=True): self.hashtags[h].append(d)
     def mapParseHashtagObjectsWithoutLatticeApproximation(self, key, line):
         if False: yield # I'm a generator!
         for h, d in iterateHashtagObjectInstancesWithoutLatticeApproximation(line): self.hashtags[h].append(d)
@@ -316,7 +322,7 @@ class MRAnalysis(ModifiedMRJob):
     def jobsToGetLocationObjects(self): return self.jobsToGetHastagObjectsWithEndingWindow() + [self.mr(mapper=self.mapHashtagObjectsToLocationUnits, mapper_final=self.mapFinalHashtagObjectsToLocationUnits, reducer=self.reduceLocationUnitsToLocationObject)]
     def jobsToGetTimeUnitObjects(self): return self.jobsToGetLocationObjects() + \
                                                 [self.mr(mapper=self.mapLocationsObjectsToTimeUnits, mapper_final=self.mapFinalLocationsObjectsToTimeUnits, reducer=self.reduceTimeUnitsToTimeUnitObject)]
-    def jobsToBuildLatticeGraph(self): return self.jobsToGetHastagObjectsWithEndingWindow()+\
+    def jobsToBuildLatticeGraph(self): return [self.mr(mapper=self.mapParseHashtagObjectsForAllLocations, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]+\
                  [(self.buildLatticeGraphMap, self.buildLatticeGraphReduce1), 
                   (self.emptyMapper, self.buildLatticeGraphReduce2)
                     ]
