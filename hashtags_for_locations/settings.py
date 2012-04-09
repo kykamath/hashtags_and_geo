@@ -16,6 +16,7 @@ hashtagsWithEndingWindowFile = analysisFolder+'%s_%s/hashtagsWithEndingWindow'
 hashtagsAllOccurrencesWithinWindowFile = analysisFolder+'%s_%s/hashtagsAllOccurrencesWithinWindow'
 locationsWithOccurrencesFile = analysisFolder+'%s_%s/locationsWithOccurrences'
 timeUnitWithOccurrencesFile = analysisFolder+'%s_%s/timeUnitWithOccurrences'
+latticeGraphFile = analysisFolder+'%s_%s/latticeGraph'
 #modelsFolder = analysisFolder+'models/'
 modelsFolder = analysisFolder+'models_1/'
 
