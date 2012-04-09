@@ -269,14 +269,23 @@ class MRAnalysis(ModifiedMRJob):
             return dict([(k,v) for k, v in latticesToOccurancesMap.iteritems() if len(v)>=MIN_HASHTAG_OCCURENCES_PER_LATTICE])
         hashtagObject['oc']=getOccuranesInHighestActiveRegion(hashtagObject)
         lattices = filterLatticesByMinHashtagOccurencesPerLattice(hashtagObject).keys()
-        latticesToOccranceTimeMap = {}
+#        latticesToOccranceTimeMap = {}
+#        for k, v in hashtagObject['oc']:
+#            lid = getLatticeLid(k, LOCATION_ACCURACY)
+#            if lid!='0.0000_0.0000' and lid in lattices:
+#                if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
+        ###
+        
+        latticesToOccranceTimeMap = defaultdict(list)
         for k, v in hashtagObject['oc']:
             lid = getLatticeLid(k, LOCATION_ACCURACY)
             if lid!='0.0000_0.0000' and lid in lattices:
-                if lid not in latticesToOccranceTimeMap: latticesToOccranceTimeMap[lid]=v
+                latticesToOccranceTimeMap[lid].append(v)
+        
+        ###
         lattices = latticesToOccranceTimeMap.items()
         if lattices:
-            hastagStartTime, hastagEndTime = min(lattices, key=itemgetter(1))[1], max(lattices, key=itemgetter(1))[1]
+            hastagStartTime, hastagEndTime = min(lattices, key=lambda lid, occurrences: min(occurrences) )[1], max(lattices, key=lambda lid, occurrences: max(occurrences) )[1]
             hashtagTimePeriod = hastagEndTime - hastagStartTime
             for lattice in lattices: 
                 yield lattice[0], ['h', [[hashtagObject['h'], [lattice[1], hashtagTimePeriod]]]]

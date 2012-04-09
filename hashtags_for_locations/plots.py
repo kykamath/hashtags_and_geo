@@ -124,23 +124,6 @@ class GeneralAnalysis():
 #        plt.savefig(file_learning_analysis)
     @staticmethod
     def transmitting_sharing_relationships():
-#        def loadSharingProbabilities():
-#            sharing_probabilities = None
-#            if not sharing_probabilities:
-#                sharing_probabilities = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
-#                hashtagsObserved = []
-#                for latticeObject in iterateJsonFromFile(GeneralAnalysis.locationsGraphFile):
-#                    latticeHashtagsSet = set(latticeObject['hashtags'])
-#                    hashtagsObserved+=latticeObject['hashtags']
-#                    sharing_probabilities['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
-#                    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
-#                        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
-#                        neighborHashtagsSet = set(neighborHashtags)
-#                        sharing_probabilities['neighborProbability'][latticeObject['id']][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
-#                    sharing_probabilities['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
-#                totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
-#                for lattice in sharing_probabilities['hashtagObservingProbability'].keys()[:]: sharing_probabilities['hashtagObservingProbability'][lattice] = len(sharing_probabilities['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
-#            return sharing_probabilities
         def load_incoming_and_outgoing_probabilities():
             probabilities = defaultdict(dict)
             for latticeObject in iterateJsonFromFile(GeneralAnalysis.locationsGraphFile):
