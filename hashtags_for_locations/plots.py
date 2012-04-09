@@ -17,7 +17,7 @@ from analysis import iterateJsonFromFile
 from itertools import groupby
 from library.geo import getLocationFromLid, plotPointsOnWorldMap, \
             getLatticeLid, plot_graph_clusters_on_world_map, isWithinBoundingBox,\
-    plotPointsOnUSMap
+    plotPointsOnUSMap, getLattice
 from collections import defaultdict
 import matplotlib.pyplot as plt
 from library.classes import GeneralMethods
@@ -124,47 +124,53 @@ class GeneralAnalysis():
 #        plt.savefig(file_learning_analysis)
     @staticmethod
     def transmitting_sharing_relationships():
-        def loadSharingProbabilities():
-            sharing_probabilities = None
-            if not sharing_probabilities:
-                sharing_probabilities = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
-                hashtagsObserved = []
-                for latticeObject in iterateJsonFromFile(GeneralAnalysis.locationsGraphFile):
-                    latticeHashtagsSet = set(latticeObject['hashtags'])
-                    hashtagsObserved+=latticeObject['hashtags']
-                    sharing_probabilities['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
-                    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
-                        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
-                        neighborHashtagsSet = set(neighborHashtags)
-                        sharing_probabilities['neighborProbability'][latticeObject['id']][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
-                    sharing_probabilities['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
-                totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
-                for lattice in sharing_probabilities['hashtagObservingProbability'].keys()[:]: sharing_probabilities['hashtagObservingProbability'][lattice] = len(sharing_probabilities['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
-            return sharing_probabilities
-        def loadTransmittingProbabilities():
-            transmitting_probabilities = None
-            if not transmitting_probabilities:
-                transmitting_probabilities = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
-                hashtagsObserved = []
-                for latticeObject in iterateJsonFromFile(GeneralAnalysis.locationsGraphFile):
-                    latticeHashtagsSet = set(latticeObject['hashtags'])
-                    hashtagsObserved+=latticeObject['hashtags']
-                    transmitting_probabilities['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
-                    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
-                        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags, findLag=False)
-            #                neighborHashtagsSet = set(neighborHashtags)
-                        transmittedHashtags = [k for k in neighborHashtags if k in latticeObject['hashtags'] and latticeObject['hashtags'][k][0]<neighborHashtags[k][0]]
-                        transmitting_probabilities['neighborProbability'][latticeObject['id']][neighborLattice]=len(transmittedHashtags)/float(len(latticeHashtagsSet))
-                    transmitting_probabilities['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
-                totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
-                for lattice in transmitting_probabilities['hashtagObservingProbability'].keys()[:]: transmitting_probabilities['hashtagObservingProbability'][lattice] = len(transmitting_probabilities['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
-            return transmitting_probabilities
-        sharing_probabilities = loadSharingProbabilities()
-        locations = []
-        for location in sharing_probabilities['neighborProbability']: locations.append(location)
-        locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
-        plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c='r', lw = 0)
-        plt.show()
+#        def loadSharingProbabilities():
+#            sharing_probabilities = None
+#            if not sharing_probabilities:
+#                sharing_probabilities = {'neighborProbability': defaultdict(dict), 'hashtagObservingProbability': {}}
+#                hashtagsObserved = []
+#                for latticeObject in iterateJsonFromFile(GeneralAnalysis.locationsGraphFile):
+#                    latticeHashtagsSet = set(latticeObject['hashtags'])
+#                    hashtagsObserved+=latticeObject['hashtags']
+#                    sharing_probabilities['hashtagObservingProbability'][latticeObject['id']] = latticeHashtagsSet
+#                    for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+#                        neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags)
+#                        neighborHashtagsSet = set(neighborHashtags)
+#                        sharing_probabilities['neighborProbability'][latticeObject['id']][neighborLattice]=len(latticeHashtagsSet.intersection(neighborHashtagsSet))/float(len(latticeHashtagsSet))
+#                    sharing_probabilities['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
+#                totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
+#                for lattice in sharing_probabilities['hashtagObservingProbability'].keys()[:]: sharing_probabilities['hashtagObservingProbability'][lattice] = len(sharing_probabilities['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+#            return sharing_probabilities
+        def load_incoming_and_outgoing_probabilities():
+            probabilities = defaultdict(dict)
+            for latticeObject in iterateJsonFromFile(GeneralAnalysis.locationsGraphFile):
+                latticeHashtagsSet = set(latticeObject['hashtags'])
+                probabilities[latticeObject['id']] = {'incoming': defaultdict(dict), 'outgoing': defaultdict(dict)}
+                for neighborLattice, neighborHashtags in latticeObject['links'].iteritems():
+                    neighborHashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(latticeObject['hashtags'], neighborHashtags, findLag=False)
+                    incoming_hashtags = [k for k in neighborHashtags if k in latticeObject['hashtags'] and latticeObject['hashtags'][k][0]>neighborHashtags[k][0]]
+                    outgoing_hashtags = [k for k in neighborHashtags if k in latticeObject['hashtags'] and latticeObject['hashtags'][k][0]<neighborHashtags[k][0]]
+                    probabilities[latticeObject['id']]['incoming'][neighborLattice]=len(incoming_hashtags)/float(len(latticeHashtagsSet))
+                    probabilities[latticeObject['id']]['outgoing'][neighborLattice]=len(outgoing_hashtags)/float(len(latticeHashtagsSet))
+            return probabilities
+
+#        LOCATION_ACCURACY = 0.725
+#        input_point = [40.762601,-73.97953]
+#        input_point_lid = getLatticeLid(getLattice(input_point, LOCATION_ACCURACY), LOCATION_ACCURACY)
+        map_from_location_to_incoming_and_outgoing_probabilities = load_incoming_and_outgoing_probabilities()
+        for location, incoming_and_outgoing_probabilities in map_from_location_to_incoming_and_outgoing_probabilities.iteritems():
+            for probability_type, map_from_neigboring_location_to_probabilities in incoming_and_outgoing_probabilities.iteritems():
+                print location, probability_type, sorted(map_from_neigboring_location_to_probabilities.iteritems(), key=itemgetter(1), reverse=True)
+            exit()
+#            if location == input_point_lid:
+#                tuples_of_location_and_probabilities = sorted(probabilities['neighborProbability'][location].iteritems(), key=itemgetter(1), reverse=True)
+#                print tuples_of_location_and_probabilities
+#        locations = []
+#        for location in sharing_probabilities['neighborProbability']: 
+#            if location==input_point_lid: locations.append(location)
+#        locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
+#        plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c='r', lw = 0)
+#        plt.show()
     @staticmethod
     def run():
 #        GeneralAnalysis.grid_visualization()
