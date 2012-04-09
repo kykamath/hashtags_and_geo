@@ -18,7 +18,8 @@ from operator import itemgetter
 from library.stats import getOutliersRangeUsingIRQ
 
 # General parameters
-LOCATION_ACCURACY = 0.145
+#LOCATION_ACCURACY = 0.145
+LOCATION_ACCURACY = 0.725
 
 # Time windows.
 START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012, 1, 31), 'complete' # Complete duration
@@ -28,7 +29,7 @@ START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012
 
 # Paramters to filter hashtags.
 #MIN_HASHTAG_OCCURENCES = 50
-MIN_HASHTAG_OCCURENCES = 1000
+MIN_HASHTAG_OCCURENCES = 750
 
 # Parameters to filter hashtags at a location.
 MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 0
@@ -204,9 +205,9 @@ class MRAnalysis(ModifiedMRJob):
         pass
 #        return self.jobsToGetHastagObjectsWithEndingWindow()
 #        return self.jobsToGetHastagObjectsWithoutEndingWindow()
-#        return self.jobsToGetHastagObjectsWithoutEndingWindowWithoutLatticeApproximation()
+        return self.jobsToGetHastagObjectsWithoutEndingWindowWithoutLatticeApproximation()
 #        return self.jobsToGetHastagObjectsAllOccurrencesWithinWindow()
 #        return self.jobsToGetLocationObjects()
-        return self.jobsToGetTimeUnitObjects()
+#        return self.jobsToGetTimeUnitObjects()
 if __name__ == '__main__':
     MRAnalysis.run()

@@ -34,7 +34,8 @@ from datetime import datetime
 from library.stats import getOutliersRangeUsingIRQ, filter_outliers
 import numpy as np
 from hashtags_for_locations.models import loadSharingProbabilities,\
-    EvaluationMetrics, CoverageModel, LOCATIONS_LIST, PredictionModels
+    EvaluationMetrics, CoverageModel, LOCATIONS_LIST, PredictionModels,\
+    loadTransmittingProbabilities
 import networkx as nx
 from library.graphs import clusterUsingAffinityPropagation
 from scipy.stats import ks_2samp
@@ -442,7 +443,8 @@ class PaperPlots:
     hashtag_ditribution_on_world_map_file = 'data/hashtag_ditribution_on_world_map'
     map_from_hahstags_to_hashtag_properties = {
                                                'usopen' : {'color': '#0011FF'}, 
-                                               'cnnteaparty' : {'color': '#FF00EE'}
+                                               'blackparentsquotes' : {'color': '#FF00EE'},
+                                               'missuniverso' : {'color': '#00FF33'},
                                                }
     @staticmethod
     def get_tuples_of_hashtag_and_location_and_occurrence_time(): 
@@ -494,7 +496,7 @@ class PaperPlots:
             tuples_of_location_and_occurrences_count = [(getLocationFromLid(location.replace('_', ' ')), len(list(itertor_of_locations))) for location, itertor_of_locations in groupby(sorted(locations))]
             locations, colors = zip(*sorted(tuples_of_location_and_occurrences_count, key=itemgetter(1)))
             ax=plt.subplot(111)
-            sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
+            sc = plotPointsOnWorldMap(locations, c=colors, bkcolor='#CFCFCF', cmap=matplotlib.cm.winter, lw = 0, alpha=1.0)
             output_file = 'images/%s_%s.png'%(GeneralMethods.get_method_id(), hashtag)
             print output_file
             FileIO.createDirectoryForFile(output_file)
@@ -528,14 +530,24 @@ class PaperPlots:
                                       map_from_location_to_tuple_of_coverage_metric_and_hashtag.iteritems()
                                   ]
             locations, colors = zip(*sorted(tuples_of_location_and_color, key=itemgetter(1), reverse=True))
-            plotPointsOnUSMap(locations, c=colors, lw = 0, s=80, alpha=1.0)
+#            plotPointsOnUSMap(locations, c=colors, lw = 0, s=80, alpha=1.0)
+            plotPointsOnWorldMap(locations, c=colors, bkcolor='#CFCFCF', lw = 0, alpha=1.0)
+            for hashtag, hashtag_properties in sorted(PaperPlots.map_from_hahstags_to_hashtag_properties.iteritems(), key=itemgetter(0)): plt.scatter(0,0, label='%s'%hashtag, color=hashtag_properties['color'])
             output_file = 'images/%s_%s.png'%(GeneralMethods.get_method_id(), coverage_metric_id)
             print output_file
+            plt.legend(loc=3, ncol=3, mode="expand",)
             FileIO.createDirectoryForFile(output_file)
             plt.savefig(output_file)
 #            plt.show()
             plt.clf()
-            
+#    @staticmethod
+#    def temp():
+#        conf = {'noOfTargetHashtags': 1}
+#        propogations = Propagations(None, None)
+#        propogations.update(PaperPlots.get_tuples_of_hashtag_and_location_and_occurrence_time())
+#        probabilities = loadTransmittingProbabilities()
+#        print PredictionModels._hashtags_by_location_probabilities(propogations, probabilities, **conf)
+        
     @staticmethod
     def run():
 #        PaperPlots.hashtag_ditribution_on_world_map_by_time_units()
