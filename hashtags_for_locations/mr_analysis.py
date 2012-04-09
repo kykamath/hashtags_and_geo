@@ -29,7 +29,7 @@ START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 4, 1), datetime(2012
 
 # Paramters to filter hashtags.
 #MIN_HASHTAG_OCCURENCES = 50
-MIN_HASHTAG_OCCURENCES = 750
+MIN_HASHTAG_OCCURENCES = 1000
 
 # Parameters to filter hashtags at a location.
 MIN_HASHTAG_OCCURRENCES_AT_A_LOCATION = 0

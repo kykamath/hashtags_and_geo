@@ -569,6 +569,6 @@ prediction_models = [
 #plotRealData()
 #plotCoverageDistance()
 
-#GeneralAnalysis.grid_visualization()
+GeneralAnalysis.grid_visualization()
 #LearningAnalysis.run()
-PaperPlots.run()
+#PaperPlots.run()
