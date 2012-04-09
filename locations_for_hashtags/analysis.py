@@ -9,16 +9,16 @@ from scipy import stats
 from library.graphs import plot
 from library.stats import getOutliersRangeUsingIRQ
 from library.classes import GeneralMethods
-from experiments.mr_area_analysis import MRAreaAnalysis, latticeIdInValidAreas,\
+from locations_for_hashtags.mr_area_analysis import MRAreaAnalysis, latticeIdInValidAreas,\
     LATTICE_ACCURACY, TIME_UNIT_IN_SECONDS, getSourceLattice,\
     getOccuranesInHighestActiveRegion, HashtagsClassifier
 from library.geo import getHaversineDistance, getLatticeLid, getLattice,\
     getCenterOfMass, getLocationFromLid, plotPointsOnUSMap, plotPointsOnWorldMap,\
     getHaversineDistanceForLids, getLidFromLocation
 from operator import itemgetter
-from experiments.mr_wc import MRWC
+from locations_for_hashtags.mr_wc import MRWC
 from library.file_io import FileIO
-from experiments.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
+from locations_for_hashtags.mr_analysis import MRAnalysis, addHashtagDisplacementsInTime,\
     getMeanDistanceBetweenLids, getMeanDistanceFromSource, getLocalityIndexAtK,\
     addSourceLatticeToHashTagObject, addHashtagLocalityIndexInTime,\
     HASHTAG_SPREAD_ANALYSIS_WINDOW_IN_SECONDS, ACCURACY,\
@@ -283,7 +283,10 @@ def tempAnalysis(timeRange, mrOutputFolder):
 #        mra.buildHashtagTemporalClosenessGraphMap(None, h)
 #        exit()
 
-def getInputFiles(months, folderType='/'): return [inputFolder+folderType+'/2011_'+str(m) for m in months]        
+def getInputFiles(months, folderType='/'): 
+    print [inputFolder+folderType+'/2011_'+str(m) for m in months]      
+    exit()
+    return [inputFolder+folderType+'/2011_'+str(m) for m in months]        
 def mr_analysis(timeRange, folderType, mrOutputFolder):
     runMRJob(MRAnalysis, hashtagsFile%(mrOutputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), folderType), jobconf={'mapred.reduce.tasks':300})
 ##    runMRJob(MRAnalysis, hashtagsWithoutEndingWindowFile%(outputFolder, '%s_%s'%timeRange), getInputFiles(range(timeRange[0], timeRange[1]+1), outputFolder), jobconf={'mapred.reduce.tasks':160})
@@ -310,8 +313,9 @@ def mr_area_analysis(timeRange, folderType, mrOutputFolder):
 
 if __name__ == '__main__':
 #    timeRange = (2,11)
+    timeRange = (5,12)
 #    timeRange = (3,8)
-    timeRange = (9,10)
+#    timeRange = (9,10)
     
 #    outputFolder = '/'
 #    outputFolder = 'world'
