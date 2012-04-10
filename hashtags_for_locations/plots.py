@@ -373,13 +373,17 @@ class GeneralAnalysis():
                     map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score[hashtag_class].append([neighbor_location, 
                                                                                                                        map_from_location_to_location_weights[neighbor_location]*\
                                                                                                                        mean_transmission_score])
-            map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score = {}
-            for hashtag_class, tuples_of_neighbor_location_and_transmission_score \
-                in map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score.iteritems():
+            for hashtag_class in map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score.keys()[:]:
+                tuples_of_neighbor_location_and_transmission_score = map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score[hashtag_class]
                 map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score[hashtag_class] = sorted(tuples_of_neighbor_location_and_transmission_score,
                                                                                                                     key=itemgetter(1))
             FileIO.writeToFileAsJson([location_object['id'], map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score], 
                                      GeneralAnalysis.tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score_file)
+    @staticmethod
+    def load_tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score():
+        return [(location, map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score)
+                 for location, map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score in 
+                 iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score_file)]
     @staticmethod
     def run():
 #        GeneralAnalysis.grid_visualization()
