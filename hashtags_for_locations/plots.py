@@ -189,7 +189,7 @@ class GeneralAnalysis():
             print
             print list_of_neighbor_location
             print
-            reversed(list_of_neighbor_location)
+            list_of_neighbor_location = reversed(list_of_neighbor_location)
             print list_of_neighbor_location
             exit()
 #    @staticmethod
