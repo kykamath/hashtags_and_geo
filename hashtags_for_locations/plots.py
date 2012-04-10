@@ -174,6 +174,12 @@ class GeneralAnalysis():
                                                                         key=itemgetter(1))
             FileIO.writeToFileAsJson([location_object['id'], tuples_of_neighbor_location_and_transmission_score], 
                                      GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)
+    @staticmethod
+    def load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score():
+        return [(location, tuples_of_neighbor_location_and_transmission_score)
+                 for location, tuples_of_neighbor_location_and_transmission_score in 
+                 iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)]
+            
 #    @staticmethod
 #    def transmitting_sharing_relationships():
 #        def load_incoming_and_outgoing_probabilities():
@@ -209,7 +215,7 @@ class GeneralAnalysis():
     @staticmethod
     def run():
 #        GeneralAnalysis.grid_visualization()
-        GeneralAnalysis.write_transmission_scores_file()
+#        GeneralAnalysis.write_transmission_scores_file()
         
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
