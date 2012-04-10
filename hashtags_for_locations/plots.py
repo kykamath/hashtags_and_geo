@@ -382,10 +382,10 @@ class GeneralAnalysis():
 #        GeneralAnalysis.outgoing_and_incoming_locations_on_world_map()
 #        GeneralAnalysis.get_top_influencers([[-90,-180], [90, 180]] )
 #        GeneralAnalysis.plot_local_influencers()
-        GeneralAnalysis.example_of_locations_most_influenced()
+#        GeneralAnalysis.example_of_locations_most_influenced()
         
 #        GeneralAnalysis.get_hashtags()
-#        GeneralAnalysis.print_hashtags_class_stats()
+        GeneralAnalysis.print_hashtags_class_stats()
         
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
