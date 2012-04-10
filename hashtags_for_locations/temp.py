@@ -1,16 +1,26 @@
 from library.geo import getLocationFromLid, plotPointsOnWorldMap
 import matplotlib.pyplot as plt
 
-def plot_locations_on_map(source_location, outgoing_locations):
+SOURCE_COLOR = 'r'
+OUTGOING_COLOR = 'g'
+INCOMING_COLOR = 'm'
+
+def plot_locations_on_map(source_location, outgoing_locations, incoming_locations):
     source_location = getLocationFromLid(source_location.replace('_', ' '))
     outgoing_locations = [getLocationFromLid(location.replace('_', ' ')) for location in outgoing_locations]
-    plotPointsOnWorldMap(outgoing_locations, blueMarble=False, bkcolor='#CFCFCF', c='g', lw = 0)
-    plotPointsOnWorldMap([source_location], blueMarble=False, bkcolor='#CFCFCF', c='r', lw = 0)
+    incoming_locations = [getLocationFromLid(location.replace('_', ' ')) for location in incoming_locations]
+    plt.subplot(211)
+    plotPointsOnWorldMap(outgoing_locations, blueMarble=False, bkcolor='#CFCFCF', c=OUTGOING_COLOR, lw = 0)
+    plotPointsOnWorldMap([source_location], blueMarble=False, bkcolor='#CFCFCF', c=SOURCE_COLOR, lw = 0)
+    plt.subplot(212)
+    plotPointsOnWorldMap(outgoing_locations, blueMarble=False, bkcolor='#CFCFCF', c=INCOMING_COLOR, lw = 0)
+    plotPointsOnWorldMap([source_location], blueMarble=False, bkcolor='#CFCFCF', c=SOURCE_COLOR, lw = 0)
     plt.show()
     
 source_location = '-12.3250_-37.7000'
 outgoing_locations = ['-0.7250_-47.8500', '-29.0000_-50.7500', '-21.7500_-42.7750', '-18.8500_-47.8500', '-10.8750_-36.9750', '-7.2500_-35.5250', '-2.9000_-41.3250', '-15.2250_-47.8500', '-22.4750_-43.5000', '-21.7500_-48.5750']
-plot_locations_on_map(source_location, outgoing_locations)
+incoming_locations = ['-3.6250_-38.4250', '-7.9750_-34.8000', '-15.9500_-48.5750', '-5.0750_-34.8000', '-9.4250_-47.8500', '-19.5750_-43.5000', '-2.1750_-44.2250', '-21.0250_-50.0250', '-29.7250_-50.7500', '-23.2000_-47.1250']
+plot_locations_on_map(source_location, outgoing_locations, incoming_locations)
 #def get_no_of_after_and_before_occurrences(occurrences1, occurrences2):
 #    no_of_after_occurrences, no_of_before_occurrences = 0., 0.
 #    occurrences1=sorted(occurrences1)

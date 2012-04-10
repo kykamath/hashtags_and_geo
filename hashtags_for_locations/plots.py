@@ -185,10 +185,16 @@ class GeneralAnalysis():
         tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
         for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
             print location, tuples_of_neighbor_location_and_transmission_score
-            list_of_top_outgoing_locations = list(reversed(zip(*tuples_of_neighbor_location_and_transmission_score[-GeneralAnalysis.NO_OF_TOP_LOCATIONS:])[0]))
-            list_of_top_incoming_locations = zip(*tuples_of_neighbor_location_and_transmission_score[:GeneralAnalysis.NO_OF_TOP_LOCATIONS])[0]
-            print 
-            print list_of_top_incoming_locations
+#            list_of_top_outgoing_locations = list(reversed(zip(*tuples_of_neighbor_location_and_transmission_score[-GeneralAnalysis.NO_OF_TOP_LOCATIONS:])[0]))
+#            list_of_top_incoming_locations = zip(*tuples_of_neighbor_location_and_transmission_score[:GeneralAnalysis.NO_OF_TOP_LOCATIONS])[0]
+#            print 
+#            print list_of_top_incoming_locations
+            tuples_of_outgoing_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score>0, tuples_of_neighbor_location_and_transmission_score)
+            tuples_of_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuples_of_neighbor_location_and_transmission_score)
+            print
+            print tuples_of_outgoing_location_and_transmission_score
+            print
+            print tuples_of_incoming_location_and_transmission_score 
             exit()
 #    @staticmethod
 #    def transmitting_sharing_relationships():
