@@ -100,6 +100,7 @@ def plotAllData(prediction_models):
 class GeneralAnalysis():
     locationsGraphFile = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/complete_prop/2011-05-01_2011-12-31/latticeGraph'
     tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file = 'data/tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score'
+    NO_OF_TOP_LOCATIONS = 10
     @staticmethod
     def grid_visualization():
         BIN_ACCURACY = 1.45
@@ -184,6 +185,7 @@ class GeneralAnalysis():
         tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
         for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
             print location, tuples_of_neighbor_location_and_transmission_score
+            print tuples_of_neighbor_location_and_transmission_score[:-GeneralAnalysis.NO_OF_TOP_LOCATIONS]
             exit()
 #    @staticmethod
 #    def transmitting_sharing_relationships():
