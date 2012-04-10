@@ -102,7 +102,7 @@ def plotAllData(prediction_models):
 class GeneralAnalysis():
     locationsGraphFile = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/complete_prop/2011-05-01_2011-12-31/latticeGraph'
     tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file = 'data/tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score'
-#    tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file = 'data/tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score'
+    tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score_file = 'data/tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score'
     hashtags_csv_file = 'data/hashtags.csv'
     SOURCE_COLOR = 'r'
     @staticmethod
@@ -274,7 +274,7 @@ class GeneralAnalysis():
             for location in locations: tuples_of_location_and_color.append([getLocationFromLid(location.replace('_', ' ')), boundary_color])
         locations, colors = zip(*tuples_of_location_and_color)
         plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors,  lw = 0)
-        for _, boundary_label, _ in tuples_of_boundary_and_boundary_label: plt.scatter([0], [0], label=boundary_label, c=boundary_color)
+        for _, boundary_label, boundary_color in tuples_of_boundary_and_boundary_label: plt.scatter([0], [0], label=boundary_label, c=boundary_color, lw = 0)
         plt.legend(loc=3, ncol=4, mode="expand",)
 #        plt.show()
         output_file = 'images/%s.png'%GeneralMethods.get_method_id()
@@ -348,36 +348,42 @@ class GeneralAnalysis():
             print hashtag_class, len(hashtags), hashtags[:20]
         print total_hashtags_with_class
     @staticmethod
-    def write_transmission_scores_with_hhashtag_class_file():
+    def write_transmission_scores_with_hashtag_class_file():
         map_from_hashtag_to_hashtag_class = GeneralAnalysis.load_map_from_hashtag_to_hashtag_class()
-#        GeneralMethods.runCommand('rm -rf %s'%GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)
+        GeneralMethods.runCommand('rm -rf %s'%GeneralAnalysis.tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score_file)
         for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
             print line_count
-            tuples_of_neighbor_location_and_transmission_score = []
+            map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score = defaultdict(list)
             map_from_hashtag_to_hashtag_weights = GeneralAnalysis.get_hashtag_weights(location_object['hashtags'])
             map_from_location_to_location_weights = GeneralAnalysis.get_location_weights(location_object['hashtags'], location_object['links'])
             for neighbor_location, map_from_hashtag_to_tuples_of_occurrences_and_time_range in location_object['links'].iteritems():
-                transmission_scores = []
+                map_from_hashtag_class_to_transmission_scores = defaultdict(list)
                 for hashtag, (neighbor_location_occurrences, time_range) in map_from_hashtag_to_tuples_of_occurrences_and_time_range.iteritems():
-                    if hashtag in location_object['hashtags']:
+                    if hashtag in location_object['hashtags'] and hashtag in map_from_hashtag_to_hashtag_class:
                         location_occurrences = location_object['hashtags'][hashtag][0]
                         (no_of_occurrences_after_appearing_in_location, \
                          no_of_occurrences_before_appearing_in_location, \
                          no_of_total_occurrences_between_location_pair)= GeneralAnalysis.get_occurrences_stats(location_occurrences, neighbor_location_occurrences)
-                        transmission_scores.append(map_from_hashtag_to_hashtag_weights[hashtag]*GeneralAnalysis.get_transmission_score(no_of_occurrences_after_appearing_in_location, 
+                        map_from_hashtag_class_to_transmission_scores[map_from_hashtag_to_hashtag_class[hashtag]].append(map_from_hashtag_to_hashtag_weights[hashtag]*\
+                                                                                                GeneralAnalysis.get_transmission_score(no_of_occurrences_after_appearing_in_location, 
                                                                                                                                        no_of_occurrences_before_appearing_in_location, 
                                                                                                                                        no_of_total_occurrences_between_location_pair))
-                mean_transmission_score = np.mean(transmission_scores)
-                tuples_of_neighbor_location_and_transmission_score.append([neighbor_location, 
-                                                                           map_from_location_to_location_weights[neighbor_location]*\
-                                                                           mean_transmission_score])
-            tuples_of_neighbor_location_and_transmission_score = sorted(tuples_of_neighbor_location_and_transmission_score,
-                                                                        key=itemgetter(1))
-            FileIO.writeToFileAsJson([location_object['id'], tuples_of_neighbor_location_and_transmission_score], 
-                                     GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)
+                for hashtag_class, transmission_scores in map_from_hashtag_class_to_transmission_scores.iteritems():
+                    mean_transmission_score = np.mean(transmission_scores)
+                    map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score[hashtag_class].append([neighbor_location, 
+                                                                                                                       map_from_location_to_location_weights[neighbor_location]*\
+                                                                                                                       mean_transmission_score])
+            map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score = {}
+            for hashtag_class, tuples_of_neighbor_location_and_transmission_score \
+                in map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score.iteritems():
+                map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score[hashtag_class] = sorted(tuples_of_neighbor_location_and_transmission_score,
+                                                                                                                    key=itemgetter(1))
+            FileIO.writeToFileAsJson([location_object['id'], map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score], 
+                                     GeneralAnalysis.tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score_file)
     @staticmethod
     def run():
 #        GeneralAnalysis.grid_visualization()
+
 #        GeneralAnalysis.write_transmission_scores_file()
 #        GeneralAnalysis.outgoing_and_incoming_locations_on_world_map()
 #        GeneralAnalysis.get_top_influencers([[-90,-180], [90, 180]] )
@@ -385,7 +391,8 @@ class GeneralAnalysis():
 #        GeneralAnalysis.example_of_locations_most_influenced()
         
 #        GeneralAnalysis.get_hashtags()
-        GeneralAnalysis.print_hashtags_class_stats()
+#        GeneralAnalysis.print_hashtags_class_stats()
+        GeneralAnalysis.write_transmission_scores_with_hashtag_class_file()
         
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
