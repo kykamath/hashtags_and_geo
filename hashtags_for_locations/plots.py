@@ -382,22 +382,57 @@ class GeneralAnalysis():
                                      GeneralAnalysis.tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score_file)
     @staticmethod
     def load_tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score():
-        return [(location, map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score)
+        return [(location, dict((int(k), v) for k, v in map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score.iteritems()))
                  for location, map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score in 
                  iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score_file)]
+    @staticmethod
+    def get_top_influencers_based_on_hashtag_class(boundary):
+        '''
+        1 [[51.475000000000001, 0.0], [38.424999999999997, -76.849999999999994], [40.600000000000001, -73.950000000000003], [50.75, 0.0], [-23.199999999999999, -46.399999999999999]]
+        London(Central), Washington D.C, New York (Brooklyn), London(South), Sao Paulo
+        2 [[42.049999999999997, -70.325000000000003], [40.600000000000001, -73.950000000000003], [29.725000000000001, -94.974999999999994], [39.875, -73.950000000000003], [39.875, -82.650000000000006]]
+        Boston, New York (Brooklyn), Houston, Philadelphia, Columbus OH
+        3 [[39.875, -74.674999999999997], [34.075000000000003, -118.175], [41.325000000000003, -87.724999999999994], [34.799999999999997, -89.900000000000006], [32.625, -96.424999999999997]]
+        Philadelphia, Los Angeles, Chicago, Memphis, Dallas
+        '''
+        map_from_hashtag_class_to_map_from_location_to_total_influence_score, map_from_hashtag_class_to_set_of_locations = defaultdict(dict), defaultdict(set)
+        tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score()
+        for location, map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score:
+            if isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), boundary):
+                for hashtag_class, tuples_of_neighbor_location_and_transmission_score in \
+                        map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score.iteritems():
+                    map_from_hashtag_class_to_set_of_locations[hashtag_class].add(location)
+                    tuples_of_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuples_of_neighbor_location_and_transmission_score)
+                    for incoming_location, transmission_score in tuples_of_incoming_location_and_transmission_score:
+                        if incoming_location not in map_from_hashtag_class_to_map_from_location_to_total_influence_score[hashtag_class]: 
+                            map_from_hashtag_class_to_map_from_location_to_total_influence_score[hashtag_class][incoming_location]=0.
+                        map_from_hashtag_class_to_map_from_location_to_total_influence_score[hashtag_class][incoming_location]+=abs(transmission_score)
+        for hashtag_class, map_from_location_to_total_influence_score in \
+                map_from_hashtag_class_to_map_from_location_to_total_influence_score.iteritems():
+            no_of_locations = len(map_from_hashtag_class_to_set_of_locations[hashtag_class])
+            tuples_of_location_and_mean_influence_scores = sorted([(location, total_influence_score/no_of_locations)
+                                                                 for location, total_influence_score in 
+                                                                 map_from_location_to_total_influence_score.iteritems()],
+                                                             key=itemgetter(1), reverse=True)[:5]
+            locations = zip(*tuples_of_location_and_mean_influence_scores)[0]
+            locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
+            print hashtag_class, locations
+#            plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c='r',  lw = 0)
+#            plt.show()
     @staticmethod
     def run():
 #        GeneralAnalysis.grid_visualization()
 
 #        GeneralAnalysis.write_transmission_scores_file()
 #        GeneralAnalysis.outgoing_and_incoming_locations_on_world_map()
-#        GeneralAnalysis.get_top_influencers([[-90,-180], [90, 180]] )
+#        GeneralAnalysis.get_top_influencers([[-90,-180], [90, 180]])
 #        GeneralAnalysis.plot_local_influencers()
 #        GeneralAnalysis.example_of_locations_most_influenced()
         
 #        GeneralAnalysis.get_hashtags()
-#        GeneralAnalysis.print_hashtags_class_stats()
-        GeneralAnalysis.write_transmission_scores_with_hashtag_class_file()
+        GeneralAnalysis.print_hashtags_class_stats()
+#        GeneralAnalysis.write_transmission_scores_with_hashtag_class_file()
+#        GeneralAnalysis.get_top_influencers_based_on_hashtag_class([[-90,-180], [90, 180]])
         
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
