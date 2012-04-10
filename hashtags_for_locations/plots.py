@@ -381,14 +381,8 @@ class GeneralAnalysis():
 #        GeneralAnalysis.write_transmission_scores_file()
 #        GeneralAnalysis.outgoing_and_incoming_locations_on_world_map()
 
-#        boundary = [[-90,-180], [90, 180]] # World
-#        boundary = [[24.527135,-127.792969], [49.61071,-59.765625]] #USA
-#        boundary = [[10.107706,-118.660469], [26.40009,-93.699531]] # Mexico
-#        boundary = [[-29.565473,-58.191719], [7.327985,-30.418282]] # Brazil
-#        boundary = [[-16.6695,88.409841], [30.115057,119.698904]] #South East Asia
-#        boundary = [[-19.343951,-81.131172], [-0.034768,-70.408516]]
-#        GeneralAnalysis.get_top_influencers(boundary)
-        GeneralAnalysis.plot_local_influencers()
+        GeneralAnalysis.get_top_influencers([[-90,-180], [90, 180]] )
+#        GeneralAnalysis.plot_local_influencers()
         
 #        GeneralAnalysis.example_of_locations_most_influenced()
         
