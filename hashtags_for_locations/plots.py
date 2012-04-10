@@ -190,11 +190,10 @@ class GeneralAnalysis():
                                                        tuples_of_location_and_transmission_score,
                                                        key=lambda (location, transmission_score): abs(transmission_score)
                                                        ))
-            else: locations, transmission_scores = [], []
-            locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
-            transmission_scores = [abs(transmission_score) for transmission_score in transmission_scores]
-            sc = plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=transmission_scores, cmap=matplotlib.cm.winter,  lw = 0)
-            plt.colorbar(sc)
+                locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
+                transmission_scores = [abs(transmission_score) for transmission_score in transmission_scores]
+                sc = plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=transmission_scores, cmap=matplotlib.cm.winter,  lw = 0)
+                plt.colorbar(sc)
             plotPointsOnWorldMap([source_location], blueMarble=False, bkcolor='#CFCFCF', c=GeneralAnalysis.SOURCE_COLOR, lw = 0)
         tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
         for location_count, (location, tuples_of_neighbor_location_and_transmission_score) in enumerate(tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score):
