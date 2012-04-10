@@ -247,6 +247,7 @@ class GeneralAnalysis():
         3 = Political
         4 = Global celebrations
         5 = Sports
+        6 = Rip/Events
         '''
         set_of_hashtags = set()
         GeneralMethods.runCommand('rm -rf %s'%GeneralAnalysis.hashtags_csv_file)
