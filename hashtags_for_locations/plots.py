@@ -47,6 +47,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.optimize import curve_fit
 from datetime import datetime, timedelta
 from mr_analysis import TIME_UNIT_IN_SECONDS
+from base64 import encode
 
 ALL_LOCATIONS = 'all_locations'
 MAP_FROM_MODEL_TO_COLOR = dict([
@@ -246,7 +247,7 @@ class GeneralAnalysis():
             [set_of_hashtags.add(hashtag) for hashtag in location_object['hashtags']]
             if line_count==100: break
         for hashtag_count, hashtag in enumerate(set_of_hashtags):
-            FileIO.writeToFile('%s, %s, '%(hashtag_count, hashtag), GeneralAnalysis.hashtags_csv_file)      
+            FileIO.writeToFile('%s, %s, '%(hashtag_count, unicode(hashtag).encode('utf-8')), GeneralAnalysis.hashtags_csv_file)      
 #    @staticmethod
 #    def transmitting_sharing_relationships():
 #        def load_incoming_and_outgoing_probabilities():
