@@ -241,7 +241,10 @@ class GeneralAnalysis():
     @staticmethod
     def get_hashtags():
         '''
+        0 = Uncategorized
         1 = General
+        2 = Entertainment
+        3 = Political
         '''
         set_of_hashtags = set()
         GeneralMethods.runCommand('rm -rf %s'%GeneralAnalysis.hashtags_csv_file)
