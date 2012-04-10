@@ -210,6 +210,14 @@ class GeneralAnalysis():
             FileIO.createDirectoryForFile(output_file)
             plt.savefig(output_file)
             plt.clf()
+    @staticmethod
+    def get_top_influencers():
+        tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
+        no_of_locations = len(tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score)
+#        for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
+        print no_of_locations
+            
+
 #    @staticmethod
 #    def transmitting_sharing_relationships():
 #        def load_incoming_and_outgoing_probabilities():
@@ -246,7 +254,8 @@ class GeneralAnalysis():
     def run():
 #        GeneralAnalysis.grid_visualization()
 #        GeneralAnalysis.write_transmission_scores_file()
-        GeneralAnalysis.outgoing_and_incoming_locations_on_world_map()
+#        GeneralAnalysis.outgoing_and_incoming_locations_on_world_map()
+        GeneralAnalysis.get_top_influencers()
         
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
