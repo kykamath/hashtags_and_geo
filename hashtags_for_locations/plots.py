@@ -101,6 +101,7 @@ def plotAllData(prediction_models):
 class GeneralAnalysis():
     locationsGraphFile = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/complete_prop/2011-05-01_2011-12-31/latticeGraph'
     tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file = 'data/tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score'
+    hashtags_csv_file = 'data/hashtags.csv'
     SOURCE_COLOR = 'r'
     @staticmethod
     def grid_visualization():
@@ -239,10 +240,13 @@ class GeneralAnalysis():
     @staticmethod
     def get_hashtags():
         set_of_hashtags = set()
+        GeneralMethods.runCommand('rm -rf %s'%GeneralAnalysis.hashtags_csv_file)
         for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
             print line_count
             [set_of_hashtags.add(hashtag) for hashtag in location_object['hashtags']]
-        print len(set_of_hashtags)       
+            if line_count==100: break
+        for hashtag_count, hashtag in enumerate(set_of_hashtags):
+            FileIO.writeToFile('%s, %s, '%(hashtag_count, hashtag), GeneralAnalysis.hashtags_csv_file)      
 #    @staticmethod
 #    def transmitting_sharing_relationships():
 #        def load_incoming_and_outgoing_probabilities():
