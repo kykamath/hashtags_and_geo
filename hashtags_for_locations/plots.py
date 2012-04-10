@@ -232,7 +232,6 @@ class GeneralAnalysis():
         locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
         plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c='r',  lw = 0)
         plt.show()
-
 #    @staticmethod
 #    def transmitting_sharing_relationships():
 #        def load_incoming_and_outgoing_probabilities():
