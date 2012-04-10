@@ -216,6 +216,7 @@ class GeneralAnalysis():
     def run():
 #        GeneralAnalysis.grid_visualization()
 #        GeneralAnalysis.write_transmission_scores_file()
+        GeneralAnalysis.
         
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
