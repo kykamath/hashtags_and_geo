@@ -185,8 +185,12 @@ class GeneralAnalysis():
         tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
         for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
             print location, tuples_of_neighbor_location_and_transmission_score
-            print 
-            print tuples_of_neighbor_location_and_transmission_score[-GeneralAnalysis.NO_OF_TOP_LOCATIONS:]
+            list_of_neighbor_location = zip(*tuples_of_neighbor_location_and_transmission_score[-GeneralAnalysis.NO_OF_TOP_LOCATIONS:])[0]
+            print
+            print list_of_neighbor_location
+            print
+            reversed(list_of_neighbor_location)
+            print list_of_neighbor_location
             exit()
 #    @staticmethod
 #    def transmitting_sharing_relationships():
