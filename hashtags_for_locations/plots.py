@@ -245,7 +245,7 @@ class GeneralAnalysis():
         for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
             print line_count
             [set_of_hashtags.add(hashtag) for hashtag in location_object['hashtags']]
-            if line_count==100: break
+#            if line_count==100: break
         for hashtag_count, hashtag in enumerate(set_of_hashtags):
             FileIO.writeToFile('%s, %s, '%(hashtag_count, unicode(hashtag).encode('utf-8')), GeneralAnalysis.hashtags_csv_file)      
 #    @staticmethod
