@@ -377,6 +377,7 @@ class GeneralAnalysis():
                 tuples_of_neighbor_location_and_transmission_score = map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score[hashtag_class]
                 map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score[hashtag_class] = sorted(tuples_of_neighbor_location_and_transmission_score,
                                                                                                                     key=itemgetter(1))
+            map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score = dict((str(k), v) for k, v in map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score.iteritems())
             FileIO.writeToFileAsJson([location_object['id'], map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score], 
                                      GeneralAnalysis.tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score_file)
     @staticmethod
