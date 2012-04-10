@@ -212,10 +212,18 @@ class GeneralAnalysis():
             plt.clf()
     @staticmethod
     def get_top_influencers():
+        map_from_location_to_total_influence_score = {}
         tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
-        no_of_locations = len(tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score)
-#        for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
-        print no_of_locations
+        no_of_locations = len(tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score)+0.
+        for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
+            tuples_of_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuples_of_neighbor_location_and_transmission_score)
+            for incoming_location, transmission_score in tuples_of_incoming_location_and_transmission_score:
+                if incoming_location not in map_from_location_to_total_influence_score: map_from_location_to_total_influence_score[incoming_location]=0.
+                map_from_location_to_total_influence_score[incoming_location]+=abs(transmission_score)
+        print sorted([(location, total_influence_score/no_of_locations)
+                         for location, total_influence_score in 
+                         map_from_location_to_total_influence_score.iteritems()],
+                     key=itemgetter(1), reverse=True)[:10]
             
 
 #    @staticmethod
