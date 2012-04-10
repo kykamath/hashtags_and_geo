@@ -246,6 +246,41 @@ class GeneralAnalysis():
         plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c='r',  lw = 0)
         plt.show()
     @staticmethod
+    def plot_local_influencers():
+        tuples_of_boundary_and_boundary_label = [
+#            ([[-90,-180], [90, 180]], 'World', GeneralMethods.getRandomColor()),
+            ([[24.527135,-127.792969], [49.61071,-59.765625]], 'USA', GeneralMethods.getRandomColor()),
+            ([[10.107706,-118.660469], [26.40009,-93.699531]], 'Mexico', GeneralMethods.getRandomColor()),
+            ([[-29.565473,-58.191719], [7.327985,-30.418282]], 'Brazil', GeneralMethods.getRandomColor()),
+            ([[-16.6695,88.409841], [30.115057,119.698904]], 'SE-Asia', GeneralMethods.getRandomColor()),
+        ]
+        tuples_of_location_and_color = []
+        for boundary, boundary_label, boundary_color in tuples_of_boundary_and_boundary_label:
+            map_from_location_to_total_influence_score, set_of_locations = {}, set()
+            tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
+            for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
+                if isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), boundary):
+                    set_of_locations.add(location)
+                    tuples_of_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuples_of_neighbor_location_and_transmission_score)
+                    for incoming_location, transmission_score in tuples_of_incoming_location_and_transmission_score:
+                        if incoming_location not in map_from_location_to_total_influence_score: map_from_location_to_total_influence_score[incoming_location]=0.
+                        map_from_location_to_total_influence_score[incoming_location]+=abs(transmission_score)
+            no_of_locations = len(set_of_locations)
+            tuples_of_location_and_mean_influence_scores = sorted([(location, total_influence_score/no_of_locations)
+                                                                 for location, total_influence_score in 
+                                                                 map_from_location_to_total_influence_score.iteritems()],
+                                                             key=itemgetter(1), reverse=True)[:10]
+            locations = zip(*tuples_of_location_and_mean_influence_scores)[0]
+            for location in locations: tuples_of_location_and_color.append([getLocationFromLid(location.replace('_', ' ')), boundary_color])
+        locations, colors = zip(*tuples_of_location_and_color)
+        plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors,  lw = 0)
+        for _, boundary_label, _ in tuples_of_boundary_and_boundary_label: plt.scatter([0], [0], label=boundary_label, c=boundary_color)
+        plt.legend(loc=3, ncol=4, mode="expand",)
+#        plt.show()
+        output_file = 'images/%s.png'%GeneralMethods.get_method_id()
+        FileIO.createDirectoryForFile(output_file)
+        plt.savefig(output_file)
+    @staticmethod
     def example_of_locations_most_influenced():
         input_locations = [('40.6000_-73.2250', 'new_york'), ('33.3500_-118.1750', 'los_angeles')]
         for input_location, label in input_locations:
@@ -351,9 +386,11 @@ class GeneralAnalysis():
 #        boundary = [[10.107706,-118.660469], [26.40009,-93.699531]] # Mexico
 #        boundary = [[-29.565473,-58.191719], [7.327985,-30.418282]] # Brazil
 #        boundary = [[-16.6695,88.409841], [30.115057,119.698904]] #South East Asia
+#        boundary = [[-19.343951,-81.131172], [-0.034768,-70.408516]]
 #        GeneralAnalysis.get_top_influencers(boundary)
+        GeneralAnalysis.plot_local_influencers()
         
-        GeneralAnalysis.example_of_locations_most_influenced()
+#        GeneralAnalysis.example_of_locations_most_influenced()
         
 #        GeneralAnalysis.get_hashtags()
 #        GeneralAnalysis.print_hashtags_class_stats()
