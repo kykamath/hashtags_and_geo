@@ -185,10 +185,12 @@ class GeneralAnalysis():
     def outgoing_and_incoming_locations_on_world_map():
         def plot_locations(source_location, tuples_of_location_and_transmission_score):
             source_location = getLocationFromLid(source_location.replace('_', ' '))
-            locations, transmission_scores = zip(*sorted(
-                                                   tuples_of_location_and_transmission_score,
-                                                   key=lambda (location, transmission_score): abs(transmission_score)
-                                                   ))
+            if tuples_of_location_and_transmission_score:
+                locations, transmission_scores = zip(*sorted(
+                                                       tuples_of_location_and_transmission_score,
+                                                       key=lambda (location, transmission_score): abs(transmission_score)
+                                                       ))
+            else: locations, transmission_scores = [], []
             locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
             transmission_scores = [abs(transmission_score) for transmission_score in transmission_scores]
             sc = plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=transmission_scores, cmap=matplotlib.cm.winter,  lw = 0)
