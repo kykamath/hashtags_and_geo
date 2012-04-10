@@ -136,11 +136,50 @@ class GeneralAnalysis():
                     probabilities[latticeObject['id']]['incoming'][neighborLattice]=len(incoming_hashtags)/float(len(latticeHashtagsSet))
                     probabilities[latticeObject['id']]['outgoing'][neighborLattice]=len(outgoing_hashtags)/float(len(latticeHashtagsSet))
             return probabilities
-
+        def get_transmission_scores():
+            def get_hashtag_weights(map_from_hashtag_to_tuples_of_occurrences_and_time_range):
+                total_occurrences = sum([len(occurrences) 
+                                         for hashtag, (occurrences, time_range) in 
+                                         map_from_hashtag_to_tuples_of_occurrences_and_time_range.iteritems()]) + 0.
+                return dict([(hashtag, len(occurrences)/total_occurrences)
+                    for hashtag, (occurrences, time_range) in 
+                    map_from_hashtag_to_tuples_of_occurrences_and_time_range.iteritems()])
+            def get_location_weights(hashtags_for_source_location, map_from_location_to_hashtags):
+                set_of_hashtags_for_source_location = set(hashtags_for_source_location.keys())
+                return dict([(location, len(set(hashtags.keys()).intersection(set_of_hashtags_for_source_location))/(len(set_of_hashtags_for_source_location)+0.))
+                             for location, hashtags in 
+                             map_from_location_to_hashtags.iteritems()])
+            def get_occurrences_stats(occurrences1, occurrences2):
+                no_of_occurrences_after_appearing_in_location, no_of_occurrences_before_appearing_in_location = 0., 0.
+                occurrences1=sorted(occurrences1)
+                occurrences2=sorted(occurrences2)
+                no_of_total_occurrences_between_location_pair = len(occurrences1)*len(occurrences2)*1.
+                for occurrence1 in occurrences1:
+                    for occurrence2 in occurrences2:
+                        if occurrence1<occurrence2: no_of_occurrences_after_appearing_in_location+=1
+                        elif occurrence1>occurrence2: no_of_occurrences_before_appearing_in_location+=1
+                return no_of_occurrences_after_appearing_in_location, no_of_occurrences_before_appearing_in_location, no_of_total_occurrences_between_location_pair
+            def get_transmission_score(no_of_occurrences_after_appearing_in_location, no_of_occurrences_before_appearing_in_location, no_of_total_occurrences_between_location_pair):
+                return (no_of_occurrences_after_appearing_in_location - no_of_occurrences_before_appearing_in_location) / no_of_total_occurrences_between_location_pair
+            for latticeObject in iterateJsonFromFile(GeneralAnalysis.locationsGraphFile):
+                map_from_hashtag_to_hashtag_weights = get_hashtag_weights(latticeObject['hashtags'])
+                map_from_location_to_location_weights = get_location_weights(latticeObject['hashtags'], latticeObject['links'])
+                for neighbor_location, map_from_hashtag_to_tuples_of_occurrences_and_time_range in latticeObject['links'].iteritems():
+                    transmission_scores = []
+                    for hashtag, (neighbor_location_occurrences, time_range) in map_from_hashtag_to_tuples_of_occurrences_and_time_range.iteritems():
+                        if hashtag in latticeObject['hashtags']:
+                            location_occurrences = latticeObject['hashtags'][hashtag][0]
+                            (no_of_occurrences_after_appearing_in_location, \
+                             no_of_occurrences_before_appearing_in_location, \
+                             no_of_total_occurrences_between_location_pair)= get_occurrences_stats(location_occurrences, neighbor_location_occurrences)
+                            transmission_scores.append(map_from_hashtag_to_hashtag_weights[hashtag]*get_transmission_score(no_of_occurrences_after_appearing_in_location, 
+                                                                                                                           no_of_occurrences_before_appearing_in_location, 
+                                                                                                                           no_of_total_occurrences_between_location_pair))
+                            print 'x'
 #        LOCATION_ACCURACY = 0.725
 #        input_point = [40.762601,-73.97953]
 #        input_point_lid = getLatticeLid(getLattice(input_point, LOCATION_ACCURACY), LOCATION_ACCURACY)
-        map_from_location_to_incoming_and_outgoing_probabilities = load_incoming_and_outgoing_probabilities()
+        map_from_location_to_incoming_and_outgoing_probabilities = get_transmission_scores()
         for location, incoming_and_outgoing_probabilities in map_from_location_to_incoming_and_outgoing_probabilities.iteritems():
             for probability_type, map_from_neigboring_location_to_probabilities in incoming_and_outgoing_probabilities.iteritems():
                 print location, probability_type, sorted(map_from_neigboring_location_to_probabilities.iteritems(), key=itemgetter(1), reverse=True)
