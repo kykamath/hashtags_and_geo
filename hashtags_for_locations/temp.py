@@ -1,6 +1,9 @@
 from library.geo import getLocationFromLid, plotPointsOnWorldMap
 import matplotlib.pyplot as plt
 import matplotlib
+from settings import data_analysis_folder
+from library.classes import GeneralMethods
+from library.file_io import FileIO
 
 SOURCE_COLOR = 'r'
 OUTGOING_COLOR = 'g'
@@ -8,8 +11,10 @@ INCOMING_COLOR = 'm'
 
 
 
-def plot_locations_on_map(source_location, tuples_of_outgoing_location_and_transmission_score, tuples_of_incoming_location_and_transmission_score):
-    source_location = getLocationFromLid(source_location.replace('_', ' '))
+def plot_locations_on_map(source_location_lid, tuples_of_outgoing_location_and_transmission_score, tuples_of_incoming_location_and_transmission_score):
+    source_location = getLocationFromLid(source_location_lid.replace('_', ' '))
+    output_file = data_analysis_folder%GeneralMethods.get_method_id()+'%s.png'%source_location_lid
+    print output_file
     def plot_locations(tuples_of_location_and_transmission_score):
         locations, transmission_scores = zip(*sorted(
                                                tuples_of_location_and_transmission_score,
@@ -33,8 +38,9 @@ def plot_locations_on_map(source_location, tuples_of_outgoing_location_and_trans
     plt.title('Gets influenced by')
 #    plotPointsOnWorldMap(outgoing_locations, blueMarble=False, bkcolor='#CFCFCF', c=INCOMING_COLOR, lw = 0)
 #    plotPointsOnWorldMap([source_location], blueMarble=False, bkcolor='#CFCFCF', c=SOURCE_COLOR, lw = 0)
-    plt.show()
-    plt.savefig()
+#    plt.show()
+    FileIO.createDirectoryForFile(output_file)
+    plt.savefig(output_file)
     plt.clf()
     
 source_location = '-12.3250_-37.7000'

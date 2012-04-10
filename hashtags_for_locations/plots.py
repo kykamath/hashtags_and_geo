@@ -29,7 +29,8 @@ from library.file_io import FileIO
 from models import ModelSelectionHistory
 from settings import analysisFolder, timeUnitWithOccurrencesFile, \
         PARTIAL_WORLD_BOUNDARY, hashtagsWithoutEndingWindowFile, \
-        hashtagsWithoutEndingWindowWithoutLatticeApproximationFile
+        hashtagsWithoutEndingWindowWithoutLatticeApproximationFile, \
+        data_analysis_folder
 from datetime import datetime
 from library.stats import getOutliersRangeUsingIRQ, filter_outliers
 import numpy as np
@@ -100,7 +101,7 @@ def plotAllData(prediction_models):
 class GeneralAnalysis():
     locationsGraphFile = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/complete_prop/2011-05-01_2011-12-31/latticeGraph'
     tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file = 'data/tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score'
-    NO_OF_TOP_LOCATIONS = 10
+    SOURCE_COLOR = 'r'
     @staticmethod
     def grid_visualization():
         BIN_ACCURACY = 1.45
@@ -182,21 +183,32 @@ class GeneralAnalysis():
                  iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)]
     @staticmethod
     def outgoing_and_incoming_locations_on_world_map():
+        def plot_locations(source_location, tuples_of_location_and_transmission_score):
+            source_location = getLocationFromLid(source_location.replace('_', ' '))
+            locations, transmission_scores = zip(*sorted(
+                                                   tuples_of_location_and_transmission_score,
+                                                   key=lambda (location, transmission_score): abs(transmission_score)
+                                                   ))
+            locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
+            transmission_scores = [abs(transmission_score) for transmission_score in transmission_scores]
+            sc = plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=transmission_scores, cmap=matplotlib.cm.winter,  lw = 0)
+            plt.colorbar(sc)
+            plotPointsOnWorldMap([source_location], blueMarble=False, bkcolor='#CFCFCF', c=GeneralAnalysis.SOURCE_COLOR, lw = 0)
         tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
-        for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
-            print GeneralMethods.get_method_id()
-#            print location, tuples_of_neighbor_location_and_transmission_score
-#            list_of_top_outgoing_locations = list(reversed(zip(*tuples_of_neighbor_location_and_transmission_score[-GeneralAnalysis.NO_OF_TOP_LOCATIONS:])[0]))
-#            list_of_top_incoming_locations = zip(*tuples_of_neighbor_location_and_transmission_score[:GeneralAnalysis.NO_OF_TOP_LOCATIONS])[0]
-#            print 
-#            print list_of_top_incoming_locations
-#            tuples_of_outgoing_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score>0, tuples_of_neighbor_location_and_transmission_score)
-#            tuples_of_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuples_of_neighbor_location_and_transmission_score)
-#            print
-#            print tuples_of_outgoing_location_and_transmission_score
-#            print
-#            print tuples_of_incoming_location_and_transmission_score 
-            exit()
+        for location_count, (location, tuples_of_neighbor_location_and_transmission_score) in enumerate(tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score):
+            output_file = data_analysis_folder%GeneralMethods.get_method_id()+'%s.png'%location
+            print location_count, output_file
+            tuples_of_outgoing_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score>0, tuples_of_neighbor_location_and_transmission_score)
+            tuples_of_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuples_of_neighbor_location_and_transmission_score)
+            plt.subplot(211)
+            plot_locations(location, tuples_of_outgoing_location_and_transmission_score)
+            plt.title('Influences')
+            plt.subplot(212)
+            plot_locations(location, tuples_of_incoming_location_and_transmission_score)
+            plt.title('Gets influenced by')
+            FileIO.createDirectoryForFile(output_file)
+            plt.savefig(output_file)
+            plt.clf()
 #    @staticmethod
 #    def transmitting_sharing_relationships():
 #        def load_incoming_and_outgoing_probabilities():

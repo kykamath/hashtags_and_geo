@@ -21,6 +21,6 @@ latticeGraphFile = analysisFolder+'%s_%s/latticeGraph'
 modelsFolder = analysisFolder+'models_1/'
 locationsGraphFile = '/mnt/chevron/kykamath/data/geo/hashtags/analysis/training_world/2_11/latticeGraph'
 
-general_analysis_folder = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/general_analysis/%s'
+data_analysis_folder = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/data_analysis/%s/'
 
 
