@@ -240,6 +240,9 @@ class GeneralAnalysis():
         plt.show()
     @staticmethod
     def get_hashtags():
+        '''
+        1 = General
+        '''
         set_of_hashtags = set()
         GeneralMethods.runCommand('rm -rf %s'%GeneralAnalysis.hashtags_csv_file)
         for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
