@@ -285,8 +285,10 @@ class MRAnalysis(ModifiedMRJob):
         ###
         lattices = latticesToOccranceTimeMap.items()
         if lattices:
-            hastagStartTime, hastagEndTime = min(lattices, key=lambda (lid, occurrences): min(occurrences) )[1], max(lattices, key=lambda (lid, occurrences): max(occurrences) )[1]
-            hashtagTimePeriod = hastagEndTime - hastagStartTime
+#            hastagStartTime, hastagEndTime = min(lattices, key=lambda (lid, occurrences): min(occurrences) )[1], max(lattices, key=lambda (lid, occurrences): max(occurrences) )[1]
+#            hastagStartTime, hastagEndTime = min(hastagStartTime), max(hastagEndTime)
+#            hashtagTimePeriod = hastagEndTime - hastagStartTime
+            hashtagTimePeriod = None
             for lattice in lattices: 
                 yield lattice[0], ['h', [[hashtagObject['h'], [lattice[1], hashtagTimePeriod]]]]
                 yield lattice[0], ['n', lattices]
