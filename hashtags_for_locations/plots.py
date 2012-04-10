@@ -181,7 +181,7 @@ class GeneralAnalysis():
                  for location, tuples_of_neighbor_location_and_transmission_score in 
                  iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)]
     @staticmethod
-    def outgoing_and_incoming_on_map():
+    def outgoing_and_incoming_locations_on_world_map():
         tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
         for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
             print GeneralMethods.get_method_id()
@@ -233,7 +233,7 @@ class GeneralAnalysis():
     def run():
 #        GeneralAnalysis.grid_visualization()
 #        GeneralAnalysis.write_transmission_scores_file()
-        GeneralAnalysis.plot_top_outgoing_locations()
+        GeneralAnalysis.outgoing_and_incoming_locations_on_world_map()
         
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
