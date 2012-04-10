@@ -170,6 +170,8 @@ class GeneralAnalysis():
                 tuples_of_neighbor_location_and_transmission_score.append([neighbor_location, 
                                                                            map_from_location_to_location_weights[neighbor_location]*\
                                                                            mean_transmission_score])
+            tuples_of_neighbor_location_and_transmission_score = sorted(tuples_of_neighbor_location_and_transmission_score,
+                                                                        key=itemgetter(1))
             FileIO.writeToFileAsJson([location_object['id'], tuples_of_neighbor_location_and_transmission_score], 
                                      GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)
 #    @staticmethod
