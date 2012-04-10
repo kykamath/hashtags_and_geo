@@ -217,15 +217,16 @@ class GeneralAnalysis():
             London (Center), Washington D.C, New York (Brooklyn), London (South), Detroit
             Los Angeles, New York (Babylon), Atlanta, Sao Paulo, Miami 
         '''
-        map_from_location_to_total_influence_score = {}
+        map_from_location_to_total_influence_score, set_of_locations = {}, set()
         tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
-        no_of_locations = len(tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score)+0.
         for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
             if isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), boundary):
+                set_of_locations.add(location)
                 tuples_of_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuples_of_neighbor_location_and_transmission_score)
                 for incoming_location, transmission_score in tuples_of_incoming_location_and_transmission_score:
                     if incoming_location not in map_from_location_to_total_influence_score: map_from_location_to_total_influence_score[incoming_location]=0.
                     map_from_location_to_total_influence_score[incoming_location]+=abs(transmission_score)
+        no_of_locations = len(set_of_locations)
         tuples_of_location_and_mean_influence_scores = sorted([(location, total_influence_score/no_of_locations)
                                                              for location, total_influence_score in 
                                                              map_from_location_to_total_influence_score.iteritems()],
@@ -235,6 +236,13 @@ class GeneralAnalysis():
         print locations
         plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c='r',  lw = 0)
         plt.show()
+    @staticmethod
+    def get_hashtags():
+        set_of_hashtags = set()
+        for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
+            print line_count
+            [set_of_hashtags.add(hashtag) for hashtag in location_object['hashtags']]
+        print len(set_of_hashtags)       
 #    @staticmethod
 #    def transmitting_sharing_relationships():
 #        def load_incoming_and_outgoing_probabilities():
@@ -273,12 +281,13 @@ class GeneralAnalysis():
 #        GeneralAnalysis.write_transmission_scores_file()
 #        GeneralAnalysis.outgoing_and_incoming_locations_on_world_map()
 
-        boundary = [[-90,-180], [90, 180]] # World
+#        boundary = [[-90,-180], [90, 180]] # World
 #        boundary = [[24.527135,-127.792969], [49.61071,-59.765625]] #USA
 #        boundary = [[10.107706,-118.660469], [26.40009,-93.699531]] # Mexico
-#        boundary = [[-29.565473,-58.191719], [7.327985,-30.418282]] # Brazil
+        boundary = [[-29.565473,-58.191719], [7.327985,-30.418282]] # Brazil
 #        boundary = [[-16.6695,88.409841], [30.115057,119.698904]] #South East Asia
-        GeneralAnalysis.get_top_influencers(boundary)
+#        GeneralAnalysis.get_top_influencers(boundary)
+        GeneralAnalysis.get_hashtags()
         
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
