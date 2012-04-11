@@ -17,7 +17,7 @@ from analysis import iterateJsonFromFile
 from itertools import groupby
 from library.geo import getLocationFromLid, plotPointsOnWorldMap, \
             getLatticeLid, plot_graph_clusters_on_world_map, isWithinBoundingBox,\
-    plotPointsOnUSMap, getLattice
+    plotPointsOnUSMap, getLattice, getHaversineDistance
 from collections import defaultdict
 import matplotlib.pyplot as plt
 from library.classes import GeneralMethods
@@ -103,7 +103,8 @@ class GeneralAnalysis():
     locationsGraphFile = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/complete_prop/2011-05-01_2011-12-31/latticeGraph'
     tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file = 'data/tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score'
     tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score_file = 'data/tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score'
-    tuples_of_location_and_neighboring_locations_file = 'data/tuples_of_location_and_neighboring_locations'
+#    tuples_of_location_and_neighboring_locations_file = 'data/tuples_of_location_and_neighboring_locations'
+    to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity_file = 'data/to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity'
     hashtags_csv_file = 'data/hashtags.csv'
     SOURCE_COLOR = 'r'
     LOCATION_INFLUENCING_VECTOR = 0
@@ -219,22 +220,43 @@ class GeneralAnalysis():
                                                                         ])
         return tuples_of_location_and_map_from_influence_type_to_vector
     @staticmethod
+    def write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity():
+        def location_similarity(location_vector_1, location_vector_2): 
+            return reduce(lambda total, k: total+(location_vector_1.get(k,0)*location_vector_2.get(k,0)), set(location_vector_1.keys()).union(location_vector_2.keys()),0.)
+        influence_types=[GeneralAnalysis.LOCATION_INFLUENCE_VECTOR, GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, GeneralAnalysis.LOCATION_INFLUENCING_VECTOR]
+        map_from_location_to_map_from_influence_type_to_vector = dict(GeneralAnalysis.get_tuples_of_location_and_map_from_influence_type_to_vector())
+        for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
+            print line_count
+            location = location_object['id']
+            to_neighbor_location_and_mf_influence_type_and_similarity = []
+            for neighbor_location in location_object['links'].keys(): 
+                mf_influence_type_and_similarity = {}
+                for influence_type in influence_types:
+                    similarity = location_similarity( map_from_location_to_map_from_influence_type_to_vector[location][influence_type],
+                                                      map_from_location_to_map_from_influence_type_to_vector[neighbor_location][influence_type])
+                    mf_influence_type_and_similarity[influence_type] = similarity
+                to_neighbor_location_and_mf_influence_type_and_similarity.append([neighbor_location, mf_influence_type_and_similarity])
+            FileIO.writeToFileAsJson(
+                                     [location, to_neighbor_location_and_mf_influence_type_and_similarity],
+                                     GeneralAnalysis.to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity_file
+                                     )
+                    
+    @staticmethod
     def influence_clusters(influence_type):
         def location_similarity(location_vector_1, location_vector_2): 
             return reduce(lambda total, k: total+(location_vector_1.get(k,0)*location_vector_2.get(k,0)), set(location_vector_1.keys()).union(location_vector_2.keys()),0.)
         digraph_of_location_and_location_similarity = nx.DiGraph()
         map_from_location_to_map_from_influence_type_to_vector = dict(GeneralAnalysis.get_tuples_of_location_and_map_from_influence_type_to_vector())
-        for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
+        for line_count, (location, neighbor_locations) in enumerate(FileIO.iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_neighboring_locations_file)):
             print line_count
-            location = location_object['id']
-            for neighbor_location, _ in location_object['links'].iteritems(): 
+            for neighbor_location in neighbor_locations: 
                 digraph_of_location_and_location_similarity.add_edge(location, neighbor_location, 
                                                                    {'w': location_similarity(
                                                                                              map_from_location_to_map_from_influence_type_to_vector[location][influence_type],
                                                                                              map_from_location_to_map_from_influence_type_to_vector[neighbor_location][influence_type]
                                                                                              )}
                                                                    )
-        
+#            if line_count==25: break;
         no_of_clusters, tuples_of_location_and_cluster_id = clusterUsingAffinityPropagation(digraph_of_location_and_location_similarity)
         print 'x'
     @staticmethod
@@ -478,7 +500,8 @@ class GeneralAnalysis():
 #        GeneralAnalysis.plot_local_influencers()
 #        GeneralAnalysis.example_of_locations_most_influenced()
         
-        GeneralAnalysis.write_tuples_of_location_and_neighboring_locations()
+#        GeneralAnalysis.write_tuples_of_location_and_neighboring_locations()
+        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
 #        GeneralAnalysis.influence_clusters(GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR)
         
 #        GeneralAnalysis.get_hashtags()
