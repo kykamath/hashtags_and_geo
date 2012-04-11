@@ -41,7 +41,7 @@ from hashtags_for_locations.models import loadSharingProbabilities,\
 import networkx as nx
 from library.graphs import clusterUsingAffinityPropagation
 from scipy.stats import ks_2samp
-from library.plotting import CurveFit, splineSmooth
+from library.plotting import CurveFit, splineSmooth, smooth
 import scipy
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.optimize import curve_fit
@@ -110,6 +110,7 @@ class GeneralAnalysis():
     LOCATION_INFLUENCING_VECTOR = '0'
     LOCATION_INFLUENCED_BY_VECTOR = '1'
     LOCATION_INFLUENCE_VECTOR = '2'
+    DISTANCE_ACCURACY = 500
     @staticmethod
     def grid_visualization():
         BIN_ACCURACY = 1.45
@@ -193,11 +194,11 @@ class GeneralAnalysis():
         return [(location, tuples_of_neighbor_location_and_transmission_score)
                  for location, tuples_of_neighbor_location_and_transmission_score in 
                  iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)]
-    @staticmethod
-    def write_tuples_of_location_and_neighboring_locations():
-        for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
-            print line_count
-            FileIO.writeToFileAsJson([location_object['id'], location_object['links'].keys()], GeneralAnalysis.tuples_of_location_and_neighboring_locations_file)
+#    @staticmethod
+#    def write_tuples_of_location_and_neighboring_locations():
+#        for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
+#            print line_count
+#            FileIO.writeToFileAsJson([location_object['id'], location_object['links'].keys()], GeneralAnalysis.tuples_of_location_and_neighboring_locations_file)
     @staticmethod
     def get_tuples_of_location_and_map_from_influence_type_to_vector():
         def convert_to_vector(tuples_of_location_and_transmission_score):
@@ -240,25 +241,57 @@ class GeneralAnalysis():
                                      [location, to_neighbor_location_and_mf_influence_type_and_similarity],
                                      GeneralAnalysis.to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity_file
                                      )
+    @staticmethod
+    def plot_influence_type_similarity_vs_distance():
+        mf_influence_type_to_tuo_distance_and_similarity = defaultdict(list)
+        for line_count, (location, to_neighbor_location_and_mf_influence_type_to_similarity) in \
+                enumerate(FileIO.iterateJsonFromFile(GeneralAnalysis.to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity_file)):
+            print line_count
+            for neighbor_location, mf_influence_type_to_similarity in \
+                    to_neighbor_location_and_mf_influence_type_to_similarity:
+                distance = getHaversineDistance(getLocationFromLid(location.replace('_', ' ')), getLocationFromLid(neighbor_location.replace('_', ' ')))
+                distance = int(distance)/GeneralAnalysis.DISTANCE_ACCURACY*GeneralAnalysis.DISTANCE_ACCURACY + GeneralAnalysis.DISTANCE_ACCURACY
+#                if distance==6500:
+#                    print 'x'
+                for influence_type, similarity in mf_influence_type_to_similarity.iteritems():
+                    mf_influence_type_to_tuo_distance_and_similarity[influence_type].append([distance, similarity])
+        for influence_type, tuo_distance_and_similarity in \
+                mf_influence_type_to_tuo_distance_and_similarity.iteritems():
+            tuo_distance_and_similarities =  [(distance, zip(*ito_tuo_distance_and_similarity)[1])
+                                                for distance, ito_tuo_distance_and_similarity in groupby(
+                                                        sorted(tuo_distance_and_similarity, key=itemgetter(0)),
+                                                        key=itemgetter(0)
+                                                    )
+                                            ]
+            x_distances, y_similarities = [], []
+            for distance, similarities in tuo_distance_and_similarities:
+                similarities=filter_outliers(similarities)
+                x_distances.append(distance), y_similarities.append(np.mean(similarities))
+#            x_distances, y_similarities = splineSmooth(x_distances, y_similarities)
+            plt.plot(x_distances, y_similarities, label=influence_type)
+        plt.legend()
+        plt.show()
+                
                     
     @staticmethod
     def influence_clusters(influence_type):
-        def location_similarity(location_vector_1, location_vector_2): 
-            return reduce(lambda total, k: total+(location_vector_1.get(k,0)*location_vector_2.get(k,0)), set(location_vector_1.keys()).union(location_vector_2.keys()),0.)
-        digraph_of_location_and_location_similarity = nx.DiGraph()
-        map_from_location_to_map_from_influence_type_to_vector = dict(GeneralAnalysis.get_tuples_of_location_and_map_from_influence_type_to_vector())
-        for line_count, (location, neighbor_locations) in enumerate(FileIO.iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_neighboring_locations_file)):
-            print line_count
-            for neighbor_location in neighbor_locations: 
-                digraph_of_location_and_location_similarity.add_edge(location, neighbor_location, 
-                                                                   {'w': location_similarity(
-                                                                                             map_from_location_to_map_from_influence_type_to_vector[location][influence_type],
-                                                                                             map_from_location_to_map_from_influence_type_to_vector[neighbor_location][influence_type]
-                                                                                             )}
-                                                                   )
-#            if line_count==25: break;
-        no_of_clusters, tuples_of_location_and_cluster_id = clusterUsingAffinityPropagation(digraph_of_location_and_location_similarity)
-        print 'x'
+        pass
+#        def location_similarity(location_vector_1, location_vector_2): 
+#            return reduce(lambda total, k: total+(location_vector_1.get(k,0)*location_vector_2.get(k,0)), set(location_vector_1.keys()).union(location_vector_2.keys()),0.)
+#        digraph_of_location_and_location_similarity = nx.DiGraph()
+#        map_from_location_to_map_from_influence_type_to_vector = dict(GeneralAnalysis.get_tuples_of_location_and_map_from_influence_type_to_vector())
+#        for line_count, (location, neighbor_locations) in enumerate(FileIO.iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_neighboring_locations_file)):
+#            print line_count
+#            for neighbor_location in neighbor_locations: 
+#                digraph_of_location_and_location_similarity.add_edge(location, neighbor_location, 
+#                                                                   {'w': location_similarity(
+#                                                                                             map_from_location_to_map_from_influence_type_to_vector[location][influence_type],
+#                                                                                             map_from_location_to_map_from_influence_type_to_vector[neighbor_location][influence_type]
+#                                                                                             )}
+#                                                                   )
+##            if line_count==25: break;
+#        no_of_clusters, tuples_of_location_and_cluster_id = clusterUsingAffinityPropagation(digraph_of_location_and_location_similarity)
+#        print 'x'
     @staticmethod
     def outgoing_and_incoming_locations_on_world_map():
         def plot_locations(source_location, tuples_of_location_and_transmission_score):
@@ -501,7 +534,8 @@ class GeneralAnalysis():
 #        GeneralAnalysis.example_of_locations_most_influenced()
         
 #        GeneralAnalysis.write_tuples_of_location_and_neighboring_locations()
-        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
+#        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
+        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
 #        GeneralAnalysis.influence_clusters(GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR)
         
 #        GeneralAnalysis.get_hashtags()
