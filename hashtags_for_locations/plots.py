@@ -189,6 +189,10 @@ class GeneralAnalysis():
                  for location, tuples_of_neighbor_location_and_transmission_score in 
                  iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)]
     @staticmethod
+    def get_location_influence_vectors():
+        tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
+
+    @staticmethod
     def outgoing_and_incoming_locations_on_world_map():
         def plot_locations(source_location, tuples_of_location_and_transmission_score):
             source_location = getLocationFromLid(source_location.replace('_', ' '))
@@ -430,10 +434,9 @@ class GeneralAnalysis():
 #        GeneralAnalysis.example_of_locations_most_influenced()
         
 #        GeneralAnalysis.get_hashtags()
-        GeneralAnalysis.print_hashtags_class_stats()
+#        GeneralAnalysis.print_hashtags_class_stats()
 #        GeneralAnalysis.write_transmission_scores_with_hashtag_class_file()
 #        GeneralAnalysis.get_top_influencers_based_on_hashtag_class([[-90,-180], [90, 180]])
-        
         
 def follow_the_leader_method(map_from_model_to_weight): return min(map_from_model_to_weight.iteritems(), key=itemgetter(1))[0]
 def hedging_method(map_from_model_to_weight):
