@@ -103,8 +103,12 @@ class GeneralAnalysis():
     locationsGraphFile = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/complete_prop/2011-05-01_2011-12-31/latticeGraph'
     tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file = 'data/tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score'
     tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score_file = 'data/tuples_of_location_and_map_from_hashtag_class_to_tuples_of_neighbor_location_and_transmission_score'
+    tuples_of_location_and_neighboring_locations_file = 'data/tuples_of_location_and_neighboring_locations'
     hashtags_csv_file = 'data/hashtags.csv'
     SOURCE_COLOR = 'r'
+    LOCATION_INFLUENCING_VECTOR = 0
+    LOCATION_INFLUENCED_BY_VECTOR = 1
+    LOCATION_INFLUENCE_VECTOR = 2
     @staticmethod
     def grid_visualization():
         BIN_ACCURACY = 1.45
@@ -189,9 +193,50 @@ class GeneralAnalysis():
                  for location, tuples_of_neighbor_location_and_transmission_score in 
                  iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)]
     @staticmethod
-    def get_location_influence_vectors():
+    def write_tuples_of_location_and_neighboring_locations():
+        for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
+            print line_count
+            FileIO.writeToFileAsJson([location_object['id'], location_object['links'].keys()], GeneralAnalysis.tuples_of_location_and_neighboring_locations_file)
+    @staticmethod
+    def get_tuples_of_location_and_map_from_influence_type_to_vector():
+        def convert_to_vector(tuples_of_location_and_transmission_score):
+            total_score = sum([abs(transmission_score) for _, transmission_score in tuples_of_location_and_transmission_score])
+            return dict([(location, abs(transmission_score)/total_score) for location, transmission_score in tuples_of_location_and_transmission_score])
+        tuples_of_location_and_map_from_influence_type_to_vector = []
         tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
-
+        for location, tuples_of_neighbor_location_and_transmission_score  in \
+                tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
+            tuples_of_outgoing_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score>0, tuples_of_neighbor_location_and_transmission_score)
+            tuples_of_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuples_of_neighbor_location_and_transmission_score)
+            location_influence_vector = convert_to_vector(tuples_of_neighbor_location_and_transmission_score)
+            location_influencing_vector = convert_to_vector(tuples_of_outgoing_location_and_transmission_score)
+            location_infuenced_by_vector = convert_to_vector(tuples_of_incoming_location_and_transmission_score)
+            tuples_of_location_and_map_from_influence_type_to_vector.append([location, {
+                                                                                    GeneralAnalysis.LOCATION_INFLUENCE_VECTOR: location_influence_vector,
+                                                                                    GeneralAnalysis.LOCATION_INFLUENCING_VECTOR: location_influencing_vector,
+                                                                                    GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR: location_infuenced_by_vector,
+                                                                                    }
+                                                                        ])
+        return tuples_of_location_and_map_from_influence_type_to_vector
+    @staticmethod
+    def influence_clusters(influence_type):
+        def location_similarity(location_vector_1, location_vector_2): 
+            return reduce(lambda total, k: total+(location_vector_1.get(k,0)*location_vector_2.get(k,0)), set(location_vector_1.keys()).union(location_vector_2.keys()),0.)
+        digraph_of_location_and_location_similarity = nx.DiGraph()
+        map_from_location_to_map_from_influence_type_to_vector = dict(GeneralAnalysis.get_tuples_of_location_and_map_from_influence_type_to_vector())
+        for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
+            print line_count
+            location = location_object['id']
+            for neighbor_location, _ in location_object['links'].iteritems(): 
+                digraph_of_location_and_location_similarity.add_edge(location, neighbor_location, 
+                                                                   {'w': location_similarity(
+                                                                                             map_from_location_to_map_from_influence_type_to_vector[location][influence_type],
+                                                                                             map_from_location_to_map_from_influence_type_to_vector[neighbor_location][influence_type]
+                                                                                             )}
+                                                                   )
+        
+        no_of_clusters, tuples_of_location_and_cluster_id = clusterUsingAffinityPropagation(digraph_of_location_and_location_similarity)
+        print 'x'
     @staticmethod
     def outgoing_and_incoming_locations_on_world_map():
         def plot_locations(source_location, tuples_of_location_and_transmission_score):
@@ -432,6 +477,9 @@ class GeneralAnalysis():
 #        GeneralAnalysis.get_top_influencers([[-90,-180], [90, 180]])
 #        GeneralAnalysis.plot_local_influencers()
 #        GeneralAnalysis.example_of_locations_most_influenced()
+        
+        GeneralAnalysis.write_tuples_of_location_and_neighboring_locations()
+#        GeneralAnalysis.influence_clusters(GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR)
         
 #        GeneralAnalysis.get_hashtags()
 #        GeneralAnalysis.print_hashtags_class_stats()
