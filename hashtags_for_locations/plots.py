@@ -107,9 +107,9 @@ class GeneralAnalysis():
     to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity_file = 'data/to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity'
     hashtags_csv_file = 'data/hashtags.csv'
     SOURCE_COLOR = 'r'
-    LOCATION_INFLUENCING_VECTOR = 0
-    LOCATION_INFLUENCED_BY_VECTOR = 1
-    LOCATION_INFLUENCE_VECTOR = 2
+    LOCATION_INFLUENCING_VECTOR = '0'
+    LOCATION_INFLUENCED_BY_VECTOR = '1'
+    LOCATION_INFLUENCE_VECTOR = '2'
     @staticmethod
     def grid_visualization():
         BIN_ACCURACY = 1.45
