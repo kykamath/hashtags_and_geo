@@ -113,6 +113,7 @@ class GeneralAnalysis():
     LOCATION_INFLUENCE_NONE = '-1'
     NO_OF_TOP_LOCATIONS = 25
     DISTANCE_ACCURACY = 500
+    JACCARD_SIMILARITY_ACCURACY = 0.1
     INFLUENCE_PROPERTIES = {
                             LOCATION_INFLUENCING_VECTOR: {'label': 'Influencing', 'color': 'r', 'marker': '*'},
                             LOCATION_INFLUENCED_BY_VECTOR: {'label': 'Influenced by', 'color': 'b', 'marker': 's'},
@@ -297,11 +298,45 @@ class GeneralAnalysis():
             plt.plot(x_distances, y_similarities, c = GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['color'], 
                      lw=2, marker = GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['marker'])
         plt.xlabel('Distance (miles)', fontsize=20)
-        plt.ylabel('Influenced Locations Similarity', fontsize=20)
+        plt.ylabel('Similarity Using Influenced Locations', fontsize=20)
         plt.legend()
-        plt.show()
+#        plt.show()
+        output_file = 'images/%s.png'%GeneralMethods.get_method_id()
+        FileIO.createDirectoryForFile(output_file)
+        plt.savefig(output_file)
     @staticmethod
-    
+    def plot_correlation_between_influence_similarity_and_hashtag_similarity():
+        mf_jaccard_similarity_to_influence_similarities = defaultdict(list)
+        for line_count, (location, to_neighbor_location_and_mf_influence_type_to_similarity) in \
+                enumerate(FileIO.iterateJsonFromFile(GeneralAnalysis.to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity_file)):
+            print line_count
+            for neighbor_location, mf_influence_type_to_similarity in \
+                    to_neighbor_location_and_mf_influence_type_to_similarity:
+                jaccard_similarity = round(mf_influence_type_to_similarity[GeneralAnalysis.LOCATION_INFLUENCE_NONE], 1)
+                mf_jaccard_similarity_to_influence_similarities[jaccard_similarity]\
+                    .append(mf_influence_type_to_similarity[GeneralAnalysis.LOCATION_INFLUENCING_VECTOR])
+        x_jaccard_similarities, y_influence_similarities = [], []
+        for jaccard_similarity, influence_similarities in \
+                mf_jaccard_similarity_to_influence_similarities.iteritems():
+            influence_similarities=filter_outliers(influence_similarities)
+            if len(influence_similarities) > 500:
+                x_jaccard_similarities.append(jaccard_similarity)
+                y_influence_similarities.append(np.mean(influence_similarities))
+                print jaccard_similarity, len(influence_similarities)
+        plt.scatter(x_jaccard_similarities, y_influence_similarities,  
+                    c = GeneralAnalysis.INFLUENCE_PROPERTIES[GeneralAnalysis.LOCATION_INFLUENCING_VECTOR]['color'], 
+                    lw=0, s=40)
+        parameters_after_fitting = CurveFit.getParamsAfterFittingData(x_jaccard_similarities, y_influence_similarities, CurveFit.lineFunction, [1., 1.])
+        x_jaccard_similarities = [0.01*i for i in range(65)]
+        y_fitted_mean_flipping_ratios = CurveFit.getYValues(CurveFit.lineFunction, parameters_after_fitting, x_jaccard_similarities)
+        plt.plot(x_jaccard_similarities, y_fitted_mean_flipping_ratios, lw=2)
+        plt.xlabel('Jaccard Similarity Between Locations', fontsize=20)
+        plt.ylabel('Similarity Using Influenced Locations', fontsize=20)
+#        plt.show()
+        output_file = 'images/%s.png'%GeneralMethods.get_method_id()
+        FileIO.createDirectoryForFile(output_file)
+        plt.savefig(output_file)
+            
     @staticmethod
     def influence_clusters():
         influence_type = GeneralAnalysis.LOCATION_INFLUENCE_VECTOR
@@ -560,8 +595,9 @@ class GeneralAnalysis():
 #        GeneralAnalysis.example_of_locations_most_influenced()
         
 #        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
-        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
-#        GeneralAnalysis.influence_clusters()
+#        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
+#        GeneralAnalysis.plot_correlation_between_influence_similarity_and_hashtag_similarity()
+        GeneralAnalysis.influence_clusters()
         
 #        GeneralAnalysis.get_hashtags()
 #        GeneralAnalysis.print_hashtags_class_stats()
