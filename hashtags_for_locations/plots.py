@@ -289,7 +289,7 @@ class GeneralAnalysis():
                     if influence_type == GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR:
                         if distance==6000 and similarity > 0.25\
                                 or distance==9000 and similarity > 0.25 \
-                                or distance==7000 and similarity == 0.00:
+                                or distance==7500 and similarity == 0.00:
                             larger_lid_pair = '__'.join(sorted([get_larger_lid(location), get_larger_lid(neighbor_location)]))
                             if larger_lid_pair not in mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance]:
                                 mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance][larger_lid_pair] = 0.
@@ -299,7 +299,7 @@ class GeneralAnalysis():
                     elif influence_type == GeneralAnalysis.LOCATION_INFLUENCING_VECTOR:
                         if distance==6000 and similarity > 0.25\
                                 or distance==9000 and similarity > 0.25 \
-                                or distance==7000 and similarity > 0.00:
+                                or distance==7500 and similarity > 0.00:
                             larger_lid_pair = '__'.join(sorted([get_larger_lid(location), get_larger_lid(neighbor_location)]))
                             if larger_lid_pair not in mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance]:
                                 mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance][larger_lid_pair] = 0.
@@ -307,7 +307,7 @@ class GeneralAnalysis():
                             if larger_lid_pair not in mf_larger_lid_pair_to_actual_lid_pair: 
                                 mf_larger_lid_pair_to_actual_lid_pair[larger_lid_pair] = '__'.join([location, neighbor_location])
         
-        mf_distance_to_color = dict([(6000, '#FF00D0'), (7000, '#00FF59'), (9000, '#00FFEE')])
+        mf_distance_to_color = dict([(6000, '#FF00D0'), (7500, '#00FF59'), (9000, '#00FFEE')])
         mf_influence_type_to_y_label = dict([(GeneralAnalysis.LOCATION_INFLUENCING_VECTOR, 'Similarity between influenced locations'),
               (GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, 'Similarity between influencer locations')])
         for influence_type in \
