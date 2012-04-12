@@ -237,8 +237,7 @@ class GeneralAnalysis():
     def write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity():
         def location_similarity(location_vector_1, location_vector_2): 
             return reduce(lambda total, k: total+(location_vector_1.get(k,0)*location_vector_2.get(k,0)), set(location_vector_1.keys()).union(location_vector_2.keys()),0.)
-        influence_types=[GeneralAnalysis.LOCATION_INFLUENCE_VECTOR, GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, 
-                         GeneralAnalysis.LOCATION_INFLUENCING_VECTOR, GeneralAnalysis.LOCATION_INFLUENCE_NONE]
+        influence_types=[GeneralAnalysis.LOCATION_INFLUENCE_VECTOR, GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, GeneralAnalysis.LOCATION_INFLUENCING_VECTOR]
         map_from_location_to_map_from_influence_type_to_vector = dict(GeneralAnalysis.get_tuples_of_location_and_map_from_influence_type_to_vector())
         GeneralMethods.runCommand('rm -rf %s'%GeneralAnalysis.to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity_file)
         for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
