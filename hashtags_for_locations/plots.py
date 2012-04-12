@@ -110,6 +110,7 @@ class GeneralAnalysis():
     LOCATION_INFLUENCING_VECTOR = '0'
     LOCATION_INFLUENCED_BY_VECTOR = '1'
     LOCATION_INFLUENCE_VECTOR = '2'
+    LOCATION_INFLUENCE_NONE = '-1'
     NO_OF_TOP_LOCATIONS = 25
     DISTANCE_ACCURACY = 500
     @staticmethod
@@ -236,7 +237,8 @@ class GeneralAnalysis():
     def write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity():
         def location_similarity(location_vector_1, location_vector_2): 
             return reduce(lambda total, k: total+(location_vector_1.get(k,0)*location_vector_2.get(k,0)), set(location_vector_1.keys()).union(location_vector_2.keys()),0.)
-        influence_types=[GeneralAnalysis.LOCATION_INFLUENCE_VECTOR, GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, GeneralAnalysis.LOCATION_INFLUENCING_VECTOR]
+        influence_types=[GeneralAnalysis.LOCATION_INFLUENCE_VECTOR, GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, 
+                         GeneralAnalysis.LOCATION_INFLUENCING_VECTOR, GeneralAnalysis.LOCATION_INFLUENCE_NONE]
         map_from_location_to_map_from_influence_type_to_vector = dict(GeneralAnalysis.get_tuples_of_location_and_map_from_influence_type_to_vector())
         GeneralMethods.runCommand('rm -rf %s'%GeneralAnalysis.to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity_file)
         for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
@@ -249,6 +251,11 @@ class GeneralAnalysis():
                     similarity = location_similarity( map_from_location_to_map_from_influence_type_to_vector[location][influence_type],
                                                       map_from_location_to_map_from_influence_type_to_vector[neighbor_location][influence_type])
                     mf_influence_type_and_similarity[influence_type] = similarity
+                so_hashtags_for_location = set(location_object['hashtags'].keys())
+                so_hashtags_for_neighbor_location = set(location_object['links'][neighbor_location].keys())
+                numerator = len(so_hashtags_for_location.intersection(so_hashtags_for_neighbor_location)) + 0.
+                denominator = len(so_hashtags_for_location.union(so_hashtags_for_neighbor_location)) + 0.
+                mf_influence_type_and_similarity[GeneralAnalysis.LOCATION_INFLUENCE_NONE] = numerator/denominator                
                 to_neighbor_location_and_mf_influence_type_and_similarity.append([neighbor_location, mf_influence_type_and_similarity])
             FileIO.writeToFileAsJson(
                                      [location, to_neighbor_location_and_mf_influence_type_and_similarity],
@@ -266,8 +273,10 @@ class GeneralAnalysis():
                 distance = int(distance)/GeneralAnalysis.DISTANCE_ACCURACY*GeneralAnalysis.DISTANCE_ACCURACY + GeneralAnalysis.DISTANCE_ACCURACY
                 for influence_type, similarity in mf_influence_type_to_similarity.iteritems():
                     mf_influence_type_to_tuo_distance_and_similarity[influence_type].append([distance, similarity])
-        for influence_type, tuo_distance_and_similarity in \
-                mf_influence_type_to_tuo_distance_and_similarity.iteritems():
+        for influence_type in \
+                mf_influence_type_to_tuo_distance_and_similarity:
+#                [GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, GeneralAnalysis.LOCATION_INFLUENCING_VECTOR]:
+            tuo_distance_and_similarity = mf_influence_type_to_tuo_distance_and_similarity[influence_type]
             tuo_distance_and_similarities =  [(distance, zip(*ito_tuo_distance_and_similarity)[1])
                                                 for distance, ito_tuo_distance_and_similarity in groupby(
                                                         sorted(tuo_distance_and_similarity, key=itemgetter(0)),
