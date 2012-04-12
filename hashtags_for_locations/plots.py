@@ -113,6 +113,13 @@ class GeneralAnalysis():
     LOCATION_INFLUENCE_NONE = '-1'
     NO_OF_TOP_LOCATIONS = 25
     DISTANCE_ACCURACY = 500
+    INFLUENCE_PROPERTIES = {
+                            LOCATION_INFLUENCING_VECTOR: {'label': 'Influencing', 'color': 'r', 'marker': '*'},
+                            LOCATION_INFLUENCED_BY_VECTOR: {'label': 'Influenced by', 'color': 'b', 'marker': 's'},
+                            LOCATION_INFLUENCE_VECTOR: {'label': 'Influence', 'color': 'g', 'marker': 'o'},
+                            LOCATION_INFLUENCE_VECTOR: {'label': 'Jaccard', 'color': 'm', 'marker': 's'},
+                            }
+    
     @staticmethod
     def grid_visualization():
         BIN_ACCURACY = 1.45
@@ -273,7 +280,7 @@ class GeneralAnalysis():
                 for influence_type, similarity in mf_influence_type_to_similarity.iteritems():
                     mf_influence_type_to_tuo_distance_and_similarity[influence_type].append([distance, similarity])
         for influence_type in \
-                [GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, GeneralAnalysis.LOCATION_INFLUENCING_VECTOR, GeneralAnalysis.LOCATION_INFLUENCE_NONE]:
+                [GeneralAnalysis.LOCATION_INFLUENCING_VECTOR]:
 #                mf_influence_type_to_tuo_distance_and_similarity:
             tuo_distance_and_similarity = mf_influence_type_to_tuo_distance_and_similarity[influence_type]
             tuo_distance_and_similarities =  [(distance, zip(*ito_tuo_distance_and_similarity)[1])
@@ -285,10 +292,12 @@ class GeneralAnalysis():
             x_distances, y_similarities = [], []
             for distance, similarities in tuo_distance_and_similarities:
                 similarities=filter_outliers(similarities)
-                print len(similarities)
                 x_distances.append(distance), y_similarities.append(np.mean(similarities))
 #            x_distances, y_similarities = splineSmooth(x_distances, y_similarities)
-            plt.plot(x_distances, y_similarities, label=influence_type)
+            plt.plot(x_distances, y_similarities, c = GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['color'], 
+                     lw=2, marker = GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['marker'])
+        plt.xlabel('Distance (miles)', fontsize=20)
+        plt.ylabel('Influenced Locations Similarity', fontsize=20)
         plt.legend()
         plt.show()
     @staticmethod
@@ -548,8 +557,8 @@ class GeneralAnalysis():
 #        GeneralAnalysis.plot_local_influencers()
 #        GeneralAnalysis.example_of_locations_most_influenced()
         
-        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
-#        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
+#        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
+        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
 #        GeneralAnalysis.influence_clusters()
         
 #        GeneralAnalysis.get_hashtags()
