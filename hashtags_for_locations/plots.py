@@ -273,8 +273,8 @@ class GeneralAnalysis():
                 for influence_type, similarity in mf_influence_type_to_similarity.iteritems():
                     mf_influence_type_to_tuo_distance_and_similarity[influence_type].append([distance, similarity])
         for influence_type in \
-                mf_influence_type_to_tuo_distance_and_similarity:
-#                [GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, GeneralAnalysis.LOCATION_INFLUENCING_VECTOR]:
+                [GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, GeneralAnalysis.LOCATION_INFLUENCING_VECTOR, GeneralAnalysis.LOCATION_INFLUENCE_NONE]:
+#                mf_influence_type_to_tuo_distance_and_similarity:
             tuo_distance_and_similarity = mf_influence_type_to_tuo_distance_and_similarity[influence_type]
             tuo_distance_and_similarities =  [(distance, zip(*ito_tuo_distance_and_similarity)[1])
                                                 for distance, ito_tuo_distance_and_similarity in groupby(
@@ -285,6 +285,7 @@ class GeneralAnalysis():
             x_distances, y_similarities = [], []
             for distance, similarities in tuo_distance_and_similarities:
                 similarities=filter_outliers(similarities)
+                print len(similarities)
                 x_distances.append(distance), y_similarities.append(np.mean(similarities))
 #            x_distances, y_similarities = splineSmooth(x_distances, y_similarities)
             plt.plot(x_distances, y_similarities, label=influence_type)
