@@ -110,6 +110,7 @@ class GeneralAnalysis():
     LOCATION_INFLUENCING_VECTOR = '0'
     LOCATION_INFLUENCED_BY_VECTOR = '1'
     LOCATION_INFLUENCE_VECTOR = '2'
+    NO_OF_TOP_LOCATIONS = 25
     DISTANCE_ACCURACY = 500
     @staticmethod
     def grid_visualization():
@@ -202,14 +203,25 @@ class GeneralAnalysis():
     @staticmethod
     def get_tuples_of_location_and_map_from_influence_type_to_vector():
         def convert_to_vector(tuples_of_location_and_transmission_score):
-            total_score = sum([abs(transmission_score) for _, transmission_score in tuples_of_location_and_transmission_score])
-            return dict([(location, abs(transmission_score)/total_score) for location, transmission_score in tuples_of_location_and_transmission_score])
+            tuples_of_location_and_transmission_score = sorted(
+                                                               tuples_of_location_and_transmission_score,
+                                                               key = lambda (_, transmission_score): abs(transmission_score),
+                                                               reverse=True
+                                                        )[:GeneralAnalysis.NO_OF_TOP_LOCATIONS]
+            root_of_sum_of_squares = np.sqrt(sum([transmission_score**2 for _, transmission_score in tuples_of_location_and_transmission_score]))
+            return dict([(location, transmission_score/root_of_sum_of_squares) for location, transmission_score in tuples_of_location_and_transmission_score])
         tuples_of_location_and_map_from_influence_type_to_vector = []
         tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
         for location, tuples_of_neighbor_location_and_transmission_score  in \
                 tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
-            tuples_of_outgoing_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score>0, tuples_of_neighbor_location_and_transmission_score)
-            tuples_of_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuples_of_neighbor_location_and_transmission_score)
+            tuples_of_outgoing_location_and_transmission_score = filter(
+                                                                            lambda (neighbor_location, transmission_score): transmission_score>0,
+                                                                            tuples_of_neighbor_location_and_transmission_score
+                                                                        )
+            tuples_of_incoming_location_and_transmission_score = filter(
+                                                                            lambda (neighbor_location, transmission_score): transmission_score<0, 
+                                                                            tuples_of_neighbor_location_and_transmission_score
+                                                                        )
             location_influence_vector = convert_to_vector(tuples_of_neighbor_location_and_transmission_score)
             location_influencing_vector = convert_to_vector(tuples_of_outgoing_location_and_transmission_score)
             location_infuenced_by_vector = convert_to_vector(tuples_of_incoming_location_and_transmission_score)
@@ -226,6 +238,7 @@ class GeneralAnalysis():
             return reduce(lambda total, k: total+(location_vector_1.get(k,0)*location_vector_2.get(k,0)), set(location_vector_1.keys()).union(location_vector_2.keys()),0.)
         influence_types=[GeneralAnalysis.LOCATION_INFLUENCE_VECTOR, GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, GeneralAnalysis.LOCATION_INFLUENCING_VECTOR]
         map_from_location_to_map_from_influence_type_to_vector = dict(GeneralAnalysis.get_tuples_of_location_and_map_from_influence_type_to_vector())
+        GeneralMethods.runCommand('rm -rf %s'%GeneralAnalysis.to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity_file)
         for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
             print line_count
             location = location_object['id']
@@ -526,10 +539,9 @@ class GeneralAnalysis():
 #        GeneralAnalysis.plot_local_influencers()
 #        GeneralAnalysis.example_of_locations_most_influenced()
         
-#        GeneralAnalysis.write_tuples_of_location_and_neighboring_locations()
-#        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
+        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
 #        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
-        GeneralAnalysis.influence_clusters()
+#        GeneralAnalysis.influence_clusters()
         
 #        GeneralAnalysis.get_hashtags()
 #        GeneralAnalysis.print_hashtags_class_stats()
