@@ -271,10 +271,6 @@ class GeneralAnalysis():
                                      )
     @staticmethod
     def plot_influence_type_similarity_vs_distance():
-        '''
-        Mexico Spain 7000
-        
-        '''
         def get_larger_lid(lid): return getLatticeLid(getLocationFromLid(lid.replace('_', ' ')), 10)
         mf_influence_type_to_tuo_distance_and_similarity = defaultdict(list)
         mf_larger_lid_pair_to_actual_lid_pair = {}
@@ -311,8 +307,9 @@ class GeneralAnalysis():
                             if larger_lid_pair not in mf_larger_lid_pair_to_actual_lid_pair: 
                                 mf_larger_lid_pair_to_actual_lid_pair[larger_lid_pair] = '__'.join([location, neighbor_location])
         
-#        mf_distance_to_color = dict([(distance, GeneralMethods.getRandomColor()) for distance in mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences])
-        
+        mf_distance_to_color = dict([(6000, '#FF00D0'), (7000, '#00FF59'), (9000, '#00FFEE')])
+        mf_influence_type_to_y_label = dict([(GeneralAnalysis.LOCATION_INFLUENCING_VECTOR, 'Similarity between influenced locations'),
+              (GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, 'Similarity between influencer locations')])
         for influence_type in \
                 [GeneralAnalysis.LOCATION_INFLUENCING_VECTOR, GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR]:
 #                mf_influence_type_to_tuo_distance_and_similarity:
@@ -323,9 +320,10 @@ class GeneralAnalysis():
                                                         key=itemgetter(0)
                                                     )
                                             ]
-            plt.subplot(211)
+            plt.subplot(111)
 #            el = Ellipse((2, -1), 0.5, 0.5)
 #            xy = (6000, 0.23)
+#            figure(figsize=(1,1))
             x_distances, y_similarities = [], []
             for distance, similarities in tuo_distance_and_similarities:
                 similarities=filter_outliers(similarities)
@@ -333,10 +331,16 @@ class GeneralAnalysis():
 #            x_distances, y_similarities = splineSmooth(x_distances, y_similarities)
             plt.plot(x_distances, y_similarities, c = GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['color'], 
                      lw=2, marker = GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['marker'])
-            plt.xlabel('Distance (Miles)', fontsize=10)
-            plt.ylabel('Similarity Using Influenced Locations', fontsize=10)
-            plt.subplot(212)
-            mf_distance_to_color = dict([(6000, '#FF00D0'), (7000, '#00FF59'), (9000, '#00FFEE')])
+            plt.xlabel('Distance (Miles)', fontsize=20)
+            plt.ylabel(mf_influence_type_to_y_label[influence_type], fontsize=20)
+            
+            plt.ylim(ymin=0.0, ymax=0.4)
+            mf_distance_to_similarity = dict(zip(x_distances, y_similarities))
+            for distance, color in mf_distance_to_color.iteritems():
+                plt.plot([distance, distance], [0,mf_distance_to_similarity[distance]], '--', lw=3, c=color)
+            
+
+            a = plt.axes([0.39, 0.47, .49, .49])
             mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences = mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type]
             for distance, mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences in mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences.iteritems():
                 for larger_lid_pairs in mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences.keys()[:]:
@@ -356,9 +360,10 @@ class GeneralAnalysis():
                 _, m = plotPointsOnWorldMap([getLocationFromLid(location.replace('_', ' ')) for location in so_locations], blueMarble=False, bkcolor='#CFCFCF', c=mf_distance_to_color[distance], returnBaseMapObject=True, lw = 0)
                 for location1, location2 in location_pairs: 
     #                if isWithinBoundingBox(location1, PARTIAL_WORLD_BOUNDARY) and isWithinBoundingBox(location2, PARTIAL_WORLD_BOUNDARY): 
-                    m.drawgreatcircle(location1[1], location1[0], location2[1], location2[0], color=mf_distance_to_color[distance], lw=2., alpha=0.5)
-            for distance, color in mf_distance_to_color.iteritems(): plt.scatter([0], [0], color=color, label=str(distance))
-            plt.legend(loc=3, ncol=3, mode="expand")
+                    m.drawgreatcircle(location1[1], location1[0], location2[1], location2[0], color=mf_distance_to_color[distance], lw=3., alpha=0.5)
+#            for distance, color in mf_distance_to_color.iteritems(): plt.scatter([0], [0], color=color, label=str(distance))
+#            plt.legend(loc=3, ncol=3, mode="expand")
+            plt.setp(a)
             output_file = 'images/%s/%s.png'%(GeneralMethods.get_method_id(), GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['id'])
             FileIO.createDirectoryForFile(output_file)
             plt.savefig(output_file)
