@@ -296,16 +296,16 @@ class GeneralAnalysis():
                             mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance][larger_lid_pair]+=1
                             if larger_lid_pair not in mf_larger_lid_pair_to_actual_lid_pair: 
                                 mf_larger_lid_pair_to_actual_lid_pair[larger_lid_pair] = '__'.join([location, neighbor_location])
-                    elif influence_type == GeneralAnalysis.LOCATION_INFLUENCING_VECTOR:
-                        if distance==6000 and similarity > 0.25\
-                                or distance==9000 and similarity > 0.25 \
-                                or distance==7500 and similarity > 0.00:
-                            larger_lid_pair = '__'.join(sorted([get_larger_lid(location), get_larger_lid(neighbor_location)]))
-                            if larger_lid_pair not in mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance]:
-                                mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance][larger_lid_pair] = 0.
-                            mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance][larger_lid_pair]+=1
-                            if larger_lid_pair not in mf_larger_lid_pair_to_actual_lid_pair: 
-                                mf_larger_lid_pair_to_actual_lid_pair[larger_lid_pair] = '__'.join([location, neighbor_location])
+#                    elif influence_type == GeneralAnalysis.LOCATION_INFLUENCING_VECTOR:
+#                        if distance==6000 and similarity > 0.25\
+#                                or distance==9000 and similarity > 0.25 \
+#                                or distance==7500 and similarity > 0.00:
+#                            larger_lid_pair = '__'.join(sorted([get_larger_lid(location), get_larger_lid(neighbor_location)]))
+#                            if larger_lid_pair not in mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance]:
+#                                mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance][larger_lid_pair] = 0.
+#                            mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance][larger_lid_pair]+=1
+#                            if larger_lid_pair not in mf_larger_lid_pair_to_actual_lid_pair: 
+#                                mf_larger_lid_pair_to_actual_lid_pair[larger_lid_pair] = '__'.join([location, neighbor_location])
         
         mf_distance_to_color = dict([(6000, '#FF00D0'), (7500, '#00FF59'), (9000, '#00FFEE')])
         mf_influence_type_to_y_label = dict([(GeneralAnalysis.LOCATION_INFLUENCING_VECTOR, 'Similarity between influenced locations'),
@@ -338,10 +338,10 @@ class GeneralAnalysis():
             mf_distance_to_similarity = dict(zip(x_distances, y_similarities))
             for distance, color in mf_distance_to_color.iteritems():
                 plt.plot([distance, distance], [0,mf_distance_to_similarity[distance]], '--', lw=3, c=color)
-            
 
             a = plt.axes([0.39, 0.47, .49, .49])
-            mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences = mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type]
+#            mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences = mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type]
+            mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences = mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR]
             for distance, mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences in mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences.iteritems():
                 for larger_lid_pairs in mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences.keys()[:]:
                     mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[mf_larger_lid_pair_to_actual_lid_pair[larger_lid_pairs]] = mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[larger_lid_pairs]
