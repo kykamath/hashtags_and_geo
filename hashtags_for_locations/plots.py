@@ -301,6 +301,8 @@ class GeneralAnalysis():
         plt.legend()
         plt.show()
     @staticmethod
+    
+    @staticmethod
     def influence_clusters():
         influence_type = GeneralAnalysis.LOCATION_INFLUENCE_VECTOR
         digraph_of_location_and_location_similarity = nx.DiGraph()
