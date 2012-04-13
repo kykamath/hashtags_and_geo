@@ -43,7 +43,7 @@ from library.graphs import clusterUsingAffinityPropagation
 from scipy.stats import ks_2samp
 from library.plotting import CurveFit, splineSmooth, smooth, getLatexForString
 import scipy
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+#from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.optimize import curve_fit
 from datetime import datetime, timedelta
 from mr_analysis import TIME_UNIT_IN_SECONDS
