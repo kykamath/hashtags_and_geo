@@ -41,7 +41,7 @@ from hashtags_for_locations.models import loadSharingProbabilities,\
 import networkx as nx
 from library.graphs import clusterUsingAffinityPropagation
 from scipy.stats import ks_2samp
-from library.plotting import CurveFit, splineSmooth, smooth
+from library.plotting import CurveFit, splineSmooth, smooth, getLatexForString
 import scipy
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.optimize import curve_fit
@@ -49,6 +49,7 @@ from datetime import datetime, timedelta
 from mr_analysis import TIME_UNIT_IN_SECONDS
 from base64 import encode
 from matplotlib.patches import Ellipse
+from scipy.stats.stats import pearsonr
 
 ALL_LOCATIONS = 'all_locations'
 MAP_FROM_MODEL_TO_COLOR = dict([
@@ -116,11 +117,12 @@ class GeneralAnalysis():
     DISTANCE_ACCURACY = 500
     JACCARD_SIMILARITY_ACCURACY = 0.1
     INFLUENCE_PROPERTIES = {
-                            LOCATION_INFLUENCING_VECTOR: {'label': 'Influencing', 'color': 'r', 'marker': '*', 'id': 'influencing_vector'},
-                            LOCATION_INFLUENCED_BY_VECTOR: {'label': 'Influenced by', 'color': 'b', 'marker': 's', 'id': 'influenced_by_vector'},
+                            LOCATION_INFLUENCING_VECTOR: {'label':  'Influenced locations similarity', 'color': 'r', 'marker': '*', 'id': 'influencing_vector'},
+                            LOCATION_INFLUENCED_BY_VECTOR: {'label': 'Influencing locations similarity', 'color': 'b', 'marker': 's', 'id': 'influenced_by_vector'},
                             LOCATION_INFLUENCE_VECTOR: {'label': 'Influence', 'color': 'g', 'marker': 'o', 'id': 'influence_vector'},
                             LOCATION_INFLUENCE_NONE: {'label': 'Jaccard', 'color': 'm', 'marker': 's', 'id': 'jaccard_similarity'},
                             }
+
     
     @staticmethod
     def grid_visualization():
@@ -308,8 +310,6 @@ class GeneralAnalysis():
 #                                mf_larger_lid_pair_to_actual_lid_pair[larger_lid_pair] = '__'.join([location, neighbor_location])
         mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[GeneralAnalysis.LOCATION_INFLUENCING_VECTOR] = mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR]
         mf_distance_to_color = dict([(6000, '#FF00D0'), (7500, '#00FF59'), (9000, '#00FFEE')])
-        mf_influence_type_to_y_label = dict([(GeneralAnalysis.LOCATION_INFLUENCING_VECTOR, 'Similarity between influenced locations'),
-              (GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR, 'Similarity between influencer locations')])
         for influence_type in \
                 [GeneralAnalysis.LOCATION_INFLUENCING_VECTOR, GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR]:
 #                mf_influence_type_to_tuo_distance_and_similarity:
@@ -332,7 +332,7 @@ class GeneralAnalysis():
             plt.plot(x_distances, y_similarities, c = GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['color'], 
                      lw=2, marker = GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['marker'])
             plt.xlabel('Distance (Miles)', fontsize=20)
-            plt.ylabel(mf_influence_type_to_y_label[influence_type], fontsize=20)
+            plt.ylabel(GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['label'], fontsize=20)
             
             plt.ylim(ymin=0.0, ymax=0.4)
             mf_distance_to_similarity = dict(zip(x_distances, y_similarities))
@@ -371,32 +371,48 @@ class GeneralAnalysis():
             plt.clf()
     @staticmethod
     def plot_correlation_between_influence_similarity_and_hashtag_similarity():
-        mf_jaccard_similarity_to_influence_similarities = defaultdict(list)
+        mf_influence_type_to_mf_jaccard_similarity_to_influence_similarities = {}
         for line_count, (location, to_neighbor_location_and_mf_influence_type_to_similarity) in \
                 enumerate(FileIO.iterateJsonFromFile(GeneralAnalysis.to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity_file)):
             print line_count
             for neighbor_location, mf_influence_type_to_similarity in \
                     to_neighbor_location_and_mf_influence_type_to_similarity:
                 jaccard_similarity = round(mf_influence_type_to_similarity[GeneralAnalysis.LOCATION_INFLUENCE_NONE], 1)
-                mf_jaccard_similarity_to_influence_similarities[jaccard_similarity]\
-                    .append(mf_influence_type_to_similarity[GeneralAnalysis.LOCATION_INFLUENCING_VECTOR])
-        x_jaccard_similarities, y_influence_similarities = [], []
-        for jaccard_similarity, influence_similarities in \
-                mf_jaccard_similarity_to_influence_similarities.iteritems():
-            influence_similarities=filter_outliers(influence_similarities)
-            if len(influence_similarities) > 500:
-                x_jaccard_similarities.append(jaccard_similarity)
-                y_influence_similarities.append(np.mean(influence_similarities))
-                print jaccard_similarity, len(influence_similarities)
-        plt.scatter(x_jaccard_similarities, y_influence_similarities,  
-                    c = GeneralAnalysis.INFLUENCE_PROPERTIES[GeneralAnalysis.LOCATION_INFLUENCING_VECTOR]['color'], 
-                    lw=0, s=40)
-        parameters_after_fitting = CurveFit.getParamsAfterFittingData(x_jaccard_similarities, y_influence_similarities, CurveFit.lineFunction, [1., 1.])
-        x_jaccard_similarities = [0.01*i for i in range(65)]
-        y_fitted_mean_flipping_ratios = CurveFit.getYValues(CurveFit.lineFunction, parameters_after_fitting, x_jaccard_similarities)
-        plt.plot(x_jaccard_similarities, y_fitted_mean_flipping_ratios, lw=2)
-        plt.xlabel('Jaccard Similarity Between Locations', fontsize=20)
-        plt.ylabel('Similarity Using Influenced Locations', fontsize=20)
+                for influence_type in \
+                        [GeneralAnalysis.LOCATION_INFLUENCING_VECTOR, GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR]:
+#                        [GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR]:
+                    if influence_type not in mf_influence_type_to_mf_jaccard_similarity_to_influence_similarities: 
+                        mf_influence_type_to_mf_jaccard_similarity_to_influence_similarities[influence_type] = defaultdict(list)
+                    mf_influence_type_to_mf_jaccard_similarity_to_influence_similarities[influence_type][jaccard_similarity]\
+                        .append(mf_influence_type_to_similarity[influence_type])
+        subplot_id = 211
+        for influence_type, mf_jaccard_similarity_to_influence_similarities in \
+                mf_influence_type_to_mf_jaccard_similarity_to_influence_similarities.iteritems():
+            plt.subplot(subplot_id)
+            x_jaccard_similarities, y_influence_similarities = [], []
+            for jaccard_similarity, influence_similarities in \
+                    mf_jaccard_similarity_to_influence_similarities.iteritems():
+                influence_similarities=filter_outliers(influence_similarities)
+                if len(influence_similarities) > 500:
+                    x_jaccard_similarities.append(jaccard_similarity)
+                    y_influence_similarities.append(np.mean(influence_similarities))
+#                    print jaccard_similarity, len(influence_similarities)
+            rho, p_value = pearsonr(x_jaccard_similarities, y_influence_similarities)
+            plt.scatter(x_jaccard_similarities, y_influence_similarities,  
+                        c = GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['color'], 
+                        lw=0, s=40)
+            if influence_type==GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR: plt.ylabel('Influencing locations similarity', fontsize=10)
+            else: plt.ylabel('Influenced locations similarity', fontsize=10)
+#            plt.ylim(ymin=0.0, ymax=1.0)
+#                        lw=0, s=40, label=GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['label'] + ' (%s)'%getLatexForString('\\rho=%0.2f'%rho))
+            parameters_after_fitting = CurveFit.getParamsAfterFittingData(x_jaccard_similarities, y_influence_similarities, CurveFit.lineFunction, [1., 1.])
+            x_jaccard_similarities = [0.01*i for i in range(65)]
+            y_fitted_mean_flipping_ratios = CurveFit.getYValues(CurveFit.lineFunction, parameters_after_fitting, x_jaccard_similarities)
+            plt.plot(x_jaccard_similarities, y_fitted_mean_flipping_ratios, lw=1, c = GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['color'])
+            subplot_id+=1
+        plt.xlabel('Jaccard similarity', fontsize=10)
+#        plt.ylabel('Similarities using influences', fontsize=15)
+#        plt.legend(loc=2)
 #        plt.show()
         output_file = 'images/%s.png'%GeneralMethods.get_method_id()
         FileIO.createDirectoryForFile(output_file)
@@ -660,8 +676,8 @@ class GeneralAnalysis():
 #        GeneralAnalysis.example_of_locations_most_influenced()
         
 #        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
-        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
-#        GeneralAnalysis.plot_correlation_between_influence_similarity_and_hashtag_similarity()
+#        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
+        GeneralAnalysis.plot_correlation_between_influence_similarity_and_hashtag_similarity()
 #        GeneralAnalysis.influence_clusters()
         
 #        GeneralAnalysis.get_hashtags()
