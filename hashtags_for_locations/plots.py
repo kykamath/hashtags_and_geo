@@ -207,6 +207,22 @@ class GeneralAnalysis():
         return [(location, tuples_of_neighbor_location_and_transmission_score)
                  for location, tuples_of_neighbor_location_and_transmission_score in 
                  iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)]
+    @staticmethod
+    def load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(noOfInfluencers=None):
+        '''
+        noOfInfluencers (k) = The top-k influencers for a location
+        '''
+        tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
+        mf_location_to_tuo_neighbor_location_and_locations_influence_score = defaultdict(list)
+        for neighbor_location, tuples_of_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
+            if not noOfInfluencers: tuples_of_location_and_transmission_score = filter(lambda (location, transmission_score): transmission_score<0, tuples_of_location_and_transmission_score)
+            else: tuples_of_location_and_transmission_score = filter(lambda (location, transmission_score): transmission_score<0, tuples_of_location_and_transmission_score)[:noOfInfluencers]
+            for location, transmission_score in tuples_of_location_and_transmission_score:
+                mf_location_to_tuo_neighbor_location_and_locations_influence_score[location].append([neighbor_location, abs(transmission_score)])
+        for location in mf_location_to_tuo_neighbor_location_and_locations_influence_score.keys()[:]:
+            tuo_neighbor_location_and_locations_influence_score = mf_location_to_tuo_neighbor_location_and_locations_influence_score[location]
+            mf_location_to_tuo_neighbor_location_and_locations_influence_score[location] = sorted(tuo_neighbor_location_and_locations_influence_score, key=itemgetter(1), reverse=True)
+        return mf_location_to_tuo_neighbor_location_and_locations_influence_score.items()
 #    @staticmethod
 #    def write_tuples_of_location_and_neighboring_locations():
 #        for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
@@ -463,8 +479,9 @@ class GeneralAnalysis():
             FileIO.createDirectoryForFile(output_file)
             plt.savefig(output_file)
             plt.clf()
+        
     @staticmethod
-    def get_top_influencers(boundary):
+    def get_top_influencers(boundary, no_of_top_locations=10):
         '''
         World
             London (Center), Washington D.C, New York (Brooklyn), London (South), Detroit
@@ -472,25 +489,21 @@ class GeneralAnalysis():
         ('51.4750_0.0000', '38.4250_-76.8500', '40.6000_-73.9500', '50.7500_0.0000', '42.0500_-82.6500', 
         '33.3500_-118.1750', '40.6000_-73.2250', '33.3500_-84.1000', '-23.2000_-46.4000', '25.3750_-79.7500')
         '''
-        map_from_location_to_total_influence_score, set_of_locations = {}, set()
-        tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
-        for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
-            if isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), boundary):
-                set_of_locations.add(location)
-                tuples_of_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuples_of_neighbor_location_and_transmission_score)
-                for incoming_location, transmission_score in tuples_of_incoming_location_and_transmission_score:
-                    if incoming_location not in map_from_location_to_total_influence_score: map_from_location_to_total_influence_score[incoming_location]=0.
-                    map_from_location_to_total_influence_score[incoming_location]+=abs(transmission_score)
+        tuo_location_and_tuo_neighbor_location_and_locations_influence_score = \
+            GeneralAnalysis.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(noOfInfluencers=None)
+        mf_location_to_total_influence_score, set_of_locations = {}, set()
+        for location, tuo_neighbor_location_and_locations_influence_score in \
+                tuo_location_and_tuo_neighbor_location_and_locations_influence_score:
+            neighbor_locations, locations_influence_scores = zip(*tuo_neighbor_location_and_locations_influence_score)
+            mf_location_to_total_influence_score[location] = sum(locations_influence_scores)
+            set_of_locations = set_of_locations.union(set(neighbor_locations))
         no_of_locations = len(set_of_locations)
         tuples_of_location_and_mean_influence_scores = sorted([(location, total_influence_score/no_of_locations)
-                                                             for location, total_influence_score in 
-                                                             map_from_location_to_total_influence_score.iteritems()],
-                                                         key=itemgetter(1), reverse=True)[:10]
-        locations = zip(*tuples_of_location_and_mean_influence_scores)[0]
-        print locations
-        locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
-        plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c='r',  lw = 0)
-        plt.show()
+                                                                 for location, total_influence_score in 
+                                                                 mf_location_to_total_influence_score.iteritems()],
+                                                              key=itemgetter(1), reverse=True)[:no_of_top_locations]
+        print zip(*tuples_of_location_and_mean_influence_scores)[0]
+        
     @staticmethod
     def plot_local_influencers():
         tuples_of_boundary_and_boundary_label = [
@@ -526,30 +539,62 @@ class GeneralAnalysis():
         output_file = 'images/%s.png'%GeneralMethods.get_method_id()
         FileIO.createDirectoryForFile(output_file)
         plt.savefig(output_file)
+#    @staticmethod
+#    def example_of_locations_most_influenced(percentage_of_locations=0.25):
+#        input_locations = [('40.6000_-73.2250', 'new_york'), ('33.3500_-118.1750', 'los_angeles')] + \
+#                            [('29.7250_-97.1500', 'austin'), ('30.4500_-95.7000', 'college_station'), ('32.6250_-87.0000', 'tuscaloosa'),
+#                             ('39.1500_-83.3750', 'hillsboro_oh')] 
+##        input_locations = [('29.7250_-97.1500', 'austin'), ('30.4500_-95.7000', 'college_station')]
+#        for input_location, label in input_locations:
+##            plt.subplot(subplot)
+#            tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
+#            for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
+#                if input_location==location:
+#                    input_location = getLocationFromLid(input_location.replace('_', ' '))
+#                    tuples_of_outgoing_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score>0, tuples_of_neighbor_location_and_transmission_score)
+#                    number_of_outgoing_influences = int(len(tuples_of_outgoing_location_and_transmission_score)*percentage_of_locations)
+#                    locations = zip(*reversed(tuples_of_outgoing_location_and_transmission_score))[0][:number_of_outgoing_influences]
+#                    locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
+#                    locations = filter(lambda location: isWithinBoundingBox(location, PARTIAL_WORLD_BOUNDARY), locations)
+#                    _, m = plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c='#FF00FF', returnBaseMapObject=True, lw = 0)
+#                    for location in locations: 
+#                        if isWithinBoundingBox(location, PARTIAL_WORLD_BOUNDARY): m.drawgreatcircle(location[1], location[0], input_location[1], input_location[0], color='#FAA31B', lw=1., alpha=0.5)
+#                    plotPointsOnWorldMap([input_location], blueMarble=False, bkcolor='#CFCFCF', c='#003CFF', s=80, lw = 0)
+#                    output_file = 'images/%s/%s.png'%(GeneralMethods.get_method_id(), label)
+#                    FileIO.createDirectoryForFile(output_file)
+#                    plt.savefig(output_file)
+#                    plt.clf()
+#                    break
     @staticmethod
-    def example_of_locations_most_influenced():
-        input_locations = [('40.6000_-73.2250', 'new_york'), ('33.3500_-118.1750', 'los_angeles')]
+    def example_of_locations_most_influenced(percentage_of_locations=1.0):
+        input_locations = [('40.6000_-73.9500', 'new_york'), ('33.3500_-118.1750', 'los_angeles')] + \
+                            [('29.7250_-97.1500', 'austin'), ('30.4500_-95.7000', 'college_station'), ('32.6250_-87.0000', 'tuscaloosa'),
+                             ('39.1500_-83.3750', 'hillsboro_oh'), ('25.3750_-79.7500', 'miami'), ('-23.2000_-46.4000', 'sao_paulo'),
+                             ('29.7250_-94.9750', 'houston'),('51.4750_0.0000', 'london'), ('38.4250_-76.8500', 'washington'),
+                             ('33.3500_-84.1000', 'atlanta'), ('42.0500_-82.6500', 'detroit')] 
+        tuo_location_and_tuo_neighbor_location_and_locations_influence_score = GeneralAnalysis.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(noOfInfluencers=10)
         for input_location, label in input_locations:
-#            plt.subplot(subplot)
-            tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
-            for location, tuples_of_neighbor_location_and_transmission_score in tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score:
+            for location, tuo_neighbor_location_and_locations_influence_score in \
+                    tuo_location_and_tuo_neighbor_location_and_locations_influence_score:
                 if input_location==location:
                     input_location = getLocationFromLid(input_location.replace('_', ' '))
-                    tuples_of_outgoing_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score>0, tuples_of_neighbor_location_and_transmission_score)
-                    locations = zip(*reversed(tuples_of_outgoing_location_and_transmission_score))[0][:80]
+                    output_file = 'images/%s/%s.png'%(GeneralMethods.get_method_id(), label)
+                    number_of_outgoing_influences = int(len(tuo_neighbor_location_and_locations_influence_score)*percentage_of_locations)
+#                    locations = zip(*reversed(tuples_of_outgoing_location_and_transmission_score))[0][:number_of_outgoing_influences]
+                    locations = zip(*tuo_neighbor_location_and_locations_influence_score)[0][:number_of_outgoing_influences]
                     locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
                     locations = filter(lambda location: isWithinBoundingBox(location, PARTIAL_WORLD_BOUNDARY), locations)
-                    _, m = plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c='#FF00FF', returnBaseMapObject=True, lw = 0)
-#                    plt.title(label)
-#                    00FBFF
-                    for location in locations: 
-                        if isWithinBoundingBox(location, PARTIAL_WORLD_BOUNDARY): m.drawgreatcircle(location[1], location[0], input_location[1], input_location[0], color='#FAA31B', lw=1., alpha=0.5)
-                    plotPointsOnWorldMap([input_location], blueMarble=False, bkcolor='#CFCFCF', c='#003CFF', s=80, lw = 0)
-#                    plt.show()
-                    output_file = 'images/%s/%s.png'%(GeneralMethods.get_method_id(), label)
-                    FileIO.createDirectoryForFile(output_file)
-                    plt.savefig(output_file)
-                    plt.clf()
+                    if locations:
+                        _, m = plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c='#FF00FF', returnBaseMapObject=True, lw = 0)
+                        for location in locations: 
+#                            if isWithinBoundingBox(location, PARTIAL_WORLD_BOUNDARY): 
+                            m.drawgreatcircle(location[1], location[0], input_location[1], input_location[0], color='#FAA31B', lw=1., alpha=0.5)
+                        plotPointsOnWorldMap([input_location], blueMarble=False, bkcolor='#CFCFCF', c='#003CFF', s=40, lw = 0)
+                        FileIO.createDirectoryForFile(output_file)
+                        plt.savefig(output_file)
+                        plt.clf()
+                    else:
+                        GeneralMethods.runCommand('rm -rf %s'%output_file)
                     break
     @staticmethod
     def get_hashtags():
@@ -673,11 +718,11 @@ class GeneralAnalysis():
 #        GeneralAnalysis.outgoing_and_incoming_locations_on_world_map()
 #        GeneralAnalysis.get_top_influencers([[-90,-180], [90, 180]])
 #        GeneralAnalysis.plot_local_influencers()
-#        GeneralAnalysis.example_of_locations_most_influenced()
+        GeneralAnalysis.example_of_locations_most_influenced()
         
 #        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
 #        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
-        GeneralAnalysis.plot_correlation_between_influence_similarity_and_hashtag_similarity()
+#        GeneralAnalysis.plot_correlation_between_influence_similarity_and_hashtag_similarity()
 #        GeneralAnalysis.influence_clusters()
         
 #        GeneralAnalysis.get_hashtags()
