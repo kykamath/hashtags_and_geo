@@ -76,8 +76,9 @@ class Experiments(object):
         for model_id in models_ids:
             output_file = tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%model_id
             GeneralMethods.runCommand('rm -rf %s'%output_file)
-            location_objects_file = location_objects_file%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
-            for line_count, location_object in enumerate(iterateJsonFromFile(location_objects_file)):
+            for line_count, location_object in enumerate(iterateJsonFromFile(
+                     location_objects_file%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+                     )):
                 print line_count, model_id
                 tuo_neighbor_location_and_pure_influence_score = []
                 location_hashtag_set = set(location_object['hashtags'])
