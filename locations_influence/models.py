@@ -74,7 +74,8 @@ class Experiments(object):
                       InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
         for model_id in models_ids:
-            GeneralMethods.runCommand('rm -rf %s'%tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file)
+            output_file = tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%model_id
+            GeneralMethods.runCommand('rm -rf %s'%output_file)
             for line_count, location_object in enumerate(iterateJsonFromFile(train_location_objects_file)):
                 print line_count, model_id
                 tuo_neighbor_location_and_pure_influence_score = []
@@ -91,8 +92,7 @@ class Experiments(object):
                     mean_pure_influence_score = np.mean(pure_influence_scores)
                     tuo_neighbor_location_and_pure_influence_score.append([neighbor_location, mean_pure_influence_score])
                 tuo_neighbor_location_and_pure_influence_score = sorted(tuo_neighbor_location_and_pure_influence_score, key=itemgetter(1))
-                FileIO.writeToFileAsJson([location_object['id'], tuo_neighbor_location_and_pure_influence_score], 
-                                         tuo_neighbor_location_and_pure_influence_score)
+                FileIO.writeToFileAsJson([location_object['id'], tuo_neighbor_location_and_pure_influence_score], output_file)
         
     @staticmethod
     def run():
