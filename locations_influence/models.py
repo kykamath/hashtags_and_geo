@@ -27,8 +27,8 @@ class InfluenceMeasuringModels(object):
         else: return 0.0
     @staticmethod
     def mean_occurrence(location_occurrences, neighbor_location_occurrences):
-        mean_location_occurrence=np.mean(location_occurrences)[0]
-        mean_neighbor_location_occurrence=np.mean(neighbor_location_occurrences)[0]
+        mean_location_occurrence=np.mean(location_occurrences)
+        mean_neighbor_location_occurrence=np.mean(neighbor_location_occurrences)
         if mean_location_occurrence<mean_neighbor_location_occurrence: return 1.0
         elif mean_location_occurrence>mean_neighbor_location_occurrence: return -1.0
         else: return 0.0
