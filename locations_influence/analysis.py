@@ -3,11 +3,13 @@ Created on Apr 14, 2012
 
 @author: kykamath
 '''
-from settings import hdfs_input_folder
+from settings import hdfs_input_folder, location_objects_file
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from library.mrjobwrapper import runMRJob
 from library.file_io import FileIO
+from mr_analysis import MRAnalysis, \
+    PARAMS_DICT, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER
 
 def iterateJsonFromFile(file):
     for data in FileIO.iterateJsonFromFile(file):
@@ -21,7 +23,7 @@ def getInputFiles(startTime, endTime, folderType='world'):
 
 def mr_analysis(startTime, endTime, outputFolder, inputFilesStartTime=None, inputFilesEndTime=None):
     if not inputFilesStartTime: inputFilesStartTime=startTime; inputFilesEndTime=endTime
-    outputFile = latticeGraphFile%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+    outputFile = location_objects_file%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
     runMRJob(MRAnalysis, outputFile, getInputFiles(inputFilesStartTime, inputFilesEndTime), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 
