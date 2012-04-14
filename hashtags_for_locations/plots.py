@@ -217,8 +217,8 @@ class GeneralAnalysis():
         total_nof_occurrences = float(len(location_occurrences) + len(neighbor_location_occurrences))
         ratio_of_occurrences_in_location = len(location_occurrences)/total_nof_occurrences
         ratio_of_occurrences_in_neighbor_location = len(neighbor_location_occurrences)/total_nof_occurrences
-        return 2*(
-                  ratio_of_occurrences_in_location*no_of_occurrences_after_appearing_in_location \
+        return (
+                ratio_of_occurrences_in_location*no_of_occurrences_after_appearing_in_location \
                 - ratio_of_occurrences_in_neighbor_location*no_of_occurrences_before_appearing_in_location
                 ) / no_of_total_occurrences_between_location_pair
     @staticmethod
@@ -229,12 +229,16 @@ class GeneralAnalysis():
             tuples_of_neighbor_location_and_pure_influence_score = []
 #            map_from_hashtag_to_hashtag_weights = GeneralAnalysis.get_hashtag_weights(location_object['hashtags'])
 #            map_from_location_to_location_weights = GeneralAnalysis.get_location_weights(location_object['hashtags'], location_object['links'])
+            location_hashtag_set = set(location_object['hashtags'])
             for neighbor_location, map_from_hashtag_to_tuples_of_occurrences_and_time_range in location_object['links'].iteritems():
                 pure_influence_scores = []
                 for hashtag, (neighbor_location_occurrences, time_range) in map_from_hashtag_to_tuples_of_occurrences_and_time_range.iteritems():
                     if hashtag in location_object['hashtags']:
                         location_occurrences = location_object['hashtags'][hashtag][0]
                         pure_influence_scores.append(GeneralAnalysis.get_influence_scores(location_occurrences, neighbor_location_occurrences))
+                neighbor_location_hashtag_set = set(map_from_hashtag_to_tuples_of_occurrences_and_time_range.keys())
+                for hashtag in location_hashtag_set.difference(neighbor_location_hashtag_set): pure_influence_scores.append(1.0)
+                for hashtag in neighbor_location_hashtag_set.difference(location_hashtag_set): pure_influence_scores.append(-1.0)
                 mean_pure_influence_score = np.mean(pure_influence_scores)
                 tuples_of_neighbor_location_and_pure_influence_score.append([neighbor_location, mean_pure_influence_score])
             tuples_of_neighbor_location_and_pure_influence_score= sorted(tuples_of_neighbor_location_and_pure_influence_score, key=itemgetter(1))
@@ -646,21 +650,30 @@ class GeneralAnalysis():
             for location, tuo_neighbor_location_and_influence_score in \
                     tuo_location_and_tuo_neighbor_location_and_influence_score:
                 if input_location==location:
-                    plt.figure()
+                    figure = plt.figure()
+                    size = figure.get_size_inches()
+                    figure.set_size_inches( (size[0]*2, size[1]*0.4) )
+                    print tuo_neighbor_location_and_influence_score
+                    exit()
                     influence_scores = zip(*tuo_neighbor_location_and_influence_score)[1]
                     no_of_influence_scores = len(influence_scores)
                     
-#                    influence_scores = map(lambda s: s+1., influence_scores)
-#                    influence_scores = filter(lambda s: s>0, influence_scores)
-
                     hist_influence_score, bin_edges_influence_score =  np.histogram(influence_scores, no_of_bins_for_influence_score)
                     normed_hist_influence_score = map(lambda influence_score: (influence_score+0.)/no_of_influence_scores, hist_influence_score)
-                    plt.fill_between(bin_edges_influence_score[:-1], normed_hist_influence_score)
+                    bin_edges_influence_score = list(bin_edges_influence_score)
+                    normed_hist_influence_score = list(normed_hist_influence_score)
+                    bin_edges_influence_score=[bin_edges_influence_score[0]]+bin_edges_influence_score+[bin_edges_influence_score[-1]]
+                    normed_hist_influence_score=[0.0]+normed_hist_influence_score+[0.0]
+                    x_bin_edges_influence_score, y_normed_hist_influence_score = bin_edges_influence_score[:-1], normed_hist_influence_score
+#                    x_bin_edges_influence_score, y_normed_hist_influence_score = splineSmooth(x_bin_edges_influence_score, y_normed_hist_influence_score)
+                    plt.plot(x_bin_edges_influence_score, y_normed_hist_influence_score, lw=3, color='#FF9E05')
+                    plt.fill_between(x_bin_edges_influence_score, y_normed_hist_influence_score, color='#FF9E05', alpha=0.3)
 #                    plt.xlim(get_new_xlim(plt.xlim()))
-                    plt.title(label)
-                    plt.xlim(-1,1)
-#                    plt.show()
-#                    exit()
+                    (ticks, labels) = plt.yticks()
+                    plt.yticks([ticks[-2]])
+                    plt.xlim(-1,1); plt.ylim(ymin=0.0)
+                    plt.show()
+                    exit()
                     break
         plt.show()
         
