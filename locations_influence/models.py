@@ -65,12 +65,12 @@ MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID = dict([
 
 class Experiments(object):
     @staticmethod
-    def generate_influence_scores():
+    def generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score():
         models_ids = [
 #                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
-#                      InfluenceMeasuringModels.ID_FIRST_AND_LAST_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
+                      InfluenceMeasuringModels.ID_FIRST_AND_LAST_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
         for model_id in models_ids:
             output_file = tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%model_id
@@ -92,12 +92,17 @@ class Experiments(object):
                     tuo_neighbor_location_and_pure_influence_score.append([neighbor_location, mean_pure_influence_score])
                 tuo_neighbor_location_and_pure_influence_score = sorted(tuo_neighbor_location_and_pure_influence_score, key=itemgetter(1))
                 FileIO.writeToFileAsJson([location_object['id'], tuo_neighbor_location_and_pure_influence_score], output_file)
-        
+    @staticmethod
+    def load_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_id):
+        return [(location, tuo_neighbor_location_and_pure_influence_score)
+                 for location, tuo_neighbor_location_and_pure_influence_score in 
+                 iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%model_id)]
     @staticmethod
     def run():
-        Experiments.generate_influence_scores()
+        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score()
 
-Experiments.run()
+if __name__ == '__main__':
+    Experiments.run()
         
     
     
