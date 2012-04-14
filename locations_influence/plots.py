@@ -16,7 +16,7 @@ class InfluenceAnalysis:
     @staticmethod
     def locations_at_top_and_bottom(model_ids, no_of_locations=5):
         for model_id in model_ids:
-            output_file_format = analysis_folder+'%s/%s/'%(GeneralMethods.get_method_id(), model_id)+'%s'
+            output_file_format = analysis_folder+'%s/%s/'%(GeneralMethods.get_method_id(), model_id)+'%s.json'
             input_locations = [ 
                                 ('40.6000_-73.9500', 'new_york'), 
                                 ('33.3500_-118.1750', 'los_angeles'),
