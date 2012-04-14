@@ -133,6 +133,11 @@ class Experiments(object):
                 tuo_neighbor_location_and_transmission_score = sorted(tuo_neighbor_location_and_influence_score, key=itemgetter(1))
                 FileIO.writeToFileAsJson([location_object['id'], tuo_neighbor_location_and_transmission_score], output_file)
     @staticmethod
+    def load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id):
+        return [(location, tuo_neighbor_location_and_influence_score)
+                 for location, tuo_neighbor_location_and_influence_score in 
+                 iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_influence_score_file%model_id)]
+    @staticmethod
     def run():
         models_ids = [
                       InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
