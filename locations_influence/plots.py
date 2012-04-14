@@ -78,8 +78,9 @@ class InfluenceAnalysis:
     @staticmethod
     def run():
 #        model_id = InfluenceMeasuringModels.ID_FIRST_OCCURRENCE
-        model_id = InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE
-#        model_id = InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE
+#        model_id = InfluenceMeasuringModels.ID_MEAN_OCCURRENCE
+#        model_id = InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE
+        model_id = InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE
         InfluenceAnalysis.location_influence_plots(model_id)
 #        InfluenceAnalysis.get_top_influencers([[-90,-180], [90, 180]], model_id)
 
