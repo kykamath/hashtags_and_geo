@@ -5,6 +5,7 @@ Created on Apr 13, 2012
 '''
 from library.classes import GeneralMethods
 from library.file_io import FileIO
+from collections import defaultdict
 import numpy as np
 from operator import itemgetter
 from settings import tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file, \
@@ -130,13 +131,30 @@ class Experiments(object):
                     mean_influence_scores = np.mean(influence_scores)
                     tuo_neighbor_location_and_influence_score.append([neighbor_location, 
                                                                        mf_location_to_location_weights[neighbor_location]*mean_influence_scores])
-                tuo_neighbor_location_and_transmission_score = sorted(tuo_neighbor_location_and_influence_score, key=itemgetter(1))
-                FileIO.writeToFileAsJson([location_object['id'], tuo_neighbor_location_and_transmission_score], output_file)
+                tuo_neighbor_location_and_influence_score = sorted(tuo_neighbor_location_and_influence_score, key=itemgetter(1))
+                FileIO.writeToFileAsJson([location_object['id'], tuo_neighbor_location_and_influence_score], output_file)
     @staticmethod
     def load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id):
         return [(location, tuo_neighbor_location_and_influence_score)
                  for location, tuo_neighbor_location_and_influence_score in 
                  iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_influence_score_file%model_id)]
+    @staticmethod
+    def load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers=None):
+        '''
+        noOfInfluencers (k) = The top-k influencers for a location
+        '''
+        tuo_location_and_tuo_neighbor_location_and_influence_score = Experiments.load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id)
+        mf_location_to_tuo_neighbor_location_and_locations_influence_score = defaultdict(list)
+        for neighbor_location, tuo_location_and_influence_score in tuo_location_and_tuo_neighbor_location_and_influence_score:
+            if not noOfInfluencers: tuo_location_and_influence_score = filter(lambda (location, influence_score): influence_score<0, tuo_location_and_influence_score)
+            else: tuo_location_and_influence_score = filter(lambda (location, influence_score): influence_score<0, tuo_location_and_influence_score)[:noOfInfluencers]
+            for location, influence_score in tuo_location_and_influence_score:
+                mf_location_to_tuo_neighbor_location_and_locations_influence_score[location].append([neighbor_location, abs(influence_score)])
+        for location in mf_location_to_tuo_neighbor_location_and_locations_influence_score.keys()[:]:
+            tuo_neighbor_location_and_locations_influence_score = mf_location_to_tuo_neighbor_location_and_locations_influence_score[location]
+            mf_location_to_tuo_neighbor_location_and_locations_influence_score[location] = sorted(tuo_neighbor_location_and_locations_influence_score, key=itemgetter(1), reverse=True)
+        return mf_location_to_tuo_neighbor_location_and_locations_influence_score.items()
+
     @staticmethod
     def run():
         models_ids = [
