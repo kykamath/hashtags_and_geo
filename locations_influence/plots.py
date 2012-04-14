@@ -31,9 +31,6 @@ class InfluenceAnalysis:
                 for location, tuo_neighbor_location_and_influence_score in \
                         tuo_location_and_tuo_neighbor_location_and_influence_score:
                     if input_location==location:
-                        figure = plt.figure()
-                        size = figure.get_size_inches()
-                        figure.set_size_inches( (size[0]*2, size[1]*0.5) )
                         output_file = output_file_format%input_location
                         GeneralMethods.runCommand('rm -rf %s')%output_file
                         FileIO.createDirectoryForFile(output_file)
