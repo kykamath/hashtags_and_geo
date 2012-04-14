@@ -32,7 +32,7 @@ class InfluenceAnalysis:
                         tuo_location_and_tuo_neighbor_location_and_influence_score:
                     if input_location==location:
                         output_file = output_file_format%input_location
-                        GeneralMethods.runCommand('rm -rf %s')%output_file
+                        GeneralMethods.runCommand('rm -rf %s'%output_file)
                         FileIO.createDirectoryForFile(output_file)
                         FileIO.writeToFileAsJson("Bottom:", output_file)
                         for neighbor_location_and_influence_score in tuo_neighbor_location_and_influence_score[:no_of_locations]:
