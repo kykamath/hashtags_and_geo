@@ -9,10 +9,7 @@ import numpy as np
 from operator import itemgetter
 from settings import tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file, \
     train_location_objects_file  
-
-def iterateJsonFromFile(file):
-    for data in FileIO.iterateJsonFromFile(file):
-        if 'PARAMS_DICT' not in data: yield data
+from analysis import iterateJsonFromFile
 
 class InfluenceMeasuringModels(object):
     ID_FIRST_OCCURRENCE = 'first_occurrence'
@@ -70,8 +67,10 @@ class Experiments(object):
     @staticmethod
     def generate_influence_scores():
         models_ids = [
-                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, InfluenceMeasuringModels.ID_FIRST_AND_LAST_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
+#                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_FIRST_AND_LAST_OCCURRENCE, 
+                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
+                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
         for model_id in models_ids:
             output_file = tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%model_id
