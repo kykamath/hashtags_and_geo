@@ -15,19 +15,23 @@ from mr_analysis import START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER
 
 class InfluenceMeasuringModels(object):
     ID_FIRST_OCCURRENCE = 'first_occurrence'
-    ID_FIRST_AND_LAST_OCCURRENCE = 'first_and_last_occurrence'
+    ID_MEAN_OCCURRENCE = 'mean_occurrence'
     ID_AGGREGATE_OCCURRENCE = 'aggregate_occurrence'
     ID_WEIGHTED_AGGREGATE_OCCURRENCE = 'weighted_aggregate_occurrence'
     @staticmethod
     def first_occurrence(location_occurrences, neighbor_location_occurrences):
         first_location_occurrence=sorted(location_occurrences)[0]
         first_neighbor_location_occurrence=sorted(neighbor_location_occurrences)[0]
-        if first_location_occurrence>first_neighbor_location_occurrence: return 1.0
-        elif first_location_occurrence<first_neighbor_location_occurrence: return -1.0
+        if first_location_occurrence<first_neighbor_location_occurrence: return 1.0
+        elif first_location_occurrence>first_neighbor_location_occurrence: return -1.0
         else: return 0.0
     @staticmethod
-    def first_and_last_occurrence(location_occurrences, neighbor_location_occurrences):
-        pass
+    def mean_occurrence(location_occurrences, neighbor_location_occurrences):
+        mean_location_occurrence=np.mean(location_occurrences)[0]
+        mean_neighbor_location_occurrence=np.mean(neighbor_location_occurrences)[0]
+        if mean_location_occurrence<mean_neighbor_location_occurrence: return 1.0
+        elif mean_location_occurrence>mean_neighbor_location_occurrence: return -1.0
+        else: return 0.0
     @staticmethod
     def _get_occurrences_stats(occurrences1, occurrences2):
         no_of_occurrences_after_appearing_in_location, no_of_occurrences_before_appearing_in_location = 0., 0.
@@ -60,7 +64,7 @@ class InfluenceMeasuringModels(object):
                 ) / no_of_total_occurrences_between_location_pair
 MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID = dict([
                                                   (InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, InfluenceMeasuringModels.first_occurrence),
-                                                  (InfluenceMeasuringModels.ID_FIRST_AND_LAST_OCCURRENCE, InfluenceMeasuringModels.first_and_last_occurrence),
+                                                  (InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, InfluenceMeasuringModels.mean_occurrence),
                                                   (InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, InfluenceMeasuringModels.aggregate_occurrence),
                                                   (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, InfluenceMeasuringModels.weighted_aggregate_occurrence),
                                                   ])
@@ -159,9 +163,9 @@ class Experiments(object):
     def run():
         models_ids = [
                       InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
-#                      InfluenceMeasuringModels.ID_FIRST_AND_LAST_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
+                      InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(models_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
         Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(models_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
