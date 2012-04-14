@@ -8,8 +8,9 @@ from library.file_io import FileIO
 import numpy as np
 from operator import itemgetter
 from settings import tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file, \
-    train_location_objects_file  
+    location_objects_file
 from analysis import iterateJsonFromFile
+from mr_analysis import START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER
 
 class InfluenceMeasuringModels(object):
     ID_FIRST_OCCURRENCE = 'first_occurrence'
@@ -65,17 +66,18 @@ MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID = dict([
 
 class Experiments(object):
     @staticmethod
-    def generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score():
+    def generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(startTime, endTime, outputFolder):
         models_ids = [
-#                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_FIRST_AND_LAST_OCCURRENCE, 
-#                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
-#                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
+                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_FIRST_AND_LAST_OCCURRENCE, 
+                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
+                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
         for model_id in models_ids:
             output_file = tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%model_id
             GeneralMethods.runCommand('rm -rf %s'%output_file)
-            for line_count, location_object in enumerate(iterateJsonFromFile(train_location_objects_file)):
+            location_objects_file = location_objects_file%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+            for line_count, location_object in enumerate(iterateJsonFromFile(location_objects_file)):
                 print line_count, model_id
                 tuo_neighbor_location_and_pure_influence_score = []
                 location_hashtag_set = set(location_object['hashtags'])
@@ -86,8 +88,8 @@ class Experiments(object):
                             location_occurrences = location_object['hashtags'][hashtag][0]
                             pure_influence_scores.append(MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID[model_id](location_occurrences, neighbor_location_occurrences))
                     neighbor_location_hashtag_set = set(mf_hashtag_to_tuo_occurrences_and_time_range.keys())
-                    for hashtag in location_hashtag_set.difference(neighbor_location_hashtag_set): pure_influence_scores.append(1.0)
-                    for hashtag in neighbor_location_hashtag_set.difference(location_hashtag_set): pure_influence_scores.append(-1.0)
+#                    for hashtag in location_hashtag_set.difference(neighbor_location_hashtag_set): pure_influence_scores.append(1.0)
+#                    for hashtag in neighbor_location_hashtag_set.difference(location_hashtag_set): pure_influence_scores.append(-1.0)
                     mean_pure_influence_score = np.mean(pure_influence_scores)
                     tuo_neighbor_location_and_pure_influence_score.append([neighbor_location, mean_pure_influence_score])
                 tuo_neighbor_location_and_pure_influence_score = sorted(tuo_neighbor_location_and_pure_influence_score, key=itemgetter(1))
@@ -99,7 +101,7 @@ class Experiments(object):
                  iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%model_id)]
     @staticmethod
     def run():
-        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score()
+        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 
 if __name__ == '__main__':
     Experiments.run()
