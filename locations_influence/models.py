@@ -76,7 +76,7 @@ class Experiments(object):
         for model_id in models_ids:
             GeneralMethods.runCommand('rm -rf %s'%tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file)
             for line_count, location_object in enumerate(iterateJsonFromFile(train_location_objects_file)):
-                print line_count
+                print line_count, model_id
                 tuo_neighbor_location_and_pure_influence_score = []
                 location_hashtag_set = set(location_object['hashtags'])
                 for neighbor_location, mf_hashtag_to_tuo_occurrences_and_time_range in location_object['links'].iteritems():
