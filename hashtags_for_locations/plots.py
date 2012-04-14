@@ -204,34 +204,47 @@ class GeneralAnalysis():
             FileIO.writeToFileAsJson([location_object['id'], tuples_of_neighbor_location_and_transmission_score], 
                                      GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)
     @staticmethod
-    def write_pure_influence_scores_file():
-        GeneralMethods.runCommand('rm -rf %s'%GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_pure_influence_score_file)
-        for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
-            print line_count
-            tuples_of_neighbor_location_and_transmission_score = []
-#            map_from_hashtag_to_hashtag_weights = GeneralAnalysis.get_hashtag_weights(location_object['hashtags'])
-#            map_from_location_to_location_weights = GeneralAnalysis.get_location_weights(location_object['hashtags'], location_object['links'])
-            for neighbor_location, map_from_hashtag_to_tuples_of_occurrences_and_time_range in location_object['links'].iteritems():
-                transmission_scores = []
-                for hashtag, (neighbor_location_occurrences, time_range) in map_from_hashtag_to_tuples_of_occurrences_and_time_range.iteritems():
-                    if hashtag in location_object['hashtags']:
-                        location_occurrences = location_object['hashtags'][hashtag][0]
-                        (no_of_occurrences_after_appearing_in_location, \
-                         no_of_occurrences_before_appearing_in_location, \
-                         no_of_total_occurrences_between_location_pair)= GeneralAnalysis.get_occurrences_stats(location_occurrences, neighbor_location_occurrences)
-                        transmission_scores.append(GeneralAnalysis.get_transmission_score(no_of_occurrences_after_appearing_in_location, 
-                                                                                                                                       no_of_occurrences_before_appearing_in_location, 
-                                                                                                                                       no_of_total_occurrences_between_location_pair))
-                mean_transmission_score = np.mean(transmission_scores)
-                tuples_of_neighbor_location_and_transmission_score.append([neighbor_location, mean_transmission_score])
-            tuples_of_neighbor_location_and_transmission_score = sorted(tuples_of_neighbor_location_and_transmission_score, key=itemgetter(1))
-            FileIO.writeToFileAsJson([location_object['id'], tuples_of_neighbor_location_and_transmission_score], 
-                                     GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_pure_influence_score_file)
-    @staticmethod
     def load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score():
         return [(location, tuples_of_neighbor_location_and_transmission_score)
                  for location, tuples_of_neighbor_location_and_transmission_score in 
                  iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score_file)]
+    @staticmethod
+    def get_influence_scores(location_occurrences, neighbor_location_occurrences):
+        (no_of_occurrences_after_appearing_in_location, \
+         no_of_occurrences_before_appearing_in_location, \
+         no_of_total_occurrences_between_location_pair) =\
+            GeneralAnalysis.get_occurrences_stats(location_occurrences, neighbor_location_occurrences)
+        total_nof_occurrences = float(len(location_occurrences) + len(neighbor_location_occurrences))
+        ratio_of_occurrences_in_location = len(location_occurrences)/total_nof_occurrences
+        ratio_of_occurrences_in_neighbor_location = len(neighbor_location_occurrences)/total_nof_occurrences
+        return 2*(
+                  ratio_of_occurrences_in_location*no_of_occurrences_after_appearing_in_location \
+                - ratio_of_occurrences_in_neighbor_location*no_of_occurrences_before_appearing_in_location
+                ) / no_of_total_occurrences_between_location_pair
+    @staticmethod
+    def write_pure_influence_scores_file():
+        GeneralMethods.runCommand('rm -rf %s'%GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_pure_influence_score_file)
+        for line_count, location_object in enumerate(iterateJsonFromFile(GeneralAnalysis.locationsGraphFile)):
+            print line_count
+            tuples_of_neighbor_location_and_pure_influence_score = []
+#            map_from_hashtag_to_hashtag_weights = GeneralAnalysis.get_hashtag_weights(location_object['hashtags'])
+#            map_from_location_to_location_weights = GeneralAnalysis.get_location_weights(location_object['hashtags'], location_object['links'])
+            for neighbor_location, map_from_hashtag_to_tuples_of_occurrences_and_time_range in location_object['links'].iteritems():
+                pure_influence_scores = []
+                for hashtag, (neighbor_location_occurrences, time_range) in map_from_hashtag_to_tuples_of_occurrences_and_time_range.iteritems():
+                    if hashtag in location_object['hashtags']:
+                        location_occurrences = location_object['hashtags'][hashtag][0]
+                        pure_influence_scores.append(GeneralAnalysis.get_influence_scores(location_occurrences, neighbor_location_occurrences))
+                mean_pure_influence_score = np.mean(pure_influence_scores)
+                tuples_of_neighbor_location_and_pure_influence_score.append([neighbor_location, mean_pure_influence_score])
+            tuples_of_neighbor_location_and_pure_influence_score= sorted(tuples_of_neighbor_location_and_pure_influence_score, key=itemgetter(1))
+            FileIO.writeToFileAsJson([location_object['id'], tuples_of_neighbor_location_and_pure_influence_score], 
+                                     GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_pure_influence_score_file)
+    @staticmethod
+    def load_tuples_of_location_and_tuples_of_neighbor_location_and_pure_influence_score():
+        return [(location, tuples_of_neighbor_location_and_transmission_score)
+                 for location, tuples_of_neighbor_location_and_transmission_score in 
+                 iterateJsonFromFile(GeneralAnalysis.tuples_of_location_and_tuples_of_neighbor_location_and_pure_influence_score_file)]
     @staticmethod
     def load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(noOfInfluencers=None):
         '''
@@ -623,8 +636,12 @@ class GeneralAnalysis():
                     break
     @staticmethod
     def example_of_location_influence_plot(no_of_bins_for_influence_score=100):
-        input_locations = [('40.6000_-73.9500', 'new_york'), ('33.3500_-118.1750', 'los_angeles')]
-        tuo_location_and_tuo_neighbor_location_and_influence_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_transmission_score()
+        def get_new_xlim((xmin, xmax)):
+            xlim = max([abs(0-xmin), abs(0-xmax)])
+            return (-xlim, xlim)
+        input_locations = [('40.6000_-73.9500', 'new_york'), ('33.3500_-118.1750', 'los_angeles'), ('29.7250_-97.1500', 'austin'),
+                           ('30.4500_-95.7000', 'college_station'), ('32.6250_-87.0000', 'tuscaloosa')]
+        tuo_location_and_tuo_neighbor_location_and_influence_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_pure_influence_score()
         for input_location, label in input_locations:
             for location, tuo_neighbor_location_and_influence_score in \
                     tuo_location_and_tuo_neighbor_location_and_influence_score:
@@ -638,9 +655,12 @@ class GeneralAnalysis():
 
                     hist_influence_score, bin_edges_influence_score =  np.histogram(influence_scores, no_of_bins_for_influence_score)
                     normed_hist_influence_score = map(lambda influence_score: (influence_score+0.)/no_of_influence_scores, hist_influence_score)
-                    plt.plot(bin_edges_influence_score[:-1], normed_hist_influence_score)
-                    plt.show()
-                    exit()
+                    plt.fill_between(bin_edges_influence_score[:-1], normed_hist_influence_score)
+#                    plt.xlim(get_new_xlim(plt.xlim()))
+                    plt.title(label)
+                    plt.xlim(-1,1)
+#                    plt.show()
+#                    exit()
                     break
         plt.show()
         
@@ -764,12 +784,12 @@ class GeneralAnalysis():
 #        GeneralAnalysis.grid_visualization()
 
 #        GeneralAnalysis.write_transmission_scores_file()
-        GeneralAnalysis.write_pure_influence_scores_file()
+#        GeneralAnalysis.write_pure_influence_scores_file()
 #        GeneralAnalysis.outgoing_and_incoming_locations_on_world_map()
 #        GeneralAnalysis.get_top_influencers([[-90,-180], [90, 180]])
 #        GeneralAnalysis.plot_local_influencers()
 #        GeneralAnalysis.example_of_locations_most_influenced()
-#        GeneralAnalysis.example_of_location_influence_plot()
+        GeneralAnalysis.example_of_location_influence_plot()
         
 #        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
 #        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
