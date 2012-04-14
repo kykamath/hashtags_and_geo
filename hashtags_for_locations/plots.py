@@ -643,8 +643,11 @@ class GeneralAnalysis():
         def get_new_xlim((xmin, xmax)):
             xlim = max([abs(0-xmin), abs(0-xmax)])
             return (-xlim, xlim)
-        input_locations = [('40.6000_-73.9500', 'new_york'), ('33.3500_-118.1750', 'los_angeles'), ('29.7250_-97.1500', 'austin'),
-                           ('30.4500_-95.7000', 'college_station'), ('32.6250_-87.0000', 'tuscaloosa')]
+        input_locations = [('40.6000_-73.9500', 'new_york'), ('33.3500_-118.1750', 'los_angeles')] + \
+                            [('29.7250_-97.1500', 'austin'), ('30.4500_-95.7000', 'college_station'), ('32.6250_-87.0000', 'tuscaloosa'),
+                             ('39.1500_-83.3750', 'hillsboro_oh'), ('25.3750_-79.7500', 'miami'), ('-23.2000_-46.4000', 'sao_paulo'),
+                             ('29.7250_-94.9750', 'houston'),('51.4750_0.0000', 'london'), ('38.4250_-76.8500', 'washington'),
+                             ('33.3500_-84.1000', 'atlanta'), ('42.0500_-82.6500', 'detroit')] 
         tuo_location_and_tuo_neighbor_location_and_influence_score = GeneralAnalysis.load_tuples_of_location_and_tuples_of_neighbor_location_and_pure_influence_score()
         for input_location, label in input_locations:
             for location, tuo_neighbor_location_and_influence_score in \
@@ -652,9 +655,9 @@ class GeneralAnalysis():
                 if input_location==location:
                     figure = plt.figure()
                     size = figure.get_size_inches()
-                    figure.set_size_inches( (size[0]*2, size[1]*0.4) )
-                    print tuo_neighbor_location_and_influence_score
-                    exit()
+#                    figure.set_size_inches( (size[0]*2, size[1]*0.4) )
+#                    print tuo_neighbor_location_and_influence_score
+#                    exit()
                     influence_scores = zip(*tuo_neighbor_location_and_influence_score)[1]
                     no_of_influence_scores = len(influence_scores)
                     
@@ -670,10 +673,11 @@ class GeneralAnalysis():
                     plt.fill_between(x_bin_edges_influence_score, y_normed_hist_influence_score, color='#FF9E05', alpha=0.3)
 #                    plt.xlim(get_new_xlim(plt.xlim()))
                     (ticks, labels) = plt.yticks()
+                    plt.title(label)
                     plt.yticks([ticks[-2]])
                     plt.xlim(-1,1); plt.ylim(ymin=0.0)
-                    plt.show()
-                    exit()
+#                    plt.show()
+#                    exit()
                     break
         plt.show()
         
@@ -797,12 +801,12 @@ class GeneralAnalysis():
 #        GeneralAnalysis.grid_visualization()
 
 #        GeneralAnalysis.write_transmission_scores_file()
-        GeneralAnalysis.write_pure_influence_scores_file()
+#        GeneralAnalysis.write_pure_influence_scores_file()
 #        GeneralAnalysis.outgoing_and_incoming_locations_on_world_map()
 #        GeneralAnalysis.get_top_influencers([[-90,-180], [90, 180]])
 #        GeneralAnalysis.plot_local_influencers()
 #        GeneralAnalysis.example_of_locations_most_influenced()
-#        GeneralAnalysis.example_of_location_influence_plot()
+        GeneralAnalysis.example_of_location_influence_plot()
         
 #        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
 #        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
