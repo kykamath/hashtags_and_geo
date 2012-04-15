@@ -11,6 +11,8 @@ from library.plotting import savefig
 from operator import itemgetter
 from settings import analysis_folder
 from library.file_io import FileIO
+from library.geo import isWithinBoundingBox, getLocationFromLid,\
+    plotPointsOnWorldMap
 
 class InfluenceAnalysis:
     @staticmethod
@@ -106,16 +108,51 @@ class InfluenceAnalysis:
                                                                   key=itemgetter(1), reverse=True)[:no_of_top_locations]
             print zip(*tuples_of_location_and_mean_influence_scores)[0]
     @staticmethod
+    def plot_local_influencers(model_ids):
+        for model_id in model_ids:
+            tuples_of_boundary_and_boundary_label = [
+    #            ([[-90,-180], [90, 180]], 'World', GeneralMethods.getRandomColor()),
+                ([[24.527135,-127.792969], [49.61071,-59.765625]], 'USA', GeneralMethods.getRandomColor()),
+                ([[10.107706,-118.660469], [26.40009,-93.699531]], 'Mexico', GeneralMethods.getRandomColor()),
+                ([[-29.565473,-58.191719], [7.327985,-30.418282]], 'Brazil', GeneralMethods.getRandomColor()),
+                ([[-16.6695,88.409841], [30.115057,119.698904]], 'SE-Asia', GeneralMethods.getRandomColor()),
+            ]
+            tuples_of_location_and_color = []
+            for boundary, boundary_label, boundary_color in tuples_of_boundary_and_boundary_label:
+                map_from_location_to_total_influence_score, set_of_locations = {}, set()
+                tuo_location_and_tuo_neighbor_location_and_influence_score = Experiments.load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id)
+                for location, tuo_neighbor_location_and_influence_score in tuo_location_and_tuo_neighbor_location_and_influence_score:
+                    if isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), boundary):
+                        set_of_locations.add(location)
+                        tuo_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuo_neighbor_location_and_influence_score)
+                        for incoming_location, transmission_score in tuo_incoming_location_and_transmission_score:
+                            if incoming_location not in map_from_location_to_total_influence_score: map_from_location_to_total_influence_score[incoming_location]=0.
+                            map_from_location_to_total_influence_score[incoming_location]+=abs(transmission_score)
+                no_of_locations = len(set_of_locations)
+                tuples_of_location_and_mean_influence_scores = sorted([(location, total_influence_score/no_of_locations)
+                                                                     for location, total_influence_score in 
+                                                                     map_from_location_to_total_influence_score.iteritems()],
+                                                                 key=itemgetter(1), reverse=True)[:10]
+                locations = zip(*tuples_of_location_and_mean_influence_scores)[0]
+                for location in locations: tuples_of_location_and_color.append([getLocationFromLid(location.replace('_', ' ')), boundary_color])
+            locations, colors = zip(*tuples_of_location_and_color)
+            plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors,  lw = 0, alpha=1.)
+            for _, boundary_label, boundary_color in tuples_of_boundary_and_boundary_label: plt.scatter([0], [0], label=boundary_label, c=boundary_color, lw = 0)
+            plt.legend(loc=3, ncol=4, mode="expand",)
+#            plt.show()
+            savefig('images/%s.png'%GeneralMethods.get_method_id())
+    @staticmethod
     def run():
         model_ids = [
-                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
                       InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
-        InfluenceAnalysis.locations_at_top_and_bottom(model_ids)
+#        InfluenceAnalysis.locations_at_top_and_bottom(model_ids)
 #        InfluenceAnalysis.location_influence_plots(model_ids)
 #        InfluenceAnalysis.get_top_influencers(model_ids, [[-90,-180], [90, 180]])
+        InfluenceAnalysis.plot_local_influencers(model_ids)
 if __name__ == '__main__':
     InfluenceAnalysis.run()
     
