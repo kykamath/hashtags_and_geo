@@ -14,10 +14,14 @@ from settings import analysis_folder, PARTIAL_WORLD_BOUNDARY,\
     tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file
 from library.file_io import FileIO
 from library.geo import isWithinBoundingBox, getLocationFromLid,\
-    plotPointsOnWorldMap, getLatticeLid, getHaversineDistance
+    plotPointsOnWorldMap, getLatticeLid, getHaversineDistance,\
+    plot_graph_clusters_on_world_map
 from collections import defaultdict
 from library.stats import filter_outliers
 from scipy.stats.stats import pearsonr
+from itertools import groupby
+import networkx as nx
+from library.graphs import clusterUsingAffinityPropagation
 
 class InfluenceAnalysis:
     @staticmethod
@@ -193,27 +197,28 @@ class InfluenceAnalysis:
                 plt.subplot(subplot_id)
                 x_jaccard_similarities, y_influence_similarities = [], []
                 for jaccard_similarity, influence_similarities in \
-                        mf_jaccard_similarity_to_influence_similarities.iteritems():
+                        sorted(mf_jaccard_similarity_to_influence_similarities.iteritems(), key=itemgetter(0)):
                     influence_similarities=filter_outliers(influence_similarities)
-                    if len(influence_similarities) > 500:
+                    if len(influence_similarities) > 10:
                         x_jaccard_similarities.append(jaccard_similarity)
                         y_influence_similarities.append(np.mean(influence_similarities))
                 rho, p_value = pearsonr(x_jaccard_similarities, y_influence_similarities)
+                
                 plt.scatter(x_jaccard_similarities, y_influence_similarities,  
                             c = InfluenceMeasuringModels.INFLUENCE_PROPERTIES[influence_type]['color'], 
                             lw=0, s=40)
+                plt.plot(x_jaccard_similarities, y_influence_similarities, 
+                            c = InfluenceMeasuringModels.INFLUENCE_PROPERTIES[influence_type]['color'],  lw=2)
                 if influence_type==InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE: plt.ylabel('Influencing locations similarity', fontsize=13)
                 else: plt.ylabel('Influenced locations similarity', fontsize=13)
                 subplot_id+=1
             plt.xlabel('Jaccard similarity', fontsize=13)
             savefig('images/%s.png'%GeneralMethods.get_method_id())
     @staticmethod
-    def plot_influence_type_similarity_vs_distance(model_ids, distance_accuracy=500):
+    def plot_correlation_between_influence_similarity_and_distance(model_ids, distance_accuracy=500):
         def get_larger_lid(lid): return getLatticeLid(getLocationFromLid(lid.replace('_', ' ')), 10)
         for model_id in model_ids:
             mf_influence_type_to_tuo_distance_and_similarity = defaultdict(list)
-            mf_larger_lid_pair_to_actual_lid_pair = {}
-            mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences = {}
             for line_count, (location, tuo_neighbor_location_and_mf_influence_type_and_similarity) in \
                     enumerate(FileIO.iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file%model_id)):
                 print line_count
@@ -223,33 +228,9 @@ class InfluenceAnalysis:
                     distance = int(distance)/distance_accuracy*distance_accuracy + distance_accuracy
                     for influence_type, similarity in mf_influence_type_to_similarity.iteritems():
                         mf_influence_type_to_tuo_distance_and_similarity[influence_type].append([distance, similarity])
-                        if influence_type not in mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences:
-                                mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type] = defaultdict(dict)
-                        if influence_type == InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE:
-                            if distance==6000 and similarity > 0.25\
-                                    or distance==9000 and similarity > 0.25 \
-                                    or distance==7500 and similarity == 0.00:
-                                larger_lid_pair = '__'.join(sorted([get_larger_lid(location), get_larger_lid(neighbor_location)]))
-                                if larger_lid_pair not in mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance]:
-                                    mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance][larger_lid_pair] = 0.
-                                mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance][larger_lid_pair]+=1
-                                if larger_lid_pair not in mf_larger_lid_pair_to_actual_lid_pair: 
-                                    mf_larger_lid_pair_to_actual_lid_pair[larger_lid_pair] = '__'.join([location, neighbor_location])
-    #                    elif influence_type == GeneralAnalysis.LOCATION_INFLUENCING_VECTOR:
-    #                        if distance==6000 and similarity > 0.25\
-    #                                or distance==9000 and similarity > 0.25 \
-    #                                or distance==7500 and similarity > 0.00:
-    #                            larger_lid_pair = '__'.join(sorted([get_larger_lid(location), get_larger_lid(neighbor_location)]))
-    #                            if larger_lid_pair not in mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance]:
-    #                                mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance][larger_lid_pair] = 0.
-    #                            mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type][distance][larger_lid_pair]+=1
-    #                            if larger_lid_pair not in mf_larger_lid_pair_to_actual_lid_pair: 
-    #                                mf_larger_lid_pair_to_actual_lid_pair[larger_lid_pair] = '__'.join([location, neighbor_location])
-            mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[GeneralAnalysis.LOCATION_INFLUENCING_VECTOR] = mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR]
-            mf_distance_to_color = dict([(6000, '#FF00D0'), (7500, '#00FF59'), (9000, '#00FFEE')])
+            subpot_id = 211
             for influence_type in \
-                    [GeneralAnalysis.LOCATION_INFLUENCING_VECTOR, GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR]:
-    #                mf_influence_type_to_tuo_distance_and_similarity:
+                    [InfluenceMeasuringModels.TYPE_OUTGOING_INFLUENCE, InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE]:
                 tuo_distance_and_similarity = mf_influence_type_to_tuo_distance_and_similarity[influence_type]
                 tuo_distance_and_similarities =  [(distance, zip(*ito_tuo_distance_and_similarity)[1])
                                                     for distance, ito_tuo_distance_and_similarity in groupby(
@@ -257,55 +238,79 @@ class InfluenceAnalysis:
                                                             key=itemgetter(0)
                                                         )
                                                 ]
-                plt.subplot(111)
-    #            el = Ellipse((2, -1), 0.5, 0.5)
-    #            xy = (6000, 0.23)
-    #            figure(figsize=(1,1))
+                plt.subplot(subpot_id)
                 x_distances, y_similarities = [], []
                 for distance, similarities in tuo_distance_and_similarities:
-                    similarities=filter_outliers(similarities)
+#                    similarities=filter_outliers(similarities)
                     x_distances.append(distance), y_similarities.append(np.mean(similarities))
     #            x_distances, y_similarities = splineSmooth(x_distances, y_similarities)
-                plt.plot(x_distances, y_similarities, c = GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['color'], 
-                         lw=2, marker = GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['marker'])
-                plt.xlabel('Distance (Miles)', fontsize=20)
-                plt.ylabel(GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['label'], fontsize=20)
-                
-                plt.ylim(ymin=0.0, ymax=0.4)
-                mf_distance_to_similarity = dict(zip(x_distances, y_similarities))
-                for distance, color in mf_distance_to_color.iteritems():
-                    plt.plot([distance, distance], [0,mf_distance_to_similarity[distance]], '--', lw=3, c=color)
-    
-                a = plt.axes([0.39, 0.47, .49, .49])
-                mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences = mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[influence_type]
-    #            mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences = mf_influence_type_to_mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[GeneralAnalysis.LOCATION_INFLUENCED_BY_VECTOR]
-                for distance, mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences in mf_distance_to_mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences.iteritems():
-                    for larger_lid_pairs in mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences.keys()[:]:
-                        if mf_larger_lid_pair_to_actual_lid_pair[larger_lid_pairs] not in mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences: break
-                        mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[mf_larger_lid_pair_to_actual_lid_pair[larger_lid_pairs]] = mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[larger_lid_pairs]
-                        del mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences[larger_lid_pairs]
-                    tuo_of_larger_lid_pairs_and_larger_lid_pair_occurrences = sorted(
-                                                                               mf_to_larger_lid_pairs_to_larger_lid_pair_occurrences.iteritems(),
-                                                                               key=itemgetter(1), 
-                                                                               reverse=True,
-                                                                           )[:2]
-                    so_locations, location_pairs = set(), []
-                    for (larger_lid_pairs, _) in tuo_of_larger_lid_pairs_and_larger_lid_pair_occurrences:
-                        location1, location2 = larger_lid_pairs.split('__')
-                        so_locations.add(location1), so_locations.add(location2)
-                        location1, location2 = getLocationFromLid(location1.replace('_', ' ')), getLocationFromLid(location2.replace('_', ' '))
-                        location_pairs.append([location1, location2])
-                    _, m = plotPointsOnWorldMap([getLocationFromLid(location.replace('_', ' ')) for location in so_locations], blueMarble=False, bkcolor='#CFCFCF', c=mf_distance_to_color[distance], returnBaseMapObject=True, lw = 0)
-                    for location1, location2 in location_pairs: 
-        #                if isWithinBoundingBox(location1, PARTIAL_WORLD_BOUNDARY) and isWithinBoundingBox(location2, PARTIAL_WORLD_BOUNDARY): 
-                        m.drawgreatcircle(location1[1], location1[0], location2[1], location2[0], color=mf_distance_to_color[distance], lw=3., alpha=0.5)
-    #            for distance, color in mf_distance_to_color.iteritems(): plt.scatter([0], [0], color=color, label=str(distance))
-    #            plt.legend(loc=3, ncol=3, mode="expand")
-                plt.setp(a)
-                output_file = 'images/%s/%s.png'%(GeneralMethods.get_method_id(), GeneralAnalysis.INFLUENCE_PROPERTIES[influence_type]['id'])
-                FileIO.createDirectoryForFile(output_file)
-                plt.savefig(output_file)
-                plt.clf()
+                plt.semilogy(x_distances, y_similarities, c = InfluenceMeasuringModels.INFLUENCE_PROPERTIES[influence_type]['color'], 
+                         lw=2, marker = InfluenceMeasuringModels.INFLUENCE_PROPERTIES[influence_type]['marker'])
+                plt.ylabel(InfluenceMeasuringModels.INFLUENCE_PROPERTIES[influence_type]['label'], fontsize=13)
+                subpot_id+=1
+            plt.xlabel('Distance (Miles)', fontsize=13)
+#            plt.show()
+            savefig('images/%s.png'%(GeneralMethods.get_method_id()))
+    @staticmethod
+    def influence_clusters(model_ids, min_cluster_size=15):
+        influence_type = InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE
+        for model_id in model_ids:
+            digraph_of_location_and_location_similarity = nx.DiGraph()
+            for line_count, (location, tuo_neighbor_location_and_mf_influence_type_and_similarity) in \
+                        enumerate(FileIO.iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file%model_id)):
+#                print line_count
+                for neighbor_location, mf_influence_type_to_similarity in tuo_neighbor_location_and_mf_influence_type_and_similarity: 
+                    if isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), PARTIAL_WORLD_BOUNDARY) and \
+                            isWithinBoundingBox(getLocationFromLid(neighbor_location.replace('_', ' ')), PARTIAL_WORLD_BOUNDARY):
+                        digraph_of_location_and_location_similarity.add_edge(location, neighbor_location, {'w': mf_influence_type_to_similarity[influence_type]})
+    #        no_of_clusters, tuples_of_location_and_cluster_id = clusterUsingAffinityPropagation(digraph_of_location_and_location_similarity)
+    #        print 'x'
+    #        plot_graph_clusters_on_world_map(graph, s, lw, alpha, bkcolor)
+#            plot_graph_clusters_on_world_map(digraph_of_location_and_location_similarity)
+
+            no_of_clusters, tuo_location_and_cluster_id = clusterUsingAffinityPropagation(digraph_of_location_and_location_similarity)
+            tuo_cluster_id_to_locations = [ (cluster_id, zip(*ito_tuo_location_and_cluster_id)[0])
+                                            for cluster_id, ito_tuo_location_and_cluster_id in 
+                                            groupby(
+                                                  sorted(tuo_location_and_cluster_id, key=itemgetter(1)),
+                                                  key=itemgetter(1)
+                                                  )
+                                           ]
+            mf_location_to_cluster_id = dict(tuo_location_and_cluster_id)
+            mf_cluster_id_to_cluster_color = dict([(i, GeneralMethods.getRandomColor()) for i in range(no_of_clusters)])
+            mf_valid_locations_to_color = {}
+            for cluster_id, locations in \
+                    sorted(tuo_cluster_id_to_locations, key=lambda (cluster_id, locations): len(locations))[-10:]:
+#                if len(locations)>min_cluster_size:
+                print cluster_id, len(locations)
+                for location in locations: mf_valid_locations_to_color[location] \
+                    = mf_cluster_id_to_cluster_color[mf_location_to_cluster_id[location]]
+            locations, colors = zip(*mf_valid_locations_to_color.iteritems())
+            locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
+            _, m = plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors, s=0, returnBaseMapObject=True, lw = 0)
+            for u, v, data in digraph_of_location_and_location_similarity.edges(data=True):
+                if u in mf_valid_locations_to_color and v in mf_valid_locations_to_color \
+                        and mf_location_to_cluster_id[u]==mf_location_to_cluster_id[v]:
+                    color, u, v, w = mf_cluster_id_to_cluster_color[mf_location_to_cluster_id[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
+                    m.drawgreatcircle(u[1], u[0], v[1], v[0], color=color, alpha=0.6)
+            plt.show()
+#            map_from_location_to_cluster_id = dict(tuples_of_location_and_cluster_id)
+#            map_from_cluster_id_to_cluster_color = dict([(i, GeneralMethods.getRandomColor()) for i in range(no_of_clusters)])
+#            points, colors = zip(*map(
+#                                      lambda  location: (
+#                                                         getLocationFromLid(location.replace('_', ' ')), 
+#                                                         map_from_cluster_id_to_cluster_color[map_from_location_to_cluster_id[location]]
+#                                                         ), 
+#                                      digraph_of_location_and_location_similarity.nodes())
+#                                 )
+#            _, m = plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='#FF00FF', returnBaseMapObject=True, lw = 0)
+#            for u, v, data in digraph_of_location_and_location_similarity.edges(data=True):
+#                if map_from_location_to_cluster_id[u]==map_from_location_to_cluster_id[v]:
+#                    color, u, v, w = map_from_cluster_id_to_cluster_color[map_from_location_to_cluster_id[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
+#                    m.drawgreatcircle(u[1], u[0], v[1], v[0], color=color, alpha=0.6)
+
+
+#            plt.show()
     @staticmethod
     def run():
         model_ids = [
@@ -319,7 +324,9 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.global_influence_plots(model_ids)
 #        InfluenceAnalysis.plot_local_influencers(model_ids)
 #        InfluenceAnalysis.plot_locations_influence_on_world_map(model_ids)
-        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_jaccard_similarity(model_ids)
+#        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_jaccard_similarity(model_ids)
+#        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_distance(model_ids)
+        InfluenceAnalysis.influence_clusters(model_ids)
 if __name__ == '__main__':
     InfluenceAnalysis.run()
     

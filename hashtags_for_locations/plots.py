@@ -809,9 +809,9 @@ class GeneralAnalysis():
 #        GeneralAnalysis.example_of_location_influence_plot()
         
 #        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
-        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
+#        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
 #        GeneralAnalysis.plot_correlation_between_influence_similarity_and_hashtag_similarity()
-#        GeneralAnalysis.influence_clusters()
+        GeneralAnalysis.influence_clusters()
         
 #        GeneralAnalysis.get_hashtags()
 #        GeneralAnalysis.print_hashtags_class_stats()
