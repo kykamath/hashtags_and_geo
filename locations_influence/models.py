@@ -88,8 +88,8 @@ class Experiments(object):
                             location_occurrences = location_object['hashtags'][hashtag][0]
                             pure_influence_scores.append(MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID[model_id](location_occurrences, neighbor_location_occurrences))
                     neighbor_location_hashtag_set = set(mf_hashtag_to_tuo_occurrences_and_time_range.keys())
-                    for hashtag in location_hashtag_set.difference(neighbor_location_hashtag_set): pure_influence_scores.append(1.0)
-                    for hashtag in neighbor_location_hashtag_set.difference(location_hashtag_set): pure_influence_scores.append(-1.0)
+#                    for hashtag in location_hashtag_set.difference(neighbor_location_hashtag_set): pure_influence_scores.append(1.0)
+#                    for hashtag in neighbor_location_hashtag_set.difference(location_hashtag_set): pure_influence_scores.append(-1.0)
                     mean_pure_influence_score = np.mean(pure_influence_scores)
                     tuo_neighbor_location_and_pure_influence_score.append([neighbor_location, mean_pure_influence_score])
                 tuo_neighbor_location_and_pure_influence_score = sorted(tuo_neighbor_location_and_pure_influence_score, key=itemgetter(1))
@@ -132,8 +132,8 @@ class Experiments(object):
                             pure_influence_score = MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID[model_id](location_occurrences, neighbor_location_occurrences)
                             influence_scores.append(mf_hashtag_to_hashtag_weights[hashtag]*pure_influence_score)
                     neighbor_location_hashtag_set = set(mf_hashtag_to_tuo_occurrences_and_time_range.keys())
-                    for hashtag in location_hashtag_set.difference(neighbor_location_hashtag_set): influence_scores.append(1.0)
-                    for hashtag in neighbor_location_hashtag_set.difference(location_hashtag_set): influence_scores.append(-1.0)
+#                    for hashtag in location_hashtag_set.difference(neighbor_location_hashtag_set): influence_scores.append(1.0)
+#                    for hashtag in neighbor_location_hashtag_set.difference(location_hashtag_set): influence_scores.append(-1.0)
                     mean_influence_scores = np.mean(influence_scores)
                     tuo_neighbor_location_and_influence_score.append([neighbor_location, 
                                                                        mf_location_to_location_weights[neighbor_location]*mean_influence_scores])
@@ -169,8 +169,8 @@ class Experiments(object):
 #                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
 #                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
-#        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(models_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
-        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(models_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
+        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(models_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
+#        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(models_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 
 if __name__ == '__main__':
     Experiments.run()

@@ -16,11 +16,11 @@ class InfluenceAnalysis:
     @staticmethod
     def locations_at_top_and_bottom(model_ids, no_of_locations=5):
         for model_id in model_ids:
-            output_file_format = analysis_folder+'%s/%s/'%(GeneralMethods.get_method_id(), model_id)+'%s.json'
+            output_file_format = analysis_folder+'%s/'%(GeneralMethods.get_method_id())+'%s/%s.json'
             input_locations = [ 
                                 ('40.6000_-73.9500', 'new_york'), 
-                                ('33.3500_-118.1750', 'los_angeles'),
-                                ('29.7250_-97.1500', 'austin'), ('30.4500_-95.7000', 'college_station') ,('29.7250_-94.9750', 'houston'),
+#                                ('33.3500_-118.1750', 'los_angeles'),
+#                                ('29.7250_-97.1500', 'austin'), ('30.4500_-95.7000', 'college_station') ,('29.7250_-94.9750', 'houston'),
     #                            ('39.1500_-83.3750', 'hillsboro_oh'), ('25.3750_-79.7500', 'miami'), ('-23.2000_-46.4000', 'sao_paulo'),
     #                            ('51.4750_0.0000', 'london'), ('38.4250_-76.8500', 'washington'),
     #                            ('33.3500_-84.1000', 'atlanta'), ('42.0500_-82.6500', 'detroit')
@@ -31,16 +31,16 @@ class InfluenceAnalysis:
                 for location, tuo_neighbor_location_and_influence_score in \
                         tuo_location_and_tuo_neighbor_location_and_influence_score:
                     if input_location==location:
-                        output_file = output_file_format%input_location
+                        output_file = output_file_format%(input_location, model_id)
                         GeneralMethods.runCommand('rm -rf %s'%output_file)
                         FileIO.createDirectoryForFile(output_file)
                         FileIO.writeToFileAsJson("Bottom:", output_file)
                         for neighbor_location_and_influence_score in tuo_neighbor_location_and_influence_score[:no_of_locations]:
-                            FileIO.writeToFileAsJson(neighbor_location_and_influence_score, output_file)
+                            FileIO.writeToFileAsJson(neighbor_location_and_influence_score+[''], output_file)
                         FileIO.writeToFileAsJson("Top:", output_file)
                         for neighbor_location_and_influence_score in \
                                 reversed(tuo_neighbor_location_and_influence_score[-no_of_locations:]):
-                            FileIO.writeToFileAsJson(neighbor_location_and_influence_score, output_file)
+                            FileIO.writeToFileAsJson(neighbor_location_and_influence_score+[''], output_file)
     @staticmethod
     def location_influence_plots(model_ids, no_of_bins_for_influence_score=100):
         for model_id in model_ids:
