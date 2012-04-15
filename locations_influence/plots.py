@@ -7,7 +7,7 @@ from models import Experiments, InfluenceMeasuringModels
 import matplotlib.pyplot as plt
 import numpy as np
 from library.classes import GeneralMethods
-from library.plotting import savefig
+from library.plotting import savefig, splineSmooth
 from operator import itemgetter
 from settings import analysis_folder
 from library.file_io import FileIO
@@ -22,7 +22,7 @@ class InfluenceAnalysis:
             output_file_format = analysis_folder+'%s/'%(GeneralMethods.get_method_id())+'%s/%s.json'
             input_locations = [ 
 #                                ('40.6000_-73.9500', 'new_york'), 
-                                ('29.7250_-97.1500', 'austin'), 
+                                ('30.4500_-95.7000', 'college_station'), 
                             ] 
             tuo_location_and_tuo_neighbor_location_and_influence_score = \
                 Experiments.load_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_id)
@@ -45,12 +45,13 @@ class InfluenceAnalysis:
         for model_id in model_ids:
             output_file_format = 'images/%s/'%(GeneralMethods.get_method_id()) + '%s_%s.png'
             tuo_input_location_and_label_and_marking_locations = [ 
-                                [ '40.6000_-73.9500', 'new_york', ['-23.2000_-46.4000', '-22.4750_-42.7750', '51.4750_0.0000', '33.3500_-118.1750', '29.7250_-94.9750']] 
+#                                [ '40.6000_-73.9500', 'new_york', ['-23.2000_-46.4000', '-22.4750_-42.7750', '51.4750_0.0000', '33.3500_-118.1750', '29.7250_-97.1500','30.4500_-95.7000']],
+#                                [ '39.1500_-83.3750', 'hillsboro_oh', ['-23.2000_-46.4000', '-22.4750_-42.7750', '51.4750_0.0000', '33.3500_-118.1750', '29.7250_-97.1500','30.4500_-95.7000', '40.6000_-73.9500']] 
 #                                ('33.3500_-118.1750', 'los_angeles'),
-#                                ('29.7250_-97.1500', 'austin'), 
-#                                ('30.4500_-95.7000', 'college_station'),
+                                ['29.7250_-97.1500', 'austin',  ['-23.2000_-46.4000', '-22.4750_-42.7750', '51.4750_0.0000', '33.3500_-118.1750', '39.1500_-83.3750','30.4500_-95.7000', '40.6000_-73.9500']], 
+#                                ['30.4500_-95.7000', 'college_station', ['-23.2000_-46.4000', '-22.4750_-42.7750', '51.4750_0.0000', '33.3500_-118.1750', '29.7250_-97.1500','30.4500_-95.7000', '40.6000_-73.9500']],
     #                            ('39.1500_-83.3750', 'hillsboro_oh'), ('25.3750_-79.7500', 'miami'), ('-23.2000_-46.4000', 'sao_paulo'),
-#                                ('29.7250_-94.9750', 'houston'),
+#                                ['29.7250_-94.9750', 'houston', []],
 #                                ('51.4750_0.0000', 'london'), ('38.4250_-76.8500', 'washington'),
     #                            ('33.3500_-84.1000', 'atlanta'), ('42.0500_-82.6500', 'detroit')
                             ] 
@@ -74,31 +75,25 @@ class InfluenceAnalysis:
                         bin_edges_influence_score=[bin_edges_influence_score[0]]+bin_edges_influence_score+[bin_edges_influence_score[-1]]
                         normed_hist_influence_score=[0.0]+normed_hist_influence_score+[0.0]
                         x_bin_edges_influence_score, y_normed_hist_influence_score = bin_edges_influence_score[:-1], normed_hist_influence_score
-    #                    x_bin_edges_influence_score, y_normed_hist_influence_score = splineSmooth(x_bin_edges_influence_score, y_normed_hist_influence_score)
+                        x_bin_edges_influence_score, y_normed_hist_influence_score = splineSmooth(x_bin_edges_influence_score, y_normed_hist_influence_score)
     
-                        plt.plot(x_bin_edges_influence_score, y_normed_hist_influence_score, lw=3, color='#FF9E05')
+                        plt.plot(x_bin_edges_influence_score, y_normed_hist_influence_score, lw=1, color='#FF9E05')
                         plt.fill_between(x_bin_edges_influence_score, y_normed_hist_influence_score, color='#FF9E05', alpha=0.3)
   
                         mf_neighbor_location_to_influence_score = dict(tuo_neighbor_location_and_influence_score)
                         for marking_location in marking_locations: 
-                            print marking_location, mf_neighbor_location_to_influence_score[marking_location]
-                            plt.scatter([mf_neighbor_location_to_influence_score[marking_location]], [0.001], marker='x', s=80, color='m', alpha=0.5, label=marking_location)
-#                            ax.annotate('wedge', xy=(mf_neighbor_location_to_influence_score[marking_location], 0.1),  xycoords='data',
-#                            xytext=(-100, -100), textcoords='offset points',
-#                            size=20,
-#                            #bbox=dict(boxstyle="round", fc="0.8"),
-#                            arrowprops=dict(arrowstyle="wedge,tail_width=0.7",
-#                                            fc="0.6", ec="none",
-#                                            patchB=el,
-#                                            connectionstyle="arc3,rad=-0.3"),
-#                            )
+                            if marking_location in mf_neighbor_location_to_influence_score:
+                                print marking_location, mf_neighbor_location_to_influence_score[marking_location]
+                                plt.scatter([mf_neighbor_location_to_influence_score[marking_location]], [0.0005], s=20, lw=0, color=GeneralMethods.getRandomColor(), alpha=1., label=marking_location)
+#                                plt.scatter([mf_neighbor_location_to_influence_score[marking_location]], [0.0005], s=20, lw=0, color='m', alpha=1., label=marking_location)
+                            else: print marking_location
     #                    plt.xlim(get_new_xlim(plt.xlim()))
                         plt.legend()
                         (ticks, labels) = plt.yticks()
                         plt.yticks([ticks[-2]])
                         plt.xlim(-1,1); plt.ylim(ymin=0.0)
-                        plt.show()
-#                        savefig(output_file_format%(label, model_id))
+#                        plt.show()
+                        savefig(output_file_format%(label, model_id))
                         break
     @staticmethod
     def get_top_influencers(model_ids, boundary, no_of_top_locations=10):
