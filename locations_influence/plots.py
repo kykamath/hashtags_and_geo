@@ -3,17 +3,21 @@ Created on Apr 14, 2012
 
 @author: kykamath
 '''
-from models import Experiments, InfluenceMeasuringModels
+from models import Experiments, InfluenceMeasuringModels,\
+    JACCARD_SIMILARITY
 import matplotlib.pyplot as plt
 import numpy as np
 from library.classes import GeneralMethods
 from library.plotting import savefig, splineSmooth
 from operator import itemgetter
-from settings import analysis_folder, PARTIAL_WORLD_BOUNDARY
+from settings import analysis_folder, PARTIAL_WORLD_BOUNDARY,\
+    tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file
 from library.file_io import FileIO
 from library.geo import isWithinBoundingBox, getLocationFromLid,\
     plotPointsOnWorldMap
-from matplotlib.patches import Ellipse
+from collections import defaultdict
+from library.stats import filter_outliers
+from scipy.stats.stats import pearsonr
 
 class InfluenceAnalysis:
     @staticmethod
@@ -168,6 +172,42 @@ class InfluenceAnalysis:
                             GeneralMethods.runCommand('rm -rf %s'%output_file)
                         break
     @staticmethod
+    def plot_correlation_between_influence_similarity_and_jaccard_similarity(model_ids):
+        for model_id in model_ids:
+            mf_influence_type_to_mf_jaccard_similarity_to_influence_similarities = {}
+            for line_count, (location, tuo_neighbor_location_and_mf_influence_type_and_similarity) in \
+                    enumerate(FileIO.iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file%model_id)):
+                print line_count
+                for neighbor_location, mf_influence_type_to_similarity in \
+                        tuo_neighbor_location_and_mf_influence_type_and_similarity:
+                    jaccard_similarity = round(mf_influence_type_to_similarity[JACCARD_SIMILARITY], 1)
+                    for influence_type in \
+                            [InfluenceMeasuringModels.TYPE_OUTGOING_INFLUENCE, InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE]:
+                        if influence_type not in mf_influence_type_to_mf_jaccard_similarity_to_influence_similarities: 
+                            mf_influence_type_to_mf_jaccard_similarity_to_influence_similarities[influence_type] = defaultdict(list)
+                        mf_influence_type_to_mf_jaccard_similarity_to_influence_similarities[influence_type][jaccard_similarity]\
+                            .append(mf_influence_type_to_similarity[influence_type])
+            subplot_id = 211
+            for influence_type, mf_jaccard_similarity_to_influence_similarities in \
+                    mf_influence_type_to_mf_jaccard_similarity_to_influence_similarities.iteritems():
+                plt.subplot(subplot_id)
+                x_jaccard_similarities, y_influence_similarities = [], []
+                for jaccard_similarity, influence_similarities in \
+                        mf_jaccard_similarity_to_influence_similarities.iteritems():
+                    influence_similarities=filter_outliers(influence_similarities)
+                    if len(influence_similarities) > 500:
+                        x_jaccard_similarities.append(jaccard_similarity)
+                        y_influence_similarities.append(np.mean(influence_similarities))
+                rho, p_value = pearsonr(x_jaccard_similarities, y_influence_similarities)
+                plt.scatter(x_jaccard_similarities, y_influence_similarities,  
+                            c = InfluenceMeasuringModels.INFLUENCE_PROPERTIES[influence_type]['color'], 
+                            lw=0, s=40)
+                if influence_type==InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE: plt.ylabel('Influencing locations similarity', fontsize=13)
+                else: plt.ylabel('Influenced locations similarity', fontsize=13)
+                subplot_id+=1
+            plt.xlabel('Jaccard similarity', fontsize=13)
+            savefig('images/%s.png'%GeneralMethods.get_method_id())
+    @staticmethod
     def run():
         model_ids = [
 #                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
@@ -179,7 +219,8 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.location_influence_plots(model_ids)
 #        InfluenceAnalysis.global_influence_plots(model_ids)
 #        InfluenceAnalysis.plot_local_influencers(model_ids)
-        InfluenceAnalysis.plot_locations_influence_on_world_map(model_ids)
+#        InfluenceAnalysis.plot_locations_influence_on_world_map(model_ids)
+        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_jaccard_similarity(model_ids)
 if __name__ == '__main__':
     InfluenceAnalysis.run()
     

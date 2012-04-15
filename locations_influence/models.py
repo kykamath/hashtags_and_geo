@@ -24,6 +24,12 @@ class InfluenceMeasuringModels(object):
     TYPE_COMPLETE_INFLUENCE = 'complete_influence'
     TYPE_OUTGOING_INFLUENCE = 'outgoing_influence'
     TYPE_INCOMING_INFLUENCE = 'incoming_influence'
+    INFLUENCE_PROPERTIES = {
+                            TYPE_OUTGOING_INFLUENCE: {'label':  'Influenced locations similarity', 'color': 'r', 'marker': '*', 'id': 'influencing_vector'},
+                            TYPE_INCOMING_INFLUENCE: {'label': 'Influencing locations similarity', 'color': 'b', 'marker': 's', 'id': 'influenced_by_vector'},
+                            TYPE_COMPLETE_INFLUENCE: {'label': 'Influence', 'color': 'g', 'marker': 'o', 'id': 'influence_vector'},
+                            JACCARD_SIMILARITY: {'label': 'Jaccard', 'color': 'm', 'marker': 's', 'id': 'jaccard_similarity'},
+                            }
     @staticmethod
     def first_occurrence(location_occurrences, neighbor_location_occurrences):
         first_location_occurrence=sorted(location_occurrences)[0]
@@ -211,13 +217,18 @@ class Experiments(object):
             else: mf_location_to_global_influence_score[location] = influence_score
         return mf_location_to_global_influence_score.items()
     @staticmethod
-    def load_tuo_location_and_mf_influence_type_to_influence_vector(model_id, vector_length=25):
+    def load_tuo_location_and_mf_influence_type_to_influence_vector(model_id, vector_length=None):
         def convert_to_vector(tuo_location_and_influence_score):
-            tuo_location_and_influence_score = sorted(
+            if vector_length: tuo_location_and_influence_score = sorted(
                                                                tuo_location_and_influence_score,
                                                                key = lambda (_, transmission_score): abs(transmission_score),
                                                                reverse=True
                                                         )[:vector_length]
+            else: tuo_location_and_influence_score = sorted(
+                                                               tuo_location_and_influence_score,
+                                                               key = lambda (_, transmission_score): abs(transmission_score),
+                                                               reverse=True
+                                                        )                                      
             root_of_sum_of_squares = np.sqrt(sum([influence_score**2 for _, influence_score in tuo_location_and_influence_score]))
             return dict([(location, influence_score/root_of_sum_of_squares) for location, influence_score in tuo_location_and_influence_score])
         tuo_location_and_mf_influence_type_to_influence_vector = []
