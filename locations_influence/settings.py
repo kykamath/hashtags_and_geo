@@ -19,5 +19,5 @@ tuo_location_and_tuo_neighbor_location_and_influence_score_file  = locations_inf
 
 analysis_folder = locations_influence_folder%'analysis/'
 
-hadoop_output_folder = locations_influence_folder%'hadoop'+'/%s/'
+hadoop_output_folder = '/mnt/chevron/kykamath/data/geo/hashtags/locations_influence/hadoop/%s/'
 location_objects_file = hadoop_output_folder+'%s_%s/location_objects'
