@@ -128,14 +128,17 @@ class Experiments(object):
                 location_hashtag_set = set(location_object['hashtags'])
                 for neighbor_location, mf_hashtag_to_tuo_occurrences_and_time_range in location_object['links'].iteritems():
                     influence_scores = []
+                    mf_neighbor_location_hashtag_to_hashtag_weights = get_hashtag_weights(mf_hashtag_to_tuo_occurrences_and_time_range)
+                    neighbor_location_hashtag_set = set(mf_hashtag_to_tuo_occurrences_and_time_range.keys())
                     for hashtag, (neighbor_location_occurrences, time_range) in mf_hashtag_to_tuo_occurrences_and_time_range.iteritems():
                         if hashtag in location_object['hashtags']:
                             location_occurrences = location_object['hashtags'][hashtag][0]
                             pure_influence_score = MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID[model_id](location_occurrences, neighbor_location_occurrences)
                             influence_scores.append(mf_hashtag_to_hashtag_weights[hashtag]*pure_influence_score)
-                    neighbor_location_hashtag_set = set(mf_hashtag_to_tuo_occurrences_and_time_range.keys())
-                    for hashtag in location_hashtag_set.difference(neighbor_location_hashtag_set): influence_scores.append(1.0)
-                    for hashtag in neighbor_location_hashtag_set.difference(location_hashtag_set): influence_scores.append(-1.0)
+                    for hashtag in location_hashtag_set.difference(neighbor_location_hashtag_set): 
+                        influence_scores.append(mf_hashtag_to_hashtag_weights[hashtag]*1.0)
+                    for hashtag in neighbor_location_hashtag_set.difference(location_hashtag_set): 
+                        influence_scores.append(mf_neighbor_location_hashtag_to_hashtag_weights[hashtag]*-1.0)
                     mean_influence_scores = np.mean(influence_scores)
                     tuo_neighbor_location_and_influence_score.append([neighbor_location, 
                                                                        mf_location_to_location_weights[neighbor_location]*mean_influence_scores])
@@ -147,11 +150,14 @@ class Experiments(object):
                  for location, tuo_neighbor_location_and_influence_score in 
                  iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_influence_score_file%model_id)]
     @staticmethod
-    def load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers=None, influence_type=InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE):
+    def load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, 
+                                                                                       noOfInfluencers=None, 
+                                                                                       influence_type=InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE):
         '''
         noOfInfluencers (k) = The top-k influencers for a location
         '''
-        tuo_location_and_tuo_neighbor_location_and_influence_score = Experiments.load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id)
+        tuo_location_and_tuo_neighbor_location_and_influence_score \
+            = Experiments.load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id)
         mf_location_to_tuo_neighbor_location_and_locations_influence_score = defaultdict(list)
         for neighbor_location, tuo_location_and_influence_score in tuo_location_and_tuo_neighbor_location_and_influence_score:
             if not noOfInfluencers: 
@@ -166,21 +172,36 @@ class Experiments(object):
                 mf_location_to_tuo_neighbor_location_and_locations_influence_score[location].append([neighbor_location, abs(influence_score)])
         for location in mf_location_to_tuo_neighbor_location_and_locations_influence_score.keys()[:]:
             tuo_neighbor_location_and_locations_influence_score = mf_location_to_tuo_neighbor_location_and_locations_influence_score[location]
-            mf_location_to_tuo_neighbor_location_and_locations_influence_score[location] = sorted(tuo_neighbor_location_and_locations_influence_score, key=itemgetter(1), reverse=True)
+            mf_location_to_tuo_neighbor_location_and_locations_influence_score[location] = sorted(tuo_neighbor_location_and_locations_influence_score, 
+                                                                                                       key=itemgetter(1), reverse=True)
         return mf_location_to_tuo_neighbor_location_and_locations_influence_score.items()
     @staticmethod
     def load_tuo_location_and_global_influence_score(model_id, noOfInfluencers=None):
+        mf_location_to_global_influence_score = {}
         mf_location_to_mf_influence_type_to_influence_score = defaultdict(dict)
         mf_location_to_tuo_neighbor_location_and_locations_influencing_score = \
             dict(Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers, InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE))
         mf_location_to_tuo_neighbor_location_and_locations_influenced_score = \
             dict(Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers, InfluenceMeasuringModels.TYPE_OUTGOING_INFLUENCE))
+        no_of_locations = len(mf_location_to_tuo_neighbor_location_and_locations_influenced_score)
         for location, tuo_neighbor_location_and_locations_influencing_score in \
                 mf_location_to_tuo_neighbor_location_and_locations_influencing_score.iteritems():
-            print location, np.mean(zip(*tuo_neighbor_location_and_locations_influencing_score)[1])
+#            print location, np.mean(zip(*tuo_neighbor_location_and_locations_influencing_score)[1])
+            mf_location_to_mf_influence_type_to_influence_score[location][InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE] \
+                = sum(zip(*tuo_neighbor_location_and_locations_influencing_score)[1])/no_of_locations
         for location, tuo_neighbor_location_and_locations_influenced_score in \
                 mf_location_to_tuo_neighbor_location_and_locations_influenced_score.iteritems():
-            print location, np.mean(zip(*tuo_neighbor_location_and_locations_influenced_score)[1])
+#            print location, np.mean(zip(*tuo_neighbor_location_and_locations_influenced_score)[1])
+            mf_location_to_mf_influence_type_to_influence_score[location][InfluenceMeasuringModels.TYPE_OUTGOING_INFLUENCE] \
+                = sum(zip(*tuo_neighbor_location_and_locations_influenced_score)[1])/no_of_locations
+        for location, mf_influence_type_to_influence_score in \
+                mf_location_to_mf_influence_type_to_influence_score.iteritems():
+            influence_type, influence_score = max(mf_influence_type_to_influence_score.iteritems(), key=itemgetter(1))
+            if influence_type==InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE: 
+                mf_location_to_global_influence_score[location] = -influence_score
+            else: mf_location_to_global_influence_score[location] = influence_score
+        return mf_location_to_global_influence_score.items()
+            
     @staticmethod
     def run():
         models_ids = [
