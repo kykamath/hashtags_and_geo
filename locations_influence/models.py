@@ -248,7 +248,7 @@ class Experiments(object):
             return reduce(lambda total, k: total+(location_vector_1.get(k,0)*location_vector_2.get(k,0)), set(location_vector_1.keys()).union(location_vector_2.keys()),0.)
         influence_types=[InfluenceMeasuringModels.TYPE_COMPLETE_INFLUENCE, InfluenceMeasuringModels.TYPE_OUTGOING_INFLUENCE, InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE]
         for model_id in model_ids:
-            mf_location_to_mf_influence_type_to_influence_vector = dict(InfluenceMeasuringModels.load_tuo_location_and_mf_influence_type_to_influence_vector(model_id))
+            mf_location_to_mf_influence_type_to_influence_vector = dict(Experiments.load_tuo_location_and_mf_influence_type_to_influence_vector(model_id))
             GeneralMethods.runCommand('rm -rf %s'%tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file%model_id)
             for line_count, location_object in enumerate(iterateJsonFromFile(
                          location_objects_file%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
