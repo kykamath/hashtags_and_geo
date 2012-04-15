@@ -217,7 +217,7 @@ class Experiments(object):
             else: mf_location_to_global_influence_score[location] = influence_score
         return mf_location_to_global_influence_score.items()
     @staticmethod
-    def load_tuo_location_and_mf_influence_type_to_influence_vector(model_id, vector_length=None):
+    def load_tuo_location_and_mf_influence_type_to_influence_vector(model_id, vector_length=25):
         def convert_to_vector(tuo_location_and_influence_score):
             if vector_length: tuo_location_and_influence_score = sorted(
                                                                tuo_location_and_influence_score,
