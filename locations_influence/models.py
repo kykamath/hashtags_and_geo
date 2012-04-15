@@ -12,6 +12,7 @@ from settings import tuo_location_and_tuo_neighbor_location_and_pure_influence_s
     location_objects_file, tuo_location_and_tuo_neighbor_location_and_influence_score_file
 from analysis import iterateJsonFromFile
 from mr_analysis import START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER
+from library.geo import isWithinBoundingBox, getLocationFromLid
 
 class InfluenceMeasuringModels(object):
     ID_FIRST_OCCURRENCE = 'first_occurrence'
@@ -178,14 +179,18 @@ class Experiments(object):
                                                                                                        key=itemgetter(1), reverse=True)
         return mf_location_to_tuo_neighbor_location_and_locations_influence_score.items()
     @staticmethod
-    def load_tuo_location_and_global_influence_score(model_id, boundary=[[-90,-180], [90, 180]], noOfInfluencers=None):
+    def load_tuo_location_and_boundary_influence_score(model_id, boundary=[[-90,-180], [90, 180]], noOfInfluencers=None):
         mf_location_to_global_influence_score = {}
         mf_location_to_mf_influence_type_to_influence_score = defaultdict(dict)
         mf_location_to_tuo_neighbor_location_and_locations_influencing_score = \
             dict(Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers, InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE))
         mf_location_to_tuo_neighbor_location_and_locations_influenced_score = \
             dict(Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers, InfluenceMeasuringModels.TYPE_OUTGOING_INFLUENCE))
-        
+        for location in mf_location_to_tuo_neighbor_location_and_locations_influenced_score.keys()[:]:
+            if not isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), boundary):
+                if location in mf_location_to_tuo_neighbor_location_and_locations_influencing_score:
+                    del mf_location_to_tuo_neighbor_location_and_locations_influencing_score[location]
+                del mf_location_to_tuo_neighbor_location_and_locations_influenced_score[location]
         no_of_locations = len(mf_location_to_tuo_neighbor_location_and_locations_influenced_score)
         for location, tuo_neighbor_location_and_locations_influencing_score in \
                 mf_location_to_tuo_neighbor_location_and_locations_influencing_score.iteritems():
@@ -213,7 +218,7 @@ class Experiments(object):
                   ]
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(models_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
         Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(models_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
-#        Experiments.load_tuo_location_and_global_influence_score(InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE)
+#        Experiments.load_tuo_location_and_boundary_influence_score(InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE)
 
 if __name__ == '__main__':
     Experiments.run()

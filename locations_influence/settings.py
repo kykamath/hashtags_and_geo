@@ -3,6 +3,7 @@ Created on Apr 13, 2012
 
 @author: krishnakamath
 '''
+PARTIAL_WORLD_BOUNDARY = [[-58.447733,-153.457031], [72.127936,75.410156]]
 
 hdfs_input_folder = 'hdfs:///user/kykamath/geo/hashtags/%s/'
 
