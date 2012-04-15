@@ -9,16 +9,19 @@ from collections import defaultdict
 import numpy as np
 from operator import itemgetter
 from settings import tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file, \
-    location_objects_file, tuo_location_and_tuo_neighbor_location_and_influence_score_file
+    location_objects_file, tuo_location_and_tuo_neighbor_location_and_influence_score_file, \
+    tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file
 from analysis import iterateJsonFromFile
 from mr_analysis import START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER
 from library.geo import isWithinBoundingBox, getLocationFromLid
 
+JACCARD_SIMILARITY = 'jaccard_similarity'
 class InfluenceMeasuringModels(object):
     ID_FIRST_OCCURRENCE = 'first_occurrence'
     ID_MEAN_OCCURRENCE = 'mean_occurrence'
     ID_AGGREGATE_OCCURRENCE = 'aggregate_occurrence'
     ID_WEIGHTED_AGGREGATE_OCCURRENCE = 'weighted_aggregate_occurrence'
+    TYPE_COMPLETE_INFLUENCE = 'complete_influence'
     TYPE_OUTGOING_INFLUENCE = 'outgoing_influence'
     TYPE_INCOMING_INFLUENCE = 'incoming_influence'
     @staticmethod
@@ -207,18 +210,82 @@ class Experiments(object):
                 mf_location_to_global_influence_score[location] = -influence_score
             else: mf_location_to_global_influence_score[location] = influence_score
         return mf_location_to_global_influence_score.items()
+    @staticmethod
+    def load_tuo_location_and_mf_influence_type_to_influence_vector(model_id, vector_length=25):
+        def convert_to_vector(tuo_location_and_influence_score):
+            tuo_location_and_influence_score = sorted(
+                                                               tuo_location_and_influence_score,
+                                                               key = lambda (_, transmission_score): abs(transmission_score),
+                                                               reverse=True
+                                                        )[:vector_length]
+            root_of_sum_of_squares = np.sqrt(sum([influence_score**2 for _, influence_score in tuo_location_and_influence_score]))
+            return dict([(location, influence_score/root_of_sum_of_squares) for location, influence_score in tuo_location_and_influence_score])
+        tuo_location_and_mf_influence_type_to_influence_vector = []
+        tuo_location_and_tuo_neighbor_location_and_influence_score = Experiments.load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id)
+        for location, tuo_neighbor_location_and_influence_score  in \
+                tuo_location_and_tuo_neighbor_location_and_influence_score:
+            tuo_outgoing_location_and_influence_score = filter(
+                                                                lambda (neighbor_location, influence_score): influence_score>0,
+                                                                tuo_neighbor_location_and_influence_score
+                                                        )
+            tuo_incoming_location_and_influence_score = filter(
+                                                            lambda (neighbor_location, influence_score): influence_score<0, 
+                                                            tuo_neighbor_location_and_influence_score
+                                                        )
+            location_influence_vector = convert_to_vector(tuo_neighbor_location_and_influence_score)
+            location_outgoing_locations_vector = convert_to_vector(tuo_outgoing_location_and_influence_score)
+            location_incoming_locations_vector = convert_to_vector(tuo_incoming_location_and_influence_score)
+            tuo_location_and_mf_influence_type_to_influence_vector.append([location, {
+                                                                            InfluenceMeasuringModels.TYPE_COMPLETE_INFLUENCE: location_influence_vector,
+                                                                            InfluenceMeasuringModels.TYPE_OUTGOING_INFLUENCE: location_outgoing_locations_vector,
+                                                                            InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE: location_incoming_locations_vector,
+                                                                            }
+                                                                ])
+        return tuo_location_and_mf_influence_type_to_influence_vector
+    @staticmethod
+    def generate_tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity(model_ids, startTime, endTime, outputFolder):
+        def location_similarity(location_vector_1, location_vector_2): 
+            return reduce(lambda total, k: total+(location_vector_1.get(k,0)*location_vector_2.get(k,0)), set(location_vector_1.keys()).union(location_vector_2.keys()),0.)
+        influence_types=[InfluenceMeasuringModels.TYPE_COMPLETE_INFLUENCE, InfluenceMeasuringModels.TYPE_OUTGOING_INFLUENCE, InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE]
+        for model_id in model_ids:
+            mf_location_to_mf_influence_type_to_influence_vector = dict(InfluenceMeasuringModels.load_tuo_location_and_mf_influence_type_to_influence_vector(model_id))
+            GeneralMethods.runCommand('rm -rf %s'%tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file%model_id)
+            for line_count, location_object in enumerate(iterateJsonFromFile(
+                         location_objects_file%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+                     )):
+                print line_count
+                location = location_object['id']
+                tuo_neighbor_location_and_mf_influence_type_and_similarity = []
+                for neighbor_location in location_object['links'].keys(): 
+                    mf_influence_type_and_similarity = {}
+                    for influence_type in influence_types:
+                        similarity = location_similarity( 
+                                                             mf_location_to_mf_influence_type_to_influence_vector[location][influence_type],
+                                                             mf_location_to_mf_influence_type_to_influence_vector[neighbor_location][influence_type]
+                                                      )
+                        mf_influence_type_and_similarity[influence_type] = similarity
+                    so_hashtags_for_location = set(location_object['hashtags'].keys())
+                    so_hashtags_for_neighbor_location = set(location_object['links'][neighbor_location].keys())
+                    numerator = len(so_hashtags_for_location.intersection(so_hashtags_for_neighbor_location)) + 0.
+                    denominator = len(so_hashtags_for_location.union(so_hashtags_for_neighbor_location)) + 0.
+                    mf_influence_type_and_similarity[JACCARD_SIMILARITY] = numerator/denominator                
+                    tuo_neighbor_location_and_mf_influence_type_and_similarity.append([neighbor_location, mf_influence_type_and_similarity])
+                FileIO.writeToFileAsJson(
+                                         [location, tuo_neighbor_location_and_mf_influence_type_and_similarity],
+                                         tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file%model_id
+                                         )
             
     @staticmethod
     def run():
-        models_ids = [
+        model_ids = [
 #                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
 #                      InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, 
 #                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
                       InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
-#        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(models_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
-        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(models_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
-#        Experiments.load_tuo_location_and_boundary_influence_score(InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE)
+#        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
+#        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
+        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 
 if __name__ == '__main__':
     Experiments.run()

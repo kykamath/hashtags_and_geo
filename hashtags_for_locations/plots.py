@@ -805,10 +805,10 @@ class GeneralAnalysis():
 #        GeneralAnalysis.outgoing_and_incoming_locations_on_world_map()
 #        GeneralAnalysis.get_top_influencers([[-90,-180], [90, 180]])
 #        GeneralAnalysis.plot_local_influencers()
-        GeneralAnalysis.example_of_locations_most_influenced()
+#        GeneralAnalysis.example_of_locations_most_influenced()
 #        GeneralAnalysis.example_of_location_influence_plot()
         
-#        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
+        GeneralAnalysis.write_to_location_and_to_neighbor_location_and_mf_influence_type_and_similarity()
 #        GeneralAnalysis.plot_influence_type_similarity_vs_distance()
 #        GeneralAnalysis.plot_correlation_between_influence_similarity_and_hashtag_similarity()
 #        GeneralAnalysis.influence_clusters()
