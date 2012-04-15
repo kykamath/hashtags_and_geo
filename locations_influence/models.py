@@ -178,22 +178,21 @@ class Experiments(object):
                                                                                                        key=itemgetter(1), reverse=True)
         return mf_location_to_tuo_neighbor_location_and_locations_influence_score.items()
     @staticmethod
-    def load_tuo_location_and_global_influence_score(model_id, noOfInfluencers=None):
+    def load_tuo_location_and_global_influence_score(model_id, boundary=[[-90,-180], [90, 180]], noOfInfluencers=None):
         mf_location_to_global_influence_score = {}
         mf_location_to_mf_influence_type_to_influence_score = defaultdict(dict)
         mf_location_to_tuo_neighbor_location_and_locations_influencing_score = \
             dict(Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers, InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE))
         mf_location_to_tuo_neighbor_location_and_locations_influenced_score = \
             dict(Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers, InfluenceMeasuringModels.TYPE_OUTGOING_INFLUENCE))
+        
         no_of_locations = len(mf_location_to_tuo_neighbor_location_and_locations_influenced_score)
         for location, tuo_neighbor_location_and_locations_influencing_score in \
                 mf_location_to_tuo_neighbor_location_and_locations_influencing_score.iteritems():
-#            print location, np.mean(zip(*tuo_neighbor_location_and_locations_influencing_score)[1])
             mf_location_to_mf_influence_type_to_influence_score[location][InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE] \
                 = sum(zip(*tuo_neighbor_location_and_locations_influencing_score)[1])/no_of_locations
         for location, tuo_neighbor_location_and_locations_influenced_score in \
                 mf_location_to_tuo_neighbor_location_and_locations_influenced_score.iteritems():
-#            print location, np.mean(zip(*tuo_neighbor_location_and_locations_influenced_score)[1])
             mf_location_to_mf_influence_type_to_influence_score[location][InfluenceMeasuringModels.TYPE_OUTGOING_INFLUENCE] \
                 = sum(zip(*tuo_neighbor_location_and_locations_influenced_score)[1])/no_of_locations
         for location, mf_influence_type_to_influence_score in \

@@ -106,20 +106,11 @@ class InfluenceAnalysis:
         for model_id in model_ids:
             output_file_format = 'images/%s/'%(GeneralMethods.get_method_id()) + '%s_%s.png'
             tuo_location_and_global_influence_score = Experiments.load_tuo_location_and_global_influence_score(model_id)
-#            global_influence_scores = zip(*tuo_location_and_global_influence_score)[1]
             InfluenceAnalysis._plot_scores(tuo_location_and_global_influence_score, marking_locations, no_of_bins_for_influence_score, smooth=True)
             plt.ylim(ymin=0.0)
 #            plt.show()
             savefig(output_file_format%(label, model_id))
-#            print sorted(
-#                         Experiments.load_tuo_location_and_global_influence_score(model_id),
-#                         key=itemgetter(1),
-##                         reverse=True
-#                         )[:5]
-#            print dict(tuo_location_and_global_influence_score)['40.6000_-73.9500']
-#            for location, global_influence_score in \
-#                    Experiments.load_tuo_location_and_global_influence_score(model_id):
-#                print location, global_influence_score
+
 #    @staticmethod
 #    def get_top_influencers(model_ids, boundary, no_of_top_locations=10):
 #        '''
@@ -188,10 +179,10 @@ class InfluenceAnalysis:
                   ]
 #        InfluenceAnalysis.locations_at_top_and_bottom(model_ids)
 #        InfluenceAnalysis.location_influence_plots(model_ids)
-        InfluenceAnalysis.global_influence_plots(model_ids)
+#        InfluenceAnalysis.global_influence_plots(model_ids)
         
 #        InfluenceAnalysis.get_top_influencers(model_ids, [[-90,-180], [90, 180]])
-#        InfluenceAnalysis.plot_local_influencers(model_ids)
+        InfluenceAnalysis.plot_local_influencers(model_ids)
 if __name__ == '__main__':
     InfluenceAnalysis.run()
     
