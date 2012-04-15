@@ -136,9 +136,11 @@ class Experiments(object):
                             pure_influence_score = MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID[model_id](location_occurrences, neighbor_location_occurrences)
                             influence_scores.append(mf_hashtag_to_hashtag_weights[hashtag]*pure_influence_score)
                     for hashtag in location_hashtag_set.difference(neighbor_location_hashtag_set): 
-                        influence_scores.append(mf_hashtag_to_hashtag_weights[hashtag]*1.0)
+#                        influence_scores.append(mf_hashtag_to_hashtag_weights[hashtag]*1.0)
+                        influence_scores.append(1.0)
                     for hashtag in neighbor_location_hashtag_set.difference(location_hashtag_set): 
-                        influence_scores.append(mf_neighbor_location_hashtag_to_hashtag_weights[hashtag]*-1.0)
+#                        influence_scores.append(mf_neighbor_location_hashtag_to_hashtag_weights[hashtag]*-1.0)
+                        influence_scores.append(-1.0)
                     mean_influence_scores = np.mean(influence_scores)
                     tuo_neighbor_location_and_influence_score.append([neighbor_location, 
                                                                        mf_location_to_location_weights[neighbor_location]*mean_influence_scores])

@@ -102,70 +102,70 @@ class InfluenceAnalysis:
             print sorted(
                          Experiments.load_tuo_location_and_global_influence_score(model_id),
                          key=itemgetter(1),
-                         reverse=True
+#                         reverse=True
                          )[:5]
             print dict(tuo_location_and_global_influence_score)['40.6000_-73.9500']
 #            for location, global_influence_score in \
 #                    Experiments.load_tuo_location_and_global_influence_score(model_id):
 #                print location, global_influence_score
-#    @staticmethod
-#    def get_top_influencers(model_ids, boundary, no_of_top_locations=10):
-#        '''
-#        World
-#            London (Center), Washington D.C, New York (Brooklyn), London (South), Detroit
-#            Los Angeles, New York (Babylon), Atlanta, Sao Paulo, Miami 
-#        ('51.4750_0.0000', '38.4250_-76.8500', '40.6000_-73.9500', '50.7500_0.0000', '42.0500_-82.6500', 
-#        '33.3500_-118.1750', '40.6000_-73.2250', '33.3500_-84.1000', '-23.2000_-46.4000', '25.3750_-79.7500')
-#        '''
-#        for model_id in model_ids:
-#            tuo_location_and_tuo_neighbor_location_and_locations_influence_score = \
-#                Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers=None)
-#            mf_location_to_total_influence_score, set_of_locations = {}, set()
-#            for location, tuo_neighbor_location_and_locations_influence_score in \
-#                    tuo_location_and_tuo_neighbor_location_and_locations_influence_score:
-#                neighbor_locations, locations_influence_scores = zip(*tuo_neighbor_location_and_locations_influence_score)
-#                mf_location_to_total_influence_score[location] = sum(locations_influence_scores)
-#                set_of_locations = set_of_locations.union(set(neighbor_locations))
-#            no_of_locations = len(set_of_locations)
-#            tuples_of_location_and_mean_influence_scores = sorted([(location, total_influence_score/no_of_locations)
-#                                                                     for location, total_influence_score in 
-#                                                                     mf_location_to_total_influence_score.iteritems()],
-#                                                                  key=itemgetter(1), reverse=True)[:no_of_top_locations]
-#            print zip(*tuples_of_location_and_mean_influence_scores)[0]
-#    @staticmethod
-#    def plot_local_influencers(model_ids):
-#        for model_id in model_ids:
-#            tuples_of_boundary_and_boundary_label = [
-#    #            ([[-90,-180], [90, 180]], 'World', GeneralMethods.getRandomColor()),
-#                ([[24.527135,-127.792969], [49.61071,-59.765625]], 'USA', GeneralMethods.getRandomColor()),
-#                ([[10.107706,-118.660469], [26.40009,-93.699531]], 'Mexico', GeneralMethods.getRandomColor()),
-#                ([[-29.565473,-58.191719], [7.327985,-30.418282]], 'Brazil', GeneralMethods.getRandomColor()),
-#                ([[-16.6695,88.409841], [30.115057,119.698904]], 'SE-Asia', GeneralMethods.getRandomColor()),
-#            ]
-#            tuples_of_location_and_color = []
-#            for boundary, boundary_label, boundary_color in tuples_of_boundary_and_boundary_label:
-#                map_from_location_to_total_influence_score, set_of_locations = {}, set()
-#                tuo_location_and_tuo_neighbor_location_and_influence_score = Experiments.load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id)
-#                for location, tuo_neighbor_location_and_influence_score in tuo_location_and_tuo_neighbor_location_and_influence_score:
-#                    if isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), boundary):
-#                        set_of_locations.add(location)
-#                        tuo_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuo_neighbor_location_and_influence_score)
-#                        for incoming_location, transmission_score in tuo_incoming_location_and_transmission_score:
-#                            if incoming_location not in map_from_location_to_total_influence_score: map_from_location_to_total_influence_score[incoming_location]=0.
-#                            map_from_location_to_total_influence_score[incoming_location]+=abs(transmission_score)
-#                no_of_locations = len(set_of_locations)
-#                tuples_of_location_and_mean_influence_scores = sorted([(location, total_influence_score/no_of_locations)
-#                                                                     for location, total_influence_score in 
-#                                                                     map_from_location_to_total_influence_score.iteritems()],
-#                                                                 key=itemgetter(1), reverse=True)[:10]
-#                locations = zip(*tuples_of_location_and_mean_influence_scores)[0]
-#                for location in locations: tuples_of_location_and_color.append([getLocationFromLid(location.replace('_', ' ')), boundary_color])
-#            locations, colors = zip(*tuples_of_location_and_color)
-#            plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors,  lw = 0, alpha=1.)
-#            for _, boundary_label, boundary_color in tuples_of_boundary_and_boundary_label: plt.scatter([0], [0], label=boundary_label, c=boundary_color, lw = 0)
-#            plt.legend(loc=3, ncol=4, mode="expand",)
-##            plt.show()
-#            savefig('images/%s.png'%GeneralMethods.get_method_id())
+    @staticmethod
+    def get_top_influencers(model_ids, boundary, no_of_top_locations=10):
+        '''
+        World
+            London (Center), Washington D.C, New York (Brooklyn), London (South), Detroit
+            Los Angeles, New York (Babylon), Atlanta, Sao Paulo, Miami 
+        ('51.4750_0.0000', '38.4250_-76.8500', '40.6000_-73.9500', '50.7500_0.0000', '42.0500_-82.6500', 
+        '33.3500_-118.1750', '40.6000_-73.2250', '33.3500_-84.1000', '-23.2000_-46.4000', '25.3750_-79.7500')
+        '''
+        for model_id in model_ids:
+            tuo_location_and_tuo_neighbor_location_and_locations_influence_score = \
+                Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers=None)
+            mf_location_to_total_influence_score, set_of_locations = {}, set()
+            for location, tuo_neighbor_location_and_locations_influence_score in \
+                    tuo_location_and_tuo_neighbor_location_and_locations_influence_score:
+                neighbor_locations, locations_influence_scores = zip(*tuo_neighbor_location_and_locations_influence_score)
+                mf_location_to_total_influence_score[location] = sum(locations_influence_scores)
+                set_of_locations = set_of_locations.union(set(neighbor_locations))
+            no_of_locations = len(set_of_locations)
+            tuples_of_location_and_mean_influence_scores = sorted([(location, total_influence_score/no_of_locations)
+                                                                     for location, total_influence_score in 
+                                                                     mf_location_to_total_influence_score.iteritems()],
+                                                                  key=itemgetter(1), reverse=True)[:no_of_top_locations]
+            print zip(*tuples_of_location_and_mean_influence_scores)[0]
+    @staticmethod
+    def plot_local_influencers(model_ids):
+        for model_id in model_ids:
+            tuples_of_boundary_and_boundary_label = [
+    #            ([[-90,-180], [90, 180]], 'World', GeneralMethods.getRandomColor()),
+                ([[24.527135,-127.792969], [49.61071,-59.765625]], 'USA', GeneralMethods.getRandomColor()),
+                ([[10.107706,-118.660469], [26.40009,-93.699531]], 'Mexico', GeneralMethods.getRandomColor()),
+                ([[-29.565473,-58.191719], [7.327985,-30.418282]], 'Brazil', GeneralMethods.getRandomColor()),
+                ([[-16.6695,88.409841], [30.115057,119.698904]], 'SE-Asia', GeneralMethods.getRandomColor()),
+            ]
+            tuples_of_location_and_color = []
+            for boundary, boundary_label, boundary_color in tuples_of_boundary_and_boundary_label:
+                map_from_location_to_total_influence_score, set_of_locations = {}, set()
+                tuo_location_and_tuo_neighbor_location_and_influence_score = Experiments.load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id)
+                for location, tuo_neighbor_location_and_influence_score in tuo_location_and_tuo_neighbor_location_and_influence_score:
+                    if isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), boundary):
+                        set_of_locations.add(location)
+                        tuo_incoming_location_and_transmission_score = filter(lambda (neighbor_location, transmission_score): transmission_score<0, tuo_neighbor_location_and_influence_score)
+                        for incoming_location, transmission_score in tuo_incoming_location_and_transmission_score:
+                            if incoming_location not in map_from_location_to_total_influence_score: map_from_location_to_total_influence_score[incoming_location]=0.
+                            map_from_location_to_total_influence_score[incoming_location]+=abs(transmission_score)
+                no_of_locations = len(set_of_locations)
+                tuples_of_location_and_mean_influence_scores = sorted([(location, total_influence_score/no_of_locations)
+                                                                     for location, total_influence_score in 
+                                                                     map_from_location_to_total_influence_score.iteritems()],
+                                                                 key=itemgetter(1), reverse=True)[:10]
+                locations = zip(*tuples_of_location_and_mean_influence_scores)[0]
+                for location in locations: tuples_of_location_and_color.append([getLocationFromLid(location.replace('_', ' ')), boundary_color])
+            locations, colors = zip(*tuples_of_location_and_color)
+            plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c=colors,  lw = 0, alpha=1.)
+            for _, boundary_label, boundary_color in tuples_of_boundary_and_boundary_label: plt.scatter([0], [0], label=boundary_label, c=boundary_color, lw = 0)
+            plt.legend(loc=3, ncol=4, mode="expand",)
+#            plt.show()
+            savefig('images/%s.png'%GeneralMethods.get_method_id())
     @staticmethod
     def run():
         model_ids = [
