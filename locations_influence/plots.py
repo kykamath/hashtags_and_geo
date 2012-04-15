@@ -41,19 +41,41 @@ class InfluenceAnalysis:
                                 reversed(tuo_neighbor_location_and_influence_score[-no_of_locations:]):
                             FileIO.writeToFileAsJson(neighbor_location_and_influence_score+[''], output_file)
     @staticmethod
+    def _plot_scores(tuo_location_and_influence_score, marking_locations, no_of_bins_for_influence_score, smooth=True):
+        figure = plt.figure()
+        size = figure.get_size_inches()
+        figure.set_size_inches( (size[0]*2, size[1]*0.5) )
+        influence_scores = zip(*tuo_location_and_influence_score)[1]
+        no_of_influence_scores = len(influence_scores)
+        hist_influence_score, bin_edges_influence_score =  np.histogram(influence_scores, no_of_bins_for_influence_score)
+        normed_hist_influence_score = map(lambda influence_score: (influence_score+0.)/no_of_influence_scores, hist_influence_score)
+        bin_edges_influence_score = list(bin_edges_influence_score)
+        normed_hist_influence_score = list(normed_hist_influence_score)
+        bin_edges_influence_score=[bin_edges_influence_score[0]]+bin_edges_influence_score+[bin_edges_influence_score[-1]]
+        normed_hist_influence_score=[0.0]+normed_hist_influence_score+[0.0]
+        x_bin_edges_influence_score, y_normed_hist_influence_score = bin_edges_influence_score[:-1], normed_hist_influence_score
+        if smooth: x_bin_edges_influence_score, y_normed_hist_influence_score = splineSmooth(x_bin_edges_influence_score, y_normed_hist_influence_score)
+        plt.plot(x_bin_edges_influence_score, y_normed_hist_influence_score, lw=1, color='#FF9E05')
+        plt.fill_between(x_bin_edges_influence_score, y_normed_hist_influence_score, color='#FF9E05', alpha=0.3)
+        mf_neighbor_location_to_influence_score = dict(tuo_location_and_influence_score)
+        for marking_location in marking_locations: 
+            if marking_location in mf_neighbor_location_to_influence_score:
+                print marking_location, mf_neighbor_location_to_influence_score[marking_location]
+#                plt.scatter([mf_neighbor_location_to_influence_score[marking_location]], [0.0005], s=20, lw=0, color=GeneralMethods.getRandomColor(), alpha=1., label=marking_location)
+                plt.scatter([mf_neighbor_location_to_influence_score[marking_location]], [0.0005], s=20, lw=0, color='m', alpha=1., label=marking_location)
+            else: print marking_location
+#                    plt.xlim(get_new_xlim(plt.xlim()))
+#        plt.legend()
+        (ticks, labels) = plt.yticks()
+        plt.yticks([ticks[-2]])
+    @staticmethod
     def location_influence_plots(model_ids, no_of_bins_for_influence_score=100):
         for model_id in model_ids:
             output_file_format = 'images/%s/'%(GeneralMethods.get_method_id()) + '%s_%s.png'
             tuo_input_location_and_label_and_marking_locations = [ 
 #                                [ '40.6000_-73.9500', 'new_york', ['-23.2000_-46.4000', '-22.4750_-42.7750', '51.4750_0.0000', '33.3500_-118.1750', '29.7250_-97.1500','30.4500_-95.7000']],
-#                                [ '39.1500_-83.3750', 'hillsboro_oh', ['-23.2000_-46.4000', '-22.4750_-42.7750', '51.4750_0.0000', '33.3500_-118.1750', '29.7250_-97.1500','30.4500_-95.7000', '40.6000_-73.9500']] 
-#                                ('33.3500_-118.1750', 'los_angeles'),
                                 ['29.7250_-97.1500', 'austin',  ['-23.2000_-46.4000', '-22.4750_-42.7750', '51.4750_0.0000', '33.3500_-118.1750', '39.1500_-83.3750','30.4500_-95.7000', '40.6000_-73.9500']], 
 #                                ['30.4500_-95.7000', 'college_station', ['-23.2000_-46.4000', '-22.4750_-42.7750', '51.4750_0.0000', '33.3500_-118.1750', '29.7250_-97.1500','30.4500_-95.7000', '40.6000_-73.9500']],
-    #                            ('39.1500_-83.3750', 'hillsboro_oh'), ('25.3750_-79.7500', 'miami'), ('-23.2000_-46.4000', 'sao_paulo'),
-#                                ['29.7250_-94.9750', 'houston', []],
-#                                ('51.4750_0.0000', 'london'), ('38.4250_-76.8500', 'washington'),
-    #                            ('33.3500_-84.1000', 'atlanta'), ('42.0500_-82.6500', 'detroit')
                             ] 
             tuo_location_and_tuo_neighbor_location_and_influence_score = \
                 Experiments.load_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_id)
@@ -61,77 +83,67 @@ class InfluenceAnalysis:
                 for location, tuo_neighbor_location_and_influence_score in \
                         tuo_location_and_tuo_neighbor_location_and_influence_score:
                     if input_location==location:
-                        el = Ellipse((2, -1), 0.5, 0.5)
-                        figure = plt.figure()
-                        ax = plt.subplot(111)
-                        size = figure.get_size_inches()
-                        figure.set_size_inches( (size[0]*2, size[1]*0.5) )
-                        influence_scores = zip(*tuo_neighbor_location_and_influence_score)[1]
-                        no_of_influence_scores = len(influence_scores)
-                        hist_influence_score, bin_edges_influence_score =  np.histogram(influence_scores, no_of_bins_for_influence_score)
-                        normed_hist_influence_score = map(lambda influence_score: (influence_score+0.)/no_of_influence_scores, hist_influence_score)
-                        bin_edges_influence_score = list(bin_edges_influence_score)
-                        normed_hist_influence_score = list(normed_hist_influence_score)
-                        bin_edges_influence_score=[bin_edges_influence_score[0]]+bin_edges_influence_score+[bin_edges_influence_score[-1]]
-                        normed_hist_influence_score=[0.0]+normed_hist_influence_score+[0.0]
-                        x_bin_edges_influence_score, y_normed_hist_influence_score = bin_edges_influence_score[:-1], normed_hist_influence_score
-                        x_bin_edges_influence_score, y_normed_hist_influence_score = splineSmooth(x_bin_edges_influence_score, y_normed_hist_influence_score)
-    
-                        plt.plot(x_bin_edges_influence_score, y_normed_hist_influence_score, lw=1, color='#FF9E05')
-                        plt.fill_between(x_bin_edges_influence_score, y_normed_hist_influence_score, color='#FF9E05', alpha=0.3)
-  
-                        mf_neighbor_location_to_influence_score = dict(tuo_neighbor_location_and_influence_score)
-                        for marking_location in marking_locations: 
-                            if marking_location in mf_neighbor_location_to_influence_score:
-                                print marking_location, mf_neighbor_location_to_influence_score[marking_location]
-                                plt.scatter([mf_neighbor_location_to_influence_score[marking_location]], [0.0005], s=20, lw=0, color=GeneralMethods.getRandomColor(), alpha=1., label=marking_location)
-#                                plt.scatter([mf_neighbor_location_to_influence_score[marking_location]], [0.0005], s=20, lw=0, color='m', alpha=1., label=marking_location)
-                            else: print marking_location
-    #                    plt.xlim(get_new_xlim(plt.xlim()))
-                        plt.legend()
-                        (ticks, labels) = plt.yticks()
-                        plt.yticks([ticks[-2]])
+                        InfluenceAnalysis._plot_scores(tuo_neighbor_location_and_influence_score, marking_locations, no_of_bins_for_influence_score)
                         plt.xlim(-1,1); plt.ylim(ymin=0.0)
-#                        plt.show()
+                        plt.show()
                         savefig(output_file_format%(label, model_id))
                         break
     @staticmethod
     def global_influence_plots(model_ids, no_of_bins_for_influence_score=100):
+        label = 'global'
+        marking_locations = [
+                             '18.8500_-98.6000',
+#                             '2.9000_101.5000',
+                             '51.4750_0.0000', 
+                             '33.3500_-118.1750', 
+                             '-23.2000_-46.4000',
+#                            '-22.4750_-42.7750',
+                            '39.1500_-83.3750',
+                             '40.6000_-73.9500', 
+                             '29.7250_-97.1500', 
+                             '30.4500_-95.7000'
+                             ]
         for model_id in model_ids:
+            output_file_format = 'images/%s/'%(GeneralMethods.get_method_id()) + '%s_%s.png'
             tuo_location_and_global_influence_score = Experiments.load_tuo_location_and_global_influence_score(model_id)
-            print sorted(
-                         Experiments.load_tuo_location_and_global_influence_score(model_id),
-                         key=itemgetter(1),
-#                         reverse=True
-                         )[:5]
-            print dict(tuo_location_and_global_influence_score)['40.6000_-73.9500']
+#            global_influence_scores = zip(*tuo_location_and_global_influence_score)[1]
+            InfluenceAnalysis._plot_scores(tuo_location_and_global_influence_score, marking_locations, no_of_bins_for_influence_score, smooth=True)
+            plt.ylim(ymin=0.0)
+#            plt.show()
+            savefig(output_file_format%(label, model_id))
+#            print sorted(
+#                         Experiments.load_tuo_location_and_global_influence_score(model_id),
+#                         key=itemgetter(1),
+##                         reverse=True
+#                         )[:5]
+#            print dict(tuo_location_and_global_influence_score)['40.6000_-73.9500']
 #            for location, global_influence_score in \
 #                    Experiments.load_tuo_location_and_global_influence_score(model_id):
 #                print location, global_influence_score
-    @staticmethod
-    def get_top_influencers(model_ids, boundary, no_of_top_locations=10):
-        '''
-        World
-            London (Center), Washington D.C, New York (Brooklyn), London (South), Detroit
-            Los Angeles, New York (Babylon), Atlanta, Sao Paulo, Miami 
-        ('51.4750_0.0000', '38.4250_-76.8500', '40.6000_-73.9500', '50.7500_0.0000', '42.0500_-82.6500', 
-        '33.3500_-118.1750', '40.6000_-73.2250', '33.3500_-84.1000', '-23.2000_-46.4000', '25.3750_-79.7500')
-        '''
-        for model_id in model_ids:
-            tuo_location_and_tuo_neighbor_location_and_locations_influence_score = \
-                Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers=None)
-            mf_location_to_total_influence_score, set_of_locations = {}, set()
-            for location, tuo_neighbor_location_and_locations_influence_score in \
-                    tuo_location_and_tuo_neighbor_location_and_locations_influence_score:
-                neighbor_locations, locations_influence_scores = zip(*tuo_neighbor_location_and_locations_influence_score)
-                mf_location_to_total_influence_score[location] = sum(locations_influence_scores)
-                set_of_locations = set_of_locations.union(set(neighbor_locations))
-            no_of_locations = len(set_of_locations)
-            tuples_of_location_and_mean_influence_scores = sorted([(location, total_influence_score/no_of_locations)
-                                                                     for location, total_influence_score in 
-                                                                     mf_location_to_total_influence_score.iteritems()],
-                                                                  key=itemgetter(1), reverse=True)[:no_of_top_locations]
-            print zip(*tuples_of_location_and_mean_influence_scores)[0]
+#    @staticmethod
+#    def get_top_influencers(model_ids, boundary, no_of_top_locations=10):
+#        '''
+#        World
+#            London (Center), Washington D.C, New York (Brooklyn), London (South), Detroit
+#            Los Angeles, New York (Babylon), Atlanta, Sao Paulo, Miami 
+#        ('51.4750_0.0000', '38.4250_-76.8500', '40.6000_-73.9500', '50.7500_0.0000', '42.0500_-82.6500', 
+#        '33.3500_-118.1750', '40.6000_-73.2250', '33.3500_-84.1000', '-23.2000_-46.4000', '25.3750_-79.7500')
+#        '''
+#        for model_id in model_ids:
+#            tuo_location_and_tuo_neighbor_location_and_locations_influence_score = \
+#                Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers=None)
+#            mf_location_to_total_influence_score, set_of_locations = {}, set()
+#            for location, tuo_neighbor_location_and_locations_influence_score in \
+#                    tuo_location_and_tuo_neighbor_location_and_locations_influence_score:
+#                neighbor_locations, locations_influence_scores = zip(*tuo_neighbor_location_and_locations_influence_score)
+#                mf_location_to_total_influence_score[location] = sum(locations_influence_scores)
+#                set_of_locations = set_of_locations.union(set(neighbor_locations))
+#            no_of_locations = len(set_of_locations)
+#            tuples_of_location_and_mean_influence_scores = sorted([(location, total_influence_score/no_of_locations)
+#                                                                     for location, total_influence_score in 
+#                                                                     mf_location_to_total_influence_score.iteritems()],
+#                                                                  key=itemgetter(1), reverse=True)[:no_of_top_locations]
+#            print zip(*tuples_of_location_and_mean_influence_scores)[0]
     @staticmethod
     def plot_local_influencers(model_ids):
         for model_id in model_ids:
