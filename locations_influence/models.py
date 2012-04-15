@@ -294,8 +294,8 @@ class Experiments(object):
                       InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
 #                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
-        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
-#        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
+#        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
+        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 
 if __name__ == '__main__':
