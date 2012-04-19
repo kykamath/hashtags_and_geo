@@ -41,6 +41,11 @@ def loadLocationsList():
     global LOCATIONS_LIST
     if not LOCATIONS_LIST: LOCATIONS_LIST = [latticeObject['id'] for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile)]
     return LOCATIONS_LIST
+
+def get_metric_value(metric_id, metric_value):
+    if metric_id==EvaluationMetrics.IMPACT: return None
+    elif metric_id==EvaluationMetrics.IMPACT_DIFFERENCE: return 1-metric_value
+    else: return metric_value
     
 def loadSharingProbabilities():
     global SHARING_PROBABILITIES
@@ -186,6 +191,7 @@ class PredictionModels:
     COVERAGE_DISTANCE = 'coverage_distance'
     SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE = 'sharing_probability_with_coverage_distance'
     TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE = 'transmitting_probability_with_coverage_distance'
+    
     @staticmethod
     def _hashtag_distribution_in_locations(occurrences):
         hashtag_distribution, hashtag_distribution_in_locations = defaultdict(dict), defaultdict(dict)
@@ -455,6 +461,8 @@ class Experiments(object):
         for time_unit_in_epoch in iteration_results.keys(): map_from_time_unit_to_model_performance[datetime.fromtimestamp(time_unit_in_epoch)] = iteration_results[time_unit_in_epoch]; del iteration_results[time_unit_in_epoch]
         for learning_model_id in self.learning_models: 
             model_selection_histories[learning_model_id] = ModelSelectionHistory()
+#            print 'rm -rf %s'%self.getModelFile(learning_model_id)
+#            print 'rm -rf %s'%self.getModelWeightsFile(learning_model_id)
             GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(learning_model_id))
             GeneralMethods.runCommand('rm -rf %s'%self.getModelWeightsFile(learning_model_id))
         hard_end_time = self.conf.get('hard_end_time', None)
@@ -513,14 +521,15 @@ class Experiments(object):
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
     @staticmethod
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-#        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-        noOfHashtagsList = [4]
+        TIME_UNIT_IN_SECONDS = 30*60
+        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
+#        noOfHashtagsList = [4]
 #        for i in range(2,7):    
-        for j in range(1,13):
-#        for j in [1]:
+#        for j in range(1,13):
+        for j in [1]:
             for noOfTargetHashtags in noOfHashtagsList:
-                for i in range(2,7):
-#                for i in [2]:
+#                for i in range(2,7):
+                for i in [2]:
                     conf = dict(historyTimeInterval = timedelta(seconds=j*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
                     conf['learningModels'] = [ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
                     conf['modelsInOrder'] = predictionModels
@@ -584,6 +593,7 @@ class Experiments(object):
     @staticmethod
     def plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
         noOfHashtagsList=[1]+filter(lambda i: i%2==0, range(2,11))
+        TIME_UNIT_IN_SECONDS = 30*60
         conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
         data_to_plot_by_model_id = defaultdict(dict)
@@ -609,6 +619,47 @@ class Experiments(object):
 #            plt.savefig(Experiments.getImageFileName(metric_id))
             plt.show()
             plt.clf()
+    @staticmethod
+    def printPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
+        noOfHashtagsList=[1]+filter(lambda i: i%2==0, range(2,11))
+        TIME_UNIT_IN_SECONDS = 30*60
+        conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+        experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
+        data_to_plot_by_model_id = defaultdict(dict)
+        noOfTargetHashtagsList = [1, 2, 4]
+        for noOfTargetHashtags in noOfTargetHashtagsList:
+            experiments.conf['noOfTargetHashtags'] = noOfTargetHashtags
+            iteration_results = experiments.loadExperimentsData()
+            metric_values_for_model = defaultdict(dict)
+            for _, data_for_models in iteration_results.iteritems():
+                for model_id in experiments.predictionModels:
+                    for metric_id, data_for_metric in data_for_models[model_id].iteritems():
+                        if metric_id not in metric_values_for_model[model_id]: metric_values_for_model[model_id][metric_id] = []
+                        metric_values_for_model[model_id][metric_id]+=filter(lambda l: l!=NAN_VALUE, data_for_metric.values())
+            for model_id in metric_values_for_model: 
+                for metric_id in metric_values_for_model[model_id]:
+                    if model_id not in data_to_plot_by_model_id[metric_id]: data_to_plot_by_model_id[metric_id][model_id] = {}
+                    data_to_plot_by_model_id[metric_id][model_id][noOfTargetHashtags] = np.mean(metric_values_for_model[model_id][metric_id])
+#       Multiple Assignment Learning  && 0.256 & 0.261&& 0.256 & 0.261&& 0.256 & 0.261 \\ 
+        for model_id in predictionModels:
+            print PREDICTION_MODELS_PROPERTIES[model_id]['label'],
+            for noOfTargetHashtags in noOfTargetHashtagsList:
+#                print noOfTargetHashtags,
+                print '&',
+                for metric_id in experiments.evaluationMetrics:
+                    metric_value = get_metric_value(metric_id, data_to_plot_by_model_id[metric_id][model_id][noOfTargetHashtags])
+                    if metric_value:
+                        print '&', '%0.3f'%metric_value,
+            print '\\\\'
+#            for model_id, data_to_plot in data_to_plot_by_model_id[metric_id].iteritems():
+#                print model_id, data_to_plot.items()
+#                dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
+#                plt.plot(dataX, dataY, label=model_id, lw=2)
+#            plt.legend()
+#            plt.ylim(ymin=0.0, ymax=1.0)
+##            plt.savefig(Experiments.getImageFileName(metric_id))
+#            plt.show()
+#            plt.clf()
 
 #def generateDataForVaryingNoOfHashtagsAtVaryingPredictionTimeInterval(historyTimeInterval, predictionTimeInterval):
 #    noOfHashtagsList=map(lambda i: i*5, range(1,21))
@@ -618,17 +669,35 @@ class Experiments(object):
 #    evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
 #    Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).run()
         
-def temp():
-#    d = {}
-#    d = [(datetime.fromtimestamp(data['tu']), data['oc']) for e, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/timeUnitWithOccurrences'))]
-#    d = sorted(d, key=itemgetter(0))
-#    for t in d: print t[0], len(t[1]), len(set(zip(*t[1])[1]))
-#        print e, data.keys()
-#        d[data['tu']] = filter(lambda l: l[1] in LOCATIONS_LIST,data['oc'])
-#        print datetime.fromtimestamp(data['tu']), len(data['oc'])
-    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2012, 12, 31), 'testing'
-    for i, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/2011-09-01_2011-09-16/hashtagsWithEndingWindow')):
-        print unicode(data['h']).encode('utf-8'), data['t']
+#def temp():
+##    d = {}
+##    d = [(datetime.fromtimestamp(data['tu']), data['oc']) for e, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/timeUnitWithOccurrences'))]
+##    d = sorted(d, key=itemgetter(0))
+##    for t in d: print t[0], len(t[1]), len(set(zip(*t[1])[1]))
+##        print e, data.keys()
+##        d[data['tu']] = filter(lambda l: l[1] in LOCATIONS_LIST,data['oc'])
+##        print datetime.fromtimestamp(data['tu']), len(data['oc'])
+#    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2012, 12, 31), 'testing'
+#    for i, data in enumerate(iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/2011-09-01_2011-09-16/hashtagsWithEndingWindow')):
+#        print unicode(data['h']).encode('utf-8'), data['t']
+
+
+PREDICTION_MODELS_PROPERTIES = {
+                                PredictionModels.RANDOM : dict(label='Random'),
+                                PredictionModels.GREEDY : dict(label='Greedy'),
+                                PredictionModels.SHARING_PROBABILITY : dict(label='Common Trails'),
+                                PredictionModels.TRANSMITTING_PROBABILITY : dict(label='Trail Transmission'),
+                                PredictionModels.COVERAGE_PROBABILITY : dict(label='Global'),
+                                PredictionModels.COVERAGE_DISTANCE : dict(label='Local'),
+                                ModelSelectionHistory.FOLLOW_THE_LEADER : dict(label='Single Assignment Learning'),
+                                ModelSelectionHistory.HEDGING_METHOD : dict(label='Multiple Assignment Learning'),
+                                }
+
+METRIC_PROPERTIES = {
+                        EvaluationMetrics.ACCURACY : dict(label='Accuracy'),
+                        EvaluationMetrics.IMPACT_DIFFERENCE : dict(label='Impact'),
+                    }
+
 if __name__ == '__main__':
 #    loadLocationsList()
 #    temp()
@@ -637,21 +706,24 @@ if __name__ == '__main__':
 #    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
-#                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
                         PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY,
+                        PredictionModels.COVERAGE_DISTANCE, 
                         PredictionModels.COVERAGE_PROBABILITY, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
-                        PredictionModels.COVERAGE_DISTANCE, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
+#    evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT_DIFFERENCE]
     
 #    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-#    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
-    predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
+#    predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
     
-    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.printPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+
     

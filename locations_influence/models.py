@@ -304,12 +304,17 @@ class Experiments(object):
                                         ], 
                                         tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score_file%model_id)
     @staticmethod
+    def load_tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score(model_id):
+        return [(location, tuo_neighbor_location_and_sharing_affinity_score)
+                 for location, tuo_neighbor_location_and_sharing_affinity_score in 
+                 iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score_file%model_id)]
+    @staticmethod
     def run():
         model_ids = [
-                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
-#                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
+#                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
+                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)

@@ -15,16 +15,13 @@ from settings import analysis_folder, PARTIAL_WORLD_BOUNDARY,\
 from library.file_io import FileIO
 from library.geo import isWithinBoundingBox, getLocationFromLid,\
     plotPointsOnWorldMap, getLatticeLid, getHaversineDistance,\
-    plot_graph_clusters_on_world_map
+    plot_graph_clusters_on_world_map, getHaversineDistanceForLids
 from collections import defaultdict
 from library.stats import filter_outliers, getOutliersRangeUsingIRQ
 from scipy.stats.stats import pearsonr
 from itertools import groupby
 import networkx as nx
 from library.graphs import clusterUsingAffinityPropagation
-from analysis import iterateJsonFromFile
-from mr_analysis import START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER, \
-        TIME_UNIT_IN_SECONDS
 
 class InfluenceAnalysis:
     @staticmethod
@@ -294,28 +291,28 @@ class InfluenceAnalysis:
                     m.drawgreatcircle(u[1], u[0], v[1], v[0], color=color, alpha=0.6)
             plt.show()
     @staticmethod
-    def sharing_probability_examples(startTime, endTime, outputFolder):
-        location = '29.7250_-97.1500'
-        for line_count, location_object in enumerate(iterateJsonFromFile(
-                     location_objects_file%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
-#                        train_location_objects_file
-                     )):
-            print line_count
-            if location_object['id']==location:
-                mf_from_neighbor_location_to_affinity_score = {}
-#                hashtagsObserved = []
-#                for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile):
-                so_hashtags = set(location_object['hashtags'])
-#                mf_from_neighbor_location_to_affinity_score[latticeObject['id']] = latticeHashtagsSet
-                for neighbor_location, neighbor_hashtags in location_object['links'].iteritems():
-#                    neighbor_hashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(location_object['hashtags'], neighbor_hashtags)
-                    so_neighbor_hashtags = set(neighbor_hashtags)
-                    mf_from_neighbor_location_to_affinity_score[neighbor_location]=len(so_hashtags.intersection(so_neighbor_hashtags))/float(len(so_hashtags))
-                print sorted(mf_from_neighbor_location_to_affinity_score.iteritems(), key=itemgetter(1), reverse=True)
-                break
-#                SHARING_PROBABILITIES['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
-#                totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
-#                for lattice in SHARING_PROBABILITIES['hashtagObservingProbability'].keys()[:]: SHARING_PROBABILITIES['hashtagObservingProbability'][lattice] = len(SHARING_PROBABILITIES['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+    def sharing_probability_examples(model_ids, kNoOfLocations = 3):
+        tuo_target_location_and_target_location_label_and_tuo_target_nearby_location_and_nearby_location_label = [
+                ('29.7250_-97.1500', 'austin' ,[('32.6250_-96.4250', 'dallas'), ('29.0000_-97.8750', 'san_antonio'), ('29.7250_-94.9750','houston')]),
+            ]
+        target_location = '29.7250_-97.1500'
+        for model_id in model_ids:
+            tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score \
+                = Experiments.load_tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score(model_id)
+#            all_locations = zip(*tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score)[0]
+            for target_location, target_location_label, tuo_target_nearby_location_and_nearby_location_label in \
+                    tuo_target_location_and_target_location_label_and_tuo_target_nearby_location_and_nearby_location_label:
+                for location, tuo_neighbor_location_and_sharing_affinity_score in \
+                        tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score:
+                    if location==target_location:
+                        mf_neighbor_location_to_sharing_affinity_score = dict(tuo_neighbor_location_and_sharing_affinity_score)
+                        print [(
+                                nearby_location_label, 
+                                getHaversineDistanceForLids(target_nearby_location.replace('_', ' '), location.replace('_', ' ')), 
+                                '%0.2f'%mf_neighbor_location_to_sharing_affinity_score[target_nearby_location]
+                                )
+                               for target_nearby_location, nearby_location_label in tuo_target_nearby_location_and_nearby_location_label]
+                        print [(a, '%0.2f'%b)for a,b in tuo_neighbor_location_and_sharing_affinity_score[1:kNoOfLocations+1]]
     
     @staticmethod
     def run():
@@ -333,7 +330,7 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_jaccard_similarity(model_ids)
 #        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_distance(model_ids)
 #        InfluenceAnalysis.influence_clusters(model_ids)
-        InfluenceAnalysis.sharing_probability_examples(START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
+        InfluenceAnalysis.sharing_probability_examples(model_ids)
 if __name__ == '__main__':
     InfluenceAnalysis.run()
     
