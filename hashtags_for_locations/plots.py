@@ -37,7 +37,9 @@ import numpy as np
 from hashtags_for_locations.models import loadSharingProbabilities,\
     EvaluationMetrics, CoverageModel, LOCATIONS_LIST, PredictionModels,\
     loadTransmittingProbabilities,\
-    filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance
+    filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance,\
+    PREDICTION_MODELS_PROPERTIES
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import networkx as nx
 from library.graphs import clusterUsingAffinityPropagation
 from scipy.stats import ks_2samp
@@ -1043,9 +1045,12 @@ class LearningAnalysis():
             ep_first_time_unit = tuples_of_ep_time_unit_and_percentage_of_locations_that_flipped[0][0]
             x_data, y_data = zip(*tuples_of_ep_time_unit_and_percentage_of_locations_that_flipped)
             x_data, y_data = splineSmooth(x_data, y_data)
-            plt.plot([(x-ep_first_time_unit)/(60*60) for x in x_data], y_data, c=MAP_FROM_MODEL_TO_COLOR[learning_type], label=learning_type, lw=2, marker = MAP_FROM_MODEL_TO_MARKER[learning_type])
+            plt.plot(
+                     [(x-ep_first_time_unit)/(60*60) for x in x_data], y_data, c=MAP_FROM_MODEL_TO_COLOR[learning_type], lw=2,
+                     label=PREDICTION_MODELS_PROPERTIES[learning_type]['label'], marker=MAP_FROM_MODEL_TO_MARKER[learning_type]
+                     )
         plt.legend()
-        plt.xlabel('Learning lag (hours)', fontsize=20), plt.ylabel('Percentage of locations that flipped', fontsize=20)
+        plt.xlabel('Learning lag (hours)', fontsize=15), plt.ylabel('Percentage of locations that flipped', fontsize=15)
 #        plt.show()
         file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
         FileIO.createDirectoryForFile(file_learning_analysis)
@@ -1057,15 +1062,18 @@ class LearningAnalysis():
             tuples_of_location_and_flipping_ratio = LearningAnalysis._get_flipping_ratio_for_all_locations(learning_type, no_of_hashtags)
             locations, colors = zip(*[(getLocationFromLid(location.replace('_', ' ')), color)
                                       for location, color in sorted(tuples_of_location_and_flipping_ratio, key=itemgetter(1))])
-            plt.subplot(MAP_FROM_MODEL_TO_SUBPLOT_ID[learning_type])
+#            plt.subplot(MAP_FROM_MODEL_TO_SUBPLOT_ID[learning_type])
+            ax = plt.subplot(111)
             sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
-            plt.title(learning_type)
-            plt.colorbar(sc)
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="5%", pad=0.05)
+#            plt.title(PREDICTION_MODELS_PROPERTIES[learning_type]['label'])
+            plt.colorbar(sc, cax=cax)
 #        plt.show()
-        file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
-        FileIO.createDirectoryForFile(file_learning_analysis)
-        plt.savefig(file_learning_analysis)
-        plt.clf()
+            file_learning_analysis = './images/%s_%s.png'%(GeneralMethods.get_method_id(), learning_type)
+            FileIO.createDirectoryForFile(file_learning_analysis)
+            plt.savefig(file_learning_analysis)
+            plt.clf()
     @staticmethod
     def flipping_ratio_correlation_with_no_of_occurrences_at_location(learning_types, no_of_hashtags):
         for learning_type in learning_types:
@@ -1114,13 +1122,13 @@ class LearningAnalysis():
             x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios = np.array(list(x_no_of_occurrences_at_location_bins)), np.array(list(y_mean_flipping_ratios))
             parameters_after_fitting = CurveFit.getParamsAfterFittingData(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios, CurveFit.lineFunction, [0., 0.])
             y_fitted_mean_flipping_ratios = CurveFit.getYValues(CurveFit.lineFunction, parameters_after_fitting, x_no_of_occurrences_at_location_bins)
-            plt.scatter(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios, lw=0, c=MAP_FROM_MODEL_TO_COLOR[learning_type], label=learning_type, marker=MAP_FROM_MODEL_TO_MARKER[learning_type])
+            plt.scatter(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios, lw=0, c=MAP_FROM_MODEL_TO_COLOR[learning_type], label=PREDICTION_MODELS_PROPERTIES[learning_type]['label'], marker=MAP_FROM_MODEL_TO_MARKER[learning_type])
             plt.plot(x_no_of_occurrences_at_location_bins, y_fitted_mean_flipping_ratios, lw=2, c=MAP_FROM_MODEL_TO_COLOR[learning_type])
-        plt.xlabel('No. of occurrences', fontsize=20), plt.ylabel('Flipping ratio', fontsize=20)
-#        plt.show()
+        plt.xlabel('No. of occurrences', fontsize=15), plt.ylabel('Flipping ratio', fontsize=15)
         plt.legend()
         file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
         FileIO.createDirectoryForFile(file_learning_analysis)
+#        plt.show()
         plt.savefig(file_learning_analysis)
         plt.clf()
             
@@ -1128,12 +1136,12 @@ class LearningAnalysis():
     @staticmethod
     def run():
         no_of_hashtags = 4
-        LearningAnalysis.model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=no_of_hashtags, generate_data=False)
+#        LearningAnalysis.model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=no_of_hashtags, generate_data=False)
 #        LearningAnalysis.correlation_between_model_type_and_location_size(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 #        LearningAnalysis.model_learning_graphs_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 #        LearningAnalysis.learner_flipping_time_series([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
 #        LearningAnalysis.flipping_ratio_on_world_map([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
-#        LearningAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
+        LearningAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
             
             
 class PaperPlots:
@@ -1250,22 +1258,24 @@ class PaperPlots:
 #        PaperPlots.hashtag_ditribution_on_world_map_by_time_units()
 #        PaperPlots.raw_data_on_world_map()    
         PaperPlots.coverage_metrics_on_world_map()
-prediction_models = [
-#                        PredictionModels.RANDOM , 
-#                        PredictionModels.GREEDY, 
-                        PredictionModels.SHARING_PROBABILITY, 
-                        PredictionModels.TRANSMITTING_PROBABILITY,
-#                        PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
-                        PredictionModels.COVERAGE_DISTANCE, 
-#                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
-                        ]
-
-#prediction_models = [PredictionModels.COVERAGE_DISTANCE, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
-#plotAllData(prediction_models)
-#getHashtagColors()
-#plotRealData()
-#plotCoverageDistance()
-
-GeneralAnalysis.run()
-#LearningAnalysis.run()
+if __name__ == '__main__':
+    
+    prediction_models = [
+    #                        PredictionModels.RANDOM , 
+    #                        PredictionModels.GREEDY, 
+                            PredictionModels.SHARING_PROBABILITY, 
+                            PredictionModels.TRANSMITTING_PROBABILITY,
+    #                        PredictionModels.COVERAGE_PROBABILITY, PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
+                            PredictionModels.COVERAGE_DISTANCE, 
+    #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
+                            ]
+    
+    #prediction_models = [PredictionModels.COVERAGE_DISTANCE, PredictionModels.SHARING_PROBABILITY, PredictionModels.TRANSMITTING_PROBABILITY]
+    #plotAllData(prediction_models)
+    #getHashtagColors()
+    #plotRealData()
+    #plotCoverageDistance()
+    
+#    GeneralAnalysis.run()
+    LearningAnalysis.run()
 #PaperPlots.run()

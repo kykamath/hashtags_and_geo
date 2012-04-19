@@ -598,15 +598,21 @@ class Experiments(object):
                     data_to_plot_by_model_id[metric_id][model_id][prediction_time_interval] = np.mean(metric_values_for_model[model_id][metric_id])
         for metric_id in experiments.evaluationMetrics:
             for model_id, data_to_plot in data_to_plot_by_model_id[metric_id].iteritems():
+                for k in data_to_plot.keys()[:]: 
+                    metric_value = get_metric_value(metric_id, data_to_plot[k])
+                    if metric_value: data_to_plot[k] = metric_value
                 dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
-                plt.plot([x/TIME_UNIT_IN_SECONDS for x in dataX], dataY, label=model_id, lw=2)
-            plt.legend()
-#            plt.ylim(ymin=0.0, ymax=1.0)
-#            plt.savefig(Experiments.getImageFileName(metric_id))
-            plt.show()
+                plt.plot([(x/TIME_UNIT_IN_SECONDS)*60 for x in dataX], dataY, label=PREDICTION_MODELS_PROPERTIES[model_id]['label'], lw=2, marker = PREDICTION_MODELS_PROPERTIES[model_id]['marker'])
+            plt.legend(loc=3, ncol=2, mode="expand",)
+            plt.ylim(ymin=0.5)
+            plt.xlabel('Prediction Interval (minutes)', fontsize=15)
+            plt.ylabel(METRIC_PROPERTIES[metric_id]['label'], fontsize=15)
+#            plt.show()
+            plt.savefig(Experiments.getImageFileName(metric_id))
             plt.clf()
     @staticmethod
     def plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
+        TIME_UNIT_IN_SECONDS = 30*60
 #        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2,3,4,5,6])
         historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, range(1,13))
         data_to_plot_by_model_id = defaultdict(dict)
@@ -626,10 +632,16 @@ class Experiments(object):
                     data_to_plot_by_model_id[metric_id][model_id][historical_time_interval] = np.mean(metric_values_for_model[model_id][metric_id])
         for metric_id in experiments.evaluationMetrics:
             for model_id, data_to_plot in data_to_plot_by_model_id[metric_id].iteritems():
+                for k in data_to_plot.keys()[:]: 
+                    metric_value = get_metric_value(metric_id, data_to_plot[k])
+                    if metric_value: data_to_plot[k] = metric_value
                 dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
-                plt.plot([x/TIME_UNIT_IN_SECONDS for x in dataX], dataY, label=model_id, lw=2)
-            plt.legend()
-#            plt.ylim(ymin=0.0, ymax=1.0)
+                plt.plot([(x/TIME_UNIT_IN_SECONDS)*60 for x in dataX], dataY, label=PREDICTION_MODELS_PROPERTIES[model_id]['label'], lw=2, marker = PREDICTION_MODELS_PROPERTIES[model_id]['marker'])
+            plt.legend(loc=3, ncol=2, mode="expand",)
+            plt.ylim(ymin=0.45)
+            plt.xlabel('Estimation Interval (minutes)', fontsize=15)
+            plt.ylabel(METRIC_PROPERTIES[metric_id]['label'], fontsize=15)
+#            plt.show()
             plt.savefig(Experiments.getImageFileName(metric_id))
             plt.clf()
     @staticmethod
@@ -727,16 +739,17 @@ class Experiments(object):
 PREDICTION_MODELS_PROPERTIES = {
                                 PredictionModels.RANDOM : dict(label='Random'),
                                 PredictionModels.GREEDY : dict(label='Greedy'),
-                                PredictionModels.SHARING_PROBABILITY : dict(label='Common Trails'),
-                                PredictionModels.TRANSMITTING_PROBABILITY : dict(label='Trail Transmission'),
+                                PredictionModels.SHARING_PROBABILITY : dict(label='Common Trails', marker='o'),
+                                PredictionModels.TRANSMITTING_PROBABILITY : dict(label='Trail Transmission', marker='s'),
                                 PredictionModels.COVERAGE_PROBABILITY : dict(label='Global'),
-                                PredictionModels.COVERAGE_DISTANCE : dict(label='Local'),
-                                ModelSelectionHistory.FOLLOW_THE_LEADER : dict(label='Single Assignment Learning'),
-                                ModelSelectionHistory.HEDGING_METHOD : dict(label='Multiple Assignment Learning'),
+                                PredictionModels.COVERAGE_DISTANCE : dict(label='Local', marker='x'),
+                                ModelSelectionHistory.FOLLOW_THE_LEADER : dict(label='Single Assignment Learning', marker='d'),
+                                ModelSelectionHistory.HEDGING_METHOD : dict(label='Multiple Assignment Learning', marker='>'),
                                 }
 
 METRIC_PROPERTIES = {
                         EvaluationMetrics.ACCURACY : dict(label='Accuracy'),
+                        EvaluationMetrics.IMPACT : dict(label='im'),
                         EvaluationMetrics.IMPACT_DIFFERENCE : dict(label='Impact'),
                     }
 
@@ -752,7 +765,7 @@ if __name__ == '__main__':
                         PredictionModels.SHARING_PROBABILITY, 
                         PredictionModels.TRANSMITTING_PROBABILITY,
                         PredictionModels.COVERAGE_DISTANCE, 
-                        PredictionModels.COVERAGE_PROBABILITY, 
+#                        PredictionModels.COVERAGE_PROBABILITY, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
