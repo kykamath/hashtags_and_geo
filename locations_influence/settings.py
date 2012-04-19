@@ -19,6 +19,8 @@ tuo_location_and_tuo_neighbor_location_and_influence_score_file  = locations_inf
     + 'tuo_location_and_tuo_neighbor_location_and_influence_score'
 tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file = locations_influence_folder \
     + 'tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity'
+tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score_file = locations_influence_folder \
+    + 'tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score'
 
 
 analysis_folder = locations_influence_folder%'analysis/'

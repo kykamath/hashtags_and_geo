@@ -17,11 +17,14 @@ from library.geo import isWithinBoundingBox, getLocationFromLid,\
     plotPointsOnWorldMap, getLatticeLid, getHaversineDistance,\
     plot_graph_clusters_on_world_map
 from collections import defaultdict
-from library.stats import filter_outliers
+from library.stats import filter_outliers, getOutliersRangeUsingIRQ
 from scipy.stats.stats import pearsonr
 from itertools import groupby
 import networkx as nx
 from library.graphs import clusterUsingAffinityPropagation
+from analysis import iterateJsonFromFile
+from mr_analysis import START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER, \
+        TIME_UNIT_IN_SECONDS
 
 class InfluenceAnalysis:
     @staticmethod
@@ -263,10 +266,6 @@ class InfluenceAnalysis:
                     if isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), PARTIAL_WORLD_BOUNDARY) and \
                             isWithinBoundingBox(getLocationFromLid(neighbor_location.replace('_', ' ')), PARTIAL_WORLD_BOUNDARY):
                         digraph_of_location_and_location_similarity.add_edge(location, neighbor_location, {'w': mf_influence_type_to_similarity[influence_type]})
-    #        no_of_clusters, tuples_of_location_and_cluster_id = clusterUsingAffinityPropagation(digraph_of_location_and_location_similarity)
-    #        print 'x'
-    #        plot_graph_clusters_on_world_map(graph, s, lw, alpha, bkcolor)
-#            plot_graph_clusters_on_world_map(digraph_of_location_and_location_similarity)
 
             no_of_clusters, tuo_location_and_cluster_id = clusterUsingAffinityPropagation(digraph_of_location_and_location_similarity)
             tuo_cluster_id_to_locations = [ (cluster_id, zip(*ito_tuo_location_and_cluster_id)[0])
@@ -294,23 +293,30 @@ class InfluenceAnalysis:
                     color, u, v, w = mf_cluster_id_to_cluster_color[mf_location_to_cluster_id[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
                     m.drawgreatcircle(u[1], u[0], v[1], v[0], color=color, alpha=0.6)
             plt.show()
-#            map_from_location_to_cluster_id = dict(tuples_of_location_and_cluster_id)
-#            map_from_cluster_id_to_cluster_color = dict([(i, GeneralMethods.getRandomColor()) for i in range(no_of_clusters)])
-#            points, colors = zip(*map(
-#                                      lambda  location: (
-#                                                         getLocationFromLid(location.replace('_', ' ')), 
-#                                                         map_from_cluster_id_to_cluster_color[map_from_location_to_cluster_id[location]]
-#                                                         ), 
-#                                      digraph_of_location_and_location_similarity.nodes())
-#                                 )
-#            _, m = plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='#FF00FF', returnBaseMapObject=True, lw = 0)
-#            for u, v, data in digraph_of_location_and_location_similarity.edges(data=True):
-#                if map_from_location_to_cluster_id[u]==map_from_location_to_cluster_id[v]:
-#                    color, u, v, w = map_from_cluster_id_to_cluster_color[map_from_location_to_cluster_id[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
-#                    m.drawgreatcircle(u[1], u[0], v[1], v[0], color=color, alpha=0.6)
-
-
-#            plt.show()
+    @staticmethod
+    def sharing_probability_examples(startTime, endTime, outputFolder):
+        location = '29.7250_-97.1500'
+        for line_count, location_object in enumerate(iterateJsonFromFile(
+                     location_objects_file%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+#                        train_location_objects_file
+                     )):
+            print line_count
+            if location_object['id']==location:
+                mf_from_neighbor_location_to_affinity_score = {}
+#                hashtagsObserved = []
+#                for latticeObject in FileIO.iterateJsonFromFile(locationsGraphFile):
+                so_hashtags = set(location_object['hashtags'])
+#                mf_from_neighbor_location_to_affinity_score[latticeObject['id']] = latticeHashtagsSet
+                for neighbor_location, neighbor_hashtags in location_object['links'].iteritems():
+#                    neighbor_hashtags = filterOutNeighborHashtagsOutside1_5IQROfTemporalDistance(location_object['hashtags'], neighbor_hashtags)
+                    so_neighbor_hashtags = set(neighbor_hashtags)
+                    mf_from_neighbor_location_to_affinity_score[neighbor_location]=len(so_hashtags.intersection(so_neighbor_hashtags))/float(len(so_hashtags))
+                print sorted(mf_from_neighbor_location_to_affinity_score.iteritems(), key=itemgetter(1), reverse=True)
+                break
+#                SHARING_PROBABILITIES['neighborProbability'][latticeObject['id']][latticeObject['id']]=1.0
+#                totalNumberOfHashtagsObserved=float(len(set(hashtagsObserved)))
+#                for lattice in SHARING_PROBABILITIES['hashtagObservingProbability'].keys()[:]: SHARING_PROBABILITIES['hashtagObservingProbability'][lattice] = len(SHARING_PROBABILITIES['hashtagObservingProbability'][lattice])/totalNumberOfHashtagsObserved
+    
     @staticmethod
     def run():
         model_ids = [
@@ -326,7 +332,8 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.plot_locations_influence_on_world_map(model_ids)
 #        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_jaccard_similarity(model_ids)
 #        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_distance(model_ids)
-        InfluenceAnalysis.influence_clusters(model_ids)
+#        InfluenceAnalysis.influence_clusters(model_ids)
+        InfluenceAnalysis.sharing_probability_examples(START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 if __name__ == '__main__':
     InfluenceAnalysis.run()
     

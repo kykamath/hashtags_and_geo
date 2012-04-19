@@ -10,7 +10,8 @@ import numpy as np
 from operator import itemgetter
 from settings import tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file, \
     location_objects_file, tuo_location_and_tuo_neighbor_location_and_influence_score_file, \
-    tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file
+    tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file, \
+    tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score_file
 from analysis import iterateJsonFromFile
 from mr_analysis import START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER
 from library.geo import isWithinBoundingBox, getLocationFromLid
@@ -285,7 +286,23 @@ class Experiments(object):
                                          [location, tuo_neighbor_location_and_mf_influence_type_and_similarity],
                                          tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file%model_id
                                          )
-            
+    @staticmethod
+    def generate_tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score(model_ids, startTime, endTime, outputFolder):
+        for model_id in model_ids:
+            for line_count, location_object in enumerate(iterateJsonFromFile(
+                         location_objects_file%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+                         )):
+                print line_count
+                mf_from_neighbor_location_to_sharing_affinity_score = {}
+                so_hashtags = set(location_object['hashtags'])
+                for neighbor_location, neighbor_hashtags in location_object['links'].iteritems():
+                    so_neighbor_hashtags = set(neighbor_hashtags)
+                    mf_from_neighbor_location_to_sharing_affinity_score[neighbor_location]=len(so_hashtags.intersection(so_neighbor_hashtags))/float(len(so_hashtags))
+                FileIO.writeToFileAsJson([
+                                          location_object['id'], 
+                                          sorted(mf_from_neighbor_location_to_sharing_affinity_score.iteritems(), key=itemgetter(1), reverse=True)
+                                        ], 
+                                        tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score_file%model_id)
     @staticmethod
     def run():
         model_ids = [
@@ -296,7 +313,8 @@ class Experiments(object):
                   ]
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
-        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
+#        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
+        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 
 if __name__ == '__main__':
     Experiments.run()
