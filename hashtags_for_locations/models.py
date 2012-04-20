@@ -410,8 +410,6 @@ class Experiments(object):
     def getModelWeightsFile(self, modelId): return modelsFolder%self.outputFolder+'%s_%s/%s_%s/%s/%s'%(self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'), self.conf['historyTimeInterval'].seconds/60, self.conf['predictionTimeInterval'].seconds/60, self.conf['noOfTargetHashtags'], modelId+'_weights')
     def runToDetermineModelPerformance(self):
         currentTime = self.startTime
-        print TIME_UNIT_IN_SECONDS
-        exit()
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
         loadLocationsList()
