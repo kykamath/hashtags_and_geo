@@ -492,6 +492,7 @@ class Experiments(object):
 #                        FileIO.writeToFileAsJson(iteration_weights, self.getModelWeightsFile(learning_model_id))
 #            currentTime+=timeUnitDelta
     def runToDeterminePerformanceWithExpertAdvice(self):
+        TIME_UNIT_IN_SECONDS = 30*60
         currentTime = self.startTime
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         iteration_results, mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score = self.loadExperimentsData(), {}
