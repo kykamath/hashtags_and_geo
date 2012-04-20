@@ -360,7 +360,8 @@ class LearningWithExpertAdviceModels:
         else: 
             tuple_of_model_id_and_cumulative_loss = (None, ())
             for model_id in reversed(conf['modelsInOrder']): 
-                if model_id in map_from_model_to_cumulative_losses: tuple_of_model_id_and_cumulative_loss = min([tuple_of_model_id_and_cumulative_loss, (model_id, map_from_model_to_cumulative_losses[model_id])], key=itemgetter(1))
+                if model_id in map_from_model_to_cumulative_losses: 
+                    tuple_of_model_id_and_cumulative_loss = min([tuple_of_model_id_and_cumulative_loss, (model_id, map_from_model_to_cumulative_losses[model_id])], key=itemgetter(1))
             return tuple_of_model_id_and_cumulative_loss[0]
     @staticmethod
     def hedging_method(map_from_model_to_cumulative_losses, **conf):
@@ -453,49 +454,12 @@ class Experiments(object):
                             FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
-    def runToDeterminePerformanceWithExpertAdvice(self):
-        currentTime = self.startTime
-        timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
-        iteration_results, map_from_time_unit_to_model_performance = self.loadExperimentsData(), {}
-        model_selection_histories = {}
-        for time_unit_in_epoch in iteration_results.keys(): map_from_time_unit_to_model_performance[datetime.fromtimestamp(time_unit_in_epoch)] = iteration_results[time_unit_in_epoch]; del iteration_results[time_unit_in_epoch]
-        for learning_model_id in self.learning_models: 
-            model_selection_histories[learning_model_id] = ModelSelectionHistory()
-#            print 'rm -rf %s'%self.getModelFile(learning_model_id)
-#            print 'rm -rf %s'%self.getModelWeightsFile(learning_model_id)
-            GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(learning_model_id))
-            GeneralMethods.runCommand('rm -rf %s'%self.getModelWeightsFile(learning_model_id))
-        hard_end_time = self.conf.get('hard_end_time', None)
-        end_time = self.endTime
-        if hard_end_time: 
-            print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
-            end_time = hard_end_time
-        while currentTime<end_time:
-#            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
-            time_unit_when_models_pick_hashtags = currentTime-self.predictionTimeInterval
-            if time_unit_when_models_pick_hashtags in map_from_time_unit_to_model_performance:
-                for learning_model_id in self.learning_models:
-                    for metric_id in self.evaluationMetrics: 
-                        map_from_location_to_learned_metric_score = {}
-                        map_from_location_to_list_of_tuple_of_model_id_and_metric_score = Experiments._get_best_model(map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags], metric_id, **self.conf)
-                        for location, list_of_tuple_of_model_id_and_metric_score in map_from_location_to_list_of_tuple_of_model_id_and_metric_score.iteritems():
-                            model_id_selected_by_learning_model = LEARNING_MODEL_METHODS[learning_model_id][LearningWithExpertAdviceModels.MODEL_SELECTION_FUNCTION](model_selection_histories[learning_model_id].get_model_cumulative_loss_for_metric(location, metric_id), **self.conf)
-                            if location in map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id]:
-                                map_from_location_to_learned_metric_score[location] = map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id][location]
-#                                print location, best_model_id, model_id_selected_by_learning_model, metric_score, map_from_location_to_learned_metric_score[location]
-                            for model_id, metric_score in list_of_tuple_of_model_id_and_metric_score: LEARNING_MODEL_METHODS[learning_model_id][LearningWithExpertAdviceModels.MODEL_SCORING_FUNCTION](model_selection_histories[learning_model_id], location, model_id, metric_id, Experiments._get_metric_loss_score(metric_id, metric_score))
-                        iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 'scoresPerLattice': map_from_location_to_learned_metric_score}
-                        iteration_weights = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 
-                                             'location_weights': dict([(location, model_selection_history[metric_id]) for location, model_selection_history in model_selection_histories[learning_model_id].map_from_location_to_model_selection_history.iteritems()])}
-                        FileIO.writeToFileAsJson(iterationData, self.getModelFile(learning_model_id))
-                        FileIO.writeToFileAsJson(iteration_weights, self.getModelWeightsFile(learning_model_id))
-            currentTime+=timeUnitDelta
 #    def runToDeterminePerformanceWithExpertAdvice(self):
 #        currentTime = self.startTime
 #        timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
-#        iteration_results, mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score = self.loadExperimentsData(), {}
+#        iteration_results, map_from_time_unit_to_model_performance = self.loadExperimentsData(), {}
 #        model_selection_histories = {}
-#        for time_unit_in_epoch in iteration_results.keys(): mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score[datetime.fromtimestamp(time_unit_in_epoch)] = iteration_results[time_unit_in_epoch]; del iteration_results[time_unit_in_epoch]
+#        for time_unit_in_epoch in iteration_results.keys(): map_from_time_unit_to_model_performance[datetime.fromtimestamp(time_unit_in_epoch)] = iteration_results[time_unit_in_epoch]; del iteration_results[time_unit_in_epoch]
 #        for learning_model_id in self.learning_models: 
 #            model_selection_histories[learning_model_id] = ModelSelectionHistory()
 ##            print 'rm -rf %s'%self.getModelFile(learning_model_id)
@@ -508,28 +472,79 @@ class Experiments(object):
 #            print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
 #            end_time = hard_end_time
 #        while currentTime<end_time:
-#            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
+##            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
 #            time_unit_when_models_pick_hashtags = currentTime-self.predictionTimeInterval
-#            if time_unit_when_models_pick_hashtags in mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score:
+#            if time_unit_when_models_pick_hashtags in map_from_time_unit_to_model_performance:
 #                for learning_model_id in self.learning_models:
 #                    for metric_id in self.evaluationMetrics: 
-#                        mf_location_to_learned_metric_score = {}
-#                        mf_location_to_tuo_model_id_and_metric_score \
-#                            = Experiments._get_best_model(mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score[time_unit_when_models_pick_hashtags], metric_id, **self.conf)
-#                        for location, tuo_model_id_and_metric_score in mf_location_to_tuo_model_id_and_metric_score.iteritems():
+#                        map_from_location_to_learned_metric_score = {}
+#                        map_from_location_to_list_of_tuple_of_model_id_and_metric_score = Experiments._get_best_model(map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags], metric_id, **self.conf)
+#                        for location, list_of_tuple_of_model_id_and_metric_score in map_from_location_to_list_of_tuple_of_model_id_and_metric_score.iteritems():
 #                            model_id_selected_by_learning_model = LEARNING_MODEL_METHODS[learning_model_id][LearningWithExpertAdviceModels.MODEL_SELECTION_FUNCTION](model_selection_histories[learning_model_id].get_model_cumulative_loss_for_metric(location, metric_id), **self.conf)
-#                            if location in \
-#                                    mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id]:
-#                                mf_location_to_learned_metric_score[location] \
-#                                    = mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id][location]
-###                                print location, best_model_id, model_id_selected_by_learning_model, metric_score, map_from_location_to_learned_metric_score[location]
-#                            for model_id, metric_score in tuo_model_id_and_metric_score: LEARNING_MODEL_METHODS[learning_model_id][LearningWithExpertAdviceModels.MODEL_SCORING_FUNCTION](model_selection_histories[learning_model_id], location, model_id, metric_id, Experiments._get_metric_loss_score(metric_id, metric_score))
-##                        iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 'scoresPerLattice': map_from_location_to_learned_metric_score}
-##                        iteration_weights = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 
-##                                             'location_weights': dict([(location, model_selection_history[metric_id]) for location, model_selection_history in model_selection_histories[learning_model_id].map_from_location_to_model_selection_history.iteritems()])}
-##                        FileIO.writeToFileAsJson(iterationData, self.getModelFile(learning_model_id))
-##                        FileIO.writeToFileAsJson(iteration_weights, self.getModelWeightsFile(learning_model_id))
+#                            if location in map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id]:
+#                                map_from_location_to_learned_metric_score[location] = map_from_time_unit_to_model_performance[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id][location]
+##                                print location, best_model_id, model_id_selected_by_learning_model, metric_score, map_from_location_to_learned_metric_score[location]
+#                            for model_id, metric_score in list_of_tuple_of_model_id_and_metric_score: LEARNING_MODEL_METHODS[learning_model_id][LearningWithExpertAdviceModels.MODEL_SCORING_FUNCTION](model_selection_histories[learning_model_id], location, model_id, metric_id, Experiments._get_metric_loss_score(metric_id, metric_score))
+#                        iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 'scoresPerLattice': map_from_location_to_learned_metric_score}
+#                        iteration_weights = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 'modelId': learning_model_id, 'metricId': metric_id, 
+#                                             'location_weights': dict([(location, model_selection_history[metric_id]) for location, model_selection_history in model_selection_histories[learning_model_id].map_from_location_to_model_selection_history.iteritems()])}
+#                        FileIO.writeToFileAsJson(iterationData, self.getModelFile(learning_model_id))
+#                        FileIO.writeToFileAsJson(iteration_weights, self.getModelWeightsFile(learning_model_id))
 #            currentTime+=timeUnitDelta
+    def runToDeterminePerformanceWithExpertAdvice(self):
+        currentTime = self.startTime
+        timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
+        iteration_results, mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score = self.loadExperimentsData(), {}
+        model_selection_histories = {}
+        for time_unit_in_epoch in iteration_results.keys(): mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score[datetime.fromtimestamp(time_unit_in_epoch)] = iteration_results[time_unit_in_epoch]; del iteration_results[time_unit_in_epoch]
+        for learning_model_id in self.learning_models: 
+            model_selection_histories[learning_model_id] = ModelSelectionHistory()
+#            print 'rm -rf %s'%self.getModelFile(learning_model_id)
+#            print 'rm -rf %s'%self.getModelWeightsFile(learning_model_id)
+            GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(learning_model_id))
+            GeneralMethods.runCommand('rm -rf %s'%self.getModelWeightsFile(learning_model_id))
+        hard_end_time = self.conf.get('hard_end_time', None)
+        end_time = self.endTime
+        if hard_end_time: 
+            print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
+            end_time = hard_end_time
+        while currentTime<end_time:
+            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
+            time_unit_when_models_pick_hashtags = currentTime-self.predictionTimeInterval
+            if time_unit_when_models_pick_hashtags in mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score:
+                for learning_model_id in self.learning_models:
+                    for metric_id in self.evaluationMetrics: 
+                        mf_location_to_learned_metric_score = {}
+                        mf_location_to_tuo_model_id_and_metric_score \
+                            = Experiments._get_best_model(mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score[time_unit_when_models_pick_hashtags], metric_id, **self.conf)
+                        for location, tuo_model_id_and_metric_score in mf_location_to_tuo_model_id_and_metric_score.iteritems():
+                            model_id_selected_by_learning_model = LEARNING_MODEL_METHODS[learning_model_id][LearningWithExpertAdviceModels.MODEL_SELECTION_FUNCTION](model_selection_histories[learning_model_id].get_model_cumulative_loss_for_metric(location, metric_id), **self.conf)
+                            if location in \
+                                    mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id]:
+                                mf_location_to_learned_metric_score[location] \
+                                    = mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score[time_unit_when_models_pick_hashtags][model_id_selected_by_learning_model][metric_id][location]
+##                                print location, best_model_id, model_id_selected_by_learning_model, metric_score, map_from_location_to_learned_metric_score[location]
+                            for model_id, metric_score in tuo_model_id_and_metric_score: 
+                                LEARNING_MODEL_METHODS[learning_model_id][LearningWithExpertAdviceModels.MODEL_SCORING_FUNCTION](
+                                                                                                                                     model_selection_histories[learning_model_id], 
+                                                                                                                                     location, model_id, metric_id, 
+                                                                                                                                     Experiments._get_metric_loss_score(metric_id, metric_score)
+                                                                                                                                 )
+                        iterationData = {'conf': self._getSerializableConf(), 
+                                         'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 
+                                         'modelId': learning_model_id, 'metricId': metric_id, 
+                                         'scoresPerLattice': mf_location_to_learned_metric_score}
+                        iteration_weights = {'conf': self._getSerializableConf(), 
+                                             'tu': GeneralMethods.getEpochFromDateTimeObject(time_unit_when_models_pick_hashtags), 
+                                             'modelId': learning_model_id, 'metricId': metric_id, 
+                                             'location_weights': dict([(location, model_selection_history[metric_id]) 
+                                                                       for location, model_selection_history in 
+                                                                        model_selection_histories[learning_model_id].map_from_location_to_model_selection_history.iteritems()
+                                                                        ])
+                                             }
+                        FileIO.writeToFileAsJson(iterationData, self.getModelFile(learning_model_id))
+                        FileIO.writeToFileAsJson(iteration_weights, self.getModelWeightsFile(learning_model_id))
+            currentTime+=timeUnitDelta
     def loadExperimentsData(self):
         iteration_results = {}
         model_ids = set(self.predictionModels)
@@ -773,13 +788,13 @@ if __name__ == '__main__':
 #    evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT_DIFFERENCE]
     
 #    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-#    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
     predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
     
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.printPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 
     
