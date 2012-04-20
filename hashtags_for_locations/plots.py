@@ -988,7 +988,7 @@ class LearningAnalysis():
                 edges_in_order+=subgraph_of_locations.edges(data=True)
                 
             points, colors = zip(*map(lambda  location: (getLocationFromLid(location.replace('_', ' ')), map_from_cluster_id_to_cluster_color[map_from_location_to_cluster_id[location]]), nodes_in_order))
-            _, m = plotPointsOnWorldMap(points, c=colors, s=s, lw=lw, returnBaseMapObject=True,  *args, **kwargs)
+            _, m = plotPointsOnWorldMap(points, c=colors, s=s, lw=lw, bkcolor='#CFCFCF', returnBaseMapObject=True,  *args, **kwargs)
             for u, v, data in edges_in_order:
                 if map_from_location_to_cluster_id[u]==map_from_location_to_cluster_id[v]:
                     color, u, v, w = map_from_cluster_id_to_cluster_color[map_from_location_to_cluster_id[u]], getLocationFromLid(u.replace('_', ' ')), getLocationFromLid(v.replace('_', ' ')), data['w']
@@ -1064,7 +1064,7 @@ class LearningAnalysis():
                                       for location, color in sorted(tuples_of_location_and_flipping_ratio, key=itemgetter(1))])
 #            plt.subplot(MAP_FROM_MODEL_TO_SUBPLOT_ID[learning_type])
             ax = plt.subplot(111)
-            sc = plotPointsOnWorldMap(locations, c=colors, cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
+            sc = plotPointsOnWorldMap(locations, c=colors, bkcolor='#CFCFCF', cmap=matplotlib.cm.cool, lw = 0, alpha=1.0)
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
 #            plt.title(PREDICTION_MODELS_PROPERTIES[learning_type]['label'])
@@ -1138,10 +1138,10 @@ class LearningAnalysis():
         no_of_hashtags = 4
 #        LearningAnalysis.model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=no_of_hashtags, generate_data=False)
 #        LearningAnalysis.correlation_between_model_type_and_location_size(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
-#        LearningAnalysis.model_learning_graphs_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
+        LearningAnalysis.model_learning_graphs_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 #        LearningAnalysis.learner_flipping_time_series([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
 #        LearningAnalysis.flipping_ratio_on_world_map([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
-        LearningAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
+#        LearningAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
             
             
 class PaperPlots:

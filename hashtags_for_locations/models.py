@@ -410,6 +410,8 @@ class Experiments(object):
     def getModelWeightsFile(self, modelId): return modelsFolder%self.outputFolder+'%s_%s/%s_%s/%s/%s'%(self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'), self.conf['historyTimeInterval'].seconds/60, self.conf['predictionTimeInterval'].seconds/60, self.conf['noOfTargetHashtags'], modelId+'_weights')
     def runToDetermineModelPerformance(self):
         currentTime = self.startTime
+        print TIME_UNIT_IN_SECONDS
+        exit()
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
         loadLocationsList()
@@ -492,8 +494,10 @@ class Experiments(object):
 #                        FileIO.writeToFileAsJson(iteration_weights, self.getModelWeightsFile(learning_model_id))
 #            currentTime+=timeUnitDelta
     def runToDeterminePerformanceWithExpertAdvice(self):
-        TIME_UNIT_IN_SECONDS = 30*60
+#        TIME_UNIT_IN_SECONDS = 30*60
         currentTime = self.startTime
+        print TIME_UNIT_IN_SECONDS
+        exit()
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         iteration_results, mf_time_unit_to_mf_model_to_mf_metric_to_mf_location_to_metric_score = self.loadExperimentsData(), {}
         model_selection_histories = {}
@@ -569,20 +573,20 @@ class Experiments(object):
     def generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
 #        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-        noOfHashtagsList = [4]
-        for i in range(3,7):
+        noOfHashtagsList = [2,4,10]
+        for i in range(1,25):
 #        for i in [2]:
-            conf = dict(historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+            conf = dict(historyTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             conf['hard_end_time'] = datetime(2011, 9, 16)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
     @staticmethod
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        TIME_UNIT_IN_SECONDS = 30*60
+#        TIME_UNIT_IN_SECONDS = 30*60
 #        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-        noOfHashtagsList = [4, 8, 10, 12]
+        noOfHashtagsList = [2,4,10]
 #        for i in range(2,7):    
-#        for j in range(1,13):
-        for j in [1]:
+        for j in range(1,25):
+#        for j in [1]:
             for noOfTargetHashtags in noOfHashtagsList:
 #                for i in range(2,7):
                 for i in [2]:
@@ -778,23 +782,23 @@ if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
                         PredictionModels.RANDOM , PredictionModels.GREEDY, 
-                        PredictionModels.SHARING_PROBABILITY, 
-                        PredictionModels.TRANSMITTING_PROBABILITY,
                         PredictionModels.COVERAGE_DISTANCE, 
                         PredictionModels.COVERAGE_PROBABILITY, 
+                        PredictionModels.SHARING_PROBABILITY, 
+                        PredictionModels.TRANSMITTING_PROBABILITY,
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
     evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT, EvaluationMetrics.IMPACT_DIFFERENCE]
 #    evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT_DIFFERENCE]
     
-#    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
     predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
     
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-    Experiments.printPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.printPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 
