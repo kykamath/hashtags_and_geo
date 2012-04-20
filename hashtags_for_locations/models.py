@@ -579,7 +579,7 @@ class Experiments(object):
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
         TIME_UNIT_IN_SECONDS = 30*60
 #        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-        noOfHashtagsList = [10]
+        noOfHashtagsList = [4, 8, 10, 12]
 #        for i in range(2,7):    
 #        for j in range(1,13):
         for j in [1]:
@@ -778,10 +778,10 @@ if __name__ == '__main__':
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
                         PredictionModels.RANDOM , PredictionModels.GREEDY, 
-#                        PredictionModels.SHARING_PROBABILITY, 
-#                        PredictionModels.TRANSMITTING_PROBABILITY,
+                        PredictionModels.SHARING_PROBABILITY, 
+                        PredictionModels.TRANSMITTING_PROBABILITY,
                         PredictionModels.COVERAGE_DISTANCE, 
-#                        PredictionModels.COVERAGE_PROBABILITY, 
+                        PredictionModels.COVERAGE_PROBABILITY, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
