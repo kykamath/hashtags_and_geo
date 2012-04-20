@@ -697,7 +697,7 @@ class Experiments(object):
         experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
         data_to_plot_by_model_id = defaultdict(dict)
 #        noOfTargetHashtagsList = [1, 2, 10]
-        noOfTargetHashtagsList = [10] 
+        noOfTargetHashtagsList = [1,2,10] 
         for noOfTargetHashtags in noOfTargetHashtagsList:
             experiments.conf['noOfTargetHashtags'] = noOfTargetHashtags
             iteration_results = experiments.loadExperimentsData()
@@ -789,7 +789,7 @@ if __name__ == '__main__':
 #    evaluationMetrics = [EvaluationMetrics.ACCURACY, EvaluationMetrics.IMPACT_DIFFERENCE]
     
 #    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+#    Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
     predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
     
