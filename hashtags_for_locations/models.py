@@ -695,8 +695,8 @@ class Experiments(object):
         conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
         data_to_plot_by_model_id = defaultdict(dict)
-        noOfTargetHashtagsList = [1, 2, 10]
-#        noOfTargetHashtagsList = [10] 
+#        noOfTargetHashtagsList = [1, 2, 10]
+        noOfTargetHashtagsList = [10] 
         for noOfTargetHashtags in noOfTargetHashtagsList:
             experiments.conf['noOfTargetHashtags'] = noOfTargetHashtags
             iteration_results = experiments.loadExperimentsData()
@@ -776,11 +776,11 @@ if __name__ == '__main__':
 #    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
-                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
-                        PredictionModels.SHARING_PROBABILITY, 
-                        PredictionModels.TRANSMITTING_PROBABILITY,
+#                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+#                        PredictionModels.SHARING_PROBABILITY, 
+#                        PredictionModels.TRANSMITTING_PROBABILITY,
                         PredictionModels.COVERAGE_DISTANCE, 
-                        PredictionModels.COVERAGE_PROBABILITY, 
+#                        PredictionModels.COVERAGE_PROBABILITY, 
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE,
 #                        PredictionModels.SHARING_PROBABILITY_WITH_COVERAGE_DISTANCE, PredictionModels.TRANSMITTING_PROBABILITY_WITH_COVERAGE_DISTANCE
                         ]
@@ -793,7 +793,7 @@ if __name__ == '__main__':
     predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
     
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
-#    Experiments.printPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
+    Experiments.printPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 
