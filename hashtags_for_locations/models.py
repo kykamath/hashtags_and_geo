@@ -777,7 +777,7 @@ if __name__ == '__main__':
 #    startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 12, 31), 'testing'
     startTime, endTime, outputFolder = datetime(2011, 9, 1), datetime(2011, 11, 1), 'testing'
     predictionModels = [
-#                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
+                        PredictionModels.RANDOM , PredictionModels.GREEDY, 
 #                        PredictionModels.SHARING_PROBABILITY, 
 #                        PredictionModels.TRANSMITTING_PROBABILITY,
                         PredictionModels.COVERAGE_DISTANCE, 
