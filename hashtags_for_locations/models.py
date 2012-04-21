@@ -569,11 +569,12 @@ class Experiments(object):
         return iteration_results
     @staticmethod
     def generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-#        noOfHashtagsList=map(lambda i: i*5, range(1,21))
+        noOfHashtagsList=map(lambda i: i*5, range(1,21))
 #        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-        noOfHashtagsList = [2,4,10]
-        for i in range(24,25):
-#        for i in [2]:
+#        noOfHashtagsList = [2,4,10]
+        noOfHashtagsList = range(1,21)
+#        for i in range(24,25):
+        for i in [1]:
             conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             conf['hard_end_time'] = datetime(2011, 9, 16)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
