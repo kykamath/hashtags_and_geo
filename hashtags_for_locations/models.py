@@ -572,7 +572,7 @@ class Experiments(object):
 #        noOfHashtagsList=map(lambda i: i*5, range(1,21))
 #        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
         noOfHashtagsList = [2,4,10]
-        for i in range(1,25):
+        for i in range(24,25):
 #        for i in [2]:
             conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             conf['hard_end_time'] = datetime(2011, 9, 16)
