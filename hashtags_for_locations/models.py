@@ -567,12 +567,12 @@ class Experiments(object):
         return iteration_results
     @staticmethod
     def generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        noOfHashtagsList=map(lambda i: i*5, range(1,21))
+#        noOfHashtagsList=map(lambda i: i*5, range(1,21))
 #        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-#        noOfHashtagsList = [2,4,10]
-        noOfHashtagsList = range(1,21)
-#        for i in range(24,25):
-        for i in [1]:
+        noOfHashtagsList = [2,4,10]
+#        noOfHashtagsList = range(1,21)
+        for i in range(1,25):
+#        for i in [1]:
             conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
             conf['hard_end_time'] = datetime(2011, 9, 16)
             Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDetermineModelPerformance()
@@ -580,14 +580,14 @@ class Experiments(object):
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        TIME_UNIT_IN_SECONDS = 30*60
 #        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-#        noOfHashtagsList = [2,4,10]
-        noOfHashtagsList = range(1,21)
+        noOfHashtagsList = [2,4,10]
+#        noOfHashtagsList = range(1,21)
 #        for i in range(2,7):    
 #        for j in range(1,25):
         for j in [6]:
             for noOfTargetHashtags in noOfHashtagsList:
-#                for i in range(2,7):
-                for i in [1]:
+                for i in range(1,25):
+#                for i in [1]:
                     conf = dict(historyTimeInterval = timedelta(seconds=j*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
                     conf['learningModels'] = [ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
                     conf['modelsInOrder'] = predictionModels
@@ -664,8 +664,9 @@ class Experiments(object):
             plt.clf()
     @staticmethod
     def plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        noOfHashtagsList=[1]+filter(lambda i: i%2==0, range(2,11))
-        TIME_UNIT_IN_SECONDS = 30*60
+#        noOfHashtagsList=[1]+filter(lambda i: i%2==0, range(2,11))
+        noOfHashtagsList = range(1,21)
+#        TIME_UNIT_IN_SECONDS = 30*60
         conf = dict(historyTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=2*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
         data_to_plot_by_model_id = defaultdict(dict)
@@ -698,8 +699,8 @@ class Experiments(object):
         conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
         experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
         data_to_plot_by_model_id = defaultdict(dict)
-#        noOfTargetHashtagsList = [1, 2, 10]
-        noOfTargetHashtagsList = [1,2,10] 
+        noOfTargetHashtagsList = [1, 2, 10]
+#        noOfTargetHashtagsList = [2,4,10] 
         for noOfTargetHashtags in noOfTargetHashtagsList:
             experiments.conf['noOfTargetHashtags'] = noOfTargetHashtags
             iteration_results = experiments.loadExperimentsData()
