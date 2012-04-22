@@ -560,11 +560,11 @@ class Experiments(object):
 #                print time_unit, model_id, iteration_results[time_unit]
                 for metric_id in self.evaluationMetrics:
 #                    print iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE] 
-                    if EvaluationMetrics.IMPACT in iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE]:
-                        for location in iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE][EvaluationMetrics.IMPACT]:
-                            if metric_id in iteration_results[time_unit][model_id] and location not in iteration_results[time_unit][model_id][metric_id]: 
-                                if metric_id==EvaluationMetrics.IMPACT_DIFFERENCE: iteration_results[time_unit][model_id][metric_id][location] = 1.0
-                                else: iteration_results[time_unit][model_id][metric_id][location] = 0.0
+#                    if EvaluationMetrics.IMPACT in iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE]:
+                    for location in iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE][EvaluationMetrics.IMPACT]:
+                        if metric_id in iteration_results[time_unit][model_id] and location not in iteration_results[time_unit][model_id][metric_id]: 
+                            if metric_id==EvaluationMetrics.IMPACT_DIFFERENCE: iteration_results[time_unit][model_id][metric_id][location] = 1.0
+                            else: iteration_results[time_unit][model_id][metric_id][location] = 0.0
             
 #        for time_unit, results_for_time_unit in iteration_results.iteritems(): map_from_time_unit_to_max_no_of_locations_predictable[time_unit] = len(results_for_time_unit[PredictionModels.COVERAGE_DISTANCE][EvaluationMetrics.IMPACT])
         return iteration_results
