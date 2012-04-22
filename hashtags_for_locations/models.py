@@ -584,7 +584,7 @@ class Experiments(object):
 #        TIME_UNIT_IN_SECONDS = 30*60
 #        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
 #        noOfHashtagsList = [2,4,10]
-        noOfHashtagsList = [4]
+        noOfHashtagsList = [2]
 #        noOfHashtagsList = range(1,21)
 #        for i in range(2,7):    
         for j in range(1,25):
@@ -606,7 +606,7 @@ class Experiments(object):
         predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, range(1,24))
         data_to_plot_by_model_id = defaultdict(dict)
         for prediction_time_interval in predictionTimeIntervals:
-            conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=4)
+            conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=2)
             experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
             iteration_results = experiments.loadExperimentsData()
             metric_values_for_model = defaultdict(dict)
@@ -660,9 +660,9 @@ class Experiments(object):
                     metric_value = get_metric_value(metric_id, data_to_plot[k])
                     if metric_value: data_to_plot[k] = metric_value
                 dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
-                plt.plot([(x/TIME_UNIT_IN_SECONDS)*60 for x in dataX], dataY, label=PREDICTION_MODELS_PROPERTIES[model_id]['label'], lw=2, marker = PREDICTION_MODELS_PROPERTIES[model_id]['marker'])
+                plt.plot([(x/TIME_UNIT_IN_SECONDS) for x in dataX], dataY, label=PREDICTION_MODELS_PROPERTIES[model_id]['label'], lw=2, marker = PREDICTION_MODELS_PROPERTIES[model_id]['marker'])
             plt.legend(loc=3, ncol=2, mode="expand",)
-            plt.ylim(ymin=0.45)
+            plt.ylim(ymin=0.45), plt.xlim(xmin=0., xmax=24)
             plt.xlabel('Estimation Interval (minutes)', fontsize=18)
             plt.ylabel(METRIC_PROPERTIES[metric_id]['label'], fontsize=18)
 #            plt.show()
