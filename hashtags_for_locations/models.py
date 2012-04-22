@@ -583,7 +583,8 @@ class Experiments(object):
     def generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        TIME_UNIT_IN_SECONDS = 30*60
 #        noOfHashtagsList = [1]+filter(lambda i: i%2==0, range(2,21))
-        noOfHashtagsList = [2,4,10]
+#        noOfHashtagsList = [2,4,10]
+        noOfHashtagsList = [4]
 #        noOfHashtagsList = range(1,21)
 #        for i in range(2,7):    
 #        for j in range(1,25):
