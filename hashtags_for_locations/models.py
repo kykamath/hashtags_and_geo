@@ -561,7 +561,7 @@ class Experiments(object):
                 for metric_id in self.evaluationMetrics:
 #                    print iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE] 
 #                    if EvaluationMetrics.IMPACT in iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE]:
-                    for location in iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE][EvaluationMetrics.IMPACT]:
+                    for location in iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE][EvaluationMetrics.IMPACT_DIFFERENCE]:
                         if metric_id in iteration_results[time_unit][model_id] and location not in iteration_results[time_unit][model_id][metric_id]: 
                             if metric_id==EvaluationMetrics.IMPACT_DIFFERENCE: iteration_results[time_unit][model_id][metric_id][location] = 1.0
                             else: iteration_results[time_unit][model_id][metric_id][location] = 0.0
@@ -587,11 +587,11 @@ class Experiments(object):
         noOfHashtagsList = [4]
 #        noOfHashtagsList = range(1,21)
 #        for i in range(2,7):    
-#        for j in range(1,25):
-        for j in [6]:
+        for j in range(1,25):
+#        for j in [6]:
             for noOfTargetHashtags in noOfHashtagsList:
-                for i in range(1,25):
-#                for i in [1]:
+#                for i in range(1,25):
+                for i in [1]:
                     conf = dict(historyTimeInterval = timedelta(seconds=j*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=noOfTargetHashtags)
                     conf['learningModels'] = [ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
                     conf['modelsInOrder'] = predictionModels
@@ -625,22 +625,23 @@ class Experiments(object):
                     metric_value = get_metric_value(metric_id, data_to_plot[k])
                     if metric_value: data_to_plot[k] = metric_value
                 dataX, dataY = zip(*sorted(data_to_plot.iteritems(), key=itemgetter(0)))
-                plt.plot([(x/TIME_UNIT_IN_SECONDS)*60 for x in dataX], dataY, label=PREDICTION_MODELS_PROPERTIES[model_id]['label'], lw=2, marker = PREDICTION_MODELS_PROPERTIES[model_id]['marker'])
+                plt.plot([(x/TIME_UNIT_IN_SECONDS) for x in dataX], dataY, label=PREDICTION_MODELS_PROPERTIES[model_id]['label'], lw=2, marker = PREDICTION_MODELS_PROPERTIES[model_id]['marker'])
             plt.legend(loc=3, ncol=2, mode="expand",)
-            plt.ylim(ymin=0.5)
-            plt.xlabel('Prediction Interval (minutes)', fontsize=15)
-            plt.ylabel(METRIC_PROPERTIES[metric_id]['label'], fontsize=15)
-            plt.show()
-#            plt.savefig(Experiments.getImageFileName(metric_id))
+            plt.ylim(ymin=.12, ymax=0.65); plt.xlim(xmin=0., xmax=24)
+            plt.xlabel('Prediction Interval (hours)', fontsize=18)
+            plt.ylabel(METRIC_PROPERTIES[metric_id]['label'], fontsize=18)
+#            plt.show()
+            plt.savefig(Experiments.getImageFileName(metric_id))
             plt.clf()
     @staticmethod
     def plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        TIME_UNIT_IN_SECONDS = 30*60
+#        TIME_UNIT_IN_SECONDS = 30*60
 #        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [1,2,3,4,5,6])
-        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, range(1,13))
+#        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, range(1,13))
+        historicalTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, range(1,24))
         data_to_plot_by_model_id = defaultdict(dict)
         for historical_time_interval in historicalTimeIntervals:
-            conf = dict(historyTimeInterval = timedelta(seconds=historical_time_interval), predictionTimeInterval = timedelta(seconds=4*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=4)
+            conf = dict(historyTimeInterval = timedelta(seconds=historical_time_interval), predictionTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS), noOfTargetHashtags=4)
             experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
             iteration_results = experiments.loadExperimentsData()
             metric_values_for_model = defaultdict(dict)
@@ -662,8 +663,8 @@ class Experiments(object):
                 plt.plot([(x/TIME_UNIT_IN_SECONDS)*60 for x in dataX], dataY, label=PREDICTION_MODELS_PROPERTIES[model_id]['label'], lw=2, marker = PREDICTION_MODELS_PROPERTIES[model_id]['marker'])
             plt.legend(loc=3, ncol=2, mode="expand",)
             plt.ylim(ymin=0.45)
-            plt.xlabel('Estimation Interval (minutes)', fontsize=15)
-            plt.ylabel(METRIC_PROPERTIES[metric_id]['label'], fontsize=15)
+            plt.xlabel('Estimation Interval (minutes)', fontsize=18)
+            plt.ylabel(METRIC_PROPERTIES[metric_id]['label'], fontsize=18)
 #            plt.show()
             plt.savefig(Experiments.getImageFileName(metric_id))
             plt.clf()
@@ -768,7 +769,7 @@ PREDICTION_MODELS_PROPERTIES = {
                                 PredictionModels.COVERAGE_PROBABILITY : dict(label='Global'),
                                 PredictionModels.COVERAGE_DISTANCE : dict(label='Local', marker='x'),
                                 ModelSelectionHistory.FOLLOW_THE_LEADER : dict(label='Single Assignment Learning', marker='d'),
-                                ModelSelectionHistory.HEDGING_METHOD : dict(label='Multiple Assignment Learning', marker='>'),
+                                ModelSelectionHistory.HEDGING_METHOD : dict(label='Mixed Assignment Learning', marker='>'),
                                 }
 
 METRIC_PROPERTIES = {
@@ -799,7 +800,7 @@ if __name__ == '__main__':
 #    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
-#    predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
+    predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
     
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.printPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)

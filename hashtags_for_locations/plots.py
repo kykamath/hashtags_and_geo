@@ -1050,7 +1050,7 @@ class LearningAnalysis():
                      label=PREDICTION_MODELS_PROPERTIES[learning_type]['label'], marker=MAP_FROM_MODEL_TO_MARKER[learning_type]
                      )
         plt.legend()
-        plt.xlabel('Learning lag (hours)', fontsize=15), plt.ylabel('Percentage of locations that flipped', fontsize=15)
+        plt.xlabel('Learning lag (hours)', fontsize=18), plt.ylabel('Percentage of locations that flipped', fontsize=18)
 #        plt.show()
         file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
         FileIO.createDirectoryForFile(file_learning_analysis)
@@ -1124,7 +1124,7 @@ class LearningAnalysis():
             y_fitted_mean_flipping_ratios = CurveFit.getYValues(CurveFit.lineFunction, parameters_after_fitting, x_no_of_occurrences_at_location_bins)
             plt.scatter(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios, lw=0, c=MAP_FROM_MODEL_TO_COLOR[learning_type], label=PREDICTION_MODELS_PROPERTIES[learning_type]['label'], marker=MAP_FROM_MODEL_TO_MARKER[learning_type])
             plt.plot(x_no_of_occurrences_at_location_bins, y_fitted_mean_flipping_ratios, lw=2, c=MAP_FROM_MODEL_TO_COLOR[learning_type])
-        plt.xlabel('No. of occurrences', fontsize=15), plt.ylabel('Flipping ratio', fontsize=15)
+        plt.xlabel('Footprint density', fontsize=18), plt.ylabel('Flipping ratio', fontsize=18)
         plt.legend()
         file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
         FileIO.createDirectoryForFile(file_learning_analysis)
@@ -1138,10 +1138,10 @@ class LearningAnalysis():
         no_of_hashtags = 4
 #        LearningAnalysis.model_distribution_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER, no_of_hashtags=no_of_hashtags, generate_data=False)
 #        LearningAnalysis.correlation_between_model_type_and_location_size(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
-        LearningAnalysis.model_learning_graphs_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
+#        LearningAnalysis.model_learning_graphs_on_world_map(learning_type=ModelSelectionHistory.FOLLOW_THE_LEADER)
 #        LearningAnalysis.learner_flipping_time_series([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
 #        LearningAnalysis.flipping_ratio_on_world_map([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
-#        LearningAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
+        LearningAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location([ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD], no_of_hashtags)
             
             
 class PaperPlots:
