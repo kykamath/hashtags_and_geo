@@ -557,11 +557,14 @@ class Experiments(object):
                 if data['metricId'] in self.evaluationMetrics: iteration_results[data['tu']][model_id][data['metricId']] = data['scoresPerLattice']
         for time_unit in iteration_results:
             for model_id in [PredictionModels.GREEDY, PredictionModels.RANDOM]:
+#                print time_unit, model_id, iteration_results[time_unit]
                 for metric_id in self.evaluationMetrics:
-                    for location in iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE][EvaluationMetrics.IMPACT]:
-                        if metric_id in iteration_results[time_unit][model_id] and location not in iteration_results[time_unit][model_id][metric_id]: 
-                            if metric_id==EvaluationMetrics.IMPACT_DIFFERENCE: iteration_results[time_unit][model_id][metric_id][location] = 1.0
-                            else: iteration_results[time_unit][model_id][metric_id][location] = 0.0
+#                    print iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE] 
+                    if EvaluationMetrics.IMPACT in iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE]:
+                        for location in iteration_results[time_unit][PredictionModels.COVERAGE_DISTANCE][EvaluationMetrics.IMPACT]:
+                            if metric_id in iteration_results[time_unit][model_id] and location not in iteration_results[time_unit][model_id][metric_id]: 
+                                if metric_id==EvaluationMetrics.IMPACT_DIFFERENCE: iteration_results[time_unit][model_id][metric_id][location] = 1.0
+                                else: iteration_results[time_unit][model_id][metric_id][location] = 0.0
             
 #        for time_unit, results_for_time_unit in iteration_results.iteritems(): map_from_time_unit_to_max_no_of_locations_predictable[time_unit] = len(results_for_time_unit[PredictionModels.COVERAGE_DISTANCE][EvaluationMetrics.IMPACT])
         return iteration_results
@@ -597,11 +600,12 @@ class Experiments(object):
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
     def plotPerformanceForVaryingPredictionTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        TIME_UNIT_IN_SECONDS = 30*60
-        predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [2,3,4,5,6])
+#        TIME_UNIT_IN_SECONDS = 30*60
+#        predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, [2,3,4,5,6])
+        predictionTimeIntervals = map(lambda i: i*TIME_UNIT_IN_SECONDS, range(1,24))
         data_to_plot_by_model_id = defaultdict(dict)
         for prediction_time_interval in predictionTimeIntervals:
-            conf = dict(historyTimeInterval = timedelta(seconds=12*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=4)
+            conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=prediction_time_interval), noOfTargetHashtags=4)
             experiments = Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf)
             iteration_results = experiments.loadExperimentsData()
             metric_values_for_model = defaultdict(dict)
@@ -625,8 +629,8 @@ class Experiments(object):
             plt.ylim(ymin=0.5)
             plt.xlabel('Prediction Interval (minutes)', fontsize=15)
             plt.ylabel(METRIC_PROPERTIES[metric_id]['label'], fontsize=15)
-#            plt.show()
-            plt.savefig(Experiments.getImageFileName(metric_id))
+            plt.show()
+#            plt.savefig(Experiments.getImageFileName(metric_id))
             plt.clf()
     @staticmethod
     def plotPerformanceForVaryingHistoricalTimeIntervals(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
@@ -794,7 +798,7 @@ if __name__ == '__main__':
 #    Experiments.generateDataForVaryingNumberOfHastags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     Experiments.generateDataToDeterminePerformanceWithExpertAdvice(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
     
-    predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
+#    predictionModels+=[ModelSelectionHistory.FOLLOW_THE_LEADER, ModelSelectionHistory.HEDGING_METHOD]
     
 #    Experiments.plotPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
 #    Experiments.printPerformanceForVaryingNoOfHashtags(predictionModels, evaluationMetrics, startTime, endTime, outputFolder)
