@@ -86,10 +86,11 @@ MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID = dict([
 
 class Experiments(object):
     @staticmethod
-    def generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(models_ids, startTime, endTime, outputFolder, w_extra_hashtags = True):
+    def generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(models_ids, startTime, endTime, outputFolder, hashtag_tag):
         for model_id in models_ids:
-            if w_extra_hashtags: output_file = tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%(model_id, w_extra_hashtags_tag)
-            else: output_file = tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%(model_id, wout_extra_hashtags_tag)
+#            if w_extra_hashtags: output_file = tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%(model_id, hashtag_tag)
+#            else: output_file = tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%(model_id, wout_extra_hashtags_tag)
+            output_file = tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%(model_id, hashtag_tag)
             GeneralMethods.runCommand('rm -rf %s'%output_file)
             for line_count, location_object in enumerate(iterateJsonFromFile(
                      location_objects_file%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
@@ -104,7 +105,7 @@ class Experiments(object):
                             location_occurrences = location_object['hashtags'][hashtag][0]
                             pure_influence_scores.append(MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID[model_id](location_occurrences, neighbor_location_occurrences))
                     neighbor_location_hashtag_set = set(mf_hashtag_to_tuo_occurrences_and_time_range.keys())
-                    if w_extra_hashtags:
+                    if hashtag_tag==w_extra_hashtags_tag:
                         for hashtag in location_hashtag_set.difference(neighbor_location_hashtag_set): pure_influence_scores.append(1.0)
                         for hashtag in neighbor_location_hashtag_set.difference(location_hashtag_set): pure_influence_scores.append(-1.0)
                     mean_pure_influence_score = np.mean(pure_influence_scores)
@@ -112,10 +113,10 @@ class Experiments(object):
                 tuo_neighbor_location_and_pure_influence_score = sorted(tuo_neighbor_location_and_pure_influence_score, key=itemgetter(1))
                 FileIO.writeToFileAsJson([location_object['id'], tuo_neighbor_location_and_pure_influence_score], output_file)
     @staticmethod
-    def load_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_id):
+    def load_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_id, hashtag_tag):
         return [(location, tuo_neighbor_location_and_pure_influence_score)
                  for location, tuo_neighbor_location_and_pure_influence_score in 
-                 iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%model_id)]
+                 iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_pure_influence_score_file%(model_id, hashtag_tag))]
     @staticmethod
     def generate_tuo_location_and_tuo_neighbor_location_and_influence_score(models_ids, startTime, endTime, outputFolder):
         def get_hashtag_weights(map_from_hashtag_to_tuples_of_occurrences_and_time_range):
@@ -327,11 +328,9 @@ class Experiments(object):
                       InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
                       InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
-        w_extra_hashtags = False
+        hashtag_tag = w_extra_hashtags_tag
         
-#        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
-        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER, w_extra_hashtags=w_extra_hashtags)
-        
+        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER, hashtag_tag)
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)

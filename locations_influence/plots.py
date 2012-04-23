@@ -11,7 +11,8 @@ from library.classes import GeneralMethods
 from library.plotting import savefig, splineSmooth
 from operator import itemgetter
 from settings import analysis_folder, PARTIAL_WORLD_BOUNDARY,\
-    tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file
+    tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file,\
+    w_extra_hashtags_tag, wout_extra_hashtags_tag
 from library.file_io import FileIO
 from library.geo import isWithinBoundingBox, getLocationFromLid,\
     plotPointsOnWorldMap, getLatticeLid, getHaversineDistance,\
@@ -320,7 +321,15 @@ class InfluenceAnalysis:
 #                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
 #                      InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, 
 #                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
+              InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
+          ]
+        
+        ltuo_model_id_and_hashtag_tag = [
+                      (InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, wout_extra_hashtags_tag),
+                      (InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, wout_extra_hashtags_tag),
+                      (InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, wout_extra_hashtags_tag),
+                      (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, wout_extra_hashtags_tag),
+                      (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, w_extra_hashtags_tag),
                   ]
 #        InfluenceAnalysis.locations_at_top_and_bottom(model_ids)
 #        InfluenceAnalysis.location_influence_plots(model_ids)
@@ -332,9 +341,6 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.influence_clusters(model_ids)
 #        InfluenceAnalysis.sharing_probability_examples(model_ids)
 
-        for location, no_of_occurrences in\
-                Experiments.load_ltuo_location_and_no_of_occurrences():
-            print location, no_of_occurrences
 if __name__ == '__main__':
     InfluenceAnalysis.run()
     
