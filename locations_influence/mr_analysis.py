@@ -295,7 +295,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def steps(self):
         pass
-#        return self.write_location_objects_file()
-        return self.write_ltuo_location_and_ltuo_hashtag_and_occurrence_time()
+        return self.write_location_objects_file()
+#        return self.write_ltuo_location_and_ltuo_hashtag_and_occurrence_time()
 if __name__ == '__main__':
     MRAnalysis.run()

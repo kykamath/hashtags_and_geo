@@ -24,8 +24,8 @@ def getInputFiles(startTime, endTime, folderType='world'):
 
 def mr_analysis(startTime, endTime, outputFolder, inputFilesStartTime=None, inputFilesEndTime=None):
     if not inputFilesStartTime: inputFilesStartTime=startTime; inputFilesEndTime=endTime
-#    outputFile = location_objects_file%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
-    outputFile = f_ltuo_location_and_ltuo_hashtag_and_occurrence_time%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+    outputFile = location_objects_file%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
+#    outputFile = f_ltuo_location_and_ltuo_hashtag_and_occurrence_time%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))
     runMRJob(MRAnalysis, outputFile, getInputFiles(inputFilesStartTime, inputFilesEndTime), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 
