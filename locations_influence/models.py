@@ -329,7 +329,7 @@ class Experiments(object):
                       InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
                       InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
-        hashtag_tag = wout_extra_hashtags_tag
+        hashtag_tag = w_extra_hashtags_tag
         
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER, hashtag_tag)
         Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER, hashtag_tag)
