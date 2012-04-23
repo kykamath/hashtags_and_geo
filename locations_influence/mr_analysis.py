@@ -280,10 +280,10 @@ class MRAnalysis(ModifiedMRJob):
     
     ''' MR Jobs
     '''
-#    def write_location_objects_file(self): return [self.mr(mapper=self.mapParseHashtagObjectsForAllLocations, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]+\
-#                 [(self.buildLatticeGraphMap, self.buildLatticeGraphReduce1), 
-#                  (self.emptyMapper, self.buildLatticeGraphReduce2)
-#                    ]
+    def write_location_objects_file(self): return [self.mr(mapper=self.mapParseHashtagObjectsForAllLocations, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]+\
+                 [(self.buildLatticeGraphMap, self.buildLatticeGraphReduce1), 
+                  (self.emptyMapper, self.buildLatticeGraphReduce2)
+                    ]
     def write_ltuo_location_and_ltuo_hashtag_and_occurrence_time(self):
         return [self.mr(mapper=self.mapParseHashtagObjectsForAllLocations, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]+\
             [self.mr(
@@ -295,7 +295,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def steps(self):
         pass
-#        return self.write_location_objects_file()
-        return self.write_ltuo_location_and_ltuo_hashtag_and_occurrence_time
+        return self.write_location_objects_file()
+#        return self.write_ltuo_location_and_ltuo_hashtag_and_occurrence_time
 if __name__ == '__main__':
     MRAnalysis.run()
