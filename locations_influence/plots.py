@@ -324,13 +324,7 @@ class InfluenceAnalysis:
               InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
           ]
         
-        ltuo_model_id_and_hashtag_tag = [
-                      (InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, wout_extra_hashtags_tag),
-                      (InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, wout_extra_hashtags_tag),
-                      (InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, wout_extra_hashtags_tag),
-                      (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, wout_extra_hashtags_tag),
-                      (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, w_extra_hashtags_tag),
-                  ]
+        # DEFAULT USE w_extra_hashtags_tag AS hashtag_tag
 #        InfluenceAnalysis.locations_at_top_and_bottom(model_ids)
 #        InfluenceAnalysis.location_influence_plots(model_ids)
 #        InfluenceAnalysis.global_influence_plots(model_ids)
@@ -341,6 +335,24 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.influence_clusters(model_ids)
 #        InfluenceAnalysis.sharing_probability_examples(model_ids)
 
+class ModelComparison:
+    @staticmethod
+    def top_locations_per_model(ltuo_model_id_and_hashtag_tag):
+        for model_id, hashtag_tag in \
+                ltuo_model_id_and_hashtag_tag:
+            print model_id, hashtag_tag
+    @staticmethod
+    def run():
+        ltuo_model_id_and_hashtag_tag = [
+              (InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, wout_extra_hashtags_tag),
+              (InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, wout_extra_hashtags_tag),
+              (InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, wout_extra_hashtags_tag),
+              (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, wout_extra_hashtags_tag),
+              (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, w_extra_hashtags_tag),
+          ]
+        ModelComparison.top_locations_per_model(ltuo_model_id_and_hashtag_tag)
+        
 if __name__ == '__main__':
-    InfluenceAnalysis.run()
+#    InfluenceAnalysis.run()
+    ModelComparison.run()
     
