@@ -315,10 +315,9 @@ class Experiments(object):
     @staticmethod
     def load_ltuo_location_and_no_of_occurrences():
         ltuo_location_and_no_of_occurrences = []
-        for data in \
+        for location, ltuo_hashtag_and_occurrence_time in \
                 iterateJsonFromFile(f_ltuo_location_and_ltuo_hashtag_and_occurrence_time%(WINDOW_OUTPUT_FOLDER, START_TIME.strftime('%Y-%m-%d'), END_TIME.strftime('%Y-%m-%d'))):
-            pass
-#            ltuo_location_and_no_of_occurrences.append([location, len(ltuo_hashtag_and_occurrence_time)])
+            ltuo_location_and_no_of_occurrences.append([location, len(ltuo_hashtag_and_occurrence_time)])
         return ltuo_location_and_no_of_occurrences
     @staticmethod
     def run():
