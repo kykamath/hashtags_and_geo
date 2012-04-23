@@ -330,7 +330,11 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_jaccard_similarity(model_ids)
 #        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_distance(model_ids)
 #        InfluenceAnalysis.influence_clusters(model_ids)
-        InfluenceAnalysis.sharing_probability_examples(model_ids)
+#        InfluenceAnalysis.sharing_probability_examples(model_ids)
+
+        for location, no_of_occurrences in\
+                Experiments.load_ltuo_location_and_no_of_occurrences():
+            print location, no_of_occurrences
 if __name__ == '__main__':
     InfluenceAnalysis.run()
     

@@ -12,7 +12,8 @@ from settings import tuo_location_and_tuo_neighbor_location_and_pure_influence_s
     location_objects_file, tuo_location_and_tuo_neighbor_location_and_influence_score_file, \
     tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file, \
     tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score_file, \
-    w_extra_hashtags_tag, wout_extra_hashtags_tag
+    w_extra_hashtags_tag, wout_extra_hashtags_tag, \
+    f_ltuo_location_and_ltuo_hashtag_and_occurrence_time
 from analysis import iterateJsonFromFile
 from mr_analysis import START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER
 from library.geo import isWithinBoundingBox, getLocationFromLid
@@ -311,6 +312,14 @@ class Experiments(object):
         return [(location, tuo_neighbor_location_and_sharing_affinity_score)
                  for location, tuo_neighbor_location_and_sharing_affinity_score in 
                  iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score_file%model_id)]
+    @staticmethod
+    def load_ltuo_location_and_no_of_occurrences():
+        ltuo_location_and_no_of_occurrences = []
+        for data in \
+                iterateJsonFromFile(f_ltuo_location_and_ltuo_hashtag_and_occurrence_time%(WINDOW_OUTPUT_FOLDER, START_TIME.strftime('%Y-%m-%d'), END_TIME.strftime('%Y-%m-%d'))):
+            pass
+#            ltuo_location_and_no_of_occurrences.append([location, len(ltuo_hashtag_and_occurrence_time)])
+        return ltuo_location_and_no_of_occurrences
     @staticmethod
     def run():
         model_ids = [

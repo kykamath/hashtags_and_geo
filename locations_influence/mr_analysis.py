@@ -168,7 +168,7 @@ class MRAnalysis(ModifiedMRJob):
         ltuo_hashtag_and_occurrence_time = []
         for ino_ltuo_hashtag_and_occurrence_time in ito_ltuo_hashtag_and_occurrence_time:
             ltuo_hashtag_and_occurrence_time+=ino_ltuo_hashtag_and_occurrence_time
-        yield location, ltuo_hashtag_and_occurrence_time
+        yield location, [location, ltuo_hashtag_and_occurrence_time]
     ''' End: Occurrences by location
     '''
     ''' Start: Methods to build lattice graph.
@@ -295,7 +295,7 @@ class MRAnalysis(ModifiedMRJob):
     
     def steps(self):
         pass
-        return self.write_location_objects_file()
-#        return self.write_ltuo_location_and_ltuo_hashtag_and_occurrence_time()
+#        return self.write_location_objects_file()
+        return self.write_ltuo_location_and_ltuo_hashtag_and_occurrence_time()
 if __name__ == '__main__':
     MRAnalysis.run()
