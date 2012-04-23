@@ -285,17 +285,17 @@ class MRAnalysis(ModifiedMRJob):
                   (self.emptyMapper, self.buildLatticeGraphReduce2)
                     ]
     def write_ltuo_location_and_ltuo_hashtag_and_occurrence_time(self):
-        return [self.mr(mapper=self.mapParseHashtagObjectsForAllLocations, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]+\
-            [self.mr(
-                     mapper=self.mapper_hashtag_object_to_tuo_location_and_tuo_hashtag_and_occurrence_time,
-                     mapper_final=self.mapper_final_hashtag_object_to_tuo_location_and_tuo_hashtag_and_occurrence_time, 
-                     reducer=self.reducer_tuo_location_and_ito_ltuo_hashtag_and_occurrence_time_to_tuo_location_and_ltuo_hashtag_and_occurrence_time
-                     )]
+        return [self.mr(mapper=self.mapParseHashtagObjectsForAllLocations, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]
+#            [self.mr(
+#                     mapper=self.mapper_hashtag_object_to_tuo_location_and_tuo_hashtag_and_occurrence_time,
+#                     mapper_final=self.mapper_final_hashtag_object_to_tuo_location_and_tuo_hashtag_and_occurrence_time, 
+#                     reducer=self.reducer_tuo_location_and_ito_ltuo_hashtag_and_occurrence_time_to_tuo_location_and_ltuo_hashtag_and_occurrence_time
+#                     )]
     
     
     def steps(self):
         pass
-        return self.write_location_objects_file()
-#        return self.write_ltuo_location_and_ltuo_hashtag_and_occurrence_time
+#        return self.write_location_objects_file()
+        return self.write_ltuo_location_and_ltuo_hashtag_and_occurrence_time
 if __name__ == '__main__':
     MRAnalysis.run()
