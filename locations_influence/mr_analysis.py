@@ -139,6 +139,7 @@ class MRAnalysis(ModifiedMRJob):
     def __init__(self, *args, **kwargs):
         super(MRAnalysis, self).__init__(*args, **kwargs)
         self.hashtags = defaultdict(list)
+        self.mf_location_to_tuo_hashtag_and_occurrence_time = defaultdict(list)
     ''' Start: Methods to get hashtag objects
     '''
     def mapParseHashtagObjectsForAllLocations(self, key, line):
@@ -149,10 +150,27 @@ class MRAnalysis(ModifiedMRJob):
             yield h, {'oc': instances, 'e': min(instances, key=lambda t: t[1]), 'l': max(instances, key=lambda t: t[1])}
     def reduceHashtagInstancesWithEndingWindow(self, key, values):
         hashtagObject = getHashtagWithEndingWindow(key, values)
-        if hashtagObject: yield key, hashtagObject 
+        if hashtagObject: yield key, hashtagObject
     ''' End: Methods to get hashtag objects
     '''
-            
+    ''' Start: Occurrences by location
+    '''
+    def mapper_hashtag_object_to_tuo_location_and_tuo_hashtag_and_occurrence_time(self, key, hashtag_object):
+        if False: yield # I'm a generator!
+        for point, t in hashtag_object['oc']:
+            location = getLatticeLid(point, LOCATION_ACCURACY)
+            self.mf_location_to_tuo_hashtag_and_occurrence_time[location].append([hashtag_object['h'], t])
+    def mapper_final_hashtag_object_to_tuo_location_and_tuo_hashtag_and_occurrence_time(self):
+        for location, tuo_hashtag_and_occurrence_time in \
+                self.mf_location_to_tuo_hashtag_and_occurrence_time.iteritems():
+            yield location, tuo_hashtag_and_occurrence_time
+    def reducer_tuo_location_and_ito_ltuo_hashtag_and_occurrence_time_to_tuo_location_and_ltuo_hashtag_and_occurrence_time(self, location, ito_ltuo_hashtag_and_occurrence_time):
+        ltuo_hashtag_and_occurrence_time = []
+        for ino_ltuo_hashtag_and_occurrence_time in ito_ltuo_hashtag_and_occurrence_time:
+            ltuo_hashtag_and_occurrence_time+=ino_ltuo_hashtag_and_occurrence_time
+        yield location, ltuo_hashtag_and_occurrence_time
+    ''' End: Occurrences by location
+    '''
     ''' Start: Methods to build lattice graph.
         E(Place_a, Place_b) = len(Hastags(Place_a) and Hastags(Place_b)) / len(Hastags(Place_a))
     '''
@@ -262,14 +280,22 @@ class MRAnalysis(ModifiedMRJob):
     
     ''' MR Jobs
     '''
-    def write_location_objects_file(self): return [self.mr(mapper=self.mapParseHashtagObjectsForAllLocations, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]+\
-                 [(self.buildLatticeGraphMap, self.buildLatticeGraphReduce1), 
-                  (self.emptyMapper, self.buildLatticeGraphReduce2)
-                    ]
+#    def write_location_objects_file(self): return [self.mr(mapper=self.mapParseHashtagObjectsForAllLocations, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]+\
+#                 [(self.buildLatticeGraphMap, self.buildLatticeGraphReduce1), 
+#                  (self.emptyMapper, self.buildLatticeGraphReduce2)
+#                    ]
+    def write_ltuo_location_and_ltuo_hashtag_and_occurrence_time(self):
+        return [self.mr(mapper=self.mapParseHashtagObjectsForAllLocations, mapper_final=self.mapFinalParseHashtagObjects, reducer=self.reduceHashtagInstancesWithEndingWindow)]+\
+            [self.mr(
+                     mapper=self.mapper_hashtag_object_to_tuo_location_and_tuo_hashtag_and_occurrence_time,
+                     mapper_final=self.mapper_final_hashtag_object_to_tuo_location_and_tuo_hashtag_and_occurrence_time, 
+                     reducer=self.reducer_tuo_location_and_ito_ltuo_hashtag_and_occurrence_time_to_tuo_location_and_ltuo_hashtag_and_occurrence_time
+                     )]
     
     
     def steps(self):
         pass
-        return self.write_location_objects_file()
+#        return self.write_location_objects_file()
+        return self.write_ltuo_location_and_ltuo_hashtag_and_occurrence_time
 if __name__ == '__main__':
     MRAnalysis.run()

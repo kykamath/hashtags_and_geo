@@ -346,7 +346,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.jobsToGetHastagObjectsWithoutEndingWindowWithoutLatticeApproximation()
 #        return self.jobsToGetHastagObjectsAllOccurrencesWithinWindow()
 #        return self.jobsToGetLocationObjects()
-#        return self.jobsToGetTimeUnitObjects()
-        return self.jobsToBuildLatticeGraph()
+        return self.jobsToGetTimeUnitObjects()
+#        return self.jobsToBuildLatticeGraph()
 if __name__ == '__main__':
     MRAnalysis.run()
