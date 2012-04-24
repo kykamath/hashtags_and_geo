@@ -19,7 +19,7 @@ LOCATION_ACCURACY = 0.725
 
 # Time windows.
 #START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
-START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2012, 1, 1), datetime(2012, 3, 31), 'complete_prop' # Complete propagation duration
+START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2012, 1, 1), datetime(2012, 3, 16), 'complete_prop' # Complete propagation duration
 
 # Paramters to filter hashtags.
 MIN_HASHTAG_OCCURENCES = 750

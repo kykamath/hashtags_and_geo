@@ -335,19 +335,27 @@ class InfluenceAnalysis:
                         print [(a, '%0.2f'%b)for a,b in tuo_neighbor_location_and_sharing_affinity_score[1:kNoOfLocations+1]]
     @staticmethod
     def model_comparison_with_best_model(best_tuo_model_and_hashtag_tag, ltuo_model_id_and_hashtag_tag, no_of_locations=10):
-        def _get_top_locations_based_on_global_influence_scores(model_id, hashtag_tag, no_of_locations):
-            ltuo_location_and_global_influence_score = Experiments.load_tuo_location_and_boundary_influence_score(model_id, hashtag_tag)
-            return zip(*sorted(ltuo_location_and_global_influence_score, key=itemgetter(1)))[0][:no_of_locations]
         def count_similar_pairs(current_no_of_similar_pairs, (location1, location2)):
             if location1==location2: current_no_of_similar_pairs+=1
             return current_no_of_similar_pairs
         best_model, best_hashtag_tag = best_tuo_model_and_hashtag_tag
-        best_locations = _get_top_locations_based_on_global_influence_scores(best_model, best_hashtag_tag, no_of_locations)
+        best_locations = Experiments.get_locations_sorted_by_boundary_influence_score(best_model, best_hashtag_tag, no_of_locations)
         for model_id, hashtag_tag in ltuo_model_id_and_hashtag_tag:
-            locations = _get_top_locations_based_on_global_influence_scores(model_id, hashtag_tag, no_of_locations)
+            locations = Experiments.get_locations_sorted_by_boundary_influence_score(model_id, hashtag_tag, no_of_locations)
 #            metric_count = reduce(count_similar_pairs, zip(best_locations, locations), 0.0)
             metric_count = len(set(best_locations).intersection(set(locations)))
             print '%s_%s'%(model_id, hashtag_tag), metric_count/float(no_of_locations)
+    @staticmethod
+    def compare_With_test_set():
+        def to_locations_based_on_first_occurence(locations, location):
+            if location not in locations: locations.append(location)
+            return locations
+        ltuo_hashtag_and_ltuo_location_and_occurrence_time = Experiments.load_ltuo_hashtag_and_ltuo_location_and_occurrence_time()
+        for hashtag, ltuo_location_and_occurrence_time in\
+                ltuo_hashtag_and_ltuo_location_and_occurrence_time:
+            ltuo_location_and_occurrence_time = sorted(ltuo_location_and_occurrence_time, key=itemgetter(1))
+            locations = reduce(to_locations_based_on_first_occurence, zip(*ltuo_location_and_occurrence_time)[0], [])
+            print hashtag, len(locations), len(set(zip(*ltuo_location_and_occurrence_time)[0]))
     @staticmethod
     def run():
         model_ids = [
@@ -382,7 +390,8 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_distance(model_ids)
 #        InfluenceAnalysis.influence_clusters(model_ids)
 #        InfluenceAnalysis.sharing_probability_examples(model_ids)
-        InfluenceAnalysis.model_comparison_with_best_model(best_tuo_model_and_hashtag_tag, ltuo_model_id_and_hashtag_tag, no_of_locations=100)
+#        InfluenceAnalysis.model_comparison_with_best_model(best_tuo_model_and_hashtag_tag, ltuo_model_id_and_hashtag_tag, no_of_locations=100)
+        InfluenceAnalysis.compare_With_test_set()
 
 class ModelComparison:
     @staticmethod

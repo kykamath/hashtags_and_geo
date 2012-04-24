@@ -12,11 +12,12 @@ from settings import tuo_location_and_tuo_neighbor_location_and_pure_influence_s
     location_objects_file, tuo_location_and_tuo_neighbor_location_and_influence_score_file, \
     tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file, \
     tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score_file, \
-    w_extra_hashtags_tag, wout_extra_hashtags_tag, \
+    w_extra_hashtags_tag, wout_extra_hashtags_tag, f_hashtag_objects, \
     f_ltuo_location_and_ltuo_hashtag_and_occurrence_time
 from analysis import iterateJsonFromFile
-from mr_analysis import START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER
-from library.geo import isWithinBoundingBox, getLocationFromLid
+from datetime import datetime
+from mr_analysis import LOCATION_ACCURACY
+from library.geo import isWithinBoundingBox, getLocationFromLid, getLatticeLid
 
 JACCARD_SIMILARITY = 'jaccard_similarity'
 class InfluenceMeasuringModels(object):
@@ -315,12 +316,27 @@ class Experiments(object):
                  for location, tuo_neighbor_location_and_sharing_affinity_score in 
                  iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score_file%model_id)]
     @staticmethod
-    def load_ltuo_location_and_no_of_occurrences():
+    def load_ltuo_location_and_no_of_occurrences(START_TIME=datetime(2011, 5, 1), END_TIME=datetime(2011, 12, 31), WINDOW_OUTPUT_FOLDER='complete_prop'):
         ltuo_location_and_no_of_occurrences = []
         for location, ltuo_hashtag_and_occurrence_time in \
                 iterateJsonFromFile(f_ltuo_location_and_ltuo_hashtag_and_occurrence_time%(WINDOW_OUTPUT_FOLDER, START_TIME.strftime('%Y-%m-%d'), END_TIME.strftime('%Y-%m-%d'))):
             ltuo_location_and_no_of_occurrences.append([location, len(ltuo_hashtag_and_occurrence_time)])
         return ltuo_location_and_no_of_occurrences
+    @staticmethod
+    def get_locations_sorted_by_boundary_influence_score(model_id, hashtag_tag, no_of_locations):
+            ltuo_location_and_global_influence_score = Experiments.load_tuo_location_and_boundary_influence_score(model_id, hashtag_tag)
+            return zip(*sorted(ltuo_location_and_global_influence_score, key=itemgetter(1)))[0][:no_of_locations]
+    @staticmethod
+    def load_ltuo_hashtag_and_ltuo_location_and_occurrence_time(startTime=datetime(2012, 1, 1), endTime=datetime(2012, 3, 31), outputFolder='complete_prop'):
+        ltuo_hashtag_and_ltuo_location_and_occurrence_time = []
+        for hashtag_object in \
+                iterateJsonFromFile(f_hashtag_objects%(outputFolder, startTime.strftime('%Y-%m-%d'), endTime.strftime('%Y-%m-%d'))):
+            ltuo_location_and_occurrence_time = [
+                                                 (getLatticeLid(point, LOCATION_ACCURACY), occurrence_time)
+                                                 for point, occurrence_time in hashtag_object['oc']
+                                                 ]
+            ltuo_hashtag_and_ltuo_location_and_occurrence_time.append([hashtag_object['h'], ltuo_location_and_occurrence_time])
+        return ltuo_hashtag_and_ltuo_location_and_occurrence_time
     @staticmethod
     def run():
         model_ids = [
@@ -331,8 +347,10 @@ class Experiments(object):
                   ]
         hashtag_tag = wout_extra_hashtags_tag
         
+#        START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
+        
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER, hashtag_tag)
-        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER, hashtag_tag)
+#        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER, hashtag_tag)
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 
