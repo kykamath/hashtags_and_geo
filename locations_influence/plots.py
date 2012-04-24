@@ -355,7 +355,8 @@ class InfluenceAnalysis:
                 ltuo_hashtag_and_ltuo_location_and_occurrence_time:
             ltuo_location_and_occurrence_time = sorted(ltuo_location_and_occurrence_time, key=itemgetter(1))
             locations = reduce(to_locations_based_on_first_occurence, zip(*ltuo_location_and_occurrence_time)[0], [])
-            print hashtag, len(locations), len(set(zip(*ltuo_location_and_occurrence_time)[0]))
+            mf_location_to_actual_location_rank = dict(zip(locations, range(len(locations))))
+            print mf_location_to_actual_location_rank
     @staticmethod
     def run():
         model_ids = [
