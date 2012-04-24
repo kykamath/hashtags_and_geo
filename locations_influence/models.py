@@ -164,19 +164,19 @@ class Experiments(object):
                 tuo_neighbor_location_and_influence_score = sorted(tuo_neighbor_location_and_influence_score, key=itemgetter(1))
                 FileIO.writeToFileAsJson([location_object['id'], tuo_neighbor_location_and_influence_score], output_file)
     @staticmethod
-    def load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id):
+    def load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id, hashtag_tag):
         return [(location, tuo_neighbor_location_and_influence_score)
                  for location, tuo_neighbor_location_and_influence_score in 
-                 iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_influence_score_file%model_id)]
+                 iterateJsonFromFile(tuo_location_and_tuo_neighbor_location_and_influence_score_file%(model_id, hashtag_tag))]
     @staticmethod
-    def load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, 
+    def load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, hashtag_tag,
                                                                                        noOfInfluencers=None, 
                                                                                        influence_type=InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE):
         '''
         noOfInfluencers (k) = The top-k influencers for a location
         '''
         tuo_location_and_tuo_neighbor_location_and_influence_score \
-            = Experiments.load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id)
+            = Experiments.load_tuo_location_and_tuo_neighbor_location_and_influence_score(model_id, hashtag_tag)
         mf_location_to_tuo_neighbor_location_and_locations_influence_score = defaultdict(list)
         for neighbor_location, tuo_location_and_influence_score in tuo_location_and_tuo_neighbor_location_and_influence_score:
             if not noOfInfluencers: 
@@ -195,13 +195,13 @@ class Experiments(object):
                                                                                                        key=itemgetter(1), reverse=True)
         return mf_location_to_tuo_neighbor_location_and_locations_influence_score.items()
     @staticmethod
-    def load_tuo_location_and_boundary_influence_score(model_id, boundary=[[-90,-180], [90, 180]], noOfInfluencers=None):
+    def load_tuo_location_and_boundary_influence_score(model_id, hashtag_tag, boundary=[[-90,-180], [90, 180]], noOfInfluencers=None):
         mf_location_to_global_influence_score = {}
         mf_location_to_mf_influence_type_to_influence_score = defaultdict(dict)
         mf_location_to_tuo_neighbor_location_and_locations_influencing_score = \
-            dict(Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers, InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE))
+            dict(Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, hashtag_tag, noOfInfluencers, InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE))
         mf_location_to_tuo_neighbor_location_and_locations_influenced_score = \
-            dict(Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers, InfluenceMeasuringModels.TYPE_OUTGOING_INFLUENCE))
+            dict(Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, hashtag_tag, noOfInfluencers, InfluenceMeasuringModels.TYPE_OUTGOING_INFLUENCE))
         for location in mf_location_to_tuo_neighbor_location_and_locations_influenced_score.keys()[:]:
             if not isWithinBoundingBox(getLocationFromLid(location.replace('_', ' ')), boundary):
                 if location in mf_location_to_tuo_neighbor_location_and_locations_influencing_score:
