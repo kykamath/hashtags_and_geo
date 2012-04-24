@@ -29,4 +29,5 @@ analysis_folder = locations_influence_folder%('analysis/', '')
 
 hadoop_output_folder = '/mnt/chevron/kykamath/data/geo/hashtags/locations_influence/hadoop/%s/'
 location_objects_file = hadoop_output_folder+'%s_%s/location_objects'
+f_hashtag_objects = hadoop_output_folder+'%s_%s/hashtag_objects'
 f_ltuo_location_and_ltuo_hashtag_and_occurrence_time = hadoop_output_folder+'%s_%s/ltuo_location_and_ltuo_hashtag_and_occurrence_time'

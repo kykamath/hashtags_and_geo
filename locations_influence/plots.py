@@ -98,8 +98,7 @@ class InfluenceAnalysis:
                         savefig(output_file_format%(label, model_id))
                         break
     @staticmethod
-    def global_influence_plots(model_ids, no_of_bins_for_influence_score=100):
-        label = 'global'
+    def global_influence_plots(ltuo_model_id_and_hashtag_tag, no_of_bins_for_influence_score=100):
         marking_locations = [
                              '18.8500_-98.6000',
 #                             '2.9000_101.5000',
@@ -112,13 +111,13 @@ class InfluenceAnalysis:
                              '29.7250_-97.1500', 
                              '30.4500_-95.7000'
                              ]
-        for model_id in model_ids:
-            output_file_format = 'images/%s/'%(GeneralMethods.get_method_id()) + '%s_%s.png'
-            tuo_location_and_global_influence_score = Experiments.load_tuo_location_and_boundary_influence_score(model_id)
+        for model_id, hashtag_tag in ltuo_model_id_and_hashtag_tag:
+            output_file = 'images/%s/'%(GeneralMethods.get_method_id()) + '%s_%s.png'%(model_id, hashtag_tag)
+            tuo_location_and_global_influence_score = Experiments.load_tuo_location_and_boundary_influence_score(model_id, hashtag_tag)
             InfluenceAnalysis._plot_scores(tuo_location_and_global_influence_score, marking_locations, no_of_bins_for_influence_score, smooth=True)
             plt.ylim(ymin=0.0)
 #            plt.show()
-            savefig(output_file_format%(label, model_id))
+            savefig(output_file)
     @staticmethod
     def plot_local_influencers(ltuo_model_id_and_hashtag_tag):
         tuples_of_boundary_and_boundary_label = [
@@ -161,24 +160,24 @@ class InfluenceAnalysis:
 #            plt.show()
             savefig('images/%s/%s_%s.png'%(GeneralMethods.get_method_id(), model_id, hashtag_tag))
     @staticmethod
-    def plot_locations_influence_on_world_map(model_ids, noOfInfluencers=10, percentage_of_locations=0.15):
-        for model_id in model_ids:
-            input_locations = [
+    def plot_locations_influence_on_world_map(ltuo_model_id_and_hashtag_tag, noOfInfluencers=10, percentage_of_locations=0.15):
+        input_locations = [
 #                               ('40.6000_-73.9500', 'new_york'),
 #                               ('33.3500_-118.1750', 'los_angeles'),
 #                               ('29.7250_-97.1500', 'austin'),
-                               ('30.4500_-95.7000', 'college_station'),
-                                ('-22.4750_-42.7750', 'rio'),
-                               ('51.4750_0.0000', 'london'),
-                                 ] 
+                           ('30.4500_-95.7000', 'college_station'),
+                            ('-22.4750_-42.7750', 'rio'),
+                           ('51.4750_0.0000', 'london'),
+                         ] 
+        for model_id, hashtag_tag in ltuo_model_id_and_hashtag_tag:
             tuo_location_and_tuo_neighbor_location_and_locations_influence_score = \
-                    Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, noOfInfluencers=None, influence_type=InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE)
+                    Experiments.load_tuo_location_and_tuo_neighbor_location_and_locations_influence_score(model_id, hashtag_tag, noOfInfluencers=None, influence_type=InfluenceMeasuringModels.TYPE_INCOMING_INFLUENCE)
             for input_location, label in input_locations:
                 for location, tuo_neighbor_location_and_locations_influence_score in \
                         tuo_location_and_tuo_neighbor_location_and_locations_influence_score:
                     if input_location==location:
                         input_location = getLocationFromLid(input_location.replace('_', ' '))
-                        output_file = 'images/%s/%s.png'%(GeneralMethods.get_method_id(), label)
+                        output_file = 'images/%s/%s_%s/%s.png'%(GeneralMethods.get_method_id(), model_id, hashtag_tag, label)
                         number_of_outgoing_influences = int(len(tuo_neighbor_location_and_locations_influence_score)*percentage_of_locations)
                         if number_of_outgoing_influences==0: number_of_outgoing_influences=len(tuo_neighbor_location_and_locations_influence_score)
                         locations = zip(*tuo_neighbor_location_and_locations_influence_score)[0][:number_of_outgoing_influences]
@@ -334,7 +333,21 @@ class InfluenceAnalysis:
                                 )
                                for target_nearby_location, nearby_location_label in tuo_target_nearby_location_and_nearby_location_label]
                         print [(a, '%0.2f'%b)for a,b in tuo_neighbor_location_and_sharing_affinity_score[1:kNoOfLocations+1]]
-    
+    @staticmethod
+    def model_comparison_with_best_model(best_tuo_model_and_hashtag_tag, ltuo_model_id_and_hashtag_tag, no_of_locations=10):
+        def _get_top_locations_based_on_global_influence_scores(model_id, hashtag_tag, no_of_locations):
+            ltuo_location_and_global_influence_score = Experiments.load_tuo_location_and_boundary_influence_score(model_id, hashtag_tag)
+            return zip(*sorted(ltuo_location_and_global_influence_score, key=itemgetter(1)))[0][:no_of_locations]
+        def count_similar_pairs(current_no_of_similar_pairs, (location1, location2)):
+            if location1==location2: current_no_of_similar_pairs+=1
+            return current_no_of_similar_pairs
+        best_model, best_hashtag_tag = best_tuo_model_and_hashtag_tag
+        best_locations = _get_top_locations_based_on_global_influence_scores(best_model, best_hashtag_tag, no_of_locations)
+        for model_id, hashtag_tag in ltuo_model_id_and_hashtag_tag:
+            locations = _get_top_locations_based_on_global_influence_scores(model_id, hashtag_tag, no_of_locations)
+#            metric_count = reduce(count_similar_pairs, zip(best_locations, locations), 0.0)
+            metric_count = len(set(best_locations).intersection(set(locations)))
+            print '%s_%s'%(model_id, hashtag_tag), metric_count/float(no_of_locations)
     @staticmethod
     def run():
         model_ids = [
@@ -345,27 +358,31 @@ class InfluenceAnalysis:
           ]
         
         ltuo_model_id_and_hashtag_tag = [
-              (InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, wout_extra_hashtags_tag),
-              (InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, wout_extra_hashtags_tag),
-              (InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, wout_extra_hashtags_tag),
-              (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, wout_extra_hashtags_tag),
+#              (InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, wout_extra_hashtags_tag),
+#              (InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, wout_extra_hashtags_tag),
+#              (InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, wout_extra_hashtags_tag),
+#              (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, wout_extra_hashtags_tag),
               (InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, w_extra_hashtags_tag),
               (InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, w_extra_hashtags_tag),
               (InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, w_extra_hashtags_tag),
               (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, w_extra_hashtags_tag),
           ]
         
-        # DEFAULT USE w_extra_hashtags_tag AS hashtag_tag
+#        best_tuo_model_and_hashtag_tag = (InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, w_extra_hashtags_tag)
+        best_tuo_model_and_hashtag_tag = (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, w_extra_hashtags_tag)
+        
+        # DEFAULT USE w_extra_hashtags_tag AS hashtag_tag and ID_WEIGHTED_AGGREGATE_OCCURRENCE as model
 #        InfluenceAnalysis.locations_at_top_and_bottom(model_ids)
 #        InfluenceAnalysis.location_influence_plots(model_ids)
-#        InfluenceAnalysis.global_influence_plots(model_ids)
+#        InfluenceAnalysis.global_influence_plots(ltuo_model_id_and_hashtag_tag)
 #        InfluenceAnalysis.plot_local_influencers(ltuo_model_id_and_hashtag_tag)
-        InfluenceAnalysis.plot_global_influencers(ltuo_model_id_and_hashtag_tag)
-#        InfluenceAnalysis.plot_locations_influence_on_world_map(model_ids)
+#        InfluenceAnalysis.plot_global_influencers(ltuo_model_id_and_hashtag_tag)
+#        InfluenceAnalysis.plot_locations_influence_on_world_map(ltuo_model_id_and_hashtag_tag)
 #        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_jaccard_similarity(model_ids)
 #        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_distance(model_ids)
 #        InfluenceAnalysis.influence_clusters(model_ids)
 #        InfluenceAnalysis.sharing_probability_examples(model_ids)
+        InfluenceAnalysis.model_comparison_with_best_model(best_tuo_model_and_hashtag_tag, ltuo_model_id_and_hashtag_tag, no_of_locations=100)
 
 class ModelComparison:
     @staticmethod
