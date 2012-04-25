@@ -77,6 +77,8 @@ class InfluenceAnalysis:
 #        plt.legend()
         (ticks, labels) = plt.yticks()
         plt.yticks([ticks[-2]])
+        plt.ylim(ymin=0.0)
+        return ticks[-1]
     @staticmethod
     def location_influence_plots(model_ids, no_of_bins_for_influence_score=100):
         for model_id in model_ids:
@@ -390,6 +392,48 @@ class InfluenceAnalysis:
                 mf_model_id_to_misrank_accuracies.iteritems():
             print model_id, np.mean(misrank_accuracies)
     @staticmethod
+    def plot_location_plots_with_zones(ltuo_model_id_and_hashtag_tag, no_of_bins_for_influence_score=100):
+        for model_id, hashtag_tag in ltuo_model_id_and_hashtag_tag:
+            no_of_zones, ltuo_location_and_influence_score_and_zone_id = \
+                Experiments.get_location_with_zone_ids(model_id, hashtag_tag)
+            locations, influence_scores, zone_ids = zip(*ltuo_location_and_influence_score_and_zone_id)
+            # Plot influence plot
+            ltuo_location_and_global_influence_score = zip(locations, influence_scores)
+            max_y_tick = InfluenceAnalysis._plot_scores(ltuo_location_and_global_influence_score, [], no_of_bins_for_influence_score, smooth=True)
+            # Plot zones
+            ltuo_influence_score_and_zone_id = zip(influence_scores, zone_ids)
+            ltuo_zone_id_and_influence_scores = [(zone_id, zip(*ito_tuo_influence_score_and_zone_id)[0])
+                                                    for zone_id, ito_tuo_influence_score_and_zone_id in
+                                                        groupby(
+                                                                sorted(ltuo_influence_score_and_zone_id, key=itemgetter(1)),
+                                                                key=itemgetter(1)
+                                                        )
+                                                ]
+            ltuo_zone_id_and_tuo_min_influence_score_and_max_influence_score = \
+                [(zone_id, (min(influence_scores), max(influence_scores))) for zone_id, influence_scores in ltuo_zone_id_and_influence_scores]
+            ltuo_zone_id_and_tuo_box_start_and_box_width = \
+                [(zone_id, (min_influence_score, abs(min_influence_score-max_influence_score))) 
+                     for zone_id, (min_influence_score, max_influence_score) in 
+                        ltuo_zone_id_and_tuo_min_influence_score_and_max_influence_score
+                ]
+            zone_ids, ltuo_box_start_and_box_width = zip(*ltuo_zone_id_and_tuo_box_start_and_box_width)
+            zone_colors = [GeneralMethods.getRandomColor() for zone_id in zone_ids]
+            plt.broken_barh(ltuo_box_start_and_box_width , (0, max_y_tick), facecolors=zone_colors, alpha=0.25, lw=0)
+#            temp_ltuo_box_start_and_box_width = []
+#            for box_start, box_width in ltuo_box_start_and_box_width:
+#                if box_width!=0: temp_ltuo_box_start_and_box_width.append((box_start, box_width))
+#                else: temp_ltuo_box_start_and_box_width.append((box_start, 0.0001))
+
+#            zero_size_cluster_ltuo_box_start_and_box_width = []
+#            for box_start, box_width in ltuo_box_start_and_box_width:
+#                if box_width==0: zero_size_cluster_ltuo_box_start_and_box_width.append((box_start, 0.0001))
+#            plt.broken_barh(zero_size_cluster_ltuo_box_start_and_box_width , (0, max_y_tick), facecolors='r', alpha=0.25, lw=0)
+#            plt.xlim(xmin=-0.0025, xmax=0.0025)
+            
+            output_file = 'images/%s/%s_%s.png'%(GeneralMethods.get_method_id(), model_id, hashtag_tag)
+            savefig(output_file)
+#            plt.show()
+    @staticmethod
     def run():
         model_ids = [
 #                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
@@ -424,7 +468,9 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.influence_clusters(model_ids)
 #        InfluenceAnalysis.sharing_probability_examples(model_ids)
 #        InfluenceAnalysis.model_comparison_with_best_model(best_tuo_model_and_hashtag_tag, ltuo_model_id_and_hashtag_tag, no_of_locations=100)
-        InfluenceAnalysis.compare_With_test_set(ltuo_model_id_and_hashtag_tag)
+#        InfluenceAnalysis.compare_With_test_set(ltuo_model_id_and_hashtag_tag)
+        
+        InfluenceAnalysis.plot_location_plots_with_zones(ltuo_model_id_and_hashtag_tag)
 
 class ModelComparison:
     @staticmethod

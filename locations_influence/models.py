@@ -15,9 +15,11 @@ from settings import tuo_location_and_tuo_neighbor_location_and_pure_influence_s
     w_extra_hashtags_tag, wout_extra_hashtags_tag, f_hashtag_objects, \
     f_ltuo_location_and_ltuo_hashtag_and_occurrence_time
 from analysis import iterateJsonFromFile
+from itertools import groupby
 from datetime import datetime
 from mr_analysis import LOCATION_ACCURACY
 from library.geo import isWithinBoundingBox, getLocationFromLid, getLatticeLid
+from sklearn.cluster.affinity_propagation_ import AffinityPropagation
 
 JACCARD_SIMILARITY = 'jaccard_similarity'
 class InfluenceMeasuringModels(object):
@@ -86,6 +88,7 @@ MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID = dict([
                                                   ])
 
 class Experiments(object):
+    SINGLETON_ZONE_ID = 'singleton_zone'
     @staticmethod
     def generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(models_ids, startTime, endTime, outputFolder, hashtag_tag):
         for model_id in models_ids:
@@ -338,6 +341,42 @@ class Experiments(object):
                                                  ]
             ltuo_hashtag_and_ltuo_location_and_occurrence_time.append([hashtag_object['h'], ltuo_location_and_occurrence_time])
         return ltuo_hashtag_and_ltuo_location_and_occurrence_time
+    @staticmethod
+    def _cluster_locations_based_on_influence_scores(ltuo_locations_and_influence_score):
+        def similarity_matrix(similarity_matrix, (current_point, all_points)):
+            similarity_matrix.append([1./(np.abs(current_point - point)+1)for point in all_points])
+            return similarity_matrix
+        locations, influence_scores = zip(*ltuo_locations_and_influence_score)
+        S = np.array(reduce(
+                        similarity_matrix,
+                        zip(influence_scores, [influence_scores]*len(influence_scores)),
+                        []
+                    ))
+        af = AffinityPropagation().fit(S)
+        return (len(af.cluster_centers_indices_), zip(locations, influence_scores, af.labels_))
+    @staticmethod
+    def get_location_with_zone_ids(model_id, hashtag_tag):
+        ltuo_location_and_global_influence_score = Experiments.load_tuo_location_and_boundary_influence_score(model_id, hashtag_tag)
+        no_of_zones, ltuo_location_and_influence_score_and_zone_id \
+            = Experiments._cluster_locations_based_on_influence_scores(ltuo_location_and_global_influence_score)
+        locations, influence_scores, zone_ids = zip(*ltuo_location_and_influence_score_and_zone_id)
+        ltuo_influence_score_and_zone_id = zip(influence_scores, zone_ids)
+        ltuo_zone_id_and_no_of_locations = [(zone_id, len(list(ito_tuo_influence_score_and_zone_id)))
+                                                for zone_id, ito_tuo_influence_score_and_zone_id in
+                                                    groupby(
+                                                            sorted(ltuo_influence_score_and_zone_id, key=itemgetter(1)),
+                                                            key=itemgetter(1)
+                                                    )
+                                            ]
+        singleton_zone_ids = [zone_id for zone_id, no_of_locations in ltuo_zone_id_and_no_of_locations if no_of_locations==1]
+        temp_ltuo_location_and_influence_score_and_zone_id = []
+        for location, influence_score, zone_id in \
+                ltuo_location_and_influence_score_and_zone_id:
+            if zone_id not in singleton_zone_ids: temp_ltuo_location_and_influence_score_and_zone_id.append((location, influence_score, zone_id))
+            else: temp_ltuo_location_and_influence_score_and_zone_id.append((location, influence_score, Experiments.SINGLETON_ZONE_ID))
+        ltuo_location_and_influence_score_and_zone_id = temp_ltuo_location_and_influence_score_and_zone_id
+        no_of_zones=no_of_zones-len(singleton_zone_ids)+1
+        return no_of_zones, ltuo_location_and_influence_score_and_zone_id
     @staticmethod
     def run():
         model_ids = [
