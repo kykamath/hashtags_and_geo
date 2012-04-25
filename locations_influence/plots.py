@@ -346,17 +346,49 @@ class InfluenceAnalysis:
             metric_count = len(set(best_locations).intersection(set(locations)))
             print '%s_%s'%(model_id, hashtag_tag), metric_count/float(no_of_locations)
     @staticmethod
-    def compare_With_test_set():
+    def compare_With_test_set(ltuo_model_id_and_hashtag_tag):
+        mf_model_id_to_misrank_accuracies = defaultdict(list)
         def to_locations_based_on_first_occurence(locations, location):
             if location not in locations: locations.append(location)
             return locations
+        def get_misrank_accuracy((real_location_rank, locations_order_for_hashtag)):
+            position = locations_order_for_hashtag.index(real_location_rank)
+            def count_greater_than(current_count, (real_location_rank, predicted_location_rank)):
+                if real_location_rank < predicted_location_rank: current_count+=1
+                return current_count
+            def count_lesser_than(current_count, (real_location_rank, predicted_location_rank)):
+                if real_location_rank > predicted_location_rank: current_count+=1
+                return current_count
+            left_side_location_ranks = locations_order_for_hashtag[:position]
+            right_side_location_ranks = locations_order_for_hashtag[position+1:]
+            total_misranked_locations = reduce(count_greater_than, zip([real_location_rank]*len(left_side_location_ranks), left_side_location_ranks), 0.0) \
+                                            + reduce(count_lesser_than, zip([real_location_rank]*len(right_side_location_ranks), right_side_location_ranks), 0.0)
+            return total_misranked_locations/(len(locations_order_for_hashtag)-1)
+        mf_model_id_to_locations = {}
+        for model_id, hashtag_tag in ltuo_model_id_and_hashtag_tag:
+            mf_model_id_to_locations[model_id] = Experiments.get_locations_sorted_by_boundary_influence_score(model_id, hashtag_tag)
         ltuo_hashtag_and_ltuo_location_and_occurrence_time = Experiments.load_ltuo_hashtag_and_ltuo_location_and_occurrence_time()
-        for hashtag, ltuo_location_and_occurrence_time in\
-                ltuo_hashtag_and_ltuo_location_and_occurrence_time:
+        for hashtag_count, (hashtag, ltuo_location_and_occurrence_time) in\
+                enumerate(ltuo_hashtag_and_ltuo_location_and_occurrence_time):
+            print hashtag_count
             ltuo_location_and_occurrence_time = sorted(ltuo_location_and_occurrence_time, key=itemgetter(1))
             locations = reduce(to_locations_based_on_first_occurence, zip(*ltuo_location_and_occurrence_time)[0], [])
-            mf_location_to_actual_location_rank = dict(zip(locations, range(len(locations))))
-            print mf_location_to_actual_location_rank
+            mf_location_to_hashtags_location_rank = dict(zip(locations, range(len(locations))))
+            for model_id, locations in \
+                    mf_model_id_to_locations.iteritems():
+                models_location_rank = [ mf_location_to_hashtags_location_rank[location]
+                                        for location in locations 
+                                            if location in mf_location_to_hashtags_location_rank
+                                    ]
+                if len(models_location_rank)>1:
+                    misrank_accuracies = map(
+                          get_misrank_accuracy,
+                          zip(models_location_rank, [models_location_rank]*len(models_location_rank))
+                          )
+                    mf_model_id_to_misrank_accuracies[model_id].append(np.mean(misrank_accuracies))
+        for model_id, misrank_accuracies in \
+                mf_model_id_to_misrank_accuracies.iteritems():
+            print model_id, np.mean(misrank_accuracies)
     @staticmethod
     def run():
         model_ids = [
@@ -392,7 +424,7 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.influence_clusters(model_ids)
 #        InfluenceAnalysis.sharing_probability_examples(model_ids)
 #        InfluenceAnalysis.model_comparison_with_best_model(best_tuo_model_and_hashtag_tag, ltuo_model_id_and_hashtag_tag, no_of_locations=100)
-        InfluenceAnalysis.compare_With_test_set()
+        InfluenceAnalysis.compare_With_test_set(ltuo_model_id_and_hashtag_tag)
 
 class ModelComparison:
     @staticmethod

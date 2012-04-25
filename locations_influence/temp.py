@@ -12,8 +12,8 @@ def get_misrank_accuracy((real_location_rank, locations_order_for_hashtag)):
                                     + reduce(count_lesser_than, zip([real_location_rank]*len(right_side_location_ranks), right_side_location_ranks), 0.0)
     return total_misranked_locations/(len(locations_order_for_hashtag)-1)
 
-#locations_order_for_hashtag = [3,2,1,4,5]
-#locations_order_for_hashtag = [1,2,3,4,5]
+locations_order_for_hashtag = [3,2,1,4,5]
+locations_order_for_hashtag = [1,2,3,4,5]
 locations_order_for_hashtag = [5,4,3,2,1]
 #locations_order_for_hashtag = [5, 1,2,3,4]
 real_location_rank = 2

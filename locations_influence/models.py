@@ -323,9 +323,10 @@ class Experiments(object):
             ltuo_location_and_no_of_occurrences.append([location, len(ltuo_hashtag_and_occurrence_time)])
         return ltuo_location_and_no_of_occurrences
     @staticmethod
-    def get_locations_sorted_by_boundary_influence_score(model_id, hashtag_tag, no_of_locations):
+    def get_locations_sorted_by_boundary_influence_score(model_id, hashtag_tag, no_of_locations=None):
             ltuo_location_and_global_influence_score = Experiments.load_tuo_location_and_boundary_influence_score(model_id, hashtag_tag)
-            return zip(*sorted(ltuo_location_and_global_influence_score, key=itemgetter(1)))[0][:no_of_locations]
+            if no_of_locations: return zip(*sorted(ltuo_location_and_global_influence_score, key=itemgetter(1)))[0][:no_of_locations]
+            else: return zip(*sorted(ltuo_location_and_global_influence_score, key=itemgetter(1)))[0]
     @staticmethod
     def load_ltuo_hashtag_and_ltuo_location_and_occurrence_time(startTime=datetime(2012, 1, 1), endTime=datetime(2012, 3, 31), outputFolder='complete_prop'):
         ltuo_hashtag_and_ltuo_location_and_occurrence_time = []
