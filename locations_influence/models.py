@@ -361,21 +361,42 @@ class Experiments(object):
             = Experiments._cluster_locations_based_on_influence_scores(ltuo_location_and_global_influence_score)
         locations, influence_scores, zone_ids = zip(*ltuo_location_and_influence_score_and_zone_id)
         ltuo_influence_score_and_zone_id = zip(influence_scores, zone_ids)
-        ltuo_zone_id_and_no_of_locations = [(zone_id, len(list(ito_tuo_influence_score_and_zone_id)))
-                                                for zone_id, ito_tuo_influence_score_and_zone_id in
-                                                    groupby(
-                                                            sorted(ltuo_influence_score_and_zone_id, key=itemgetter(1)),
-                                                            key=itemgetter(1)
-                                                    )
-                                            ]
-        singleton_zone_ids = [zone_id for zone_id, no_of_locations in ltuo_zone_id_and_no_of_locations if no_of_locations==1]
+        ltuo_zone_id_and_min_influence_score = [(zone_id, min(ito_tuo_influence_score_and_zone_id))
+                                                    for zone_id, ito_tuo_influence_score_and_zone_id in
+                                                        groupby(
+                                                                sorted(ltuo_influence_score_and_zone_id, key=itemgetter(1)),
+                                                                key=itemgetter(1)
+                                                        )
+                                                ]
+        
+        
+        ltuo_zone_id_and_new_zone_id = zip(
+                                            zip(*sorted(ltuo_zone_id_and_min_influence_score, key=itemgetter(1)))[0],
+                                            range(len(ltuo_zone_id_and_min_influence_score))
+                                        )
+        mf_zone_id_to_new_zone_id = dict(ltuo_zone_id_and_new_zone_id)
+        assert len(mf_zone_id_to_new_zone_id)==no_of_zones
         temp_ltuo_location_and_influence_score_and_zone_id = []
         for location, influence_score, zone_id in \
                 ltuo_location_and_influence_score_and_zone_id:
-            if zone_id not in singleton_zone_ids: temp_ltuo_location_and_influence_score_and_zone_id.append((location, influence_score, zone_id))
-            else: temp_ltuo_location_and_influence_score_and_zone_id.append((location, influence_score, Experiments.SINGLETON_ZONE_ID))
+            temp_ltuo_location_and_influence_score_and_zone_id.append([location, influence_score, mf_zone_id_to_new_zone_id[zone_id]])
         ltuo_location_and_influence_score_and_zone_id = temp_ltuo_location_and_influence_score_and_zone_id
-        no_of_zones=no_of_zones-len(singleton_zone_ids)+1
+#        ltuo_influence_score_and_zone_id = zip(influence_scores, zone_ids)
+#        ltuo_zone_id_and_no_of_locations = [(zone_id, len(list(ito_tuo_influence_score_and_zone_id)))
+#                                                for zone_id, ito_tuo_influence_score_and_zone_id in
+#                                                    groupby(
+#                                                            sorted(ltuo_influence_score_and_zone_id, key=itemgetter(1)),
+#                                                            key=itemgetter(1)
+#                                                    )
+#                                            ]
+#        singleton_zone_ids = [zone_id for zone_id, no_of_locations in ltuo_zone_id_and_no_of_locations if no_of_locations==1]
+#        temp_ltuo_location_and_influence_score_and_zone_id = []
+#        for location, influence_score, zone_id in \
+#                ltuo_location_and_influence_score_and_zone_id:
+#            if zone_id not in singleton_zone_ids: temp_ltuo_location_and_influence_score_and_zone_id.append((location, influence_score, zone_id))
+#            else: temp_ltuo_location_and_influence_score_and_zone_id.append((location, influence_score, Experiments.SINGLETON_ZONE_ID))
+#        ltuo_location_and_influence_score_and_zone_id = temp_ltuo_location_and_influence_score_and_zone_id
+#        no_of_zones=no_of_zones-len(singleton_zone_ids)+1
         return no_of_zones, ltuo_location_and_influence_score_and_zone_id
     @staticmethod
     def run():
