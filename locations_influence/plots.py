@@ -408,7 +408,7 @@ class InfluenceAnalysis:
         ltuo_hashtag_and_ltuo_location_and_occurrence_time = Experiments.load_ltuo_hashtag_and_ltuo_location_and_occurrence_time()
         for hashtag_count, (hashtag, ltuo_location_and_occurrence_time) in\
                 enumerate(ltuo_hashtag_and_ltuo_location_and_occurrence_time):
-            print hashtag_count
+#            print hashtag_count
 
 #            if hashtag_count==10: break;
             ltuo_location_and_occurrence_time = sorted(ltuo_location_and_occurrence_time, key=itemgetter(1))
@@ -515,8 +515,8 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.influence_clusters(model_ids)
 #        InfluenceAnalysis.sharing_probability_examples(model_ids)
 #        InfluenceAnalysis.model_comparison_with_best_model(best_tuo_model_and_hashtag_tag, ltuo_model_id_and_hashtag_tag, no_of_locations=100)
-        InfluenceAnalysis.compare_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
-#        InfluenceAnalysis.compare_zones_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
+#        InfluenceAnalysis.compare_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
+        InfluenceAnalysis.compare_zones_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
 #        InfluenceAnalysis.plot_location_plots_with_zones(ltuo_model_id_and_hashtag_tag)
 
 class ModelComparison:
