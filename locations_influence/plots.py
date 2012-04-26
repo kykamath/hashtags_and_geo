@@ -374,7 +374,7 @@ class InfluenceAnalysis:
         ltuo_hashtag_and_ltuo_location_and_occurrence_time = Experiments.load_ltuo_hashtag_and_ltuo_location_and_occurrence_time()
         for hashtag_count, (hashtag, ltuo_location_and_occurrence_time) in\
                 enumerate(ltuo_hashtag_and_ltuo_location_and_occurrence_time):
-            print hashtag_count
+#            print hashtag_count
             ltuo_location_and_occurrence_time = sorted(ltuo_location_and_occurrence_time, key=itemgetter(1))
             locations = reduce(InfluenceAnalysis._to_locations_based_on_first_occurence, zip(*ltuo_location_and_occurrence_time)[0], [])
 #        for hashtag_count, (hashtag, ltuo_location_and_pure_influence_score) in \
