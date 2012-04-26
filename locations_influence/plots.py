@@ -374,14 +374,13 @@ class InfluenceAnalysis:
         ltuo_hashtag_and_ltuo_location_and_occurrence_time = Experiments.load_ltuo_hashtag_and_ltuo_location_and_occurrence_time()
         for hashtag_count, (hashtag, ltuo_location_and_occurrence_time) in\
                 enumerate(ltuo_hashtag_and_ltuo_location_and_occurrence_time):
-#            print hashtag_count
             ltuo_location_and_occurrence_time = sorted(ltuo_location_and_occurrence_time, key=itemgetter(1))
+#            print hashtag_count, len(ltuo_location_and_occurrence_time)
             locations = reduce(InfluenceAnalysis._to_locations_based_on_first_occurence, zip(*ltuo_location_and_occurrence_time)[0], [])
 #        for hashtag_count, (hashtag, ltuo_location_and_pure_influence_score) in \
 #                enumerate(Experiments.load_ltuo_test_hashtag_and_ltuo_location_and_pure_influence_score(test_model_id)):
 #            locations = zip(*ltuo_location_and_pure_influence_score)[0]
             mf_location_to_hashtags_location_rank = dict(zip(locations, range(len(locations))))
-            print hashtag_count
             for model_id, locations in \
                     mf_model_id_to_locations.iteritems():
                 models_location_rank = [ mf_location_to_hashtags_location_rank[location]
@@ -394,6 +393,7 @@ class InfluenceAnalysis:
                           zip(models_location_rank, [models_location_rank]*len(models_location_rank))
                           )
                     mf_model_id_to_misrank_accuracies[model_id].append(np.mean(misrank_accuracies))
+                    print '\t '.join([hashtag_count, len(ltuo_location_and_occurrence_time), np.mean(misrank_accuracies)])
         for model_id, misrank_accuracies in \
                 mf_model_id_to_misrank_accuracies.iteritems():
             print model_id, np.mean(misrank_accuracies)
@@ -515,8 +515,8 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.influence_clusters(model_ids)
 #        InfluenceAnalysis.sharing_probability_examples(model_ids)
 #        InfluenceAnalysis.model_comparison_with_best_model(best_tuo_model_and_hashtag_tag, ltuo_model_id_and_hashtag_tag, no_of_locations=100)
-#        InfluenceAnalysis.compare_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
-        InfluenceAnalysis.compare_zones_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
+        InfluenceAnalysis.compare_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
+#        InfluenceAnalysis.compare_zones_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
 #        InfluenceAnalysis.plot_location_plots_with_zones(ltuo_model_id_and_hashtag_tag)
 
 class ModelComparison:
