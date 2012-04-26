@@ -378,7 +378,7 @@ class InfluenceAnalysis:
 #            ltuo_location_and_occurrence_time = sorted(ltuo_location_and_occurrence_time, key=itemgetter(1))
 #            locations = reduce(InfluenceAnalysis._to_locations_based_on_first_occurence, zip(*ltuo_location_and_occurrence_time)[0], [])
         for hashtag_count, (hashtag, ltuo_location_and_pure_influence_score) in \
-                enumerate(Experiments.load_ltuo_test_hashtag_and_ltuo_location_and_pure_influence_score()):
+                enumerate(Experiments.load_ltuo_test_hashtag_and_ltuo_location_and_pure_influence_score(test_model_id)):
             locations = zip(*ltuo_location_and_pure_influence_score)[0]
             mf_location_to_hashtags_location_rank = dict(zip(locations, range(len(locations))))
             print hashtag_count
