@@ -405,18 +405,18 @@ class InfluenceAnalysis:
                 no_of_zones, ltuo_location_and_influence_score_and_zone_id = Experiments.get_location_with_zone_ids(model_id, hashtag_tag)
                 locations, influence_scores, zone_ids = zip(*ltuo_location_and_influence_score_and_zone_id)
                 mf_model_id_to_mf_location_to_zone_id[model_id] = dict(zip(locations, zone_ids))
-#        ltuo_hashtag_and_ltuo_location_and_occurrence_time = Experiments.load_ltuo_hashtag_and_ltuo_location_and_occurrence_time()
-#        for hashtag_count, (hashtag, ltuo_location_and_occurrence_time) in\
-#                enumerate(ltuo_hashtag_and_ltuo_location_and_occurrence_time):
-#            print hashtag_count
-##            if hashtag_count==10: break;
-#            ltuo_location_and_occurrence_time = sorted(ltuo_location_and_occurrence_time, key=itemgetter(1))
-##            hashtag_zone_ids = [for ltuo_location, _ in ltuo_location_and_occurrence_time]
-#            locations = reduce(InfluenceAnalysis._to_locations_based_on_first_occurence, zip(*ltuo_location_and_occurrence_time)[0], [])
-##            mf_location_to_hashtags_location_rank = dict(zip(locations, range(len(locations))))
-        for hashtag_count, (hashtag, ltuo_location_and_pure_influence_score) in \
-                enumerate(Experiments.load_ltuo_test_hashtag_and_ltuo_location_and_pure_influence_score(test_model_id)):
-            locations = zip(*ltuo_location_and_pure_influence_score)[0]
+        ltuo_hashtag_and_ltuo_location_and_occurrence_time = Experiments.load_ltuo_hashtag_and_ltuo_location_and_occurrence_time()
+        for hashtag_count, (hashtag, ltuo_location_and_occurrence_time) in\
+                enumerate(ltuo_hashtag_and_ltuo_location_and_occurrence_time):
+            print hashtag_count
+#            if hashtag_count==10: break;
+            ltuo_location_and_occurrence_time = sorted(ltuo_location_and_occurrence_time, key=itemgetter(1))
+#            hashtag_zone_ids = [for ltuo_location, _ in ltuo_location_and_occurrence_time]
+            locations = reduce(InfluenceAnalysis._to_locations_based_on_first_occurence, zip(*ltuo_location_and_occurrence_time)[0], [])
+#            mf_location_to_hashtags_location_rank = dict(zip(locations, range(len(locations))))
+#        for hashtag_count, (hashtag, ltuo_location_and_pure_influence_score) in \
+#                enumerate(Experiments.load_ltuo_test_hashtag_and_ltuo_location_and_pure_influence_score(test_model_id)):
+#            locations = zip(*ltuo_location_and_pure_influence_score)[0]
             for model_id, mf_location_to_zone_id in \
                     mf_model_id_to_mf_location_to_zone_id.iteritems():
                 models_location_rank = [mf_location_to_zone_id[location] for location in locations if location in mf_location_to_zone_id]
