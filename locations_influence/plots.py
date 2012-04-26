@@ -352,7 +352,7 @@ class InfluenceAnalysis:
             if location not in locations: locations.append(location)
             return locations
     @staticmethod
-    def _get_misrank_accuracy((real_location_rank, locations_order_for_hashtag)):
+    def _get_rank_accuracy((real_location_rank, locations_order_for_hashtag)):
         position = locations_order_for_hashtag.index(real_location_rank)
         def count_greater_than(current_count, (real_location_rank, predicted_location_rank)):
             if real_location_rank < predicted_location_rank: current_count+=1
@@ -364,22 +364,22 @@ class InfluenceAnalysis:
         right_side_location_ranks = locations_order_for_hashtag[position+1:]
         total_misranked_locations = reduce(count_greater_than, zip([real_location_rank]*len(left_side_location_ranks), left_side_location_ranks), 0.0) \
                                         + reduce(count_lesser_than, zip([real_location_rank]*len(right_side_location_ranks), right_side_location_ranks), 0.0)
-        return total_misranked_locations/(len(locations_order_for_hashtag)-1)
+        return 1 - (total_misranked_locations/(len(locations_order_for_hashtag)-1))
     @staticmethod
     def compare_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id):
         mf_model_id_to_misrank_accuracies = defaultdict(list)
         mf_model_id_to_locations = {}
         for model_id, hashtag_tag in ltuo_model_id_and_hashtag_tag:
             mf_model_id_to_locations[model_id] = Experiments.get_locations_sorted_by_boundary_influence_score(model_id, hashtag_tag)
-#        ltuo_hashtag_and_ltuo_location_and_occurrence_time = Experiments.load_ltuo_hashtag_and_ltuo_location_and_occurrence_time()
-#        for hashtag_count, (hashtag, ltuo_location_and_occurrence_time) in\
-#                enumerate(ltuo_hashtag_and_ltuo_location_and_occurrence_time):
-#            print hashtag_count
-#            ltuo_location_and_occurrence_time = sorted(ltuo_location_and_occurrence_time, key=itemgetter(1))
-#            locations = reduce(InfluenceAnalysis._to_locations_based_on_first_occurence, zip(*ltuo_location_and_occurrence_time)[0], [])
-        for hashtag_count, (hashtag, ltuo_location_and_pure_influence_score) in \
-                enumerate(Experiments.load_ltuo_test_hashtag_and_ltuo_location_and_pure_influence_score(test_model_id)):
-            locations = zip(*ltuo_location_and_pure_influence_score)[0]
+        ltuo_hashtag_and_ltuo_location_and_occurrence_time = Experiments.load_ltuo_hashtag_and_ltuo_location_and_occurrence_time()
+        for hashtag_count, (hashtag, ltuo_location_and_occurrence_time) in\
+                enumerate(ltuo_hashtag_and_ltuo_location_and_occurrence_time):
+            print hashtag_count
+            ltuo_location_and_occurrence_time = sorted(ltuo_location_and_occurrence_time, key=itemgetter(1))
+            locations = reduce(InfluenceAnalysis._to_locations_based_on_first_occurence, zip(*ltuo_location_and_occurrence_time)[0], [])
+#        for hashtag_count, (hashtag, ltuo_location_and_pure_influence_score) in \
+#                enumerate(Experiments.load_ltuo_test_hashtag_and_ltuo_location_and_pure_influence_score(test_model_id)):
+#            locations = zip(*ltuo_location_and_pure_influence_score)[0]
             mf_location_to_hashtags_location_rank = dict(zip(locations, range(len(locations))))
             print hashtag_count
             for model_id, locations in \
@@ -390,7 +390,7 @@ class InfluenceAnalysis:
                                     ]
                 if len(models_location_rank)>1:
                     misrank_accuracies = map(
-                          InfluenceAnalysis._get_misrank_accuracy,
+                          InfluenceAnalysis._get_rank_accuracy,
                           zip(models_location_rank, [models_location_rank]*len(models_location_rank))
                           )
                     mf_model_id_to_misrank_accuracies[model_id].append(np.mean(misrank_accuracies))
@@ -425,7 +425,7 @@ class InfluenceAnalysis:
                 print models_location_rank
                 if len(models_location_rank)>1:
                     misrank_accuracies = map(
-                          InfluenceAnalysis._get_misrank_accuracy,
+                          InfluenceAnalysis._get_rank_accuracy,
                           zip(models_location_rank, [models_location_rank]*len(models_location_rank))
                           )
                     mf_model_id_to_misrank_accuracies[model_id].append(np.mean(misrank_accuracies))
@@ -515,8 +515,8 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.influence_clusters(model_ids)
 #        InfluenceAnalysis.sharing_probability_examples(model_ids)
 #        InfluenceAnalysis.model_comparison_with_best_model(best_tuo_model_and_hashtag_tag, ltuo_model_id_and_hashtag_tag, no_of_locations=100)
-#        InfluenceAnalysis.compare_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
-        InfluenceAnalysis.compare_zones_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
+        InfluenceAnalysis.compare_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
+#        InfluenceAnalysis.compare_zones_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
 #        InfluenceAnalysis.plot_location_plots_with_zones(ltuo_model_id_and_hashtag_tag)
 
 class ModelComparison:
