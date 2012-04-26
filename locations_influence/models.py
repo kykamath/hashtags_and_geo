@@ -343,9 +343,9 @@ class Experiments(object):
             ltuo_hashtag_and_ltuo_location_and_occurrence_time.append([hashtag_object['h'], ltuo_location_and_occurrence_time])
         return ltuo_hashtag_and_ltuo_location_and_occurrence_time
     @staticmethod
-    def generate_hashtag_specific_location_and_pure_influence_scores(models_ids):
-        for model_id in models_ids:
-            output_file = f_ltuo_hashtag_and_ltuo_location_and_pure_influence_score%(model_id)
+    def generate_hashtag_specific_location_and_pure_influence_scores(test_models_ids):
+        for test_model_id in test_models_ids:
+            output_file = f_ltuo_hashtag_and_ltuo_location_and_pure_influence_score%(test_model_id)
             GeneralMethods.runCommand('rm -rf %s'%output_file)
             ltuo_hashtag_and_ltuo_location_and_occurrence_time = Experiments.load_ltuo_hashtag_and_ltuo_location_and_occurrence_time()
             for hashtag_count, (hashtag, ltuo_location_and_occurrence_time) in\
@@ -357,13 +357,13 @@ class Experiments(object):
                                                                     key=itemgetter(0)
                                                             )
                                                     ] 
-                print hashtag_count, model_id
+                print hashtag_count, test_model_id
                 ltuo_location_and_pure_influence_score = []
                 for location, location_occurrence_times in ltuo_location_and_occurrence_times:
                     pure_influence_scores = []
                     for neighbor_location, neighbor_location_occurrence_times in ltuo_location_and_occurrence_times:
                         if location!=neighbor_location:
-                            pure_influence_score = MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID[model_id](neighbor_location_occurrence_times, location_occurrence_times)
+                            pure_influence_score = MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID[test_model_id](neighbor_location_occurrence_times, location_occurrence_times)
                             pure_influence_scores.append(pure_influence_score)
                     ltuo_location_and_pure_influence_score.append([location, np.mean(pure_influence_scores)])
                 ltuo_location_and_pure_influence_score = sorted(ltuo_location_and_pure_influence_score, key=itemgetter(1))
@@ -373,6 +373,12 @@ class Experiments(object):
 #                    return locations
 #                print reduce(_to_locations_based_on_first_occurence, zip(*sorted(ltuo_location_and_occurrence_time, key=itemgetter(1)))[0], [])[:5]
 #                if hashtag_count==5: exit()
+    @staticmethod
+    def load_ltuo_test_hashtag_and_ltuo_location_and_pure_influence_score(test_model_id):
+        return [ (hashtag, ltuo_location_and_pure_influence_score)
+                 for hashtag, ltuo_location_and_pure_influence_score in 
+                    iterateJsonFromFile(f_ltuo_hashtag_and_ltuo_location_and_pure_influence_score%(test_model_id))
+                ]
     @staticmethod
     def _cluster_locations_based_on_influence_scores(ltuo_locations_and_influence_score):
         def similarity_matrix(similarity_matrix, (current_point, all_points)):
@@ -441,6 +447,10 @@ class Experiments(object):
                   ]
         hashtag_tag = wout_extra_hashtags_tag
         
+        test_model_ids = [
+                      InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
+                  ]
+        
 #        START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER = datetime(2011, 5, 1), datetime(2011, 12, 31), 'complete_prop' # Complete propagation duration
         
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_pure_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER, hashtag_tag)
@@ -448,7 +458,7 @@ class Experiments(object):
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 
-        Experiments.generate_hashtag_specific_location_and_pure_influence_scores(model_ids)
+        Experiments.generate_hashtag_specific_location_and_pure_influence_scores(test_model_ids)
 
 if __name__ == '__main__':
     Experiments.run()
