@@ -13,7 +13,8 @@ from settings import tuo_location_and_tuo_neighbor_location_and_pure_influence_s
     tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file, \
     tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score_file, \
     w_extra_hashtags_tag, wout_extra_hashtags_tag, f_hashtag_objects, \
-    f_ltuo_location_and_ltuo_hashtag_and_occurrence_time
+    f_ltuo_location_and_ltuo_hashtag_and_occurrence_time, \
+    f_ltuo_hashtag_and_ltuo_location_and_pure_influence_score
 from analysis import iterateJsonFromFile
 from itertools import groupby
 from datetime import datetime
@@ -342,6 +343,37 @@ class Experiments(object):
             ltuo_hashtag_and_ltuo_location_and_occurrence_time.append([hashtag_object['h'], ltuo_location_and_occurrence_time])
         return ltuo_hashtag_and_ltuo_location_and_occurrence_time
     @staticmethod
+    def generate_hashtag_specific_location_and_pure_influence_scores(models_ids):
+        for model_id in models_ids:
+            output_file = f_ltuo_hashtag_and_ltuo_location_and_pure_influence_score%(model_id)
+            GeneralMethods.runCommand('rm -rf %s'%output_file)
+            ltuo_hashtag_and_ltuo_location_and_occurrence_time = Experiments.load_ltuo_hashtag_and_ltuo_location_and_occurrence_time()
+            for hashtag_count, (hashtag, ltuo_location_and_occurrence_time) in\
+                    enumerate(ltuo_hashtag_and_ltuo_location_and_occurrence_time):
+                ltuo_location_and_occurrence_times = [(location, sorted(zip(*ito_location_and_occurrence_time)[1]))
+                                                        for location, ito_location_and_occurrence_time in
+                                                            groupby(
+                                                                    sorted(ltuo_location_and_occurrence_time, key=itemgetter(0)),
+                                                                    key=itemgetter(0)
+                                                            )
+                                                    ] 
+                print hashtag_count, model_id
+                ltuo_location_and_pure_influence_score = []
+                for location, location_occurrence_times in ltuo_location_and_occurrence_times:
+                    pure_influence_scores = []
+                    for neighbor_location, neighbor_location_occurrence_times in ltuo_location_and_occurrence_times:
+                        if location!=neighbor_location:
+                            pure_influence_score = MF_INFLUENCE_MEASURING_MODELS_TO_MODEL_ID[model_id](neighbor_location_occurrence_times, location_occurrence_times)
+                            pure_influence_scores.append(pure_influence_score)
+                    ltuo_location_and_pure_influence_score.append([location, np.mean(pure_influence_scores)])
+                ltuo_location_and_pure_influence_score = sorted(ltuo_location_and_pure_influence_score, key=itemgetter(1))
+                FileIO.writeToFileAsJson([hashtag, ltuo_location_and_pure_influence_score], output_file)
+#                def _to_locations_based_on_first_occurence(locations, location):
+#                    if location not in locations: locations.append(location)
+#                    return locations
+#                print reduce(_to_locations_based_on_first_occurence, zip(*sorted(ltuo_location_and_occurrence_time, key=itemgetter(1)))[0], [])[:5]
+#                if hashtag_count==5: exit()
+    @staticmethod
     def _cluster_locations_based_on_influence_scores(ltuo_locations_and_influence_score):
         def similarity_matrix(similarity_matrix, (current_point, all_points)):
             similarity_matrix.append([1./(np.abs(current_point - point)+1)for point in all_points])
@@ -359,6 +391,25 @@ class Experiments(object):
         ltuo_location_and_global_influence_score = Experiments.load_tuo_location_and_boundary_influence_score(model_id, hashtag_tag)
         no_of_zones, ltuo_location_and_influence_score_and_zone_id \
             = Experiments._cluster_locations_based_on_influence_scores(ltuo_location_and_global_influence_score)
+        # Combine singleton clusters
+        locations, influence_scores, zone_ids = zip(*ltuo_location_and_influence_score_and_zone_id)
+        ltuo_influence_score_and_zone_id = zip(influence_scores, zone_ids)
+        ltuo_zone_id_and_no_of_locations = [(zone_id, len(list(ito_tuo_influence_score_and_zone_id)))
+                                                for zone_id, ito_tuo_influence_score_and_zone_id in
+                                                    groupby(
+                                                            sorted(ltuo_influence_score_and_zone_id, key=itemgetter(1)),
+                                                            key=itemgetter(1)
+                                                    )
+                                            ]
+        singleton_zone_ids = [zone_id for zone_id, no_of_locations in ltuo_zone_id_and_no_of_locations if no_of_locations==1]
+        temp_ltuo_location_and_influence_score_and_zone_id = []
+        for location, influence_score, zone_id in \
+                ltuo_location_and_influence_score_and_zone_id:
+            if zone_id not in singleton_zone_ids: temp_ltuo_location_and_influence_score_and_zone_id.append((location, influence_score, zone_id))
+            else: temp_ltuo_location_and_influence_score_and_zone_id.append((location, influence_score, Experiments.SINGLETON_ZONE_ID))
+        ltuo_location_and_influence_score_and_zone_id = temp_ltuo_location_and_influence_score_and_zone_id
+        no_of_zones=no_of_zones-len(singleton_zone_ids)+1
+        # Rename zone ids
         locations, influence_scores, zone_ids = zip(*ltuo_location_and_influence_score_and_zone_id)
         ltuo_influence_score_and_zone_id = zip(influence_scores, zone_ids)
         ltuo_zone_id_and_min_influence_score = [(zone_id, min(ito_tuo_influence_score_and_zone_id))
@@ -368,42 +419,24 @@ class Experiments(object):
                                                                 key=itemgetter(1)
                                                         )
                                                 ]
-        
-        
         ltuo_zone_id_and_new_zone_id = zip(
                                             zip(*sorted(ltuo_zone_id_and_min_influence_score, key=itemgetter(1)))[0],
                                             range(len(ltuo_zone_id_and_min_influence_score))
                                         )
         mf_zone_id_to_new_zone_id = dict(ltuo_zone_id_and_new_zone_id)
-        assert len(mf_zone_id_to_new_zone_id)==no_of_zones
         temp_ltuo_location_and_influence_score_and_zone_id = []
         for location, influence_score, zone_id in \
                 ltuo_location_and_influence_score_and_zone_id:
             temp_ltuo_location_and_influence_score_and_zone_id.append([location, influence_score, mf_zone_id_to_new_zone_id[zone_id]])
         ltuo_location_and_influence_score_and_zone_id = temp_ltuo_location_and_influence_score_and_zone_id
-#        ltuo_influence_score_and_zone_id = zip(influence_scores, zone_ids)
-#        ltuo_zone_id_and_no_of_locations = [(zone_id, len(list(ito_tuo_influence_score_and_zone_id)))
-#                                                for zone_id, ito_tuo_influence_score_and_zone_id in
-#                                                    groupby(
-#                                                            sorted(ltuo_influence_score_and_zone_id, key=itemgetter(1)),
-#                                                            key=itemgetter(1)
-#                                                    )
-#                                            ]
-#        singleton_zone_ids = [zone_id for zone_id, no_of_locations in ltuo_zone_id_and_no_of_locations if no_of_locations==1]
-#        temp_ltuo_location_and_influence_score_and_zone_id = []
-#        for location, influence_score, zone_id in \
-#                ltuo_location_and_influence_score_and_zone_id:
-#            if zone_id not in singleton_zone_ids: temp_ltuo_location_and_influence_score_and_zone_id.append((location, influence_score, zone_id))
-#            else: temp_ltuo_location_and_influence_score_and_zone_id.append((location, influence_score, Experiments.SINGLETON_ZONE_ID))
-#        ltuo_location_and_influence_score_and_zone_id = temp_ltuo_location_and_influence_score_and_zone_id
-#        no_of_zones=no_of_zones-len(singleton_zone_ids)+1
+        
         return no_of_zones, ltuo_location_and_influence_score_and_zone_id
     @staticmethod
     def run():
         model_ids = [
-                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, 
-                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, 
+#                      InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, 
                       InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE,
                   ]
         hashtag_tag = wout_extra_hashtags_tag
@@ -414,6 +447,8 @@ class Experiments(object):
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_influence_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER, hashtag_tag)
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
 #        Experiments.generate_tuo_location_and_tuo_neighbor_location_and_sharing_affinity_score(model_ids, START_TIME, END_TIME, WINDOW_OUTPUT_FOLDER)
+
+        Experiments.generate_hashtag_specific_location_and_pure_influence_scores(model_ids)
 
 if __name__ == '__main__':
     Experiments.run()
