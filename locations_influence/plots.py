@@ -393,7 +393,7 @@ class InfluenceAnalysis:
                           zip(models_location_rank, [models_location_rank]*len(models_location_rank))
                           )
                     mf_model_id_to_misrank_accuracies[model_id].append(np.mean(misrank_accuracies))
-                    print '\t '.join([hashtag_count, len(ltuo_location_and_occurrence_time), np.mean(misrank_accuracies)])
+                    print '\t '.join([str(hashtag_count), str(len(ltuo_location_and_occurrence_time)), str(np.mean(misrank_accuracies))])
         for model_id, misrank_accuracies in \
                 mf_model_id_to_misrank_accuracies.iteritems():
             print model_id, np.mean(misrank_accuracies)
