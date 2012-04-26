@@ -422,14 +422,14 @@ class InfluenceAnalysis:
             for model_id, mf_location_to_zone_id in \
                     mf_model_id_to_mf_location_to_zone_id.iteritems():
                 models_location_rank = [mf_location_to_zone_id[location] for location in locations if location in mf_location_to_zone_id]
-                print models_location_rank
+#                print models_location_rank
                 if len(models_location_rank)>1:
                     misrank_accuracies = map(
                           InfluenceAnalysis._get_rank_accuracy,
                           zip(models_location_rank, [models_location_rank]*len(models_location_rank))
                           )
                     mf_model_id_to_misrank_accuracies[model_id].append(np.mean(misrank_accuracies))
-            exit()
+#            exit()
         for model_id, misrank_accuracies in \
                 mf_model_id_to_misrank_accuracies.iteritems():
             print model_id, np.mean(misrank_accuracies)
