@@ -192,7 +192,8 @@ class InfluenceAnalysis:
                             for location in locations: 
     #                            if isWithinBoundingBox(location, PARTIAL_WORLD_BOUNDARY): 
                                 m.drawgreatcircle(location[1], location[0], input_location[1], input_location[0], color='#FAA31B', lw=1., alpha=0.5)
-                            plotPointsOnWorldMap([input_location], blueMarble=False, bkcolor='#CFCFCF', c='#003CFF', s=40, lw = 0)
+#                            plotPointsOnWorldMap([input_location], blueMarble=False, bkcolor='#CFCFCF', c='#003CFF', s=40, lw = 0)
+                            plotPointsOnWorldMap([input_location], blueMarble=False, bkcolor='#2084da', c='#003CFF', s=40, lw = 0)
                             FileIO.createDirectoryForFile(output_file)
                             print output_file
                             plt.savefig(output_file)
