@@ -188,7 +188,7 @@ class InfluenceAnalysis:
                         locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
 #                        locations = filter(lambda location: isWithinBoundingBox(location, PARTIAL_WORLD_BOUNDARY), locations)
                         if locations:
-                            _, m = plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#CFCFCF', c='#FF00FF', returnBaseMapObject=True, lw = 0)
+                            _, m = plotPointsOnWorldMap(locations, blueMarble=False, bkcolor='#2084da', c='#FF00FF', returnBaseMapObject=True, lw = 0)
                             for location in locations: 
     #                            if isWithinBoundingBox(location, PARTIAL_WORLD_BOUNDARY): 
                                 m.drawgreatcircle(location[1], location[0], input_location[1], input_location[0], color='#FAA31B', lw=1., alpha=0.5)
