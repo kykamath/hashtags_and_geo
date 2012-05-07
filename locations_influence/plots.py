@@ -5,6 +5,7 @@ Created on Apr 14, 2012
 '''
 from models import Experiments, InfluenceMeasuringModels,\
     JACCARD_SIMILARITY
+import random
 import matplotlib.pyplot as plt
 import numpy as np
 from library.classes import GeneralMethods
@@ -12,7 +13,7 @@ from library.plotting import savefig, splineSmooth
 from operator import itemgetter
 from settings import analysis_folder, PARTIAL_WORLD_BOUNDARY,\
     tuo_location_and_tuo_neighbor_location_and_mf_influence_type_and_similarity_file,\
-    w_extra_hashtags_tag, wout_extra_hashtags_tag
+    w_extra_hashtags_tag, wout_extra_hashtags_tag, fld_results
 from library.file_io import FileIO
 from library.geo import isWithinBoundingBox, getLocationFromLid,\
     plotPointsOnWorldMap, getLatticeLid, getHaversineDistance,\
@@ -23,6 +24,7 @@ from scipy.stats.stats import pearsonr
 from itertools import groupby
 import networkx as nx
 from library.graphs import clusterUsingAffinityPropagation
+from locations_influence.settings import fld_results
 
 class InfluenceAnalysis:
     @staticmethod
@@ -82,7 +84,7 @@ class InfluenceAnalysis:
     @staticmethod
     def location_influence_plots(model_ids, no_of_bins_for_influence_score=100):
         for model_id in model_ids:
-            output_file_format = 'images/%s/'%(GeneralMethods.get_method_id()) + '%s_%s.png'
+            output_file_format = fld_results%(GeneralMethods.get_method_id()) + '%s_%s.png'
             tuo_input_location_and_label_and_marking_locations = [ 
 #                                [ '40.6000_-73.9500', 'new_york', ['-23.2000_-46.4000', '-22.4750_-42.7750', '51.4750_0.0000', '33.3500_-118.1750', '29.7250_-97.1500','30.4500_-95.7000']],
                                 ['29.7250_-97.1500', 'austin',  ['-23.2000_-46.4000', '-22.4750_-42.7750', '51.4750_0.0000', '33.3500_-118.1750', '39.1500_-83.3750','30.4500_-95.7000', '40.6000_-73.9500']], 
@@ -114,7 +116,7 @@ class InfluenceAnalysis:
                              '30.4500_-95.7000'
                              ]
         for model_id, hashtag_tag in ltuo_model_id_and_hashtag_tag:
-            output_file = 'images/%s/'%(GeneralMethods.get_method_id()) + '%s_%s.png'%(model_id, hashtag_tag)
+            output_file = fld_results%(GeneralMethods.get_method_id()) + '%s_%s.png'%(model_id, hashtag_tag)
             tuo_location_and_global_influence_score = Experiments.load_tuo_location_and_boundary_influence_score(model_id, hashtag_tag)
             InfluenceAnalysis._plot_scores(tuo_location_and_global_influence_score, marking_locations, no_of_bins_for_influence_score, smooth=True)
             plt.ylim(ymin=0.0)
@@ -141,7 +143,7 @@ class InfluenceAnalysis:
             for _, boundary_label, boundary_color in tuples_of_boundary_and_boundary_label: plt.scatter([0], [0], label=boundary_label, c=boundary_color, lw = 0)
             plt.legend(loc=3, ncol=4, mode="expand",)
 #            plt.show()
-            savefig('images/%s/%s_%s.png'%(GeneralMethods.get_method_id(), model_id, hashtag_tag))
+            savefig(fld_results%(GeneralMethods.get_method_id()) +'%s_%s.png'%(model_id, hashtag_tag))
     @staticmethod
     def plot_global_influencers(ltuo_model_id_and_hashtag_tag):
         tuples_of_boundary_and_boundary_label = [
@@ -160,7 +162,7 @@ class InfluenceAnalysis:
             for _, boundary_label, boundary_color in tuples_of_boundary_and_boundary_label: plt.scatter([0], [0], label=boundary_label, c=boundary_color, lw = 0)
 #            plt.legend(loc=3, ncol=4, mode="expand",)
 #            plt.show()
-            savefig('images/%s/%s_%s.png'%(GeneralMethods.get_method_id(), model_id, hashtag_tag))
+            savefig(fld_results%(GeneralMethods.get_method_id()) +'%s_%s.png'%(model_id, hashtag_tag))
     @staticmethod
     def plot_locations_influence_on_world_map(ltuo_model_id_and_hashtag_tag, noOfInfluencers=10, percentage_of_locations=0.15):
         input_locations = [
@@ -179,7 +181,7 @@ class InfluenceAnalysis:
                         tuo_location_and_tuo_neighbor_location_and_locations_influence_score:
                     if input_location==location:
                         input_location = getLocationFromLid(input_location.replace('_', ' '))
-                        output_file = 'images/%s/%s_%s/%s.png'%(GeneralMethods.get_method_id(), model_id, hashtag_tag, label)
+                        output_file = fld_results%GeneralMethods.get_method_id() + '/%s_%s/%s.png'%(model_id, hashtag_tag, label)
                         number_of_outgoing_influences = int(len(tuo_neighbor_location_and_locations_influence_score)*percentage_of_locations)
                         if number_of_outgoing_influences==0: number_of_outgoing_influences=len(tuo_neighbor_location_and_locations_influence_score)
                         locations = zip(*tuo_neighbor_location_and_locations_influence_score)[0][:number_of_outgoing_influences]
@@ -367,6 +369,8 @@ class InfluenceAnalysis:
         return 1 - (total_misranked_locations/(len(locations_order_for_hashtag)-1))
     @staticmethod
     def compare_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id):
+        output_file = fld_results%GeneralMethods.get_method_id()+'results.csv'
+        GeneralMethods.runCommand('rm -rf %s'%output_file)
         mf_model_id_to_misrank_accuracies = defaultdict(list)
         mf_model_id_to_locations = {}
         for model_id, hashtag_tag in ltuo_model_id_and_hashtag_tag:
@@ -393,12 +397,25 @@ class InfluenceAnalysis:
                           zip(models_location_rank, [models_location_rank]*len(models_location_rank))
                           )
                     mf_model_id_to_misrank_accuracies[model_id].append(np.mean(misrank_accuracies))
-                    print '\t '.join([str(hashtag_count), str(len(ltuo_location_and_occurrence_time)), str(np.mean(misrank_accuracies))])
-        for model_id, misrank_accuracies in \
-                mf_model_id_to_misrank_accuracies.iteritems():
-            print model_id, np.mean(misrank_accuracies)
+                    
+                    #Random model
+#                    random_location_rank = range(len(locations))
+                    random_location_rank = models_location_rank
+                    random.shuffle(random_location_rank)
+                    random_misrank_accuracies = map(
+                          InfluenceAnalysis._get_rank_accuracy,
+                          zip(random_location_rank, [random_location_rank]*len(random_location_rank))
+                          )
+                    data = ', '.join([str(hashtag_count), str(len(ltuo_location_and_occurrence_time)), str(np.mean(misrank_accuracies)), str(np.mean(random_misrank_accuracies)), str(len(models_location_rank))])
+                    FileIO.writeToFile(data, output_file)
+                    
+#        for model_id, misrank_accuracies in \
+#                mf_model_id_to_misrank_accuracies.iteritems():
+#            print model_id, np.mean(misrank_accuracies)
     @staticmethod
     def compare_zones_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id):
+        output_file = fld_results%GeneralMethods.get_method_id()+'results.csv'
+        GeneralMethods.runCommand('rm -rf %s'%output_file)
         mf_model_id_to_misrank_accuracies = defaultdict(list)
         mf_model_id_to_mf_location_to_zone_id = {}
         for model_id, hashtag_tag in ltuo_model_id_and_hashtag_tag:
@@ -429,12 +446,24 @@ class InfluenceAnalysis:
                           zip(models_location_rank, [models_location_rank]*len(models_location_rank))
                           )
                     mf_model_id_to_misrank_accuracies[model_id].append(np.mean(misrank_accuracies))
+                    
+                    #Random model
+#                    random_location_rank = range(len(locations))
+                    random_location_rank = models_location_rank
+                    random.shuffle(random_location_rank)
+                    random_misrank_accuracies = map(
+                          InfluenceAnalysis._get_rank_accuracy,
+                          zip(random_location_rank, [random_location_rank]*len(random_location_rank))
+                          )
+                    data = ', '.join([str(hashtag_count), str(len(ltuo_location_and_occurrence_time)), str(np.mean(misrank_accuracies)), str(np.mean(random_misrank_accuracies)), str(len(models_location_rank))])
+                    FileIO.writeToFile(data, output_file)
 #            exit()
-        for model_id, misrank_accuracies in \
-                mf_model_id_to_misrank_accuracies.iteritems():
-            print model_id, np.mean(misrank_accuracies)
+#        for model_id, misrank_accuracies in \
+#                mf_model_id_to_misrank_accuracies.iteritems():
+#            print model_id, np.mean(misrank_accuracies)
     @staticmethod
     def plot_location_plots_with_zones(ltuo_model_id_and_hashtag_tag, no_of_bins_for_influence_score=100):
+        output_file_format = fld_results+'/%s_%s.png'
         for model_id, hashtag_tag in ltuo_model_id_and_hashtag_tag:
             no_of_zones, ltuo_location_and_influence_score_and_zone_id = \
                 Experiments.get_location_with_zone_ids(model_id, hashtag_tag)
@@ -474,10 +503,64 @@ class InfluenceAnalysis:
 #                if box_width==0: zero_size_cluster_ltuo_box_start_and_box_width.append((box_start, 0.0001))
 #            plt.broken_barh(zero_size_cluster_ltuo_box_start_and_box_width , (0, max_y_tick), facecolors='r', alpha=0.25, lw=0)
 #            plt.xlim(xmin=-0.0025, xmax=0.0025)
-            
-            output_file = 'images/%s/%s_%s.png'%(GeneralMethods.get_method_id(), model_id, hashtag_tag)
+            output_file = output_file_format%(GeneralMethods.get_method_id(), model_id, hashtag_tag)
             savefig(output_file)
 #            plt.show()
+
+    @staticmethod
+    def plot_model_performance_with_random():
+        PLAIN = InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE
+        RANDOM = 'random'
+        ZONE = InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE + ' with zone'
+        ACCURACY = 20
+        def get_ltuo_hashtag_and_model_rank_accuracy_and_random_rank_accuracy(file):
+            ltuo_hashtag_and_model_rank_accuracy_and_random_rank_accuracy = []
+            for data in FileIO.iterateLinesFromFile(file):
+#                hashtag, model_rank_accuracy, random_rank_accuracy = data.split(',')[1:3]
+                data = data.split(',')[2:5]
+                ltuo_hashtag_and_model_rank_accuracy_and_random_rank_accuracy.append([float(i) for i in [data[2], data[0], data[1]]])
+            return ltuo_hashtag_and_model_rank_accuracy_and_random_rank_accuracy
+        f_plain_model = fld_results%('%s/%s/'%('InfluenceAnalysis', 'compare_with_test_set')) + 'results.csv'
+        f_zone_model = fld_results%('%s/%s/'%('InfluenceAnalysis', 'compare_zones_with_test_set')) + 'results.csv'
+        plain_ltuo_hashtag_and_model_rank_accuracy_and_random_rank_accuracy = \
+            get_ltuo_hashtag_and_model_rank_accuracy_and_random_rank_accuracy(f_plain_model)
+        zone_ltuo_hashtag_and_model_rank_accuracy_and_random_rank_accuracy = \
+            get_ltuo_hashtag_and_model_rank_accuracy_and_random_rank_accuracy(f_zone_model)
+        mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies = defaultdict(dict)
+        for hashtag_occurrence_count, model_rank_accuracy, random_rank_accuracy in \
+                plain_ltuo_hashtag_and_model_rank_accuracy_and_random_rank_accuracy:
+            hashtag_occurrence_count = int(hashtag_occurrence_count)/ACCURACY*ACCURACY + ACCURACY
+            if hashtag_occurrence_count not in \
+                    mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies[PLAIN]:
+                mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies[PLAIN][hashtag_occurrence_count]=[]
+            mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies[PLAIN][hashtag_occurrence_count].append(model_rank_accuracy)
+            if hashtag_occurrence_count not in \
+                    mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies[RANDOM]:
+                mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies[RANDOM][hashtag_occurrence_count]=[]
+            mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies[RANDOM][hashtag_occurrence_count].append(random_rank_accuracy)
+        for hashtag_occurrence_count, model_rank_accuracy, random_rank_accuracy in \
+                zone_ltuo_hashtag_and_model_rank_accuracy_and_random_rank_accuracy:
+            hashtag_occurrence_count = int(hashtag_occurrence_count)/ACCURACY*ACCURACY + ACCURACY
+            if hashtag_occurrence_count not in \
+                    mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies[ZONE]:
+                mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies[ZONE][hashtag_occurrence_count]=[]
+            mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies[ZONE][hashtag_occurrence_count].append(model_rank_accuracy)
+        for model_type, mf_hashtag_occurrence_count_to_rank_accuracies in \
+                mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies.iteritems():
+            for hashtag_occurrence_count, rank_accuracies in \
+                    sorted(mf_hashtag_occurrence_count_to_rank_accuracies.iteritems(), key=itemgetter(0)):
+                if len(rank_accuracies) > 0: 
+                    mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies[model_type][hashtag_occurrence_count] = \
+                        np.mean(rank_accuracies)
+                    print model_type, hashtag_occurrence_count, len(rank_accuracies)
+                else: del mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies[model_type][hashtag_occurrence_count]
+        for model_type, mf_hashtag_occurrence_count_to_rank_accuracies in \
+                mf_model_type_to_mf_hashtag_occurrence_count_to_rank_accuracies.iteritems():
+            x_hashtag_occurrence_count, y_rank_accuracies = zip(*sorted(mf_hashtag_occurrence_count_to_rank_accuracies.iteritems(), key=itemgetter(0)))
+#            x_hashtag_occurrence_count, y_rank_accuracies = splineSmooth(x_hashtag_occurrence_count, y_rank_accuracies)
+            plt.plot(x_hashtag_occurrence_count, y_rank_accuracies,label=model_type)
+        plt.legend()
+        plt.show()
     @staticmethod
     def run():
         model_ids = [
@@ -492,9 +575,9 @@ class InfluenceAnalysis:
 #              (InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, wout_extra_hashtags_tag),
 #              (InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, wout_extra_hashtags_tag),
 #              (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, wout_extra_hashtags_tag),
-              (InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, w_extra_hashtags_tag),
-              (InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, w_extra_hashtags_tag),
-              (InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, w_extra_hashtags_tag),
+#              (InfluenceMeasuringModels.ID_FIRST_OCCURRENCE, w_extra_hashtags_tag),
+#              (InfluenceMeasuringModels.ID_MEAN_OCCURRENCE, w_extra_hashtags_tag),
+#              (InfluenceMeasuringModels.ID_AGGREGATE_OCCURRENCE, w_extra_hashtags_tag),
               (InfluenceMeasuringModels.ID_WEIGHTED_AGGREGATE_OCCURRENCE, w_extra_hashtags_tag),
           ]
         
@@ -510,14 +593,17 @@ class InfluenceAnalysis:
 #        InfluenceAnalysis.plot_local_influencers(ltuo_model_id_and_hashtag_tag)
 #        InfluenceAnalysis.plot_global_influencers(ltuo_model_id_and_hashtag_tag)
         InfluenceAnalysis.plot_locations_influence_on_world_map(ltuo_model_id_and_hashtag_tag)
+
 #        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_jaccard_similarity(model_ids)
 #        InfluenceAnalysis.plot_correlation_between_influence_similarity_and_distance(model_ids)
 #        InfluenceAnalysis.influence_clusters(model_ids)
 #        InfluenceAnalysis.sharing_probability_examples(model_ids)
+
 #        InfluenceAnalysis.model_comparison_with_best_model(best_tuo_model_and_hashtag_tag, ltuo_model_id_and_hashtag_tag, no_of_locations=100)
 #        InfluenceAnalysis.compare_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
 #        InfluenceAnalysis.compare_zones_with_test_set(ltuo_model_id_and_hashtag_tag, test_model_id)
 #        InfluenceAnalysis.plot_location_plots_with_zones(ltuo_model_id_and_hashtag_tag)
+#        InfluenceAnalysis.plot_model_performance_with_random()
 
 class ModelComparison:
     @staticmethod
