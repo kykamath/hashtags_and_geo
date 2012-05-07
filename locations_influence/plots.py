@@ -166,9 +166,9 @@ class InfluenceAnalysis:
     @staticmethod
     def plot_locations_influence_on_world_map(ltuo_model_id_and_hashtag_tag, noOfInfluencers=10, percentage_of_locations=0.15):
         input_locations = [
-#                               ('40.6000_-73.9500', 'new_york'),
-#                               ('33.3500_-118.1750', 'los_angeles'),
-#                               ('29.7250_-97.1500', 'austin'),
+                               ('40.6000_-73.9500', 'new_york'),
+                               ('33.3500_-118.1750', 'los_angeles'),
+                               ('29.7250_-97.1500', 'austin'),
                            ('30.4500_-95.7000', 'college_station'),
                             ('-22.4750_-42.7750', 'rio'),
                            ('51.4750_0.0000', 'london'),
