@@ -12,7 +12,7 @@ from collections import defaultdict
 
 LOCATION_ACCURACY = 1.45 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes
-MIN_HASHTAG_OCCURENCES = 50
+MIN_HASHTAG_OCCURENCES = 100
 
 # Parameters for the MR Job that will be logged.
 PARAMS_DICT = dict(PARAMS_DICT = True,
