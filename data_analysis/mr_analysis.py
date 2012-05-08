@@ -49,8 +49,28 @@ def combine_hashtag_instances(hashtag, ito_ltuo_lid_and_occurrence_time):
                 e[1]>=HASHTAG_STARTING_WINDOW and l[1]<=HASHTAG_ENDING_WINDOW:
             return {
                     'hashtag': hashtag, 
-                    'ltuo_lid_and_s_occurrence_time': sorted(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
+                    'ltuo_lid_and_s_interval': sorted(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
                     }
+
+def get_mf_interval_to_mf_lid_to_occurrence_count(hashtag_object):
+    mf_interval_to_mf_lid_to_occurrence_count = defaultdict(dict)
+    for lid, interval in hashtag_object['ltuo_lid_and_s_interval']:
+        if lid not in \
+                mf_interval_to_mf_lid_to_occurrence_count[interval]:
+            mf_interval_to_mf_lid_to_occurrence_count[interval][lid] = 0.
+        mf_interval_to_mf_lid_to_occurrence_count[interval][lid]+=1
+    return mf_interval_to_mf_lid_to_occurrence_count
+
+def get_mf_lid_to_occurrence_count(hashtag_object):
+    mf_lid_to_occurrence_count = defaultdict(float)
+    mf_interval_to_mf_lid_to_occurrence_count = \
+        get_mf_interval_to_mf_lid_to_occurrence_count(hashtag_object)
+    for interval, mf_lid_to_occurrence_count in \
+            mf_interval_to_mf_lid_to_occurrence_count.iteritems():
+        for lid, occurrence_count in \
+                mf_lid_to_occurrence_count.iteritems():
+            mf_lid_to_occurrence_count[lid]+=occurrence_count 
+    return mf_lid_to_occurrence_count
 
 class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
