@@ -6,7 +6,8 @@ Created on May 8, 2012
 
 from datetime import datetime
 from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
-    fld_sky_drive_data_analysis_images, f_tuo_lid_and_distribution_value
+    fld_sky_drive_data_analysis_images, f_tuo_lid_and_distribution_value,\
+    f_tuo_rank_and_average_percentage_of_occurrences
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
@@ -110,6 +111,7 @@ class DataAnalysis():
     @staticmethod
     def cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, no_of_hashtags):
         input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+        next_input_file = f_tuo_rank_and_average_percentage_of_occurrences%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
         output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags) + GeneralMethods.get_method_id() + '.png'
         GeneralMethods.runCommand('rm -rf %s'%output_file)
         ltuo_lid_and_occurrene_count = []
@@ -124,9 +126,17 @@ class DataAnalysis():
             current_val+=val
             y_fraction_of_occurrences.append(current_val)
         y_fraction_of_occurrences = y_fraction_of_occurrences[:50]
-#        x_percentage_of_locations = [x/(len(y_fraction_of_occurrences)+1.0) for x in range(1,len(y_fraction_of_occurrences)+1)]
+        
+        ltuo_rank_and_average_percentage_of_occurrences = [tuo_rank_and_average_percentage_of_occurrences 
+                                                          for tuo_rank_and_average_percentage_of_occurrences in iterateJsonFromFile(next_input_file)]
+        ltuo_s_rank_and_average_percentage_of_occurrences = sorted(ltuo_rank_and_average_percentage_of_occurrences, key=itemgetter(0))
+        y_average_percentage_of_occurrences = zip(*ltuo_s_rank_and_average_percentage_of_occurrences)[1][:50]
+        
+        
         x_percentage_of_locations = [x for x in range(1,len(y_fraction_of_occurrences)+1)]
-        plt.plot(x_percentage_of_locations, y_fraction_of_occurrences, lw=0, marker='o')   
+        print len(x_percentage_of_locations), len(y_average_percentage_of_occurrences)
+        plt.plot(x_percentage_of_locations, y_fraction_of_occurrences, lw=0, marker='o')  
+        plt.plot(x_percentage_of_locations, y_average_percentage_of_occurrences, lw=0, marker='o')  
         savefig(output_file);
     @staticmethod
     def write_entropy_and_focus(input_files_start_time, input_files_end_time, no_of_hashtags):
