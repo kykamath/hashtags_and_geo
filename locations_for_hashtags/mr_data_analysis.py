@@ -44,7 +44,8 @@ def combine_hashtag_instances(hashtag, ito_ltuo_lid_and_occurrence_time):
 
 class MRDataAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(MRDataAnalysis, self).__init__(*args, **kwargs)
         self.mf_hashtag_to_ltuo_lid_and_occurrence_time = defaultdict(list)
     ''' Start: Methods to load hashtag objects
     '''
