@@ -223,9 +223,9 @@ class MRAnalysis(ModifiedMRJob):
                            )
                    ]
     def job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus(self):
-        self.job_load_hashtag_object() + \
-            [
-                   self.mr(
+        return self.job_load_hashtag_object() + \
+                [
+                    self.mr(
                            mapper=self.map_hashtag_object_to_tuo_hashtag_and_occurrence_count_and_entropy_and_focus, 
                            )
                    ]
