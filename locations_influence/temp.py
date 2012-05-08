@@ -1,76 +1,32 @@
-"""
-Make a "broken" horizontal bar plot, ie one with gaps
-"""
 import matplotlib.pyplot as plt
 
-fig = plt.figure()
-#ax = fig.add_subplot(111)
-plt.broken_barh([ (110, 30), (150, 10) ] , (10, 9), facecolors='blue')
-plt.broken_barh([ (10, 50), (100, 20),  (130, 10)] , (20, 9),
-                facecolors=('red', 'yellow', 'green'), alpha=0.5, lw=0)
-#ax.set_ylim(5,35)
-#ax.set_xlim(0,200)
-#ax.set_xlabel('seconds since start')
-#ax.set_yticks([15,25])
-#ax.set_yticklabels(['Bill', 'Jim'])
-#ax.grid(True)
-#ax.annotate('race interrupted', (61, 25),
-#            xytext=(0.8, 0.9), textcoords='axes fraction',
-#            arrowprops=dict(facecolor='black', shrink=0.05),
-#            fontsize=16,
-#            horizontalalignment='right', verticalalignment='top')
+def plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#85A6D9', returnBaseMapObject = False, pointLabels=[], resolution='l', *args, **kwargs):
+    from mpl_toolkits.basemap import Basemap
+    m = Basemap(projection='mill', llcrnrlon=-180. ,llcrnrlat=-60, urcrnrlon=180. ,urcrnrlat=80, resolution=resolution)
+    if blueMarble: m.bluemarble()
+    else:
+        m.drawmapboundary(fill_color=bkcolor)
+        m.fillcontinents(color='white',lake_color=bkcolor)
+        m.drawcoastlines(color='#6D5F47', linewidth=.4)
+        m.drawcountries(color='#6D5F47', linewidth=.4)
+    
+    lats, lngs = zip(*points)
+    
+    x,y = m(lngs,lats)
+    scatterPlot = m.scatter(x, y, zorder = 2, *args, **kwargs)
+    for population, xpt, ypt in zip(pointLabels, x, y):
+        label_txt = str(population)
+        plt.text( xpt, ypt, label_txt, color = 'black', size='small', horizontalalignment='center', verticalalignment='center', zorder = 3)
+    if not returnBaseMapObject: return scatterPlot
+    else: return (scatterPlot, m)
 
+
+input_location = [43.644026,-99.755859] # Source point []
+locations = [[40.780541,-78.134766], [27.683528,-106.171875], [46.498392,-121.640625]] # List of locations [[lat1, lng1], [lat2, lng2], ... ]
+_, m = plotPointsOnWorldMap(locations, resolution= 'l', blueMarble=True, bkcolor='#ffffff', c='#FF00FF', returnBaseMapObject=True, lw = 0)
+for location in locations: 
+    m.drawgreatcircle(location[1], location[0], input_location[1], input_location[0], color='#FAA31B', lw=1., alpha=0.5)
+plotPointsOnWorldMap([input_location], resolution= 'l', blueMarble=True, bkcolor='#ffffff', c='#003CFF', s=40, lw = 0)
 plt.show()
-
-#import numpy as np
-#from sklearn.cluster.affinity_propagation_ import AffinityPropagation
-#
-#def cluster_locations_based_on_influence_scores(ltuo_locations_and_influence_scores):
-#    def similarity_matrix(similarity_matrix, (current_point, all_points)):
-#        similarity_matrix.append([1./(np.abs(current_point - point)+1)for point in all_points])
-#        return similarity_matrix
-#    locations, influence_scores = zip(*ltuo_locations_and_influence_scores)
-#    S = np.array(reduce(
-#                    similarity_matrix,
-#                    zip(influence_scores, [influence_scores]*len(influence_scores)),
-#                    []
-#                ))
-#    af = AffinityPropagation().fit(S)
-#    return (len(af.cluster_centers_indices_), zip(locations, af.labels_))
-#
-#ltuo_locations_and_influence_scores = [
-#                                       ('a',1),
-#                                       ('b',2),
-#                                       ('c',10),
-#                                       ('d',12),
-#                                       ('e',11),
-#                                       ]
-#print cluster_locations_based_on_influence_scores(ltuo_locations_and_influence_scores)
-#
-#
-##def get_misrank_accuracy((real_location_rank, locations_order_for_hashtag)):
-##    position = locations_order_for_hashtag.index(real_location_rank)
-##    def count_greater_than(current_count, (real_location_rank, predicted_location_rank)):
-##        if real_location_rank < predicted_location_rank: current_count+=1
-##        return current_count
-##    def count_lesser_than(current_count, (real_location_rank, predicted_location_rank)):
-##        if real_location_rank > predicted_location_rank: current_count+=1
-##        return current_count
-##    left_side_location_ranks = locations_order_for_hashtag[:position]
-##    right_side_location_ranks = locations_order_for_hashtag[position+1:]
-##    total_misranked_locations = reduce(count_greater_than, zip([real_location_rank]*len(left_side_location_ranks), left_side_location_ranks), 0.0) \
-##                                    + reduce(count_lesser_than, zip([real_location_rank]*len(right_side_location_ranks), right_side_location_ranks), 0.0)
-##    return total_misranked_locations/(len(locations_order_for_hashtag)-1)
-##
-##locations_order_for_hashtag = [3,2,1,4,5]
-##locations_order_for_hashtag = [1,2,3,4,5]
-##locations_order_for_hashtag = [5,4,3,2,1]
-###locations_order_for_hashtag = [5, 1,2,3,4]
-##real_location_rank = 2
-##
-##
-##rank_accuracies = map(
-##                      get_misrank_accuracy,
-##                      zip(locations_order_for_hashtag, [locations_order_for_hashtag]*len(locations_order_for_hashtag))
-##                      )
-##print rank_accuracies
+#    plt.savefig('output_file.png')
+#    plt.clf()
