@@ -72,10 +72,33 @@ class DataAnalysis():
                  ltuo_country_and_s_occurrence_count:
             FileIO.writeToFileAsJson([country, occurrence_count, occurrence_count/float(total_occurrences)], output_file)
     @staticmethod
+    def fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time):
+        input_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + 'DataAnalysis/occurrence_distribution_by_country.txt'
+        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + GeneralMethods.get_method_id() + '.png'
+        y_fraction_of_occurrences = [fraction_of_occurrences for (_,_,fraction_of_occurrences) in
+                                        FileIO.iterateJsonFromFile(input_file)]
+        plt.semilogy(range(1,len(y_fraction_of_occurrences)+1), y_fraction_of_occurrences, lw=0, marker='o')   
+        savefig(output_file);
+    @staticmethod
+    def cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time):
+        input_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + 'DataAnalysis/occurrence_distribution_by_country.txt'
+        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + GeneralMethods.get_method_id() + '.png'
+        fraction_of_occurrences = [fraction_of_occurrences for (_,_,fraction_of_occurrences) in
+                                        FileIO.iterateJsonFromFile(input_file)]
+        y_fraction_of_occurrences = []
+        current_val = 0.0
+        for val in fraction_of_occurrences:
+            current_val+=val
+            y_fraction_of_occurrences.append(current_val)
+        plt.plot(range(1,len(y_fraction_of_occurrences)+1), y_fraction_of_occurrences, lw=0, marker='o')   
+        savefig(output_file);
+    @staticmethod
     def run():
         input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2011, 2, 27)
 #        DataAnalysis.hashtag_distribution(input_files_start_time, input_files_end_time)
-        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time)
+#        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time)
+#        DataAnalysis.fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
+        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
 if __name__ == '__main__':
     DataAnalysis.run()
