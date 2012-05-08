@@ -219,6 +219,10 @@ class DataAnalysis():
             plt.show()
         input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
         ltuo_hashtag_and_occurrence_count_and_entropy_and_focus = [data for data in iterateJsonFromFile(input_file)]
+        occs = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[1]
+        plt.hist(occs,1000)
+        plt.show()
+        exit()
         entropies = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[2]
         focuses = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[3]
         focuses = zip(*focuses)[1]

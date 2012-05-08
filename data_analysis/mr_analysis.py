@@ -17,8 +17,9 @@ import numpy as np
 #LOCATION_ACCURACY = 1.45 # 100 miles
 LOCATION_ACCURACY = 0.001 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes
-MIN_HASHTAG_OCCURENCES = 750
-START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
+MIN_HASHTAG_OCCURENCES = 10
+#START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
+START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2011, 4, 28)
 
 
 #Distribution Paramter
