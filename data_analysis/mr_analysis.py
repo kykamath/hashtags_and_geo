@@ -184,14 +184,16 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def map_hashtag_object_to_tuo_rank_and_percentage_of_occurrences(self, hashtag, hashtag_object):
         mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
-        ltuo_lid_and_r_occurrence_count = sorted(mf_lid_to_occurrence_count.items(), key=itemgetter(1), reverse=True)
-        total_occurrence_count = float(sum(zip(*ltuo_lid_and_r_occurrence_count)[1]))
-        for rank, (_, occurrence_count) in enumerate(ltuo_lid_and_r_occurrence_count[:K_TOP_RANK]):
-            yield rank+1, occurrence_count/total_occurrence_count
+        yield len(mf_lid_to_occurrence_count), 1
+#        ltuo_lid_and_r_occurrence_count = sorted(mf_lid_to_occurrence_count.items(), key=itemgetter(1), reverse=True)
+#        total_occurrence_count = float(sum(zip(*ltuo_lid_and_r_occurrence_count)[1]))
+#        for rank, (_, occurrence_count) in enumerate(ltuo_lid_and_r_occurrence_count[:K_TOP_RANK]):
+#            yield rank+1, occurrence_count/total_occurrence_count
     def red_tuo_rank_and_ito_percentage_of_occurrences_to_tuo_rank_and_average_percentage_of_occurrences(self, rank, ito_percentage_of_occurrences):
         red_percentage_of_occurrences = []
         for percentage_of_occurrence in ito_percentage_of_occurrences: red_percentage_of_occurrences.append(percentage_of_occurrence)
-        yield rank, [rank, np.mean(red_percentage_of_occurrences)]
+#        yield rank, [rank, np.mean(red_percentage_of_occurrences)]
+        yield rank, [rank, sum(red_percentage_of_occurrences)]
     ''' End: Methods to get distribution from top-k hashtags
     '''
     
@@ -200,7 +202,7 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def map_hashtag_object_to_tuo_hashtag_and_occurrence_count_and_entropy_and_focus(self, hashtag, hashtag_object):
         mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
-        yield hashtag_object['hashtag'], [hashtag_object['hashtag'], len(hashtag_object['ltuo_lid_and_s_interval']), entropy(mf_lid_to_occurrence_count), focus(mf_lid_to_occurrence_count)]
+        yield hashtag_object['hashtag'], [hashtag_object['hashtag'], len(hashtag_object['ltuo_lid_and_s_interval']), entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count)]
     ''' End: Methods to get entropy and focus for all hashtags
     '''
     

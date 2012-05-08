@@ -7,7 +7,8 @@ Created on May 8, 2012
 from datetime import datetime
 from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
     fld_sky_drive_data_analysis_images, f_tuo_lid_and_distribution_value,\
-    f_tuo_rank_and_average_percentage_of_occurrences
+    f_tuo_rank_and_average_percentage_of_occurrences, \
+    f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
@@ -17,6 +18,7 @@ import shapefile, os
 from library.geo import point_inside_polygon, getLocationFromLid
 from collections import defaultdict
 from library.stats import entropy, focus
+import numpy as np
 
 def iterateJsonFromFile(file):
     for data in FileIO.iterateJsonFromFile(file):
@@ -169,7 +171,42 @@ class DataAnalysis():
             print lid_count
             ltuo_lid_and_occurrene_count.append([lid, distribution_value])
         print sorted(ltuo_lid_and_occurrene_count, key=itemgetter(1), reverse=True)[:5]
-
+        
+    @staticmethod
+    def locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, no_of_hashtags):
+        ACCURACY_NO_OF_OCCURRANCES = 25
+        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+        ltuo_hashtag_and_occurrence_count_and_entropy_and_focus = [data for data in iterateJsonFromFile(input_file)]
+#        for tuo_hashtag_and_occurrence_count_and_entropy_and_focus in \
+#                ltuo_hashtag_and_occurrence_count_and_entropy_and_focus:
+#            print tuo_hashtag_and_occurrence_count_and_entropy_and_focus
+        ltuo_entropy_and_occurrences_count = [(data[2], data[1]) for data in ltuo_hashtag_and_occurrence_count_and_entropy_and_focus]
+        ltuo_focus_and_occurrences_count = [(data[3][1], data[1]) for data in ltuo_hashtag_and_occurrence_count_and_entropy_and_focus]
+        def plot_graph(ltuo_locality_measure_and_occurrences_count):
+            mf_normalized_occurrences_count_to_locality_measures = defaultdict(list)
+            for locality_measure, occurrences_count in \
+                    ltuo_locality_measure_and_occurrences_count:
+                normalized_occurrence_count = int(occurrences_count/ACCURACY_NO_OF_OCCURRANCES)*ACCURACY_NO_OF_OCCURRANCES+ACCURACY_NO_OF_OCCURRANCES
+                mf_normalized_occurrences_count_to_locality_measures[normalized_occurrence_count].append(locality_measure)
+            x_occurrance_counts, y_locality_measures = [], []
+            for k in sorted(mf_normalized_occurrences_count_to_locality_measures):
+                if len(mf_normalized_occurrences_count_to_locality_measures[k]) > 10:
+                    x_occurrance_counts.append(k), y_locality_measures.append(np.mean(mf_normalized_occurrences_count_to_locality_measures[k]))
+            plt.scatter(x_occurrance_counts, y_locality_measures)
+            plt.show()
+#            y_locality_measure, x_occurrences_count = zip(*ltuo_locality_measure_and_occurrences_count)
+#            plt.scatter(x_occurrences_count, y_locality_measure)
+#            plt.semilogx(x_occurrences_count[0], y_locality_measure[0])
+#            plt.show()
+        plot_graph(ltuo_entropy_and_occurrences_count)
+    @staticmethod
+    def cdf_of_locality_measure(input_files_start_time, input_files_end_time, no_of_hashtags):
+        def plot_graph(locality_measures):
+            print locality_measures
+        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+        ltuo_hashtag_and_occurrence_count_and_entropy_and_focus = [data for data in iterateJsonFromFile(input_file)]
+        entropies = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[2]
+        plot_graph(entropies)
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
@@ -181,9 +218,11 @@ class DataAnalysis():
         
 #        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_entropy_and_focus(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_top_locations(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+
+        DataAnalysis.cdf_of_locality_measure(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
