@@ -23,12 +23,11 @@ def getInputFiles(startTime, endTime, folderType='world'):
         yield hdfs_input_folder%folderType+'%s_%s'%(current.year, current.month)
         current+=relativedelta(months=1)   
 
-def mr_analysis(input_files_start_time, input_files_end_time):
-    exit()
+def mr_data_analysis(input_files_start_time, input_files_end_time):
     outputFile = 'tempf'
     runMRJob(MRDataAnalysis, outputFile, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 
 if __name__ == '__main__':
     input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2011, 2, 27)
-    mr_analysis(input_files_start_time, input_files_end_time)
+    mr_data_analysis(input_files_start_time, input_files_end_time)
