@@ -181,8 +181,8 @@ class MRAnalysis(ModifiedMRJob):
         pass
 #        return self.job_load_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
-#        return self.job_write_tweet_count_stats()
-        return self.job_write_tuo_lid_and_distribution_value()
+        return self.job_write_tweet_count_stats()
+#        return self.job_write_tuo_lid_and_distribution_value()
     
 if __name__ == '__main__':
     MRAnalysis.run()

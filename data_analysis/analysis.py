@@ -26,12 +26,12 @@ def getInputFiles(startTime, endTime, folderType='world'):
 
 def mr_data_analysis(input_files_start_time, input_files_end_time):
 #    output_file = f_tuo_normalized_occurrence_count_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'))
-#    output_file = f_tweet_count_stats%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'))
-    output_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'))
+    output_file = f_tweet_count_stats%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'))
+#    output_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'))
     runMRJob(MRAnalysis, output_file, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
 
 if __name__ == '__main__':
-    input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2011, 2, 27)
-#    input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2012, 4, 30)
+#    input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2011, 2, 27)
+    input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2012, 4, 30)
     mr_data_analysis(input_files_start_time, input_files_end_time)
