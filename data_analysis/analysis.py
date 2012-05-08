@@ -39,5 +39,5 @@ def mr_data_analysis(input_files_start_time, input_files_end_time, min_hashtag_o
 if __name__ == '__main__':
 #    input_files_start_time, input_files_end_time, min_hashtag_occurrences = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
 #    input_files_start_time, input_files_end_time, min_hashtag_occurrences = datetime(2011, 2, 1), datetime(2012, 4, 30), MIN_HASHTAG_OCCURENCES
-    input_files_start_time, input_files_end_time, min_hashtag_occurrences = datetime(2011, 2, 1), datetime(2012, 5, 30), MIN_HASHTAG_OCCURENCES
+    input_files_start_time, input_files_end_time, min_hashtag_occurrences = datetime(2011, 2, 1), datetime(2011, 5, 30), MIN_HASHTAG_OCCURENCES
     mr_data_analysis(input_files_start_time, input_files_end_time, min_hashtag_occurrences)
