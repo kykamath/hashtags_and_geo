@@ -80,6 +80,10 @@ class DataAnalysis():
         plt.semilogy(range(1,len(y_fraction_of_occurrences)+1), y_fraction_of_occurrences, lw=0, marker='o')   
         savefig(output_file);
     @staticmethod
+    def fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, no_of_hashtags):
+        input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+        print input_file
+    @staticmethod
     def cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time):
         input_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + 'DataAnalysis/occurrence_distribution_by_country.txt'
         output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + GeneralMethods.get_method_id() + '.png'
@@ -94,11 +98,12 @@ class DataAnalysis():
         savefig(output_file);
     @staticmethod
     def run():
-        input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2011, 2, 27)
+        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
 #        DataAnalysis.hashtag_distribution(input_files_start_time, input_files_end_time)
 #        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time)
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
-        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
+        DataAnalysis.fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
 if __name__ == '__main__':
     DataAnalysis.run()

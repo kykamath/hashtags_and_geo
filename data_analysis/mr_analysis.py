@@ -85,6 +85,8 @@ class MRAnalysis(ModifiedMRJob):
         self.so_lids = set()
         # Variables for tuo_lid_and_distribution_value
         self.mf_lid_to_occurrence_count = defaultdict(float)
+    
+    
     ''' Start: Methods to load hashtag objects
     '''
     def map_checkin_line_to_tuo_hashtag_and_ltuo_lid_and_occurrence_time(self, key, line):
@@ -100,6 +102,8 @@ class MRAnalysis(ModifiedMRJob):
         if hashtagObject: yield hashtag, hashtagObject 
     ''' End: Methods to load hashtag objects
     '''
+    
+    
     ''' Start: Methods to get total tweets and total geo tweets
     '''
     def map_checkin_line_to_tuo_stat_and_stat_value(self, key, line):
@@ -127,6 +131,8 @@ class MRAnalysis(ModifiedMRJob):
             yield stat, [stat, len(reduced_so_stat_vals)]
     ''' End: Methods to get total tweets and total geo tweets
     '''
+    
+    
     ''' Start: Methods to get hashtag occurrence distribution
     '''
     def map_checkin_line_to_tuo_hashtag_and_occurrence_count(self, key, line):
@@ -147,6 +153,8 @@ class MRAnalysis(ModifiedMRJob):
         yield normalized_occurrence_count, [normalized_occurrence_count, distribution_value]
     ''' End: Methods to get hashtag occurrence distribution
     '''
+    
+    
     ''' Start: Methods to get distribution of occurrences in lids
     '''
     def map_checkin_line_to_tuo_lid_and_occurrence_count(self, key, line):
@@ -164,6 +172,7 @@ class MRAnalysis(ModifiedMRJob):
         yield lid, [lid, red_occurrence_count]
     ''' End: Methods to get distribution of occurrences in lids
     '''
+         
          
     ''' MR Jobs
     '''
@@ -208,8 +217,8 @@ class MRAnalysis(ModifiedMRJob):
         pass
 #        return self.job_load_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
-        return self.job_write_tweet_count_stats()
-#        return self.job_write_tuo_lid_and_distribution_value()
+#        return self.job_write_tweet_count_stats()
+        return self.job_write_tuo_lid_and_distribution_value()
     
 if __name__ == '__main__':
     MRAnalysis.run()
