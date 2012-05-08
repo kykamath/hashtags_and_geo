@@ -82,7 +82,18 @@ class DataAnalysis():
     @staticmethod
     def fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, no_of_hashtags):
         input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags) + GeneralMethods.get_method_id() + '.png'
+        GeneralMethods.runCommand('rm -rf %s'%output_file)
         print input_file
+        ltuo_lid_and_occurrene_count = []
+        for lid_count, (lid, distribution_value) in enumerate(iterateJsonFromFile(input_file)):
+            print lid_count
+            ltuo_lid_and_occurrene_count.append([lid, distribution_value])
+        total_occurrences = sum(zip(*ltuo_lid_and_occurrene_count)[1]) + 0.0
+        ltuo_lid_and_r_occurrence_count = sorted(ltuo_lid_and_occurrene_count, key=itemgetter(1), reverse=True)
+        y_fraction_of_occurrences = [r_occurrence_count/total_occurrences for _, r_occurrence_count in ltuo_lid_and_r_occurrence_count]
+        plt.semilogy(range(1,len(y_fraction_of_occurrences)+1), y_fraction_of_occurrences, lw=0, marker='o')   
+        savefig(output_file);
     @staticmethod
     def cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time):
         input_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + 'DataAnalysis/occurrence_distribution_by_country.txt'
