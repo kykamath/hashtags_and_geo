@@ -9,19 +9,24 @@ from library.twitter import getDateTimeObjectFromTweetTimestamp
 from library.geo import getLatticeLid
 from library.classes import GeneralMethods
 from collections import defaultdict
+from datetime import datetime
 
 LOCATION_ACCURACY = 1.45 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes
 MIN_HASHTAG_OCCURENCES = 50
+START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
+
 
 #Distribution Paramter
 DISTRIBUTION_ACCURACY = 100
 
 # Parameters for the MR Job that will be logged.
+HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
 PARAMS_DICT = dict(PARAMS_DICT = True,
                    LOCATION_ACCURACY=LOCATION_ACCURACY,
                    MIN_HASHTAG_OCCURENCES=MIN_HASHTAG_OCCURENCES,
                    TIME_UNIT_IN_SECONDS = TIME_UNIT_IN_SECONDS,
+                   HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
                    )
 
 def iterate_hashtag_occurrences(line):
@@ -39,7 +44,9 @@ def combine_hashtag_instances(hashtag, ito_ltuo_lid_and_occurrence_time):
         for tuo_lid_and_occurrence_time in ltuo_lid_and_occurrence_time: 
             combined_ltuo_lid_and_occurrence_time.append(tuo_lid_and_occurrence_time)
     if combined_ltuo_lid_and_occurrence_time:
-        if len(combined_ltuo_lid_and_occurrence_time)>=MIN_HASHTAG_OCCURENCES:
+        e, l = min(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1]), max(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
+        if len(combined_ltuo_lid_and_occurrence_time)>=MIN_HASHTAG_OCCURENCES and \
+                e[1]>=HASHTAG_STARTING_WINDOW and l[1]<=HASHTAG_ENDING_WINDOW:
             return {
                     'hashtag': hashtag, 
                     'ltuo_lid_and_s_occurrence_time': sorted(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
