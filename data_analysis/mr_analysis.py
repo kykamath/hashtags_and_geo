@@ -45,10 +45,10 @@ def combine_hashtag_instances(hashtag, ito_ltuo_lid_and_occurrence_time):
                     'ltuo_lid_and_s_occurrence_time': sorted(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
                     }
 
-class MRDataAnalysis(ModifiedMRJob):
+class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
-        super(MRDataAnalysis, self).__init__(*args, **kwargs)
+        super(MRAnalysis, self).__init__(*args, **kwargs)
         self.mf_hashtag_to_ltuo_lid_and_occurrence_time = defaultdict(list)
         self.mf_hashtag_to_occurrence_count = defaultdict(float)
     ''' Start: Methods to load hashtag objects
@@ -116,4 +116,4 @@ class MRDataAnalysis(ModifiedMRJob):
 #        return self.job_load_hashtag_object()
         return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 if __name__ == '__main__':
-    MRDataAnalysis.run()
+    MRAnalysis.run()

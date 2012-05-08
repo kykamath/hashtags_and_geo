@@ -6,19 +6,10 @@ Created on May 7, 2012
 from library.file_io import FileIO
 from dateutil.relativedelta import relativedelta
 from library.mrjobwrapper import runMRJob
-from mr_data_analysis import MRDataAnalysis, PARAMS_DICT
+from mr_analysis import MRAnalysis, PARAMS_DICT
 from datetime import datetime
-
-
-############################# Settings ##########################
-hdfs_input_folder = 'hdfs:///user/kykamath/geo/hashtags/%s/'
-
-fld_data_analysis = '/mnt/chevron/kykamath/data/geo/hashtags/data_analysis/%s_%s/'
-
-f_tuo_normalized_occurrence_count_and_distribution_value = fld_data_analysis+'/tuo_normalized_occurrence_count_and_distribution_value'
-#################################################################
-
-
+from settings import hdfs_input_folder, \
+    f_tuo_normalized_occurrence_count_and_distribution_value
 
 def iterateJsonFromFile(file):
     for data in FileIO.iterateJsonFromFile(file):
@@ -34,7 +25,7 @@ def getInputFiles(startTime, endTime, folderType='world'):
 
 def mr_data_analysis(input_files_start_time, input_files_end_time):
     outputFile = f_tuo_normalized_occurrence_count_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'))
-    runMRJob(MRDataAnalysis, outputFile, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, outputFile, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 
 if __name__ == '__main__':
