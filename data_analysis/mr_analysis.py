@@ -129,7 +129,7 @@ class MRAnalysis(ModifiedMRJob):
                            reducer=self.red_tuo_normalized_occurrence_count_and_ito_one_to_tuo_normalized_occurrence_count_and_distribution_value
                            )
                     ]
-    def job_get_tweet_count_stats(self):
+    def job_write_tweet_count_stats(self):
         return [
                    self.mr(
                            mapper=self.map_checkin_line_to_tuo_stat_and_stat_value, 
@@ -141,6 +141,7 @@ class MRAnalysis(ModifiedMRJob):
         pass
 #        return self.job_load_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
-        return self.job_get_tweet_count_stats()
+        return self.job_write_tweet_count_stats()
+    
 if __name__ == '__main__':
     MRAnalysis.run()

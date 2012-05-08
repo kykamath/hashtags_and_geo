@@ -9,7 +9,8 @@ from library.mrjobwrapper import runMRJob
 from mr_analysis import MRAnalysis, PARAMS_DICT
 from datetime import datetime
 from settings import hdfs_input_folder, \
-    f_tuo_normalized_occurrence_count_and_distribution_value
+    f_tuo_normalized_occurrence_count_and_distribution_value,\
+    f_tweet_count_stats
 
 def iterateJsonFromFile(file):
     for data in FileIO.iterateJsonFromFile(file):
@@ -24,7 +25,8 @@ def getInputFiles(startTime, endTime, folderType='world'):
         current+=relativedelta(months=1)   
 
 def mr_data_analysis(input_files_start_time, input_files_end_time):
-    outputFile = f_tuo_normalized_occurrence_count_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'))
+#    outputFile = f_tuo_normalized_occurrence_count_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'))
+    outputFile = f_tweet_count_stats%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'))
     runMRJob(MRAnalysis, outputFile, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 
