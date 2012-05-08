@@ -10,6 +10,7 @@ from library.geo import getLatticeLid
 from library.classes import GeneralMethods
 from collections import defaultdict
 from datetime import datetime
+from library.stats import entropy, focus
 
 LOCATION_ACCURACY = 1.45 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes
@@ -172,7 +173,15 @@ class MRAnalysis(ModifiedMRJob):
         yield lid, [lid, red_occurrence_count]
     ''' End: Methods to get distribution of occurrences in lids
     '''
-         
+        
+    ''' Start: Methods to get get entropy and focus for all hashtags
+    '''
+    def map_hashtag_object_to_tuo_hashtag_and_occurrence_count_and_entropy_and_focus(self, hashtag, hashtag_object):
+        mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
+        yield hashtag['hashtag'], [hashtag['hashtag'], len(hashtag['ltuo_lid_and_s_interval']), entropy(mf_lid_to_occurrence_count), focus(mf_lid_to_occurrence_count)]
+    ''' End: Methods to get get entropy and focus for all hashtags
+    '''
+    
          
     ''' MR Jobs
     '''
@@ -213,12 +222,20 @@ class MRAnalysis(ModifiedMRJob):
                            reducer=self.red_tuo_lid_and_ito_occurrence_count_to_tuo_lid_and_occurrence_count
                            )
                    ]
+    def job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus(self):
+        self.job_load_hashtag_object() + \
+            [
+                   self.mr(
+                           mapper=self.map_hashtag_object_to_tuo_hashtag_and_occurrence_count_and_entropy_and_focus, 
+                           )
+                   ]
     def steps(self):
         pass
 #        return self.job_load_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
-        return self.job_write_tuo_lid_and_distribution_value()
+#        return self.job_write_tuo_lid_and_distribution_value()
+        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus()
     
 if __name__ == '__main__':
     MRAnalysis.run()

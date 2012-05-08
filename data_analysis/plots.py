@@ -15,6 +15,7 @@ from library.plotting import savefig
 import shapefile, os
 from library.geo import point_inside_polygon, getLocationFromLid
 from collections import defaultdict
+from library.stats import entropy, focus
 
 def iterateJsonFromFile(file):
     for data in FileIO.iterateJsonFromFile(file):
@@ -56,9 +57,9 @@ class DataAnalysis():
         plt.loglog([x_normalized_occurrence_count[0]], [y_distribution_value[0]])
         savefig(output_file)
     @staticmethod
-    def occurrence_distribution_by_country(input_files_start_time, input_files_end_time):
-        input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'))
-        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + GeneralMethods.get_method_id() + '.txt'
+    def occurrence_distribution_by_country(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) + GeneralMethods.get_method_id() + '.txt'
         GeneralMethods.runCommand('rm -rf %s'%output_file)
         CountryBoundaries.load()
         mf_country_to_occurrence_count = defaultdict(float)
@@ -71,20 +72,19 @@ class DataAnalysis():
         for country, occurrence_count in\
                  ltuo_country_and_s_occurrence_count:
             FileIO.writeToFileAsJson([country, occurrence_count, occurrence_count/float(total_occurrences)], output_file)
-    @staticmethod
-    def fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time):
-        input_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + 'DataAnalysis/occurrence_distribution_by_country.txt'
-        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + GeneralMethods.get_method_id() + '.png'
-        y_fraction_of_occurrences = [fraction_of_occurrences for (_,_,fraction_of_occurrences) in
-                                        FileIO.iterateJsonFromFile(input_file)]
-        plt.semilogy(range(1,len(y_fraction_of_occurrences)+1), y_fraction_of_occurrences, lw=0, marker='o')   
-        savefig(output_file);
+#    @staticmethod
+#    def fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time):
+#        input_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + 'DataAnalysis/occurrence_distribution_by_country.txt'
+#        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + GeneralMethods.get_method_id() + '.png'
+#        y_fraction_of_occurrences = [fraction_of_occurrences for (_,_,fraction_of_occurrences) in
+#                                        FileIO.iterateJsonFromFile(input_file)]
+#        plt.semilogy(range(1,len(y_fraction_of_occurrences)+1), y_fraction_of_occurrences, lw=0, marker='o')   
+#        savefig(output_file);
     @staticmethod
     def fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, no_of_hashtags):
         input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
         output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags) + GeneralMethods.get_method_id() + '.png'
         GeneralMethods.runCommand('rm -rf %s'%output_file)
-        print input_file
         ltuo_lid_and_occurrene_count = []
         for lid_count, (lid, distribution_value) in enumerate(iterateJsonFromFile(input_file)):
             print lid_count
@@ -94,26 +94,85 @@ class DataAnalysis():
         y_fraction_of_occurrences = [r_occurrence_count/total_occurrences for _, r_occurrence_count in ltuo_lid_and_r_occurrence_count]
         plt.semilogy(range(1,len(y_fraction_of_occurrences)+1), y_fraction_of_occurrences, lw=0, marker='o')   
         savefig(output_file);
+#    @staticmethod
+#    def cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time):
+#        input_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + 'DataAnalysis/occurrence_distribution_by_country.txt'
+#        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + GeneralMethods.get_method_id() + '.png'
+#        fraction_of_occurrences = [fraction_of_occurrences for (_,_,fraction_of_occurrences) in
+#                                        FileIO.iterateJsonFromFile(input_file)]
+#        y_fraction_of_occurrences = []
+#        current_val = 0.0
+#        for val in fraction_of_occurrences:
+#            current_val+=val
+#            y_fraction_of_occurrences.append(current_val)
+#        plt.plot(range(1,len(y_fraction_of_occurrences)+1), y_fraction_of_occurrences, lw=0, marker='o')   
+#        savefig(output_file);
     @staticmethod
-    def cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time):
-        input_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + 'DataAnalysis/occurrence_distribution_by_country.txt'
-        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + GeneralMethods.get_method_id() + '.png'
-        fraction_of_occurrences = [fraction_of_occurrences for (_,_,fraction_of_occurrences) in
-                                        FileIO.iterateJsonFromFile(input_file)]
-        y_fraction_of_occurrences = []
-        current_val = 0.0
+    def cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, no_of_hashtags):
+        input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags) + GeneralMethods.get_method_id() + '.png'
+        GeneralMethods.runCommand('rm -rf %s'%output_file)
+        ltuo_lid_and_occurrene_count = []
+        for lid_count, (lid, distribution_value) in enumerate(iterateJsonFromFile(input_file)):
+            print lid_count
+            ltuo_lid_and_occurrene_count.append([lid, distribution_value])
+        total_occurrences = sum(zip(*ltuo_lid_and_occurrene_count)[1]) + 0.0
+        ltuo_lid_and_r_occurrence_count = sorted(ltuo_lid_and_occurrene_count, key=itemgetter(1), reverse=True)
+        fraction_of_occurrences = [r_occurrence_count/total_occurrences for _, r_occurrence_count in ltuo_lid_and_r_occurrence_count]
+        y_fraction_of_occurrences, current_val = [], 0.0
         for val in fraction_of_occurrences:
             current_val+=val
             y_fraction_of_occurrences.append(current_val)
-        plt.plot(range(1,len(y_fraction_of_occurrences)+1), y_fraction_of_occurrences, lw=0, marker='o')   
+        x_percentage_of_locations = [x/(len(y_fraction_of_occurrences)+1.0) for x in range(1,len(y_fraction_of_occurrences)+1)]
+        plt.plot(x_percentage_of_locations, y_fraction_of_occurrences, lw=0, marker='o')   
         savefig(output_file);
     @staticmethod
+    def write_entropy_and_focus(input_files_start_time, input_files_end_time, no_of_hashtags):
+        '''
+        datetime(2011, 2, 1), datetime(2011, 2, 27), 0: 
+            Global entropy:  9.0
+            Global focus:  ('-23.2000_-46.4000', 0.043156708042033268)
+        datetime(2011, 2, 1), datetime(2012, 4, 30), 50
+            Global entropy:  9.0
+            Global focus:  ('-23.2000_-46.4000', 0.033948282514978313)
+        '''
+        input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+        ltuo_lid_and_occurrene_count = []
+        for lid_count, (lid, distribution_value) in enumerate(iterateJsonFromFile(input_file)):
+            print lid_count
+            ltuo_lid_and_occurrene_count.append([lid, distribution_value])
+        print 'Global entropy: ', entropy(dict(ltuo_lid_and_occurrene_count))
+        print 'Global focus: ', focus(dict(ltuo_lid_and_occurrene_count))
+    @staticmethod
+    def write_top_locations(input_files_start_time, input_files_end_time, no_of_hashtags):
+        '''
+        datetime(2011, 2, 1), datetime(2012, 4, 30), 50
+            [['-23.2000_-46.4000', 'Sao, Paulo', 7357670.0], ['50.7500_0.0000', 'London', 6548390.0], 
+                ['-5.8000_105.8500', 'Jakarata', 4536084.0], ['33.3500_-117.4500', 'Los Angeles', 3940885.0], 
+                ['40.6000_-73.9500', 'New York', 3747348.0]]
+        '''
+        input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+        ltuo_lid_and_occurrene_count = []
+        for lid_count, (lid, distribution_value) in enumerate(iterateJsonFromFile(input_file)):
+            print lid_count
+            ltuo_lid_and_occurrene_count.append([lid, distribution_value])
+        print sorted(ltuo_lid_and_occurrene_count, key=itemgetter(1), reverse=True)[:5]
+
+    @staticmethod
     def run():
-        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
+#        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
+        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
+        
 #        DataAnalysis.hashtag_distribution(input_files_start_time, input_files_end_time)
 #        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time)
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
-        DataAnalysis.fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        
+        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.write_entropy_and_focus(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.write_top_locations(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
 if __name__ == '__main__':
