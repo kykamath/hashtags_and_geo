@@ -82,7 +82,7 @@ class MRAnalysis(ModifiedMRJob):
     def red_tuo_stat_and_ito_stat_value_to_tuo_stat_and_stat_value(self, stat, ito_stat_value):
         reduced_stat_value = 0.0
         for stat_value in ito_stat_value: reduced_stat_value+=stat_value
-        yield stat, reduced_stat_value
+        yield stat, [stat, reduced_stat_value]
     ''' End: Methods to get total tweets and total geo tweets
     '''
     ''' Start: Methods to get hashtag occurrence distribution
