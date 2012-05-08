@@ -12,7 +12,7 @@ from collections import defaultdict
 
 LOCATION_ACCURACY = 1.45 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes
-MIN_HASHTAG_OCCURENCES = 0
+MIN_HASHTAG_OCCURENCES = 50
 
 # Parameters for the MR Job that will be logged.
 PARAMS_DICT = dict(PARAMS_DICT = True,
@@ -62,6 +62,9 @@ class MRDataAnalysis(ModifiedMRJob):
         if hashtagObject: yield hashtag, hashtagObject 
     ''' End: Methods to load hashtag objects
     '''
+    def map_hashtag_object_to_tuo_hashtag_and_occurrences_count(self, hashtag, hashtag_object):
+        yield hashtag, [hashtag, len(hashtag_object['ltuo_lid_and_s_occurrence_time'])]
+            
     ''' MR Jobs
     '''
     def job_load_hashtag_object(self): return [
@@ -71,11 +74,13 @@ class MRDataAnalysis(ModifiedMRJob):
                                                        reducer=self.red_tuo_hashtag_and_ito_ltuo_lid_and_occurrence_time_to_tuo_hashtag_and_hashtag_object
                                                        )
                                                ]
-    
+    def job_write_tuo_hashtag_and_occurrences_count(self): 
+        return self.job_load_hashtag_object() +\
+                [self.mr( mapper=self.map_hashtag_object_to_tuo_hashtag_and_occurrences_count, )]
     
     def steps(self):
         pass
-        return self.job_load_hashtag_object()
-    
+#        return self.job_load_hashtag_object()
+        return self.job_write_tuo_hashtag_and_occurrences_count()
 if __name__ == '__main__':
     MRDataAnalysis.run()
