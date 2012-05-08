@@ -202,10 +202,26 @@ class DataAnalysis():
     @staticmethod
     def cdf_of_locality_measure(input_files_start_time, input_files_end_time, no_of_hashtags):
         def plot_graph(locality_measures):
-            print locality_measures
+            mf_apprx_to_count = defaultdict(float)
+            for measure in locality_measures:
+                mf_apprx_to_count[round(measure,3)]+=1
+            total_hashtags = sum(mf_apprx_to_count.values())
+            current_val = 0.0
+            x_measure, y_distribution = [], []
+            for apprx, count in sorted(mf_apprx_to_count.iteritems(), key=itemgetter(0)):
+                current_val+=count
+                x_measure.append(apprx)
+                y_distribution.append(current_val/total_hashtags)
+            
+                
+            plt.plot(x_measure, y_distribution, lw=0, marker='o')
+#            plt.semilogy([[1],[1]])
+            plt.show()
         input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
         ltuo_hashtag_and_occurrence_count_and_entropy_and_focus = [data for data in iterateJsonFromFile(input_file)]
         entropies = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[2]
+        focuses = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[3]
+        focuses = zip(*focuses)[1]
         plot_graph(entropies)
     @staticmethod
     def run():
