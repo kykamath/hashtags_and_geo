@@ -12,7 +12,7 @@ from collections import defaultdict
 
 LOCATION_ACCURACY = 1.45 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes
-MIN_HASHTAG_OCCURENCES = 100
+MIN_HASHTAG_OCCURENCES = 0
 
 # Parameters for the MR Job that will be logged.
 PARAMS_DICT = dict(PARAMS_DICT = True,
@@ -31,15 +31,15 @@ def iterate_hashtag_occurrences(line):
     for h in data['h']: yield h.lower(), [lattice_lid, GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS)]
     
 def combine_hashtag_instances(hashtag, ito_ltuo_lid_and_occurrence_time):
-    ltuo_lid_and_occurrence_time = []
+    combined_ltuo_lid_and_occurrence_time = []
     for ltuo_lid_and_occurrence_time in ito_ltuo_lid_and_occurrence_time: 
         for tuo_lid_and_occurrence_time in ltuo_lid_and_occurrence_time: 
-            ltuo_lid_and_occurrence_time.append(tuo_lid_and_occurrence_time)
-    if ltuo_lid_and_occurrence_time:
-        if len(ltuo_lid_and_occurrence_time)>=MIN_HASHTAG_OCCURENCES:
+            combined_ltuo_lid_and_occurrence_time.append(tuo_lid_and_occurrence_time)
+    if combined_ltuo_lid_and_occurrence_time:
+        if len(combined_ltuo_lid_and_occurrence_time)>=MIN_HASHTAG_OCCURENCES:
             return {
                     'hashtag': hashtag, 
-                    'ltuo_lid_and_s_occurrence_time': sorted(ltuo_lid_and_occurrence_time, key=lambda t: t[1])
+                    'ltuo_lid_and_s_occurrence_time': sorted(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
                     }
 
 class MRDataAnalysis(ModifiedMRJob):
@@ -47,6 +47,7 @@ class MRDataAnalysis(ModifiedMRJob):
     def __init__(self, *args, **kwargs):
         super(MRDataAnalysis, self).__init__(*args, **kwargs)
         self.mf_hashtag_to_ltuo_lid_and_occurrence_time = defaultdict(list)
+        self.mf_hashtag_to_occurrence_count = defaultdict(float)
     ''' Start: Methods to load hashtag objects
     '''
     def map_checkin_line_to_tuo_hashtag_and_ltuo_lid_and_occurrence_time(self, key, line):
@@ -62,8 +63,24 @@ class MRDataAnalysis(ModifiedMRJob):
         if hashtagObject: yield hashtag, hashtagObject 
     ''' End: Methods to load hashtag objects
     '''
-    def map_hashtag_object_to_tuo_hashtag_and_occurrences_count(self, hashtag, hashtag_object):
-        yield hashtag, [hashtag, len(hashtag_object['ltuo_lid_and_s_occurrence_time'])]
+    ''' Start: Methods to get hashtag occurrence distribution
+    '''
+    def map_checkin_line_to_tuo_hashtag_and_occurrence_count(self, key, line):
+        if False: yield # I'm a generator!
+        for h, tuo_lid_and_occurrence_time in iterate_hashtag_occurrences(line): 
+            self.mf_hashtag_to_occurrence_count[h]+=1
+    def mapf_checkin_line_to_tuo_hashtag_and_occurrence_count(self):
+        for h, occurrence_count in \
+                self.mf_hashtag_to_occurrence_count.iteritems():
+            yield h, occurrence_count
+    def red_tuo_hashtag_and_ito_occurrence_count_to_tuo_hashtag_and_occurrence_count(self, hashtag, ito_occurrence_count):
+        occurrences_count = 0.0
+        for occurrence_count in ito_occurrence_count: occurrences_count+=occurrence_count
+        yield hashtag, occurrences_count 
+    ''' End: Methods to load hashtag objects
+    '''
+#    def map_hashtag_object_to_tuo_hashtag_and_occurrences_count(self, hashtag, hashtag_object):
+#        yield hashtag, [hashtag, len(hashtag_object['ltuo_lid_and_s_occurrence_time'])]
             
     ''' MR Jobs
     '''
@@ -75,8 +92,13 @@ class MRDataAnalysis(ModifiedMRJob):
                                                        )
                                                ]
     def job_write_tuo_hashtag_and_occurrences_count(self): 
-        return self.job_load_hashtag_object() +\
-                [self.mr( mapper=self.map_hashtag_object_to_tuo_hashtag_and_occurrences_count, )]
+        return [
+                   self.mr(
+                           mapper=self.map_checkin_line_to_tuo_hashtag_and_occurrence_count, 
+                           mapper_final=self.mapf_checkin_line_to_tuo_hashtag_and_occurrence_count, 
+                           reducer=self.red_tuo_hashtag_and_ito_occurrence_count_to_tuo_hashtag_and_occurrence_count
+                           )
+                   ]
     
     def steps(self):
         pass
