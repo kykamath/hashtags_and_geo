@@ -51,8 +51,10 @@ class MRAnalysis(ModifiedMRJob):
         super(MRAnalysis, self).__init__(*args, **kwargs)
         self.mf_hashtag_to_ltuo_lid_and_occurrence_time = defaultdict(list)
         self.mf_hashtag_to_occurrence_count = defaultdict(float)
+        # Stat variables
         self.number_of_tweets = 0.0
         self.number_of_geo_tweets = 0.0
+        self.so_hashtags = set()
     ''' Start: Methods to load hashtag objects
     '''
     def map_checkin_line_to_tuo_hashtag_and_ltuo_lid_and_occurrence_time(self, key, line):
@@ -73,16 +75,25 @@ class MRAnalysis(ModifiedMRJob):
     def map_checkin_line_to_tuo_stat_and_stat_value(self, key, line):
         if False: yield # I'm a generator!
         self.number_of_tweets+=1
+        flag = False
         for h, tuo_lid_and_occurrence_time in iterate_hashtag_occurrences(line): 
-            self.number_of_geo_tweets+=1
-            break
+            self.so_hashtags.add(h)
+            flag=True
+        if flag: self.number_of_geo_tweets+=1
     def mapf_checkin_line_to_tuo_stat_and_stat_value(self):
         yield 'total_tweets', self.number_of_tweets
         yield 'number_of_geo_tweets', self.number_of_geo_tweets
+        yield 'hashtags', [hashtag for hashtag in self.so_hashtags]
     def red_tuo_stat_and_ito_stat_value_to_tuo_stat_and_stat_value(self, stat, ito_stat_value):
-        reduced_stat_value = 0.0
-        for stat_value in ito_stat_value: reduced_stat_value+=stat_value
-        yield stat, [stat, reduced_stat_value]
+        if stat!='hashtags':
+            reduced_stat_value = 0.0
+            for stat_value in ito_stat_value: reduced_stat_value+=stat_value
+            yield stat, [stat, reduced_stat_value]
+        else:
+            reduced_so_hashtags = set()
+            for hashtags in ito_stat_value: 
+                for hashtag in hashtags: reduced_so_hashtags.add(hashtag)
+            yield 'hashtags', ['hashtags', len(reduced_so_hashtags)]
     ''' End: Methods to get total tweets and total geo tweets
     '''
     ''' Start: Methods to get hashtag occurrence distribution
