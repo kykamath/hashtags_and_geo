@@ -14,12 +14,12 @@ from library.stats import entropy, focus
 from operator import itemgetter
 import numpy as np
 
-#LOCATION_ACCURACY = 1.45 # 100 miles
-LOCATION_ACCURACY = 0.001 # 100 miles
+LOCATION_ACCURACY = 1.45 # 100 miles
+#LOCATION_ACCURACY = 0.001 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes
-MIN_HASHTAG_OCCURENCES = 10
-#START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
-START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2011, 4, 28)
+MIN_HASHTAG_OCCURENCES = 50
+START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
+#START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2011, 4, 28)
 
 
 #Distribution Paramter
@@ -187,18 +187,18 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def map_hashtag_object_to_tuo_rank_and_percentage_of_occurrences(self, hashtag, hashtag_object):
         mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
-        yield len(mf_lid_to_occurrence_count), 1
+#        yield len(mf_lid_to_occurrence_count), 1
 #        obj = get_mf_interval_to_mf_lid_to_occurrence_count(hashtag_object)
 #        yield hashtag, mf_lid_to_occurrence_count
-#        ltuo_lid_and_r_occurrence_count = sorted(mf_lid_to_occurrence_count.items(), key=itemgetter(1), reverse=True)
-#        total_occurrence_count = float(sum(zip(*ltuo_lid_and_r_occurrence_count)[1]))
-#        for rank, (_, occurrence_count) in enumerate(ltuo_lid_and_r_occurrence_count[:K_TOP_RANK]):
-#            yield rank+1, occurrence_count/total_occurrence_count
+        ltuo_lid_and_r_occurrence_count = sorted(mf_lid_to_occurrence_count.items(), key=itemgetter(1), reverse=True)
+        total_occurrence_count = float(sum(zip(*ltuo_lid_and_r_occurrence_count)[1]))
+        for rank, (_, occurrence_count) in enumerate(ltuo_lid_and_r_occurrence_count[:K_TOP_RANK]):
+            yield rank+1, occurrence_count/total_occurrence_count
     def red_tuo_rank_and_ito_percentage_of_occurrences_to_tuo_rank_and_average_percentage_of_occurrences(self, rank, ito_percentage_of_occurrences):
         red_percentage_of_occurrences = []
         for percentage_of_occurrence in ito_percentage_of_occurrences: red_percentage_of_occurrences.append(percentage_of_occurrence)
-#        yield rank, [rank, np.mean(red_percentage_of_occurrences)]
-        yield rank, [rank, sum(red_percentage_of_occurrences)]
+        yield rank, [rank, np.mean(red_percentage_of_occurrences)]
+#        yield rank, [rank, sum(red_percentage_of_occurrences)]
     ''' End: Methods to get distribution from top-k hashtags
     '''
     
