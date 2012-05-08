@@ -15,3 +15,4 @@ f_tuo_normalized_occurrence_count_and_distribution_value = fld_data_analysis+'/t
 f_tuo_lid_and_distribution_value = fld_data_analysis+'/tuo_lid_and_distribution_value'
 f_tweet_count_stats = fld_data_analysis+'/tweet_count_stats'
 f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus = fld_data_analysis+'/tuo_hashtag_and_occurrence_count_and_entropy_and_focus'
+f_tuo_rank_and_average_percentage_of_occurrences =  fld_data_analysis+'/tuo_rank_and_average_percentage_of_occurrences '

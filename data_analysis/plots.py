@@ -123,7 +123,9 @@ class DataAnalysis():
         for val in fraction_of_occurrences:
             current_val+=val
             y_fraction_of_occurrences.append(current_val)
-        x_percentage_of_locations = [x/(len(y_fraction_of_occurrences)+1.0) for x in range(1,len(y_fraction_of_occurrences)+1)]
+        y_fraction_of_occurrences = y_fraction_of_occurrences[:50]
+#        x_percentage_of_locations = [x/(len(y_fraction_of_occurrences)+1.0) for x in range(1,len(y_fraction_of_occurrences)+1)]
+        x_percentage_of_locations = [x for x in range(1,len(y_fraction_of_occurrences)+1)]
         plt.plot(x_percentage_of_locations, y_fraction_of_occurrences, lw=0, marker='o')   
         savefig(output_file);
     @staticmethod
@@ -167,9 +169,9 @@ class DataAnalysis():
 #        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time)
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
-        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_entropy_and_focus(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_top_locations(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 

@@ -11,6 +11,8 @@ from library.classes import GeneralMethods
 from collections import defaultdict
 from datetime import datetime
 from library.stats import entropy, focus
+from operator import itemgetter
+import numpy as np
 
 LOCATION_ACCURACY = 1.45 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes
@@ -21,6 +23,9 @@ START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
 #Distribution Paramter
 DISTRIBUTION_ACCURACY = 100
 
+# Top K rank analysis
+K_TOP_RANK = 100
+
 # Parameters for the MR Job that will be logged.
 HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
 PARAMS_DICT = dict(PARAMS_DICT = True,
@@ -28,6 +33,7 @@ PARAMS_DICT = dict(PARAMS_DICT = True,
                    MIN_HASHTAG_OCCURENCES=MIN_HASHTAG_OCCURENCES,
                    TIME_UNIT_IN_SECONDS = TIME_UNIT_IN_SECONDS,
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
+                   K_TOP_RANK = K_TOP_RANK,
                    )
 
 def iterate_hashtag_occurrences(line):
@@ -173,13 +179,29 @@ class MRAnalysis(ModifiedMRJob):
         yield lid, [lid, red_occurrence_count]
     ''' End: Methods to get distribution of occurrences in lids
     '''
-        
-    ''' Start: Methods to get get entropy and focus for all hashtags
+    
+    ''' Start: Methods to get distribution from top-k hashtags
+    '''
+    def map_hashtag_object_to_tuo_rank_and_percentage_of_occurrences(self, hashtag, hashtag_object):
+        mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
+        ltuo_lid_and_r_occurrence_count = sorted(mf_lid_to_occurrence_count.items(), key=itemgetter(1), reverse=True)
+        total_occurrence_count = float(sum(zip(*ltuo_lid_and_r_occurrence_count)[1]))
+        for rank, (_, occurrence_count) in enumerate(ltuo_lid_and_r_occurrence_count[:K_TOP_RANK]):
+            yield rank+1, occurrence_count/total_occurrence_count
+    def red_tuo_rank_and_ito_percentage_of_occurrences_to_tuo_rank_and_average_percentage_of_occurrences(self, rank, ito_percentage_of_occurrences):
+        red_percentage_of_occurrences = []
+        for percentage_of_occurrence in ito_percentage_of_occurrences: red_percentage_of_occurrences.append(percentage_of_occurrence)
+        yield rank, [rank, np.mean(red_percentage_of_occurrences)]
+    ''' End: Methods to get distribution from top-k hashtags
+    '''
+    
+    
+    ''' Start: Methods to get entropy and focus for all hashtags
     '''
     def map_hashtag_object_to_tuo_hashtag_and_occurrence_count_and_entropy_and_focus(self, hashtag, hashtag_object):
         mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
-        yield hashtag['hashtag'], [hashtag['hashtag'], len(hashtag['ltuo_lid_and_s_interval']), entropy(mf_lid_to_occurrence_count), focus(mf_lid_to_occurrence_count)]
-    ''' End: Methods to get get entropy and focus for all hashtags
+        yield hashtag_object['hashtag'], [hashtag_object['hashtag'], len(hashtag_object['ltuo_lid_and_s_interval']), entropy(mf_lid_to_occurrence_count), focus(mf_lid_to_occurrence_count)]
+    ''' End: Methods to get entropy and focus for all hashtags
     '''
     
          
@@ -229,13 +251,22 @@ class MRAnalysis(ModifiedMRJob):
                            mapper=self.map_hashtag_object_to_tuo_hashtag_and_occurrence_count_and_entropy_and_focus, 
                            )
                    ]
+    def job_write_tuo_rank_and_average_percentage_of_occurrences(self):
+        return self.job_load_hashtag_object() + \
+                [
+                    self.mr(
+                           mapper=self.map_hashtag_object_to_tuo_rank_and_percentage_of_occurrences, 
+                           reducer=self.red_tuo_rank_and_ito_percentage_of_occurrences_to_tuo_rank_and_average_percentage_of_occurrences
+                           )
+                   ]
     def steps(self):
         pass
 #        return self.job_load_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
-        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus()
+#        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus()
+        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
     
 if __name__ == '__main__':
     MRAnalysis.run()
