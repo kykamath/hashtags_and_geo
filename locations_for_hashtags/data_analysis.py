@@ -15,7 +15,7 @@ hdfs_input_folder = 'hdfs:///user/kykamath/geo/hashtags/%s/'
 
 fld_data_analysis = '/mnt/chevron/kykamath/data/geo/hashtags/data_analysis/%s_%s/'
 
-f_tuo_hashtag_and_occurrences_count = fld_data_analysis+'/tuo_hashtag_and_occurrences_count'
+f_tuo_normalized_occurrence_count_and_distribution_value = fld_data_analysis+'/tuo_normalized_occurrence_count_and_distribution_value'
 #################################################################
 
 
@@ -33,10 +33,11 @@ def getInputFiles(startTime, endTime, folderType='world'):
         current+=relativedelta(months=1)   
 
 def mr_data_analysis(input_files_start_time, input_files_end_time):
-    outputFile = f_tuo_hashtag_and_occurrences_count%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'))
+    outputFile = f_tuo_normalized_occurrence_count_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'))
     runMRJob(MRDataAnalysis, outputFile, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 
 if __name__ == '__main__':
-    input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2011, 2, 27)
+#    input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2011, 2, 27)
+    input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2012, 4, 30)
     mr_data_analysis(input_files_start_time, input_files_end_time)
