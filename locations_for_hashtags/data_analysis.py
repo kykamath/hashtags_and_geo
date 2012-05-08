@@ -38,6 +38,6 @@ def mr_data_analysis(input_files_start_time, input_files_end_time):
     FileIO.writeToFileAsJson(PARAMS_DICT, outputFile)
 
 if __name__ == '__main__':
-#    input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2011, 2, 27)
-    input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2012, 4, 30)
+    input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2011, 2, 27)
+#    input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2012, 4, 30)
     mr_data_analysis(input_files_start_time, input_files_end_time)
