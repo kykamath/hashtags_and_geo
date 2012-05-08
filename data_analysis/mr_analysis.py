@@ -30,8 +30,8 @@ def iterate_hashtag_occurrences(line):
     if 'geo' in data: l = data['geo']
     else: l = data['bb']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
-    lattice_lid = getLatticeLid(l, LOCATION_ACCURACY)
-    for h in data['h']: yield h.lower(), [lattice_lid, GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS)]
+    lid = getLatticeLid(l, LOCATION_ACCURACY)
+    for h in data['h']: yield h.lower(), [lid, GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS)]
     
 def combine_hashtag_instances(hashtag, ito_ltuo_lid_and_occurrence_time):
     combined_ltuo_lid_and_occurrence_time = []
@@ -55,6 +55,7 @@ class MRAnalysis(ModifiedMRJob):
         self.number_of_tweets = 0.0
         self.number_of_geo_tweets = 0.0
         self.so_hashtags = set()
+        self.so_lids = set()
     ''' Start: Methods to load hashtag objects
     '''
     def map_checkin_line_to_tuo_hashtag_and_ltuo_lid_and_occurrence_time(self, key, line):
@@ -76,16 +77,17 @@ class MRAnalysis(ModifiedMRJob):
         if False: yield # I'm a generator!
         self.number_of_tweets+=1
         flag = False
-        for h, tuo_lid_and_occurrence_time in iterate_hashtag_occurrences(line): 
-            self.so_hashtags.add(h)
+        for h, (lid, occurrence_time) in iterate_hashtag_occurrences(line): 
+            self.so_hashtags.add(h), self.so_lids.add(lid)
             flag=True
         if flag: self.number_of_geo_tweets+=1
     def mapf_checkin_line_to_tuo_stat_and_stat_value(self):
-        yield 'total_tweets', self.number_of_tweets
-        yield 'number_of_geo_tweets', self.number_of_geo_tweets
+        yield 'number_of_geo_tweets', self.number_of_tweets
+        yield 'number_of_geo_tweets_with_hashtag', self.number_of_geo_tweets
         yield 'hashtags', [hashtag for hashtag in self.so_hashtags]
+        yield 'lids', [lid for lid in self.so_lids]
     def red_tuo_stat_and_ito_stat_value_to_tuo_stat_and_stat_value(self, stat, ito_stat_value):
-        if stat!='hashtags':
+        if stat!='hashtags' and stat!='lids':
             reduced_stat_value = 0.0
             for stat_value in ito_stat_value: reduced_stat_value+=stat_value
             yield stat, [stat, reduced_stat_value]
@@ -93,7 +95,7 @@ class MRAnalysis(ModifiedMRJob):
             reduced_so_hashtags = set()
             for hashtags in ito_stat_value: 
                 for hashtag in hashtags: reduced_so_hashtags.add(hashtag)
-            yield 'hashtags', ['hashtags', len(reduced_so_hashtags)]
+            yield stat, [stat, len(reduced_so_hashtags)]
     ''' End: Methods to get total tweets and total geo tweets
     '''
     ''' Start: Methods to get hashtag occurrence distribution
