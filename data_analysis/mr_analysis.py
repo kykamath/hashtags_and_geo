@@ -53,17 +53,18 @@ def combine_hashtag_instances(hashtag, ito_ltuo_lid_and_occurrence_time):
         for tuo_lid_and_occurrence_time in ltuo_lid_and_occurrence_time: 
             combined_ltuo_lid_and_occurrence_time.append(tuo_lid_and_occurrence_time)
     if combined_ltuo_lid_and_occurrence_time:
-        e, l = min(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1]), max(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
-        if len(combined_ltuo_lid_and_occurrence_time)>=MIN_HASHTAG_OCCURENCES and \
-                e[1]>=HASHTAG_STARTING_WINDOW and l[1]<=HASHTAG_ENDING_WINDOW:
-            return {
-                    'hashtag': hashtag, 
-                    'ltuo_lid_and_s_interval': sorted(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
-                    }
+#        e, l = min(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1]), max(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
+#        if len(combined_ltuo_lid_and_occurrence_time)>=MIN_HASHTAG_OCCURENCES and \
+#                e[1]>=HASHTAG_STARTING_WINDOW and l[1]<=HASHTAG_ENDING_WINDOW:
+        return {
+                'hashtag': hashtag, 
+                'ltuo_lid_and_s_interval': sorted(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
+                }
 
 def get_mf_interval_to_mf_lid_to_occurrence_count(hashtag_object):
     mf_interval_to_mf_lid_to_occurrence_count = defaultdict(dict)
     for lid, interval in hashtag_object['ltuo_lid_and_s_interval']:
+        interval = str(interval)
         if lid not in \
                 mf_interval_to_mf_lid_to_occurrence_count[interval]:
             mf_interval_to_mf_lid_to_occurrence_count[interval][lid] = 0.
@@ -71,15 +72,15 @@ def get_mf_interval_to_mf_lid_to_occurrence_count(hashtag_object):
     return mf_interval_to_mf_lid_to_occurrence_count
 
 def get_mf_lid_to_occurrence_count(hashtag_object):
-    mf_lid_to_occurrence_count = defaultdict(float)
+    return_mf_lid_to_occurrence_count = defaultdict(float)
     mf_interval_to_mf_lid_to_occurrence_count = \
         get_mf_interval_to_mf_lid_to_occurrence_count(hashtag_object)
     for interval, mf_lid_to_occurrence_count in \
             mf_interval_to_mf_lid_to_occurrence_count.iteritems():
         for lid, occurrence_count in \
                 mf_lid_to_occurrence_count.iteritems():
-            mf_lid_to_occurrence_count[lid]+=occurrence_count 
-    return mf_lid_to_occurrence_count
+            return_mf_lid_to_occurrence_count[lid]+=occurrence_count 
+    return return_mf_lid_to_occurrence_count
 
 class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -187,6 +188,8 @@ class MRAnalysis(ModifiedMRJob):
     def map_hashtag_object_to_tuo_rank_and_percentage_of_occurrences(self, hashtag, hashtag_object):
         mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
         yield len(mf_lid_to_occurrence_count), 1
+#        obj = get_mf_interval_to_mf_lid_to_occurrence_count(hashtag_object)
+#        yield hashtag, mf_lid_to_occurrence_count
 #        ltuo_lid_and_r_occurrence_count = sorted(mf_lid_to_occurrence_count.items(), key=itemgetter(1), reverse=True)
 #        total_occurrence_count = float(sum(zip(*ltuo_lid_and_r_occurrence_count)[1]))
 #        for rank, (_, occurrence_count) in enumerate(ltuo_lid_and_r_occurrence_count[:K_TOP_RANK]):
@@ -265,12 +268,12 @@ class MRAnalysis(ModifiedMRJob):
                    ]
     def steps(self):
         pass
-        return self.job_load_hashtag_object()
+#        return self.job_load_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
 #        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus()
-#        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
+        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
     
 if __name__ == '__main__':
     MRAnalysis.run()
