@@ -56,6 +56,8 @@ class MRAnalysis(ModifiedMRJob):
         self.number_of_geo_tweets = 0.0
         self.so_hashtags = set()
         self.so_lids = set()
+        # Variables for tuo_lid_and_distribution_value
+        self.mf_lid_to_occurrence_count = defaultdict(float)
     ''' Start: Methods to load hashtag objects
     '''
     def map_checkin_line_to_tuo_hashtag_and_ltuo_lid_and_occurrence_time(self, key, line):
@@ -92,10 +94,10 @@ class MRAnalysis(ModifiedMRJob):
             for stat_value in ito_stat_value: reduced_stat_value+=stat_value
             yield stat, [stat, reduced_stat_value]
         else:
-            reduced_so_hashtags = set()
-            for hashtags in ito_stat_value: 
-                for hashtag in hashtags: reduced_so_hashtags.add(hashtag)
-            yield stat, [stat, len(reduced_so_hashtags)]
+            reduced_so_stat_vals = set()
+            for stat_vals in ito_stat_value: 
+                for stat_val in stat_vals: reduced_so_stat_vals.add(stat_val)
+            yield stat, [stat, len(reduced_so_stat_vals)]
     ''' End: Methods to get total tweets and total geo tweets
     '''
     ''' Start: Methods to get hashtag occurrence distribution
@@ -118,7 +120,24 @@ class MRAnalysis(ModifiedMRJob):
         yield normalized_occurrence_count, [normalized_occurrence_count, distribution_value]
     ''' End: Methods to get hashtag occurrence distribution
     '''
-            
+    ''' Start: Methods to get distribution of occurrences in lids
+    '''
+    def map_checkin_line_to_tuo_lid_and_occurrence_count(self, key, line):
+        if False: yield # I'm a generator!
+        for h, (lid, occurrence_time) in iterate_hashtag_occurrences(line): 
+            self.mf_lid_to_occurrence_count[lid]+=1
+    def mapf_checkin_line_to_tuo_lid_and_occurrence_count(self):
+        for lid, occurrence_count in\
+                self.mf_lid_to_occurrence_count.iteritems():
+            yield lid, occurrence_count
+    def red_tuo_lid_and_ito_occurrence_count_to_tuo_lid_and_occurrence_count(self, lid, ito_occurrence_count):
+        red_occurrence_count = 0.0
+        for occurrence_count in ito_occurrence_count:
+            red_occurrence_count+=occurrence_count
+        yield lid, [lid, red_occurrence_count]
+    ''' End: Methods to get distribution of occurrences in lids
+    '''
+         
     ''' MR Jobs
     '''
     def job_load_hashtag_object(self): return [
@@ -150,11 +169,20 @@ class MRAnalysis(ModifiedMRJob):
                            reducer=self.red_tuo_stat_and_ito_stat_value_to_tuo_stat_and_stat_value
                            )
                    ]
+    def job_write_tuo_lid_and_distribution_value(self):
+        return [
+                   self.mr(
+                           mapper=self.map_checkin_line_to_tuo_lid_and_occurrence_count, 
+                           mapper_final=self.mapf_checkin_line_to_tuo_lid_and_occurrence_count, 
+                           reducer=self.red_tuo_lid_and_ito_occurrence_count_to_tuo_lid_and_occurrence_count
+                           )
+                   ]
     def steps(self):
         pass
 #        return self.job_load_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
-        return self.job_write_tweet_count_stats()
+#        return self.job_write_tweet_count_stats()
+        return self.job_write_tuo_lid_and_distribution_value()
     
 if __name__ == '__main__':
     MRAnalysis.run()

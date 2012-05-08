@@ -12,11 +12,26 @@ from library.classes import GeneralMethods
 from operator import itemgetter
 import matplotlib.pyplot as plt
 from library.plotting import savefig
-
+import shapefile, os
+from library.geo import point_inside_polygon
 
 def iterateJsonFromFile(file):
     for data in FileIO.iterateJsonFromFile(file):
         if 'PARAMS_DICT' not in data: yield data
+
+class CountryBoundaries:
+    mf_country_to_bounding_box = {}
+    @staticmethod
+    def load():
+        sf = shapefile.Reader(os.path.expanduser('~/SkyDrive/external_apps/TM_WORLD_BORDERS_SIMPL-0.3/TM_WORLD_BORDERS_SIMPL-0.3.shp'))
+        for shape_rec in sf.shapeRecords():
+            CountryBoundaries.mf_country_to_bounding_box[shape_rec.record[4]] = [[point[1], point[0]]for point in shape_rec.shape.points]
+    @staticmethod
+    def get_country(point):
+        for country, bounding_box in \
+                CountryBoundaries.mf_country_to_bounding_box.iteritems():
+            if point_inside_polygon(point[0], point[1], bounding_box):
+                    return country 
 
 class DataAnalysis():
     @staticmethod
