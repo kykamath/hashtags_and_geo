@@ -265,12 +265,12 @@ class MRAnalysis(ModifiedMRJob):
                    ]
     def steps(self):
         pass
-#        return self.job_load_hashtag_object()
+        return self.job_load_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
 #        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus()
-        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
+#        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
     
 if __name__ == '__main__':
     MRAnalysis.run()
