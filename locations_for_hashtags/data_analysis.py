@@ -20,7 +20,9 @@ def iterateJsonFromFile(file):
 def getInputFiles(startTime, endTime, folderType='world'):
     current=startTime
     while current<=endTime:
-        yield hdfs_input_folder%folderType+'%s_%s'%(current.year, current.month)
+        input_file = hdfs_input_folder%folderType+'%s_%s'%(current.year, current.month)
+        print input_file
+        yield input_file
         current+=relativedelta(months=1)   
 
 def mr_data_analysis(input_files_start_time, input_files_end_time):
