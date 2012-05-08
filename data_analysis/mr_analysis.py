@@ -51,6 +51,8 @@ class MRAnalysis(ModifiedMRJob):
         super(MRAnalysis, self).__init__(*args, **kwargs)
         self.mf_hashtag_to_ltuo_lid_and_occurrence_time = defaultdict(list)
         self.mf_hashtag_to_occurrence_count = defaultdict(float)
+        self.number_of_tweets = 0.0
+        self.number_of_geo_tweets = 0.0
     ''' Start: Methods to load hashtag objects
     '''
     def map_checkin_line_to_tuo_hashtag_and_ltuo_lid_and_occurrence_time(self, key, line):
@@ -65,6 +67,23 @@ class MRAnalysis(ModifiedMRJob):
         hashtagObject = combine_hashtag_instances(hashtag, ito_ltuo_lid_and_occurrence_time)
         if hashtagObject: yield hashtag, hashtagObject 
     ''' End: Methods to load hashtag objects
+    '''
+    ''' Start: Methods to get total tweets and total geo tweets
+    '''
+    def map_checkin_line_to_tuo_stat_and_stat_value(self, key, line):
+        if False: yield # I'm a generator!
+        self.number_of_tweets+=1
+        for h, tuo_lid_and_occurrence_time in iterate_hashtag_occurrences(line): 
+            self.number_of_geo_tweets+=1
+            break
+    def mapf_checkin_line_to_tuo_stat_and_stat_value(self):
+        yield 'total_tweets', self.number_of_tweets
+        yield 'number_of_geo_tweets', self.number_of_geo_tweets
+    def red_tuo_stat_and_ito_stat_value_to_tuo_stat_and_stat_value(self, stat, ito_stat_value):
+        reduced_stat_value = 0.0
+        for stat_value in ito_stat_value: reduced_stat_value+=stat_value
+        yield stat, reduced_stat_value
+    ''' End: Methods to get total tweets and total geo tweets
     '''
     ''' Start: Methods to get hashtag occurrence distribution
     '''
@@ -110,10 +129,18 @@ class MRAnalysis(ModifiedMRJob):
                            reducer=self.red_tuo_normalized_occurrence_count_and_ito_one_to_tuo_normalized_occurrence_count_and_distribution_value
                            )
                     ]
-    
+    def job_get_tweet_count_stats(self):
+        return [
+                   self.mr(
+                           mapper=self.map_checkin_line_to_tuo_stat_and_stat_value, 
+                           mapper_final=self.mapf_checkin_line_to_tuo_stat_and_stat_value, 
+                           reducer=self.red_tuo_stat_and_ito_stat_value_to_tuo_stat_and_stat_value
+                           )
+                   ]
     def steps(self):
         pass
 #        return self.job_load_hashtag_object()
-        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
+#        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
+        return self.job_get_tweet_count_stats()
 if __name__ == '__main__':
     MRAnalysis.run()
