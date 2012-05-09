@@ -253,9 +253,17 @@ class DataAnalysis():
         for hashtag, occurrence_count, entropy, focus in\
                 ltuo_hashtag_and_occurrence_count_and_entropy_and_focus:
             country = CountryBoundaries.get_country_for_lid(focus[0])
-            print focus[0], country
-#            mf_country_to_ltuo_hashtag_and_entropy_and_focus.append()
-
+            if country !=None:
+                mf_country_to_ltuo_hashtag_and_entropy_and_focus[country].append([hashtag, occurrence_count, entropy, focus])
+        ltuo_country_and_r_locality_info = sorted(mf_country_to_ltuo_hashtag_and_entropy_and_focus.iteritems(),
+               key=lambda (k,v): len(v), reverse=True)[:11]
+        for country, locality_info in \
+                ltuo_country_and_r_locality_info:
+            print country, len(locality_info)
+            hashtags, occurrence_counts, entropies, focuses = zip(*locality_info)
+            focuses = zip(*focuses)[1]
+            plt.scatter(entropies, focuses)
+            plt.show()
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
@@ -278,6 +286,6 @@ class DataAnalysis():
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
 if __name__ == '__main__':
-#    DataAnalysis.run()
-    CountryBoundaries.run()
+    DataAnalysis.run()
+#    CountryBoundaries.run()
     
