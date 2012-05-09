@@ -6,7 +6,7 @@ Created on May 7, 2012
 import cjson, time
 from library.mrjobwrapper import ModifiedMRJob
 from library.twitter import getDateTimeObjectFromTweetTimestamp
-from library.geo import getLatticeLid
+from library.geo import getLatticeLid, getLocationFromLid, getRadiusOfGyration
 from library.classes import GeneralMethods
 from collections import defaultdict
 from datetime import datetime
@@ -205,9 +205,10 @@ class MRAnalysis(ModifiedMRJob):
     
     ''' Start: Methods to get entropy and focus for all hashtags
     '''
-    def map_hashtag_object_to_tuo_hashtag_and_occurrence_count_and_entropy_and_focus(self, hashtag, hashtag_object):
+    def map_hashtag_object_to_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage(self, hashtag, hashtag_object):
         mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
-        yield hashtag_object['hashtag'], [hashtag_object['hashtag'], len(hashtag_object['ltuo_lid_and_s_interval']), entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count)]
+        points = [ getLocationFromLid(lid.replace('_', ' ')) for lid,_ in hashtag_object['ltuo_lid_and_s_interval']]
+        yield hashtag_object['hashtag'], [hashtag_object['hashtag'], len(hashtag_object['ltuo_lid_and_s_interval']), entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count), getRadiusOfGyration(points)]
     ''' End: Methods to get entropy and focus for all hashtags
     '''
     
@@ -251,11 +252,11 @@ class MRAnalysis(ModifiedMRJob):
                            reducer=self.red_tuo_lid_and_ito_occurrence_count_to_tuo_lid_and_occurrence_count
                            )
                    ]
-    def job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus(self):
+    def job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage(self):
         return self.job_load_hashtag_object() + \
                 [
                     self.mr(
-                           mapper=self.map_hashtag_object_to_tuo_hashtag_and_occurrence_count_and_entropy_and_focus, 
+                           mapper=self.map_hashtag_object_to_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage, 
                            )
                    ]
     def job_write_tuo_rank_and_average_percentage_of_occurrences(self):
@@ -272,8 +273,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
-#        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus()
-        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
+        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage()
+#        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
     
 if __name__ == '__main__':
     MRAnalysis.run()

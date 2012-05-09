@@ -262,7 +262,12 @@ class DataAnalysis():
             print country, len(locality_info)
             hashtags, occurrence_counts, entropies, focuses = zip(*locality_info)
             focuses = zip(*focuses)[1]
-            plt.scatter(entropies, focuses)
+            mf_norm_focus_to_entropies = defaultdict(list)
+            for focus, entropy in zip(focuses,entropies):
+                mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
+            x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems()])
+#            plt.scatter(entropies, focuses)
+            plt.scatter(x_focus, y_entropy)
             plt.show()
     @staticmethod
     def run():
