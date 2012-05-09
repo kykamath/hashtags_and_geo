@@ -268,7 +268,7 @@ class DataAnalysis():
                 + GeneralMethods.get_method_id() + '/%s/%s.png'
         mf_country_to_ltuo_hashtag_and_entropy_and_focus_and_coverage = DataAnalysis._get_country_specific_locality_info(input_files_start_time, input_files_end_time, no_of_hashtags, get_country=plot_country)
         ltuo_country_and_r_locality_info = sorted(mf_country_to_ltuo_hashtag_and_entropy_and_focus_and_coverage.iteritems(),
-               key=lambda (k,v): len(v), reverse=True)[:100]
+                                                  key=lambda (k,v): len(v), reverse=True)[:100]
         for country, locality_info in \
                 ltuo_country_and_r_locality_info:
             print country, len(locality_info)
@@ -280,7 +280,7 @@ class DataAnalysis():
                 mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
                 mf_norm_focus_to_coverages[round(focus, 2)].append(coverage)
             try:
-                plt.figure(num=None, figsize=(6,3), dpi=80, facecolor='w', edgecolor='k')
+                plt.figure(num=None, figsize=(8,3), dpi=80, facecolor='w', edgecolor='k')
                 x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems() if len(entropies)>5])
                 _, z_coverage = zip(*[(norm_focus, np.mean(coverages)) for norm_focus, coverages in mf_norm_focus_to_coverages.iteritems() if len(coverages)>5])
                 cm = matplotlib.cm.get_cmap('autumn')
@@ -295,13 +295,21 @@ class DataAnalysis():
                 print e
                 pass
     @staticmethod
-    def locality_measures_country_specific_correlation_examples(input_files_start_time, input_files_end_time, no_of_hashtags):
-        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
-        ltuo_hashtag_and_entropy_and_focus = zip(*[(data[0], data[2], data[3][1]) for data in iterateJsonFromFile(input_file)])
-#        ltuo_hashtag_and_s_entropy_and_s_focus = sorted(ltuo_hashtag_and_entropy_and_focus, key=itemgetter(1,2))
-        ltuo_hashtag_and_r_entropy_and_focus = sorted(ltuo_hashtag_and_entropy_and_focus, key=itemgetter(1), reverse=True)
-        ltuo_hashtag_and_r_entropy_and_s_focus = sorted(ltuo_hashtag_and_r_entropy_and_focus, key=itemgetter(2))
-        print ltuo_hashtag_and_r_entropy_and_s_focus[5:]
+    def locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, no_of_hashtags, plot_country=False):
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '.txt'
+        GeneralMethods.runCommand('rm -rf %s'%output_file)
+        mf_location_to_ltuo_hashtag_and_occurrences_and_entropy_and_focus_and_coverage = DataAnalysis._get_country_specific_locality_info(input_files_start_time, input_files_end_time, no_of_hashtags, get_country=plot_country)
+        ltuo_location_and_r_locality_info = sorted(mf_location_to_ltuo_hashtag_and_occurrences_and_entropy_and_focus_and_coverage.iteritems(),
+                                                    key=lambda (k,v): len(v), reverse=True)[:100]
+        for location, ltuo_hashtag_and_occurrences_and_entropy_and_focus_and_coverage in \
+                ltuo_location_and_r_locality_info:
+            ltuo_hashtag_and_entropy_and_focus = [(data[0], data[2], data[3][1]) for data in ltuo_hashtag_and_occurrences_and_entropy_and_focus_and_coverage]
+            ltuo_hashtag_and_r_entropy_and_focus = sorted(ltuo_hashtag_and_entropy_and_focus, key=itemgetter(1), reverse=True)
+            ltuo_hashtag_and_r_entropy_and_s_focus = sorted(ltuo_hashtag_and_r_entropy_and_focus, key=itemgetter(2))
+            hashtags = zip(*ltuo_hashtag_and_r_entropy_and_s_focus)[0]
+            FileIO.writeToFileAsJson([location, hashtags[:5], hashtags[-5:]], output_file)
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
@@ -319,8 +327,8 @@ class DataAnalysis():
 
 #        DataAnalysis.locality_measure_cdf(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False   )    
-#        DataAnalysis.locality_measures_country_specific_correlation_examples(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False)    
+#        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
