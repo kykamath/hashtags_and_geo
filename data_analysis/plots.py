@@ -26,6 +26,8 @@ def iterateJsonFromFile(file):
 
 class CountryBoundaries:
     mf_country_to_bounding_box = {}
+    f_mf_lid_to_country = os.path.expanduser('~/SkyDrive/external_apps/TM_WORLD_BORDERS_SIMPL-0.3/mf_lid_to_country.json')
+    mf_lid_to_country = None
     @staticmethod
     def load():
         sf = shapefile.Reader(os.path.expanduser('~/SkyDrive/external_apps/TM_WORLD_BORDERS_SIMPL-0.3/TM_WORLD_BORDERS_SIMPL-0.3.shp'))
@@ -37,7 +39,21 @@ class CountryBoundaries:
                 CountryBoundaries.mf_country_to_bounding_box.iteritems():
             if point_inside_polygon(point[0], point[1], bounding_box):
                     return country 
-
+    @staticmethod
+    def write_json_for_lattice_to_country():
+        CountryBoundaries.load()
+#        mf_lid_to_country = {}
+        (input_files_start_time, input_files_end_time, no_of_hashtags) = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
+        input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+        lids = [(data[0]) for data in iterateJsonFromFile(input_file)]
+        for lid_count, lid in enumerate(lids):
+#            mf_lid_to_country[lid ] =  CountryBoundaries.get_country(getLocationFromLid(lid.replace('_', ' ')))
+            print lid_count
+            FileIO.writeToFileAsJson([lid, getLocationFromLid(lid.replace('_', ' '))], CountryBoundaries.f_mf_lid_to_country)
+    @staticmethod
+    def run():
+        CountryBoundaries.write_json_for_lattice_to_country()
+        
 class DataAnalysis():
     @staticmethod
     def hashtag_distribution(input_files_start_time, input_files_end_time):
@@ -132,12 +148,7 @@ class DataAnalysis():
         ltuo_rank_and_average_percentage_of_occurrences = [tuo_rank_and_average_percentage_of_occurrences 
                                                           for tuo_rank_and_average_percentage_of_occurrences in iterateJsonFromFile(next_input_file)]
         ltuo_s_rank_and_average_percentage_of_occurrences = sorted(ltuo_rank_and_average_percentage_of_occurrences, key=itemgetter(0))
-        y_average_percentage_of_occurrences, current_val = [], 0.0
-        for val in zip(*ltuo_s_rank_and_average_percentage_of_occurrences)[1][:50]:
-            current_val+=val
-            y_average_percentage_of_occurrences.append(current_val)
-#        y_average_percentage_of_occurrences = y_fraction_of_occurrences[:50]
-        
+        y_average_percentage_of_occurrences = zip(*ltuo_s_rank_and_average_percentage_of_occurrences)[1][:50]
         x_percentage_of_locations = [x for x in range(1,len(y_fraction_of_occurrences)+1)]
         print len(x_percentage_of_locations), len(y_average_percentage_of_occurrences)
         plt.plot(x_percentage_of_locations, y_fraction_of_occurrences, lw=0, marker='o')  
@@ -177,15 +188,10 @@ class DataAnalysis():
         
     @staticmethod
     def locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, no_of_hashtags):
-        ACCURACY_NO_OF_OCCURRANCES = 25
-        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
-        ltuo_hashtag_and_occurrence_count_and_entropy_and_focus = [data for data in iterateJsonFromFile(input_file)]
-#        for tuo_hashtag_and_occurrence_count_and_entropy_and_focus in \
-#                ltuo_hashtag_and_occurrence_count_and_entropy_and_focus:
-#            print tuo_hashtag_and_occurrence_count_and_entropy_and_focus
-        ltuo_entropy_and_occurrences_count = [(data[2], data[1]) for data in ltuo_hashtag_and_occurrence_count_and_entropy_and_focus]
-        ltuo_focus_and_occurrences_count = [(data[3][1], data[1]) for data in ltuo_hashtag_and_occurrence_count_and_entropy_and_focus]
-        def plot_graph(ltuo_locality_measure_and_occurrences_count):
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '/%s.png'
+        def plot_graph(ltuo_locality_measure_and_occurrences_count, id):
             mf_normalized_occurrences_count_to_locality_measures = defaultdict(list)
             for locality_measure, occurrences_count in \
                     ltuo_locality_measure_and_occurrences_count:
@@ -196,15 +202,21 @@ class DataAnalysis():
                 if len(mf_normalized_occurrences_count_to_locality_measures[k]) > 10:
                     x_occurrance_counts.append(k), y_locality_measures.append(np.mean(mf_normalized_occurrences_count_to_locality_measures[k]))
             plt.scatter(x_occurrance_counts, y_locality_measures)
-            plt.show()
-#            y_locality_measure, x_occurrences_count = zip(*ltuo_locality_measure_and_occurrences_count)
-#            plt.scatter(x_occurrences_count, y_locality_measure)
-#            plt.semilogx(x_occurrences_count[0], y_locality_measure[0])
-#            plt.show()
-        plot_graph(ltuo_entropy_and_occurrences_count)
+            plt.semilogx(x_occurrance_counts[0], y_locality_measures[0])
+            savefig(output_file%id)
+        ACCURACY_NO_OF_OCCURRANCES = 25
+        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+        ltuo_hashtag_and_occurrence_count_and_entropy_and_focus = [data for data in iterateJsonFromFile(input_file)]
+        ltuo_entropy_and_occurrences_count = [(data[2], data[1]) for data in ltuo_hashtag_and_occurrence_count_and_entropy_and_focus]
+        ltuo_focus_and_occurrences_count = [(data[3][1], data[1]) for data in ltuo_hashtag_and_occurrence_count_and_entropy_and_focus]
+        plot_graph(ltuo_entropy_and_occurrences_count, 'entropy')
+        plot_graph(ltuo_focus_and_occurrences_count, 'focus')
     @staticmethod
-    def cdf_of_locality_measure(input_files_start_time, input_files_end_time, no_of_hashtags):
-        def plot_graph(locality_measures):
+    def locality_measure_cdf(input_files_start_time, input_files_end_time, no_of_hashtags):
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '/%s.png'
+        def plot_graph(locality_measures, id):
             mf_apprx_to_count = defaultdict(float)
             for measure in locality_measures:
                 mf_apprx_to_count[round(measure,3)]+=1
@@ -215,21 +227,15 @@ class DataAnalysis():
                 current_val+=count
                 x_measure.append(apprx)
                 y_distribution.append(current_val/total_hashtags)
-            
-                
             plt.plot(x_measure, y_distribution, lw=0, marker='o')
-#            plt.semilogy([[1],[1]])
-            plt.show()
+            savefig(output_file%id)
         input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
         ltuo_hashtag_and_occurrence_count_and_entropy_and_focus = [data for data in iterateJsonFromFile(input_file)]
-        occs = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[1]
-        plt.hist(occs,1000)
-        plt.show()
-        exit()
         entropies = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[2]
         focuses = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[3]
         focuses = zip(*focuses)[1]
-        plot_graph(entropies)
+        plot_graph(entropies, 'entropy')
+        plot_graph(focuses, 'focus')
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
@@ -241,13 +247,17 @@ class DataAnalysis():
         
 #        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_entropy_and_focus(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_top_locations(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
-#        DataAnalysis.cdf_of_locality_measure(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.locality_measure_cdf(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.locality_measures_country_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
 if __name__ == '__main__':
-    DataAnalysis.run()
+#    DataAnalysis.run()
+    CountryBoundaries.run()
+    
