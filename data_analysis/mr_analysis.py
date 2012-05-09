@@ -83,6 +83,30 @@ def get_mf_lid_to_occurrence_count(hashtag_object):
             return_mf_lid_to_occurrence_count[lid]+=occurrence_count 
     return return_mf_lid_to_occurrence_count
 
+def get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_object):
+    return_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = []
+    ltuo_interval_and_mf_lid_to_occurrence_count = \
+        get_mf_interval_to_mf_lid_to_occurrence_count(hashtag_object).items()
+    for iid, (interval, mf_lid_to_occurrence_count) in \
+            enumerate(
+                        sorted(ltuo_interval_and_mf_lid_to_occurrence_count, key=itemgetter(0))
+                        ):
+        return_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count.append(
+                  [iid, [interval, mf_lid_to_occurrence_count.items()]]                            
+                  )
+    return return_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count
+
+def get_ltuo_iid_to_tuo_interval_and_occurrence_count(hashtag_object):
+    return_ltuo_iid_to_tuo_interval_and_occurrence_count = []
+    ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = \
+        get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count()
+    for iid, (interval, ltuo_lid_and_occurrence_count) in\
+            ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count:
+        return_ltuo_iid_to_tuo_interval_and_occurrence_count.append(
+                    iid, [interval, sum(zip(*ltuo_lid_and_occurrence_count)[1])]
+                )
+    return return_ltuo_iid_to_tuo_interval_and_occurrence_count
+
 class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
@@ -267,13 +291,21 @@ class MRAnalysis(ModifiedMRJob):
                            reducer=self.red_tuo_rank_and_ito_percentage_of_occurrences_to_tuo_rank_and_average_percentage_of_occurrences
                            )
                    ]
+    def job_write_tuo_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences(self):
+        return self.job_load_hashtag_object() + \
+                [
+                        self.mr(
+                               mapper=self.map_hashtag_object_to_tuo_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences, 
+                               reducer=self.red_tuo_iid_and_ito_is_peak_and_cumulative_percentage_of_occurrences_to_tuo_iid_total_peaks_and_average_cumulative_percentage_of_occurrences
+                               )
+                   ]
     def steps(self):
         pass
 #        return self.job_load_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
-        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage()
+#        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage()
 #        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
     
 if __name__ == '__main__':
