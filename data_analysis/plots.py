@@ -8,7 +8,7 @@ from datetime import datetime
 from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
     fld_sky_drive_data_analysis_images, f_tuo_lid_and_distribution_value,\
     f_tuo_rank_and_average_percentage_of_occurrences, \
-    f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus
+    f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
@@ -19,6 +19,7 @@ from library.geo import point_inside_polygon, getLocationFromLid
 from collections import defaultdict
 from library.stats import entropy, focus
 import numpy as np
+import matplotlib
 
 def iterateJsonFromFile(file):
     for data in FileIO.iterateJsonFromFile(file):
@@ -58,7 +59,10 @@ class CountryBoundaries:
                 print 'Loading for: ', lid
                 if country!=None:
                     CountryBoundaries.mf_lid_to_country[lid] =  country
-        if lid in CountryBoundaries.mf_lid_to_country: return CountryBoundaries.mf_lid_to_country[lid]
+        if lid in CountryBoundaries.mf_lid_to_country: 
+            country = CountryBoundaries.mf_lid_to_country[lid]
+            if country=='United States Minor Outlying Islands': country='United States'
+            return country
     @staticmethod
     def run():
         CountryBoundaries.write_json_for_lattice_to_country()
@@ -246,29 +250,58 @@ class DataAnalysis():
         plot_graph(entropies, 'entropy')
         plot_graph(focuses, 'focus')
     @staticmethod
-    def locality_measures_country_specific_correlation(input_files_start_time, input_files_end_time, no_of_hashtags):
-        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+    def _get_country_specific_locality_info(input_files_start_time, input_files_end_time, no_of_hashtags, get_country=False):
+        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
         ltuo_hashtag_and_occurrence_count_and_entropy_and_focus = [data for data in iterateJsonFromFile(input_file)]
-        mf_country_to_ltuo_hashtag_and_entropy_and_focus = defaultdict(list)
-        for hashtag, occurrence_count, entropy, focus in\
+        mf_country_to_ltuo_hashtag_and_entropy_and_focus_and_coverage = defaultdict(list)
+        for (hashtag, occurrence_count, entropy, focus, coverage) in\
                 ltuo_hashtag_and_occurrence_count_and_entropy_and_focus:
-            country = CountryBoundaries.get_country_for_lid(focus[0])
-            if country !=None:
-                mf_country_to_ltuo_hashtag_and_entropy_and_focus[country].append([hashtag, occurrence_count, entropy, focus])
-        ltuo_country_and_r_locality_info = sorted(mf_country_to_ltuo_hashtag_and_entropy_and_focus.iteritems(),
-               key=lambda (k,v): len(v), reverse=True)[:11]
+            if get_country: country = CountryBoundaries.get_country_for_lid(focus[0])
+            else: country = focus[0]
+            if country!=None:
+                mf_country_to_ltuo_hashtag_and_entropy_and_focus_and_coverage[country].append([hashtag, occurrence_count, entropy, focus, coverage])
+        return mf_country_to_ltuo_hashtag_and_entropy_and_focus_and_coverage
+    @staticmethod
+    def locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, no_of_hashtags, plot_country=False):
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '/%s/%s.png'
+        mf_country_to_ltuo_hashtag_and_entropy_and_focus_and_coverage = DataAnalysis._get_country_specific_locality_info(input_files_start_time, input_files_end_time, no_of_hashtags, get_country=plot_country)
+        ltuo_country_and_r_locality_info = sorted(mf_country_to_ltuo_hashtag_and_entropy_and_focus_and_coverage.iteritems(),
+               key=lambda (k,v): len(v), reverse=True)[:100]
         for country, locality_info in \
                 ltuo_country_and_r_locality_info:
             print country, len(locality_info)
-            hashtags, occurrence_counts, entropies, focuses = zip(*locality_info)
+            hashtags, occurrence_counts, entropies, focuses, coverages = zip(*locality_info)
             focuses = zip(*focuses)[1]
             mf_norm_focus_to_entropies = defaultdict(list)
-            for focus, entropy in zip(focuses,entropies):
+            mf_norm_focus_to_coverages = defaultdict(list)
+            for focus, entropy, coverage in zip(focuses,entropies, coverages):
                 mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
-            x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems()])
-#            plt.scatter(entropies, focuses)
-            plt.scatter(x_focus, y_entropy)
-            plt.show()
+                mf_norm_focus_to_coverages[round(focus, 2)].append(coverage)
+            try:
+                plt.figure(num=None, figsize=(6,3), dpi=80, facecolor='w', edgecolor='k')
+                x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems() if len(entropies)>5])
+                _, z_coverage = zip(*[(norm_focus, np.mean(coverages)) for norm_focus, coverages in mf_norm_focus_to_coverages.iteritems() if len(coverages)>5])
+                cm = matplotlib.cm.get_cmap('autumn')
+                sc = plt.scatter(x_focus, y_entropy, c=z_coverage, cmap=cm, s=50, lw=0, vmin=0, vmax=2990)
+                plt.xlim(xmin=-0.1, xmax=1.1)
+                plt.ylim(ymin=-1, ymax=9)
+                plt.colorbar(sc)
+                if plot_country: savefig(output_file%('country', country))
+                else: savefig(output_file%('location', country))
+                plt.clf()
+            except Exception as e: 
+                print e
+                pass
+    @staticmethod
+    def locality_measures_country_specific_correlation_examples(input_files_start_time, input_files_end_time, no_of_hashtags):
+        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+        ltuo_hashtag_and_entropy_and_focus = zip(*[(data[0], data[2], data[3][1]) for data in iterateJsonFromFile(input_file)])
+#        ltuo_hashtag_and_s_entropy_and_s_focus = sorted(ltuo_hashtag_and_entropy_and_focus, key=itemgetter(1,2))
+        ltuo_hashtag_and_r_entropy_and_focus = sorted(ltuo_hashtag_and_entropy_and_focus, key=itemgetter(1), reverse=True)
+        ltuo_hashtag_and_r_entropy_and_s_focus = sorted(ltuo_hashtag_and_r_entropy_and_focus, key=itemgetter(2))
+        print ltuo_hashtag_and_r_entropy_and_s_focus[5:]
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
@@ -286,7 +319,8 @@ class DataAnalysis():
 
 #        DataAnalysis.locality_measure_cdf(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.locality_measures_country_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False   )    
+#        DataAnalysis.locality_measures_country_specific_correlation_examples(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
