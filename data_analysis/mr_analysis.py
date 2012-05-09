@@ -99,7 +99,7 @@ def get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_obje
 def get_ltuo_iid_and_tuo_interval_and_occurrence_count(hashtag_object):
     return_ltuo_iid_to_tuo_interval_and_occurrence_count = []
     ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = \
-        get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count()
+        get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_object)
     for iid, (interval, ltuo_lid_and_occurrence_count) in\
             ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count:
         return_ltuo_iid_to_tuo_interval_and_occurrence_count.append(
