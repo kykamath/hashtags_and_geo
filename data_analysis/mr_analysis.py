@@ -18,6 +18,7 @@ LOCATION_ACCURACY = 1.45 # 100 miles
 #LOCATION_ACCURACY = 0.001 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes
 MIN_HASHTAG_OCCURENCES = 50
+#MAX_HASHTAG_OCCURENCES = 100000
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
 #START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2011, 4, 28)
 
@@ -53,13 +54,13 @@ def combine_hashtag_instances(hashtag, ito_ltuo_lid_and_occurrence_time):
         for tuo_lid_and_occurrence_time in ltuo_lid_and_occurrence_time: 
             combined_ltuo_lid_and_occurrence_time.append(tuo_lid_and_occurrence_time)
     if combined_ltuo_lid_and_occurrence_time:
-#        e, l = min(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1]), max(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
-#        if len(combined_ltuo_lid_and_occurrence_time)>=MIN_HASHTAG_OCCURENCES and \
-#                e[1]>=HASHTAG_STARTING_WINDOW and l[1]<=HASHTAG_ENDING_WINDOW:
-        return {
-                'hashtag': hashtag, 
-                'ltuo_lid_and_s_interval': sorted(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
-                }
+        e, l = min(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1]), max(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
+        if len(combined_ltuo_lid_and_occurrence_time)>=MIN_HASHTAG_OCCURENCES and \
+                e[1]>=HASHTAG_STARTING_WINDOW and l[1]<=HASHTAG_ENDING_WINDOW:
+            return {
+                    'hashtag': hashtag, 
+                    'ltuo_lid_and_s_interval': sorted(combined_ltuo_lid_and_occurrence_time, key=lambda t: t[1])
+                    }
 
 def get_mf_interval_to_mf_lid_to_occurrence_count(hashtag_object):
     mf_interval_to_mf_lid_to_occurrence_count = defaultdict(dict)
@@ -187,9 +188,6 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def map_hashtag_object_to_tuo_rank_and_percentage_of_occurrences(self, hashtag, hashtag_object):
         mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
-#        yield len(mf_lid_to_occurrence_count), 1
-#        obj = get_mf_interval_to_mf_lid_to_occurrence_count(hashtag_object)
-#        yield hashtag, mf_lid_to_occurrence_count
         ltuo_lid_and_r_occurrence_count = sorted(mf_lid_to_occurrence_count.items(), key=itemgetter(1), reverse=True)
         total_occurrence_count = float(sum(zip(*ltuo_lid_and_r_occurrence_count)[1]))
         for rank, (_, occurrence_count) in enumerate(ltuo_lid_and_r_occurrence_count[:K_TOP_RANK]):
@@ -272,8 +270,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
-        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus()
-#        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
+#        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus()
+        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
     
 if __name__ == '__main__':
     MRAnalysis.run()
