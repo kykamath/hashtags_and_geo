@@ -190,8 +190,10 @@ class MRAnalysis(ModifiedMRJob):
         mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
         ltuo_lid_and_r_occurrence_count = sorted(mf_lid_to_occurrence_count.items(), key=itemgetter(1), reverse=True)
         total_occurrence_count = float(sum(zip(*ltuo_lid_and_r_occurrence_count)[1]))
+        current_occurrence_count = 0
         for rank, (_, occurrence_count) in enumerate(ltuo_lid_and_r_occurrence_count[:K_TOP_RANK]):
-            yield rank+1, occurrence_count/total_occurrence_count
+            current_occurrence_count+=occurrence_count
+            yield rank+1, current_occurrence_count/total_occurrence_count
     def red_tuo_rank_and_ito_percentage_of_occurrences_to_tuo_rank_and_average_percentage_of_occurrences(self, rank, ito_percentage_of_occurrences):
         red_percentage_of_occurrences = []
         for percentage_of_occurrence in ito_percentage_of_occurrences: red_percentage_of_occurrences.append(percentage_of_occurrence)
@@ -270,8 +272,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
-        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus()
-#        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
+#        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus()
+        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
     
 if __name__ == '__main__':
     MRAnalysis.run()
