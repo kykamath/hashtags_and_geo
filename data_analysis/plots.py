@@ -42,14 +42,23 @@ class CountryBoundaries:
     @staticmethod
     def write_json_for_lattice_to_country():
         CountryBoundaries.load()
-#        mf_lid_to_country = {}
+        GeneralMethods.runCommand('rm -rf %s'%CountryBoundaries.f_mf_lid_to_country)
         (input_files_start_time, input_files_end_time, no_of_hashtags) = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
         input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
         lids = [(data[0]) for data in iterateJsonFromFile(input_file)]
         for lid_count, lid in enumerate(lids):
 #            mf_lid_to_country[lid ] =  CountryBoundaries.get_country(getLocationFromLid(lid.replace('_', ' ')))
             print lid_count
-            FileIO.writeToFileAsJson([lid, getLocationFromLid(lid.replace('_', ' '))], CountryBoundaries.f_mf_lid_to_country)
+            FileIO.writeToFileAsJson([lid, CountryBoundaries.get_country(getLocationFromLid(lid.replace('_', ' ')))], CountryBoundaries.f_mf_lid_to_country)
+    @staticmethod
+    def get_country_for_lid(lid):
+        if CountryBoundaries.mf_lid_to_country==None:
+            CountryBoundaries.mf_lid_to_country = {}
+            for lid, country in FileIO.iterateJsonFromFile(CountryBoundaries.f_mf_lid_to_country):
+                print 'Loading for: ', lid
+                if country!=None:
+                    CountryBoundaries.mf_lid_to_country[lid] =  country
+        if lid in CountryBoundaries.mf_lid_to_country: return CountryBoundaries.mf_lid_to_country[lid]
     @staticmethod
     def run():
         CountryBoundaries.write_json_for_lattice_to_country()
@@ -237,6 +246,17 @@ class DataAnalysis():
         plot_graph(entropies, 'entropy')
         plot_graph(focuses, 'focus')
     @staticmethod
+    def locality_measures_country_specific_correlation(input_files_start_time, input_files_end_time, no_of_hashtags):
+        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
+        ltuo_hashtag_and_occurrence_count_and_entropy_and_focus = [data for data in iterateJsonFromFile(input_file)]
+        mf_country_to_ltuo_hashtag_and_entropy_and_focus = defaultdict(list)
+        for hashtag, occurrence_count, entropy, focus in\
+                ltuo_hashtag_and_occurrence_count_and_entropy_and_focus:
+            country = CountryBoundaries.get_country_for_lid(focus[0])
+            print focus[0], country
+#            mf_country_to_ltuo_hashtag_and_entropy_and_focus.append()
+
+    @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
         input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
@@ -253,7 +273,7 @@ class DataAnalysis():
 
 #        DataAnalysis.locality_measure_cdf(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.locality_measures_country_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.locality_measures_country_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
