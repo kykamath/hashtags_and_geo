@@ -362,14 +362,14 @@ class DataAnalysis():
             y_entropies.append(data[1][1])
             y_focuses.append(data[1][2])
             z_coverages.append(data[1][3])
-#        plt.plot(x_normalized_iids, y_entropies)
-        plt.plot(x_normalized_iids, y_focuses)
-        plt.xlim(xmin=-4, xmax=100)
+        plt.plot(x_normalized_iids, y_entropies)
+#        plt.plot(x_normalized_iids, y_focuses)
+        plt.xlim(xmin=-2, xmax=100)
         plt.show()
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
-        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 0
+        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
         
 #        DataAnalysis.hashtag_distribution(input_files_start_time, input_files_end_time)
 #        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time)

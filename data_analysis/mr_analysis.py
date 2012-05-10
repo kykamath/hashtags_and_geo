@@ -16,7 +16,7 @@ import numpy as np
 
 LOCATION_ACCURACY = 1.45 # 100 miles
 #LOCATION_ACCURACY = 0.001 # 100 miles
-TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes
+TIME_UNIT_IN_SECONDS = 60*60 # 60 minutes
 MIN_HASHTAG_OCCURENCES = 50
 #MAX_HASHTAG_OCCURENCES = 100000
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
@@ -341,6 +341,7 @@ class MRAnalysis(ModifiedMRJob):
             for lid in lids: mf_lid_to_occurrence_count[lid]+=1
             points = [getLocationFromLid(lid.replace('_', ' ')) for lid in lids]
             yield iid-peak_iid, [len(lids)/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count)[1], getRadiusOfGyration(points)]
+            yield '%s_%s'%(iid-peak_iid, peak_iid), [len(lids)/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count)[1], getRadiusOfGyration(points)]
     def red_tuo_norm_iid_and_ito_interval_stats_to_tuo_norm_iid_and_reduced_interval_stats(self, norm_iid, ito_interval_stats):
         red_percentage_of_occurrences = []
         red_cumulative_entropy = []
@@ -440,9 +441,9 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
-        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak()
+#        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak()
 #        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
-#        return self.job_write_tuo_iid_and_interval_stats()
+        return self.job_write_tuo_iid_and_interval_stats()
 #        return self.job_write_tuo_norm_iid_and_interval_stats()
     
 if __name__ == '__main__':
