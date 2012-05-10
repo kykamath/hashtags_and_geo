@@ -330,7 +330,7 @@ class MRAnalysis(ModifiedMRJob):
             mf_lid_to_occurrence_count = defaultdict(float)
             for lid in lids: mf_lid_to_occurrence_count[lid]+=1
             points = [getLocationFromLid(lid.replace('_', ' ')) for lid in lids]
-            yield iid-peak_iid, [len(lids)/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count), getRadiusOfGyration(points)]
+            yield iid-peak_iid, [len(lids)/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count)[1], getRadiusOfGyration(points)]
     def red_tuo_norm_iid_and_ito_interval_stats_to_tuo_norm_iid_and_reduced_interval_stats(self, norm_iid, ito_interval_stats):
         red_percentage_of_occurrences = []
         red_cumulative_entropy = []
