@@ -87,10 +87,14 @@ def get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_obje
     return_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = []
     ltuo_interval_and_mf_lid_to_occurrence_count = \
         get_mf_interval_to_mf_lid_to_occurrence_count(hashtag_object).items()
-    for iid, (interval, mf_lid_to_occurrence_count) in \
-            enumerate(
-                        sorted(ltuo_interval_and_mf_lid_to_occurrence_count, key=itemgetter(0))
-                        ):
+    ltuo_s_interval_and_mf_lid_to_occurrence_count = sorted(ltuo_interval_and_mf_lid_to_occurrence_count, key=itemgetter(0))
+    first_interval = ltuo_s_interval_and_mf_lid_to_occurrence_count[0][0]
+    for interval, mf_lid_to_occurrence_count in \
+            ltuo_s_interval_and_mf_lid_to_occurrence_count:
+#            enumerate(
+#                        sorted(ltuo_interval_and_mf_lid_to_occurrence_count, key=itemgetter(0))
+#                        ):
+        iid = (interval-first_interval)/TIME_UNIT_IN_SECONDS
         return_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count.append(
                   [iid, [interval, mf_lid_to_occurrence_count.items()]]                            
                   )
@@ -250,36 +254,38 @@ class MRAnalysis(ModifiedMRJob):
         # Points for entropy, focus and coverage
         mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
         points = [ getLocationFromLid(lid.replace('_', ' ')) for lid,_ in hashtag_object['ltuo_lid_and_s_interval']]
-        # Cumulative occurrences data
+        # Occurrence percentage and cumulative occurrence percentage
         current_val = 0.0
         total_occurrences = sum(data[1][1] for data in ltuo_iid_and_tuo_interval_and_occurrence_count)
-        for iid, (_, occurrence_count) in \
-                ltuo_iid_and_tuo_interval_and_occurrence_count:
+        for iid, (_, occurrence_count) in ltuo_iid_and_tuo_interval_and_occurrence_count:
             is_peak = 0.0
             if iid==peak_iid: is_peak=1.0
             current_val+=occurrence_count
-            yield iid, [is_peak, occurrence_count/total_occurrences, current_val/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count), getRadiusOfGyration(points)]
+#            yield iid, [is_peak, occurrence_count/total_occurrences, current_val/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count), getRadiusOfGyration(points)]
+            yield iid, [is_peak, occurrence_count/total_occurrences, current_val/total_occurrences]
     def red_tuo_iid_and_ito_interval_stats_to_tuo_iid_and_reduced_interval_stats(self, iid, ito_interval_stats):
         total_is_peaks = 0.0
         red_percentage_of_occurrences = []
         red_cumulative_percentage_of_occurrences = []
-        red_cumulative_entropy = []
-        red_cumulative_focus = []
-        red_cumulative_coverage = []
-        for (is_peak, percentage_of_occurrences, cumulative_percentage_of_occurrences, entropy, focus, coverage)  in\
+#        red_cumulative_entropy = []
+#        red_cumulative_focus = []
+#        red_cumulative_coverage = []
+#        for (is_peak, percentage_of_occurrences, cumulative_percentage_of_occurrences, entropy, focus, coverage)  in\
+        for (is_peak, percentage_of_occurrences, cumulative_percentage_of_occurrences)  in\
                 ito_interval_stats:
             total_is_peaks+=is_peak
             red_percentage_of_occurrences.append(percentage_of_occurrences)
             red_cumulative_percentage_of_occurrences.append(cumulative_percentage_of_occurrences)
-            red_cumulative_entropy.append(entropy)
-            red_cumulative_focus.append(focus)
-            red_cumulative_coverage.append(coverage)
+#            red_cumulative_entropy.append(entropy)
+#            red_cumulative_focus.append(focus)
+#            red_cumulative_coverage.append(coverage)
         yield iid, [iid, [total_is_peaks, 
                           np.mean(red_percentage_of_occurrences), 
                           np.mean(red_cumulative_percentage_of_occurrences), 
-                          np.mean(red_cumulative_entropy), 
-                          np.mean(red_cumulative_focus), 
-                          np.mean(red_cumulative_coverage)]]
+#                          np.mean(red_cumulative_entropy), 
+#                          np.mean(red_cumulative_focus), 
+#                          np.mean(red_cumulative_coverage)
+                    ]]
     ''' End: Methods to get stats related to intervals
     '''
         
