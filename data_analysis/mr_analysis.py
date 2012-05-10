@@ -237,13 +237,20 @@ class MRAnalysis(ModifiedMRJob):
     '''
         
     ''' Start: Methods to get stats related to intervals
+    
+        interval_stats = tuo_is_peak_and_cumulative_percentage_of_occurrences_and_entropy_and_focus_and_coverage
     '''
-    def map_hashtag_object_to_tuo_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences(self, hashtag, hashtag_object):
+    def map_hashtag_object_to_tuo_iid_and_interval_stats(self, hashtag, hashtag_object):
         ltuo_iid_and_tuo_interval_and_occurrence_count = \
             get_ltuo_iid_and_tuo_interval_and_occurrence_count(hashtag_object)
+        # Peak data
         peak_tuo_iid_and_tuo_interval_and_occurrence_count = \
             max(ltuo_iid_and_tuo_interval_and_occurrence_count, key=lambda (_, (__, occurrence_count)): occurrence_count)
         peak_iid = peak_tuo_iid_and_tuo_interval_and_occurrence_count[0]
+        # Points for entropy, focus and coverage
+        mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
+        points = [ getLocationFromLid(lid.replace('_', ' ')) for lid,_ in hashtag_object['ltuo_lid_and_s_interval']]
+        # Cumulative occurrences data
         current_val = 0.0
         total_occurrences = sum(data[1][1] for data in ltuo_iid_and_tuo_interval_and_occurrence_count)
         for iid, (_, occurrence_count) in \
@@ -251,15 +258,25 @@ class MRAnalysis(ModifiedMRJob):
             is_peak = 0.0
             if iid==peak_iid: is_peak=1.0
             current_val+=occurrence_count
-            yield iid, [is_peak, current_val/total_occurrences]
-    def red_tuo_iid_and_ito_is_peak_and_cumulative_percentage_of_occurrences_to_tuo_iid_total_peaks_and_average_cumulative_percentage_of_occurrences(self, iid, ito_is_peak_and_cumulative_percentage_of_occurrences):
+            yield iid, [is_peak, current_val/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count), getRadiusOfGyration(points)]
+    def red_tuo_iid_and_ito_interval_stats_to_tuo_iid_and_reduced_interval_stats(self, iid, ito_interval_stats):
         total_is_peaks = 0.0
         red_cumulative_percentage_of_occurrences = []
-        for is_peak, cumulative_percentage_of_occurrences in\
-                ito_is_peak_and_cumulative_percentage_of_occurrences:
+        red_cumulative_entropy = []
+        red_cumulative_focus = []
+        red_cumulative_coverage = []
+        for (is_peak, cumulative_percentage_of_occurrences, entropy, focus, coverage)  in\
+                ito_interval_stats:
             total_is_peaks+=is_peak
             red_cumulative_percentage_of_occurrences.append(cumulative_percentage_of_occurrences)
-        yield iid, [iid, [total_is_peaks, np.mean(red_cumulative_percentage_of_occurrences)]]
+            red_cumulative_entropy.append(entropy)
+            red_cumulative_focus.append(focus)
+            red_cumulative_coverage.append(coverage)
+        yield iid, [iid, [total_is_peaks, 
+                          np.mean(red_cumulative_percentage_of_occurrences), 
+                          np.mean(red_cumulative_entropy), 
+                          np.mean(red_cumulative_focus), 
+                          np.mean(red_cumulative_coverage)]]
     ''' End: Methods to get stats related to intervals
     '''
         
@@ -322,8 +339,8 @@ class MRAnalysis(ModifiedMRJob):
         return self.job_load_hashtag_object() + \
                 [
                         self.mr(
-                               mapper=self.map_hashtag_object_to_tuo_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences, 
-                               reducer=self.red_tuo_iid_and_ito_is_peak_and_cumulative_percentage_of_occurrences_to_tuo_iid_total_peaks_and_average_cumulative_percentage_of_occurrences
+                               mapper=self.map_hashtag_object_to_tuo_iid_and_interval_stats, 
+                               reducer=self.red_tuo_iid_and_ito_interval_stats_to_tuo_iid_and_reduced_interval_stats
                                )
                    ]
     def steps(self):
