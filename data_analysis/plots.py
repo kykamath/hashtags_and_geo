@@ -14,7 +14,7 @@ from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
 import matplotlib.pyplot as plt
-from library.plotting import savefig
+from library.plotting import savefig, splineSmooth
 import shapefile, os
 from library.geo import point_inside_polygon, getLocationFromLid
 from collections import defaultdict
@@ -354,18 +354,36 @@ class DataAnalysis():
 #                                             soorted([(data[0],data[1][1]) 
 #                                               for data in 
 #                                               ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage])
-
-        x_normalized_iids, y_entropies, y_focuses, z_coverages = [], [], [], []
-        for data in \
-                sorted(ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage, key=itemgetter(0)):
-            if '_' not in str(data[0]):
-                x_normalized_iids.append(int(data[0]))
-                y_entropies.append(data[1][1])
-                y_focuses.append(data[1][2])
-                z_coverages.append(data[1][3])
-#        plt.plot(x_normalized_iids, y_entropies)
-        plt.plot(x_normalized_iids, y_focuses)
-#        plt.xlim(xmin=-2, xmax=100)
+        
+        mf_peak_to_plot_data = defaultdict(dict)
+        for data in sorted(ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage, key=itemgetter(0)):
+            peak = None
+            if '_' not in str(data[0]): iid, peak = int(data[0]), -1                
+            else: 
+                iid, peak = data[0].split('_')
+                iid, peak = int(iid), int(peak)
+            if peak not in mf_peak_to_plot_data: mf_peak_to_plot_data[peak] = defaultdict(list)
+            mf_peak_to_plot_data[peak]['x_normalized_iids'].append(iid)
+            mf_peak_to_plot_data[peak]['y_entropies'].append(data[1][1])
+            mf_peak_to_plot_data[peak]['y_focuses'].append(data[1][2])
+            mf_peak_to_plot_data[peak]['z_coverages'].append(data[1][3])
+            
+#        plt.plot(mf_peak_to_plot_data[-1]['x_normalized_iids'], mf_peak_to_plot_data[-1]['y_entropies'])
+        xmin=-2 
+        xmax=24
+        for peak, plot_data in mf_peak_to_plot_data.iteritems():
+            if peak!=-1:
+                x_normalized_iids, y_focuses = [], []
+                for x, y in zip(plot_data['x_normalized_iids'], plot_data['y_focuses']):
+                    if x>=xmin and x<=xmax:
+                        x_normalized_iids.append(x)
+                        y_focuses.append(y)
+                print len(x_normalized_iids), len(y_focuses)
+                x_normalized_iids, y_focuses = splineSmooth(x_normalized_iids, y_focuses)
+                plt.plot(x_normalized_iids, y_focuses, label=peak)
+#        plt.xlim(xmin=-2, xmax=24)
+        plt.ylim(ymin=0.68, ymax=0.9)
+        plt.legend()
         plt.show()
     @staticmethod
     def run():
