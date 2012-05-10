@@ -17,8 +17,8 @@ import numpy as np
 LOCATION_ACCURACY = 1.45 # 100 miles
 #LOCATION_ACCURACY = 0.001 # 100 miles
 
-#TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes Used for iid only
-TIME_UNIT_IN_SECONDS = 60*60 # 60 minutes Used for norm iid to overcome sparcity
+TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes Used for iid only
+#TIME_UNIT_IN_SECONDS = 60*60 # 60 minutes Used for norm iid to overcome sparcity
 
 MIN_HASHTAG_OCCURENCES = 50
 #MAX_HASHTAG_OCCURENCES = 100000
@@ -444,10 +444,10 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
-#        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak()
+        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak()
 #        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
 #        return self.job_write_tuo_iid_and_interval_stats()
-        return self.job_write_tuo_norm_iid_and_interval_stats()
+#        return self.job_write_tuo_norm_iid_and_interval_stats()
     
 if __name__ == '__main__':
     MRAnalysis.run()

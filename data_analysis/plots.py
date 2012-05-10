@@ -387,6 +387,34 @@ class DataAnalysis():
         plt.legend()
         plt.show()
     @staticmethod
+    def locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '/%s/%s.png'
+        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        ltuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak = [data for data in iterateJsonFromFile(input_file)]
+        print len(ltuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak)
+        _, _, entropies, focuses, _, peaks = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak)
+        focuses = zip(*focuses)[1]
+        mf_norm_focus_to_entropies = defaultdict(list)
+        mf_norm_focus_to_peaks = defaultdict(list)
+        for focus, entropy, peak in zip(focuses,entropies, peaks):
+            if peak<100:
+                mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
+                mf_norm_focus_to_peaks[round(focus, 2)].append(peak)
+#        plt.figure(num=None, figsize=(8,3), dpi=80, facecolor='w', edgecolor='k')
+        x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems() if len(entropies)>5])
+        _, z_peak = zip(*[(norm_focus, np.mean(peaks)) for norm_focus, peaks in mf_norm_focus_to_peaks.iteritems() if len(peaks)>5])
+        cm = matplotlib.cm.get_cmap('autumn')
+        sc = plt.scatter(x_focus, y_entropy, c=z_peak, cmap=cm, s=50, lw=0,)
+#        plt.xlim(xmin=-0.1, xmax=1.1)
+#        plt.ylim(ymin=-1, ymax=9)
+        plt.colorbar(sc)
+#        if plot_country: savefig(output_file%('country', country))
+#        else: savefig(output_file%('location', country))
+        plt.show()
+        plt.clf()
+    @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
         input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
@@ -407,7 +435,8 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
