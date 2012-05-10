@@ -14,7 +14,8 @@ fld_sky_drive_data_analysis_images = fld_sky_drive_data_analysis+'images/'
 f_tuo_normalized_occurrence_count_and_distribution_value = fld_data_analysis+'/tuo_normalized_occurrence_count_and_distribution_value'
 f_tuo_lid_and_distribution_value = fld_data_analysis+'/tuo_lid_and_distribution_value'
 f_tweet_count_stats = fld_data_analysis+'/tweet_count_stats'
-f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage = fld_data_analysis+'/tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage'
+f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak = \
+    fld_data_analysis+'/tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak'
 f_tuo_rank_and_average_percentage_of_occurrences =  fld_data_analysis+'/tuo_rank_and_average_percentage_of_occurrences'
 #interval_stats = [peak, percentage_of_occurrences, cumulative_percentage_of_occurrences]
 f_tuo_iid_and_interval_stats = fld_data_analysis+'/f_tuo_iid_and_interval_stats'
