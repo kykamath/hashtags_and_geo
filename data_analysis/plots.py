@@ -350,56 +350,44 @@ class DataAnalysis():
                 + GeneralMethods.get_method_id() + '/%s.png'
         ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage = \
             [data for data in iterateJsonFromFile(input_file)]
-#        for data in ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage:
-#            print data
-        x_normalized_iids, y_entropies, y_focuses = zip(*sorted([(data[0],data[1][1], data[1][2]) 
+        x_normalized_iids, y_entropies, y_focuses, y_distance_from_overall_entropy, y_distance_from_overall_focus = \
+                                                     zip(*sorted([(data[0]*TIME_UNIT_IN_SECONDS/60, data[1][1], data[1][2], data[1][4], data[1][5]) 
                                                                       for data in 
                                                                         ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
                                                                   ])
                                                         )
+        plt.subplot(211)
+        plt.xlim(xmin=-20, xmax=400)
+        plt.ylim(ymin=0.5, ymax=1.0)
+        plt.plot(x_normalized_iids, y_entropies,  lw=1, c='k')
+        plt.scatter(x_normalized_iids, y_entropies, lw=1, marker='o', s=50, c='k')        
+        plt.subplot(212)
+        plt.xlim(xmin=-20, xmax=400)
+        plt.ylim(ymin=1, ymax=3)
+        plt.plot(x_normalized_iids, y_distance_from_overall_entropy, lw=1, c='k')                               
+        plt.scatter(x_normalized_iids,  y_distance_from_overall_entropy, marker='o', s=50, c='k')
+        savefig(output_file%'entropy')
         
-        plt.xlim(xmin=-24, xmax=100)               
-        plt.plot(x_normalized_iids, y_entropies, lw=0, marker='o')                               
-        plt.show()                     
+        plt.clf()   
         
-#        mf_peak_to_plot_data = defaultdict(dict)
-#        for data in sorted(ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage, key=itemgetter(0)):
-#            peak = None
-#            if '_' not in str(data[0]): iid, peak = int(data[0]), -1                
-#            else: 
-#                iid, peak = data[0].split('_')
-#                iid, peak = int(iid), int(peak)
-#            if peak < 5:
-#                if peak not in mf_peak_to_plot_data: mf_peak_to_plot_data[peak] = defaultdict(list)
-#                mf_peak_to_plot_data[peak]['x_normalized_iids'].append(iid)
-#                mf_peak_to_plot_data[peak]['y_entropies'].append(data[1][1])
-#                mf_peak_to_plot_data[peak]['y_focuses'].append(data[1][2])
-#                mf_peak_to_plot_data[peak]['z_coverages'].append(data[1][3])
-            
-#        plt.plot(mf_peak_to_plot_data[-1]['x_normalized_iids'], mf_peak_to_plot_data[-1]['y_entropies'])
-#        xmin=-2 
-#        xmax=24
-#        for peak, plot_data in mf_peak_to_plot_data.iteritems():
-#            if peak==-1:
-#                x_normalized_iids, y_focuses = [], []
-#                for x, y in zip(plot_data['x_normalized_iids'], plot_data['y_focuses']):
-##                    if x>=xmin and x<=xmax:
-#                        x_normalized_iids.append(x)
-#                        y_focuses.append(y)
-#                print len(x_normalized_iids), len(y_focuses)
-##                x_normalized_iids, y_focuses = splineSmooth(x_normalized_iids, y_focuses)
-#                plt.plot(x_normalized_iids, y_focuses, lw=0, marker='o')
-##                plt.semilogx()
-#        plt.xlim(xmin=-24, xmax=100)
-##        plt.ylim(ymin=0.68, ymax=0.9)
-#        plt.legend()
-#        plt.show()
+        plt.subplot(211)
+        plt.xlim(xmin=-20, xmax=400)
+        plt.ylim(ymin=0.738, ymax=0.83)
+        plt.plot(x_normalized_iids, y_focuses, lw=1, c='k')
+        plt.scatter(x_normalized_iids, y_focuses, lw=1, marker='o', s=50, c='k')     
+        plt.subplot(212)
+        plt.xlim(xmin=-20, xmax=400)
+        plt.ylim(ymin=-0.43, ymax=-0.19)
+        plt.plot(x_normalized_iids, y_distance_from_overall_focus, lw=1, c='k')                               
+        plt.scatter(x_normalized_iids, y_distance_from_overall_focus, marker='o', s=50, c='k')   
+        savefig(output_file%'focus')
+
     @staticmethod
     def locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         def getNearestNumber(num): return  (int(round(num,2)*100/100)*100 + int((round(num,2)*100%100)/3)*3)/100.
         output_file = \
                 fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
-                + GeneralMethods.get_method_id() + '/%s/%s.png'
+                + GeneralMethods.get_method_id() + '.png'
         input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
         ltuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak = [data for data in iterateJsonFromFile(input_file)]
         print len(ltuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak)
@@ -407,35 +395,18 @@ class DataAnalysis():
         focuses = zip(*focuses)[1]
         mf_norm_focus_to_entropies = defaultdict(list)
         mf_norm_focus_to_peaks = defaultdict(list)
-        mf_norm_focus_to_mf_peak_to_values = defaultdict(dict)
         for focus, entropy, peak in zip(focuses,entropies, peaks):
-            if peak<150:
+            if peak<175:
                 mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
                 mf_norm_focus_to_peaks[round(focus, 2)].append(peak)
-                
-#                mf_norm_focus_to_entropies[getNearestNumber(focus)].append(entropy)
-#                mf_norm_focus_to_peaks[getNearestNumber(focus)].append(peak)
-
-#                peak = int(peak/10)*10+10
-#                if peak not in mf_norm_focus_to_mf_peak_to_values: mf_norm_focus_to_mf_peak_to_values[peak]=[]
-#                mf_norm_focus_to_mf_peak_to_values[peak].append(peak)
-#        plt.figure(num=None, figsize=(8,3), dpi=80, facecolor='w', edgecolor='k')
+        plt.figure(num=None, figsize=(8,3), dpi=80, facecolor='w', edgecolor='k')
         x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems() if len(entropies)>5])
         _, z_peak = zip(*[(norm_focus, np.mean(peaks)*TIME_UNIT_IN_SECONDS/60) for norm_focus, peaks in mf_norm_focus_to_peaks.iteritems() if len(peaks)>5])
-#        z_peak = [int(peak/10)*10+10 for peak in z_peak]
         cm = matplotlib.cm.get_cmap('cool')
         print len(x_focus)
-        x_focus, y_entropy, z_peak = zip(*sorted(zip(x_focus, y_entropy, z_peak), key=itemgetter(2),reverse=True))
         sc = plt.scatter(x_focus, y_entropy, c=z_peak, cmap=cm, s=50, lw=0,)
-#        plt.xlim(xmin=-0.1, xmax=1.1)
-#        plt.ylim(ymin=-1, ymax=9)
         plt.colorbar(sc)
-#        if plot_country: savefig(output_file%('country', country))
-#        else: savefig(output_file%('location', country))
-        plt.show()
-#        plt.scatter(x_focus, z_peak)
-#        plt.show()
-        plt.clf()
+        savefig(output_file)
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
@@ -457,8 +428,8 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
