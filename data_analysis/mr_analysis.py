@@ -92,9 +92,6 @@ def get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_obje
     first_interval=int(float(first_interval))
     for interval, mf_lid_to_occurrence_count in \
             ltuo_s_interval_and_mf_lid_to_occurrence_count:
-#            enumerate(
-#                        sorted(ltuo_interval_and_mf_lid_to_occurrence_count, key=itemgetter(0))
-#                        ):
         interval=int(float(interval))
         iid = (interval-first_interval)/TIME_UNIT_IN_SECONDS
         return_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count.append(
@@ -112,6 +109,31 @@ def get_ltuo_iid_and_tuo_interval_and_occurrence_count(hashtag_object):
                     [iid, [interval, sum(zip(*ltuo_lid_and_occurrence_count)[1])]]
                 )
     return return_ltuo_iid_to_tuo_interval_and_occurrence_count
+
+def get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object):
+    return_ltuo_iid_and_tuo_interval_and_lids = []
+    ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = \
+        get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_object)
+    for iid, (interval, ltuo_lid_and_occurrence_count) in\
+            ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count:
+        lids = []
+        for lid, occurrence_count in ltuo_lid_and_occurrence_count:
+            for i in range(occurrence_count): lids.append(lid)
+        return_ltuo_iid_and_tuo_interval_and_lids.append(
+                    [iid, [interval, lids]]
+                )
+    return return_ltuo_iid_and_tuo_interval_and_lids
+
+#def get_ltuo_iid_and_tuo_interval_and_occurrences(hashtag_object):
+#    return_ltuo_iid_and_tuo_interval_and_occurrences = []
+#    mf_interval_to_mf_lid_to_occurrences = defaultdict(dict)
+##    mf_interval_to_mf_lid_to_occurrence_count = defaultdict(dict)
+#    for lid, interval in hashtag_object['ltuo_lid_and_s_interval']:
+##        interval = str(interval)
+#        if lid not in mf_interval_to_mf_lid_to_occurrences[interval]:
+#            mf_interval_to_mf_lid_to_occurrences[interval][lid] = []
+#        mf_interval_to_mf_lid_to_occurrences[interval][lid].append(lid)
+#    return mf_interval_to_mf_lid_to_occurrence_count
 
 class MRAnalysis(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -254,8 +276,8 @@ class MRAnalysis(ModifiedMRJob):
             max(ltuo_iid_and_tuo_interval_and_occurrence_count, key=lambda (_, (__, occurrence_count)): occurrence_count)
         peak_iid = peak_tuo_iid_and_tuo_interval_and_occurrence_count[0]
         # Points for entropy, focus and coverage
-        mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
-        points = [ getLocationFromLid(lid.replace('_', ' ')) for lid,_ in hashtag_object['ltuo_lid_and_s_interval']]
+#        mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
+#        points = [ getLocationFromLid(lid.replace('_', ' ')) for lid,_ in hashtag_object['ltuo_lid_and_s_interval']]
         # Occurrence percentage and cumulative occurrence percentage
         current_val = 0.0
         total_occurrences = sum(data[1][1] for data in ltuo_iid_and_tuo_interval_and_occurrence_count)
@@ -297,37 +319,25 @@ class MRAnalysis(ModifiedMRJob):
         interval_stats = [percentage_of_occurrences, entropy, focus, coverage]
     '''
     def map_hashtag_object_to_tuo_norm_iid_and_interval_stats(self, hashtag, hashtag_object):
-        ltuo_iid_and_tuo_interval_and_occurrence_count = \
-            get_ltuo_iid_and_tuo_interval_and_occurrence_count(hashtag_object)
-        # Peak data
-        peak_tuo_iid_and_tuo_interval_and_occurrence_count = \
-            max(ltuo_iid_and_tuo_interval_and_occurrence_count, key=lambda (_, (__, occurrence_count)): occurrence_count)
-        peak_iid = peak_tuo_iid_and_tuo_interval_and_occurrence_count[0]
-        # Points for entropy, focus and coverage
-        mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
-        points = [ getLocationFromLid(lid.replace('_', ' ')) for lid,_ in hashtag_object['ltuo_lid_and_s_interval']]
-        # Occurrence percentage and cumulative occurrence percentage
-#        current_val = 0.0
-        total_occurrences = sum(data[1][1] for data in ltuo_iid_and_tuo_interval_and_occurrence_count)
-        for iid, (_, occurrence_count) in ltuo_iid_and_tuo_interval_and_occurrence_count:
-#            is_peak = 0.0
-#            if iid==peak_iid: is_peak=1.0
-#            current_val+=occurrence_count
-            yield iid-peak_iid, [occurrence_count/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count), getRadiusOfGyration(points)]
-#            yield iid-peak_iid, [occurrence_count/total_occurrences, current_val/total_occurrences]
+        ltuo_iid_and_tuo_interval_and_lids = \
+            get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
+        peak_tuo_iid_and_tuo_interval_and_lids = \
+            max(ltuo_iid_and_tuo_interval_and_lids, key=lambda (_, (__, lids)): len(lids))
+        peak_iid = peak_tuo_iid_and_tuo_interval_and_lids[0]
+        total_occurrences = sum(len(data[1][1]) for data in peak_tuo_iid_and_tuo_interval_and_lids)
+        for iid, (_, lids) in ltuo_iid_and_tuo_interval_and_lids:
+            mf_lid_to_occurrence_count = defaultdict(float)
+            for lid in lids: mf_lid_to_occurrence_count[lid]+=1
+            points = [getLocationFromLid(lid.replace('_', ' ')) for lid in lids]
+            yield iid-peak_iid, [len(lids)/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count), getRadiusOfGyration(points)]
     def red_tuo_norm_iid_and_ito_interval_stats_to_tuo_norm_iid_and_reduced_interval_stats(self, norm_iid, ito_interval_stats):
-#        total_is_peaks = 0.0
         red_percentage_of_occurrences = []
-#        red_cumulative_percentage_of_occurrences = []
         red_cumulative_entropy = []
         red_cumulative_focus = []
         red_cumulative_coverage = []
         for (percentage_of_occurrences, entropy, focus, coverage)  in\
                 ito_interval_stats:
-#        for (is_peak, percentage_of_occurrences, cumulative_percentage_of_occurrences)  in\
-#            total_is_peaks+=is_peak
             red_percentage_of_occurrences.append(percentage_of_occurrences)
-#            red_cumulative_percentage_of_occurrences.append(cumulative_percentage_of_occurrences)
             red_cumulative_entropy.append(entropy)
             red_cumulative_focus.append(focus)
             red_cumulative_coverage.append(coverage)
