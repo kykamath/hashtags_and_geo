@@ -23,6 +23,7 @@ import numpy as np
 import matplotlib
 from datetime import timedelta
 from mr_analysis import TIME_UNIT_IN_SECONDS
+from data_analysis.settings import f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
 
 def iterateJsonFromFile(file):
     for data in FileIO.iterateJsonFromFile(file):
@@ -340,9 +341,35 @@ class DataAnalysis():
         savefig(output_file%'cumulative_percentage_of_occurrences')
 #        plt.show()
     @staticmethod
+    def norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '/%s.png'
+        ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage = \
+            [data for data in iterateJsonFromFile(input_file)]
+#        for data in ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage:
+#            print data
+#        x_normalized_iids, y_entropies = zip(*
+#                                             soorted([(data[0],data[1][1]) 
+#                                               for data in 
+#                                               ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage])
+
+        x_normalized_iids, y_entropies, y_focuses, z_coverages = [], [], [], []
+        for data in \
+                sorted(ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage, key=itemgetter(0)):
+            x_normalized_iids.append(data[0])
+            y_entropies.append(data[1][1])
+            y_focuses.append(data[1][2])
+            z_coverages.append(data[1][3])
+#        plt.plot(x_normalized_iids, y_entropies)
+        plt.plot(x_normalized_iids, y_focuses)
+        plt.xlim(xmin=-4, xmax=100)
+        plt.show()
+    @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
-        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
+        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 0
         
 #        DataAnalysis.hashtag_distribution(input_files_start_time, input_files_end_time)
 #        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time)
@@ -359,8 +386,9 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False)    
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
-        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-
+#        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
 if __name__ == '__main__':
