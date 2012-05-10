@@ -89,11 +89,13 @@ def get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_obje
         get_mf_interval_to_mf_lid_to_occurrence_count(hashtag_object).items()
     ltuo_s_interval_and_mf_lid_to_occurrence_count = sorted(ltuo_interval_and_mf_lid_to_occurrence_count, key=itemgetter(0))
     first_interval = ltuo_s_interval_and_mf_lid_to_occurrence_count[0][0]
+    first_interval=int(float(first_interval))
     for interval, mf_lid_to_occurrence_count in \
             ltuo_s_interval_and_mf_lid_to_occurrence_count:
 #            enumerate(
 #                        sorted(ltuo_interval_and_mf_lid_to_occurrence_count, key=itemgetter(0))
 #                        ):
+        interval=int(float(interval))
         iid = (interval-first_interval)/TIME_UNIT_IN_SECONDS
         return_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count.append(
                   [iid, [interval, mf_lid_to_occurrence_count.items()]]                            
