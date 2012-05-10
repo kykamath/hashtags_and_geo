@@ -20,7 +20,7 @@ LOCATION_ACCURACY = 1.45 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes Used for iid only
 #TIME_UNIT_IN_SECONDS = 60*60 # 60 minutes Used for norm iid to overcome sparcity
 
-MIN_HASHTAG_OCCURENCES = 50
+MIN_HASHTAG_OCCURENCES = 0
 #MAX_HASHTAG_OCCURENCES = 100000
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
 #START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2011, 4, 28)
@@ -335,6 +335,9 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def map_hashtag_object_to_tuo_norm_iid_and_interval_stats(self, hashtag, hashtag_object):
         def distance_from_overall_locality_stat(overall_stat, current_stat):
+            diff = overall_stat-current_stat
+            if diff==0.0: return 0.0
+            print overall_stat, current_stat
             return (overall_stat-current_stat)/float(overall_stat)
         ltuo_iid_and_tuo_interval_and_lids = \
             get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
@@ -346,7 +349,7 @@ class MRAnalysis(ModifiedMRJob):
         overall_mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
         overall_points = [ getLocationFromLid(lid.replace('_', ' ')) for lid,_ in hashtag_object['ltuo_lid_and_s_interval']]
         overall_entropy = entropy(overall_mf_lid_to_occurrence_count, False)
-        overall_focus = focus(overall_mf_lid_to_occurrence_count)
+        overall_focus = focus(overall_mf_lid_to_occurrence_count)[1]
         overall_coverage = getRadiusOfGyration(overall_points)
         total_occurrences = sum(len(lids) for (iid, (interval, lids)) in ltuo_iid_and_tuo_interval_and_lids)
         for iid, (_, lids) in ltuo_iid_and_tuo_interval_and_lids:

@@ -407,14 +407,15 @@ class DataAnalysis():
         mf_norm_focus_to_entropies = defaultdict(list)
         mf_norm_focus_to_peaks = defaultdict(list)
         for focus, entropy, peak in zip(focuses,entropies, peaks):
-            if peak<19:
+            if peak<36:
                 mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
                 mf_norm_focus_to_peaks[round(focus, 2)].append(peak)
 #        plt.figure(num=None, figsize=(8,3), dpi=80, facecolor='w', edgecolor='k')
         x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems() if len(entropies)>5])
-        _, z_peak = zip(*[(norm_focus, np.mean(peaks)) for norm_focus, peaks in mf_norm_focus_to_peaks.iteritems() if len(peaks)>5])
-        cm = matplotlib.cm.get_cmap('gist_heat')
-        x_focus, y_entropy, z_peak = zip(*sorted(zip(x_focus, y_entropy, z_peak), key=itemgetter(2),reverse=True))
+        _, z_peak = zip(*[(norm_focus, np.mean(peaks)*TIME_UNIT_IN_SECONDS/60) for norm_focus, peaks in mf_norm_focus_to_peaks.iteritems() if len(peaks)>5])
+        cm = matplotlib.cm.get_cmap('winter')
+        print len(x_focus)
+        x_focus, y_entropy, z_peak = zip(*sorted(zip(x_focus, y_entropy, z_peak), key=itemgetter(2),reverse=False))
         sc = plt.scatter(x_focus, y_entropy, c=z_peak, cmap=cm, s=50, lw=0,)
 #        plt.xlim(xmin=-0.1, xmax=1.1)
 #        plt.ylim(ymin=-1, ymax=9)
