@@ -8,7 +8,8 @@ from datetime import datetime
 from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
     fld_sky_drive_data_analysis_images, f_tuo_lid_and_distribution_value,\
     f_tuo_rank_and_average_percentage_of_occurrences, \
-    f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage
+    f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage, \
+    f_tuo_iid_and_tuo_is_peak_and_percentage_of_occurrences_and_cumulative_percentage_of_occurrences_and_entropy_and_focus_and_coverage
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
@@ -20,6 +21,8 @@ from collections import defaultdict
 from library.stats import entropy, focus
 import numpy as np
 import matplotlib
+from datetime import timedelta
+from mr_analysis import TIME_UNIT_IN_SECONDS
 
 def iterateJsonFromFile(file):
     for data in FileIO.iterateJsonFromFile(file):
@@ -311,6 +314,26 @@ class DataAnalysis():
             hashtags = zip(*ltuo_hashtag_and_r_entropy_and_s_focus)[0]
             FileIO.writeToFileAsJson([location, hashtags[:5], hashtags[-5:]], output_file)
     @staticmethod
+    def iid_vs_cumulative_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_iid_and_tuo_is_peak_and_percentage_of_occurrences_and_cumulative_percentage_of_occurrences_and_entropy_and_focus_and_coverage%\
+                                                    (input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        ltuo_iid_and_interval_stats = [data for data in iterateJsonFromFile(input_file)]
+        ltuo_s_iid_and_interval_stats = sorted(ltuo_iid_and_interval_stats, key=itemgetter(0))
+#        for (iid, (is_peak, cumulative_percentage_of_occurrences, entropy, focus, coverage)) in ltuo_s_iid_and_interval_stats: 
+        total_peaks = sum([data[1][0] for data in ltuo_s_iid_and_interval_stats])+0.0
+        x_iids = []
+        y_is_peaks = []
+        z_cumulative_percentage_of_occurrencess = []
+        for (iid, (is_peak, cumulative_percentage_of_occurrences)) in ltuo_s_iid_and_interval_stats[:100]: 
+            print (iid, (is_peak, cumulative_percentage_of_occurrences)) 
+            x_iids.append((iid+1)*TIME_UNIT_IN_SECONDS/60)
+            y_is_peaks.append(is_peak/total_peaks)
+            z_cumulative_percentage_of_occurrencess.append(cumulative_percentage_of_occurrences)
+#        plt.semilogx(x_iids, y_is_peaks, lw=0, marker='o')
+        plt.plot(x_iids, z_cumulative_percentage_of_occurrencess, lw=0, marker='o')
+        plt.xlabel('Minutes')
+        plt.show()
+    @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
         input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
@@ -330,7 +353,7 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False)    
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
-        
+        DataAnalysis.iid_vs_cumulative_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         

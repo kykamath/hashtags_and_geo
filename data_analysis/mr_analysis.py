@@ -238,7 +238,7 @@ class MRAnalysis(ModifiedMRJob):
         
     ''' Start: Methods to get stats related to intervals
     
-        interval_stats = tuo_is_peak_and_cumulative_percentage_of_occurrences_and_entropy_and_focus_and_coverage
+        interval_stats = [peak, percentage_of_occurrences, cumulative_percentage_of_occurrences, entropy, focus, coverage]
     '''
     def map_hashtag_object_to_tuo_iid_and_interval_stats(self, hashtag, hashtag_object):
         ltuo_iid_and_tuo_interval_and_occurrence_count = \
@@ -258,21 +258,24 @@ class MRAnalysis(ModifiedMRJob):
             is_peak = 0.0
             if iid==peak_iid: is_peak=1.0
             current_val+=occurrence_count
-            yield iid, [is_peak, current_val/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count), getRadiusOfGyration(points)]
+            yield iid, [is_peak, occurrence_count/total_occurrences, current_val/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count), getRadiusOfGyration(points)]
     def red_tuo_iid_and_ito_interval_stats_to_tuo_iid_and_reduced_interval_stats(self, iid, ito_interval_stats):
         total_is_peaks = 0.0
+        red_percentage_of_occurrences = []
         red_cumulative_percentage_of_occurrences = []
         red_cumulative_entropy = []
         red_cumulative_focus = []
         red_cumulative_coverage = []
-        for (is_peak, cumulative_percentage_of_occurrences, entropy, focus, coverage)  in\
+        for (is_peak, percentage_of_occurrences, cumulative_percentage_of_occurrences, entropy, focus, coverage)  in\
                 ito_interval_stats:
             total_is_peaks+=is_peak
+            red_percentage_of_occurrences.append(percentage_of_occurrences)
             red_cumulative_percentage_of_occurrences.append(cumulative_percentage_of_occurrences)
             red_cumulative_entropy.append(entropy)
             red_cumulative_focus.append(focus)
             red_cumulative_coverage.append(coverage)
         yield iid, [iid, [total_is_peaks, 
+                          np.mean(red_percentage_of_occurrences), 
                           np.mean(red_cumulative_percentage_of_occurrences), 
                           np.mean(red_cumulative_entropy), 
                           np.mean(red_cumulative_focus), 
@@ -335,7 +338,7 @@ class MRAnalysis(ModifiedMRJob):
                            reducer=self.red_tuo_rank_and_ito_percentage_of_occurrences_to_tuo_rank_and_average_percentage_of_occurrences
                            )
                    ]
-    def job_write_tuo_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences(self):
+    def job_write_tuo_iid_and_interval_stats(self):
         return self.job_load_hashtag_object() + \
                 [
                         self.mr(
@@ -351,7 +354,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_lid_and_distribution_value()
 #        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage()
 #        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
-        return self.job_write_tuo_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences()
+        return self.job_write_tuo_iid_and_interval_stats()
     
 if __name__ == '__main__':
     MRAnalysis.run()
