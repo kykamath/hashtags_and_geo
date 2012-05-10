@@ -314,8 +314,11 @@ class DataAnalysis():
             hashtags = zip(*ltuo_hashtag_and_r_entropy_and_s_focus)[0]
             FileIO.writeToFileAsJson([location, hashtags[:5], hashtags[-5:]], output_file)
     @staticmethod
-    def iid_vs_cumulative_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+    def iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         input_file = f_tuo_iid_and_interval_stats%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '/%s.png'
         ltuo_iid_and_interval_stats = [data for data in iterateJsonFromFile(input_file)]
         ltuo_s_iid_and_interval_stats = sorted(ltuo_iid_and_interval_stats, key=itemgetter(0))
         ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences = [(data[0], (data[1][0], data[1][2])) for data in ltuo_s_iid_and_interval_stats]
@@ -328,10 +331,14 @@ class DataAnalysis():
             x_iids.append((iid+1)*TIME_UNIT_IN_SECONDS/60)
             y_is_peaks.append(is_peak/total_peaks)
             z_cumulative_percentage_of_occurrencess.append(cumulative_percentage_of_occurrences)
-#        plt.semilogx(x_iids, y_is_peaks, lw=0, marker='o')
+        plt.semilogx(x_iids, y_is_peaks, marker='o')
+        plt.xlabel('Minutes')
+        savefig(output_file%'peaks')
+        plt.clf()
         plt.plot(x_iids, z_cumulative_percentage_of_occurrencess, lw=0, marker='o')
         plt.xlabel('Minutes')
-        plt.show()
+        savefig(output_file%'cumulative_percentage_of_occurrences')
+#        plt.show()
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0

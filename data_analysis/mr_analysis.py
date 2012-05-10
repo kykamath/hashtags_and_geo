@@ -17,7 +17,7 @@ import numpy as np
 LOCATION_ACCURACY = 1.45 # 100 miles
 #LOCATION_ACCURACY = 0.001 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes
-MIN_HASHTAG_OCCURENCES = 50
+MIN_HASHTAG_OCCURENCES = 0
 #MAX_HASHTAG_OCCURENCES = 100000
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
 #START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2011, 4, 28)
@@ -324,7 +324,8 @@ class MRAnalysis(ModifiedMRJob):
         peak_tuo_iid_and_tuo_interval_and_lids = \
             max(ltuo_iid_and_tuo_interval_and_lids, key=lambda (_, (__, lids)): len(lids))
         peak_iid = peak_tuo_iid_and_tuo_interval_and_lids[0]
-        total_occurrences = sum(len(data[1][1]) for data in peak_tuo_iid_and_tuo_interval_and_lids)
+#        total_occurrences = sum(len(data[1][1]) for data in peak_tuo_iid_and_tuo_interval_and_lids)
+        total_occurrences = sum(len(lids) for (iid, (interval, lids)) in ltuo_iid_and_tuo_interval_and_lids)
         for iid, (_, lids) in ltuo_iid_and_tuo_interval_and_lids:
             mf_lid_to_occurrence_count = defaultdict(float)
             for lid in lids: mf_lid_to_occurrence_count[lid]+=1
