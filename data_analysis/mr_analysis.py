@@ -368,23 +368,32 @@ class MRAnalysis(ModifiedMRJob):
         red_cumulative_entropy = []
         red_cumulative_focus = []
         red_cumulative_coverage = []
-        for (percentage_of_occurrences, entropy, focus, coverage)  in\
+        red_distance_from_overall_entropy = []
+        red_distance_from_overall_focus = []
+        red_distance_from_overall_coverage = []
+        for (percentage_of_occurrences, entropy, focus, coverage, 
+                    distance_from_overall_entropy, distance_from_overall_focus, distance_from_overall_coverage)  in\
                 ito_interval_stats:
             red_percentage_of_occurrences.append(percentage_of_occurrences)
             red_cumulative_entropy.append(entropy)
             red_cumulative_focus.append(focus)
             red_cumulative_coverage.append(coverage)
+            red_distance_from_overall_entropy.append(distance_from_overall_entropy)
+            red_distance_from_overall_focus.append(distance_from_overall_focus)
+            red_distance_from_overall_coverage.append(distance_from_overall_coverage)
         yield norm_iid, [norm_iid, 
                          [ 
                           np.mean(red_percentage_of_occurrences), 
                           np.mean(red_cumulative_entropy), 
                           np.mean(red_cumulative_focus), 
-                          np.mean(red_cumulative_coverage)
+                          np.mean(red_cumulative_coverage),
+                          np.mean(red_distance_from_overall_entropy), 
+                          np.mean(red_distance_from_overall_focus), 
+                          np.mean(red_distance_from_overall_coverage),
                     ]]
     ''' End: Methods to get stats related to intervals
     '''
     
-        
          
     ''' MR Jobs
     '''
