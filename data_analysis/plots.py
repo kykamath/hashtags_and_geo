@@ -9,7 +9,7 @@ from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
     fld_sky_drive_data_analysis_images, f_tuo_lid_and_distribution_value,\
     f_tuo_rank_and_average_percentage_of_occurrences, \
     f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage, \
-    f_tuo_iid_and_tuo_is_peak_and_percentage_of_occurrences_and_cumulative_percentage_of_occurrences_and_entropy_and_focus_and_coverage
+    f_tuo_iid_and_interval_stats
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
@@ -315,16 +315,16 @@ class DataAnalysis():
             FileIO.writeToFileAsJson([location, hashtags[:5], hashtags[-5:]], output_file)
     @staticmethod
     def iid_vs_cumulative_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags):
-        input_file = f_tuo_iid_and_tuo_is_peak_and_percentage_of_occurrences_and_cumulative_percentage_of_occurrences_and_entropy_and_focus_and_coverage%\
-                                                    (input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        input_file = f_tuo_iid_and_interval_stats%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
         ltuo_iid_and_interval_stats = [data for data in iterateJsonFromFile(input_file)]
         ltuo_s_iid_and_interval_stats = sorted(ltuo_iid_and_interval_stats, key=itemgetter(0))
+        ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences = [(data[0], (data[1][0], data[1][2])) for data in ltuo_s_iid_and_interval_stats]
 #        for (iid, (is_peak, cumulative_percentage_of_occurrences, entropy, focus, coverage)) in ltuo_s_iid_and_interval_stats: 
-        total_peaks = sum([data[1][0] for data in ltuo_s_iid_and_interval_stats])+0.0
+        total_peaks = sum([data[1][0] for data in ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences])+0.0
         x_iids = []
         y_is_peaks = []
         z_cumulative_percentage_of_occurrencess = []
-        for (iid, (is_peak, cumulative_percentage_of_occurrences)) in ltuo_s_iid_and_interval_stats[:100]: 
+        for (iid, (is_peak, cumulative_percentage_of_occurrences)) in ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences[:100]: 
             print (iid, (is_peak, cumulative_percentage_of_occurrences)) 
             x_iids.append((iid+1)*TIME_UNIT_IN_SECONDS/60)
             y_is_peaks.append(is_peak/total_peaks)
