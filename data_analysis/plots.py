@@ -358,13 +358,14 @@ class DataAnalysis():
         x_normalized_iids, y_entropies, y_focuses, z_coverages = [], [], [], []
         for data in \
                 sorted(ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage, key=itemgetter(0)):
-            x_normalized_iids.append(data[0])
-            y_entropies.append(data[1][1])
-            y_focuses.append(data[1][2])
-            z_coverages.append(data[1][3])
-        plt.plot(x_normalized_iids, y_entropies)
-#        plt.plot(x_normalized_iids, y_focuses)
-        plt.xlim(xmin=-2, xmax=100)
+            if '_' not in str(data[0]):
+                x_normalized_iids.append(int(data[0]))
+                y_entropies.append(data[1][1])
+                y_focuses.append(data[1][2])
+                z_coverages.append(data[1][3])
+#        plt.plot(x_normalized_iids, y_entropies)
+        plt.plot(x_normalized_iids, y_focuses)
+#        plt.xlim(xmin=-2, xmax=100)
         plt.show()
     @staticmethod
     def run():
@@ -386,8 +387,8 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False)    
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
-        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
