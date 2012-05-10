@@ -251,6 +251,8 @@ class DataAnalysis():
         entropies = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[2]
         focuses = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[3]
         focuses = zip(*focuses)[1]
+        print 'Mean entropy: ', np.mean(entropies)
+        print 'Mean focus: ', np.mean(focuses)
         plot_graph(entropies, 'entropy')
         plot_graph(focuses, 'focus')
     @staticmethod
@@ -350,42 +352,48 @@ class DataAnalysis():
             [data for data in iterateJsonFromFile(input_file)]
 #        for data in ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage:
 #            print data
-#        x_normalized_iids, y_entropies = zip(*
-#                                             soorted([(data[0],data[1][1]) 
-#                                               for data in 
-#                                               ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage])
+        x_normalized_iids, y_entropies, y_focuses = zip(*sorted([(data[0],data[1][1], data[1][2]) 
+                                                                      for data in 
+                                                                        ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
+                                                                  ])
+                                                        )
         
-        mf_peak_to_plot_data = defaultdict(dict)
-        for data in sorted(ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage, key=itemgetter(0)):
-            peak = None
-            if '_' not in str(data[0]): iid, peak = int(data[0]), -1                
-            else: 
-                iid, peak = data[0].split('_')
-                iid, peak = int(iid), int(peak)
-            if peak < 5:
-                if peak not in mf_peak_to_plot_data: mf_peak_to_plot_data[peak] = defaultdict(list)
-                mf_peak_to_plot_data[peak]['x_normalized_iids'].append(iid)
-                mf_peak_to_plot_data[peak]['y_entropies'].append(data[1][1])
-                mf_peak_to_plot_data[peak]['y_focuses'].append(data[1][2])
-                mf_peak_to_plot_data[peak]['z_coverages'].append(data[1][3])
+        plt.xlim(xmin=-24, xmax=100)               
+        plt.plot(x_normalized_iids, y_entropies, lw=0, marker='o')                               
+        plt.show()                     
+        
+#        mf_peak_to_plot_data = defaultdict(dict)
+#        for data in sorted(ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage, key=itemgetter(0)):
+#            peak = None
+#            if '_' not in str(data[0]): iid, peak = int(data[0]), -1                
+#            else: 
+#                iid, peak = data[0].split('_')
+#                iid, peak = int(iid), int(peak)
+#            if peak < 5:
+#                if peak not in mf_peak_to_plot_data: mf_peak_to_plot_data[peak] = defaultdict(list)
+#                mf_peak_to_plot_data[peak]['x_normalized_iids'].append(iid)
+#                mf_peak_to_plot_data[peak]['y_entropies'].append(data[1][1])
+#                mf_peak_to_plot_data[peak]['y_focuses'].append(data[1][2])
+#                mf_peak_to_plot_data[peak]['z_coverages'].append(data[1][3])
             
 #        plt.plot(mf_peak_to_plot_data[-1]['x_normalized_iids'], mf_peak_to_plot_data[-1]['y_entropies'])
-        xmin=-2 
-        xmax=24
-        for peak, plot_data in mf_peak_to_plot_data.iteritems():
-            if peak==-1:
-                x_normalized_iids, y_focuses = [], []
-                for x, y in zip(plot_data['x_normalized_iids'], plot_data['y_focuses']):
-                    if x>=xmin and x<=xmax:
-                        x_normalized_iids.append(x)
-                        y_focuses.append(y)
-                print len(x_normalized_iids), len(y_focuses)
-#                x_normalized_iids, y_focuses = splineSmooth(x_normalized_iids, y_focuses)
-                plt.plot(x_normalized_iids, y_focuses, lw=0, marker=0.0)
-#        plt.xlim(xmin=-2, xmax=24)
-#        plt.ylim(ymin=0.68, ymax=0.9)
-        plt.legend()
-        plt.show()
+#        xmin=-2 
+#        xmax=24
+#        for peak, plot_data in mf_peak_to_plot_data.iteritems():
+#            if peak==-1:
+#                x_normalized_iids, y_focuses = [], []
+#                for x, y in zip(plot_data['x_normalized_iids'], plot_data['y_focuses']):
+##                    if x>=xmin and x<=xmax:
+#                        x_normalized_iids.append(x)
+#                        y_focuses.append(y)
+#                print len(x_normalized_iids), len(y_focuses)
+##                x_normalized_iids, y_focuses = splineSmooth(x_normalized_iids, y_focuses)
+#                plt.plot(x_normalized_iids, y_focuses, lw=0, marker='o')
+##                plt.semilogx()
+#        plt.xlim(xmin=-24, xmax=100)
+##        plt.ylim(ymin=0.68, ymax=0.9)
+#        plt.legend()
+#        plt.show()
     @staticmethod
     def locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         output_file = \
@@ -435,8 +443,8 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         

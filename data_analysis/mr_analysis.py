@@ -328,22 +328,40 @@ class MRAnalysis(ModifiedMRJob):
         
     
     ''' Start: Methods to get stats related to normalized intervals
-    
-        interval_stats = [percentage_of_occurrences, entropy, focus, coverage]
+        interval_stats = [percentage_of_occurrences, entropy, focus, coverage,
+                            distance_from_overall_entropy, 
+                            distance_from_overall_focus,
+                            distance_from_overall_coverage ]
     '''
     def map_hashtag_object_to_tuo_norm_iid_and_interval_stats(self, hashtag, hashtag_object):
+        def distance_from_overall_locality_stat(overall_stat, current_stat):
+            return (overall_stat-current_stat)/float(overall_stat)
         ltuo_iid_and_tuo_interval_and_lids = \
             get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
         peak_tuo_iid_and_tuo_interval_and_lids = \
             max(ltuo_iid_and_tuo_interval_and_lids, key=lambda (_, (__, lids)): len(lids))
         peak_iid = peak_tuo_iid_and_tuo_interval_and_lids[0]
 #        total_occurrences = sum(len(data[1][1]) for data in peak_tuo_iid_and_tuo_interval_and_lids)
+        # Overall locality stats
+        overall_mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
+        overall_points = [ getLocationFromLid(lid.replace('_', ' ')) for lid,_ in hashtag_object['ltuo_lid_and_s_interval']]
+        overall_entropy = entropy(overall_mf_lid_to_occurrence_count, False)
+        overall_focus = focus(overall_mf_lid_to_occurrence_count)
+        overall_coverage = getRadiusOfGyration(overall_points)
         total_occurrences = sum(len(lids) for (iid, (interval, lids)) in ltuo_iid_and_tuo_interval_and_lids)
         for iid, (_, lids) in ltuo_iid_and_tuo_interval_and_lids:
             mf_lid_to_occurrence_count = defaultdict(float)
             for lid in lids: mf_lid_to_occurrence_count[lid]+=1
             points = [getLocationFromLid(lid.replace('_', ' ')) for lid in lids]
-            yield iid-peak_iid, [len(lids)/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count)[1], getRadiusOfGyration(points)]
+            
+            current_entropy = entropy(mf_lid_to_occurrence_count, False)
+            current_focus = focus(mf_lid_to_occurrence_count)[1]
+            current_coverage = getRadiusOfGyration(points)
+            
+            yield iid-peak_iid, [len(lids)/total_occurrences, current_entropy, current_focus, current_coverage, 
+                                    distance_from_overall_locality_stat(overall_entropy, current_entropy),
+                                    distance_from_overall_locality_stat(overall_focus, current_focus),
+                                    distance_from_overall_locality_stat(overall_coverage, current_coverage),]
 #            yield '%s_%s'%(iid-peak_iid, peak_iid), [len(lids)/total_occurrences, entropy(mf_lid_to_occurrence_count, False), focus(mf_lid_to_occurrence_count)[1], getRadiusOfGyration(points)]
     def red_tuo_norm_iid_and_ito_interval_stats_to_tuo_norm_iid_and_reduced_interval_stats(self, norm_iid, ito_interval_stats):
         red_percentage_of_occurrences = []
@@ -444,10 +462,10 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
-        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak()
+#        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak()
 #        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
 #        return self.job_write_tuo_iid_and_interval_stats()
-#        return self.job_write_tuo_norm_iid_and_interval_stats()
+        return self.job_write_tuo_norm_iid_and_interval_stats()
     
 if __name__ == '__main__':
     MRAnalysis.run()
