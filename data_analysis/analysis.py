@@ -14,7 +14,8 @@ from settings import hdfs_input_folder, \
     f_tweet_count_stats, f_tuo_lid_and_distribution_value, \
     f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage, \
     f_tuo_rank_and_average_percentage_of_occurrences, \
-    f_tuo_iid_and_interval_stats
+    f_tuo_iid_and_interval_stats, \
+    f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
 
 def iterateJsonFromFile(file):
     for data in FileIO.iterateJsonFromFile(file):
@@ -34,7 +35,8 @@ def mr_data_analysis(input_files_start_time, input_files_end_time, min_hashtag_o
 #    output_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
 #    output_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
 #    output_file = f_tuo_rank_and_average_percentage_of_occurrences%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
-    output_file = f_tuo_iid_and_interval_stats%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
+#    output_file = f_tuo_iid_and_interval_stats%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
+    output_file = f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
     runMRJob(MRAnalysis, output_file, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
 
