@@ -20,7 +20,7 @@ LOCATION_ACCURACY = 1.45 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes Used for iid only
 #TIME_UNIT_IN_SECONDS = 60*60 # 60 minutes Used for norm iid to overcome sparcity
 
-MIN_HASHTAG_OCCURENCES = 0
+MIN_HASHTAG_OCCURENCES = 50
 #MAX_HASHTAG_OCCURENCES = 100000
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
 #START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2011, 4, 28)
