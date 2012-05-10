@@ -396,6 +396,7 @@ class DataAnalysis():
 #        plt.show()
     @staticmethod
     def locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        def getNearestNumber(num): return  (int(round(num,2)*100/100)*100 + int((round(num,2)*100%100)/3)*3)/100.
         output_file = \
                 fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
                 + GeneralMethods.get_method_id() + '/%s/%s.png'
@@ -406,16 +407,25 @@ class DataAnalysis():
         focuses = zip(*focuses)[1]
         mf_norm_focus_to_entropies = defaultdict(list)
         mf_norm_focus_to_peaks = defaultdict(list)
+        mf_norm_focus_to_mf_peak_to_values = defaultdict(dict)
         for focus, entropy, peak in zip(focuses,entropies, peaks):
-            if peak<36:
+            if peak<150:
                 mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
                 mf_norm_focus_to_peaks[round(focus, 2)].append(peak)
+                
+#                mf_norm_focus_to_entropies[getNearestNumber(focus)].append(entropy)
+#                mf_norm_focus_to_peaks[getNearestNumber(focus)].append(peak)
+
+#                peak = int(peak/10)*10+10
+#                if peak not in mf_norm_focus_to_mf_peak_to_values: mf_norm_focus_to_mf_peak_to_values[peak]=[]
+#                mf_norm_focus_to_mf_peak_to_values[peak].append(peak)
 #        plt.figure(num=None, figsize=(8,3), dpi=80, facecolor='w', edgecolor='k')
         x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems() if len(entropies)>5])
         _, z_peak = zip(*[(norm_focus, np.mean(peaks)*TIME_UNIT_IN_SECONDS/60) for norm_focus, peaks in mf_norm_focus_to_peaks.iteritems() if len(peaks)>5])
-        cm = matplotlib.cm.get_cmap('winter')
+#        z_peak = [int(peak/10)*10+10 for peak in z_peak]
+        cm = matplotlib.cm.get_cmap('cool')
         print len(x_focus)
-        x_focus, y_entropy, z_peak = zip(*sorted(zip(x_focus, y_entropy, z_peak), key=itemgetter(2),reverse=False))
+        x_focus, y_entropy, z_peak = zip(*sorted(zip(x_focus, y_entropy, z_peak), key=itemgetter(2),reverse=True))
         sc = plt.scatter(x_focus, y_entropy, c=z_peak, cmap=cm, s=50, lw=0,)
 #        plt.xlim(xmin=-0.1, xmax=1.1)
 #        plt.ylim(ymin=-1, ymax=9)
@@ -423,6 +433,8 @@ class DataAnalysis():
 #        if plot_country: savefig(output_file%('country', country))
 #        else: savefig(output_file%('location', country))
         plt.show()
+#        plt.scatter(x_focus, z_peak)
+#        plt.show()
         plt.clf()
     @staticmethod
     def run():

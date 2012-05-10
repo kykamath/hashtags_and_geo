@@ -335,10 +335,12 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def map_hashtag_object_to_tuo_norm_iid_and_interval_stats(self, hashtag, hashtag_object):
         def distance_from_overall_locality_stat(overall_stat, current_stat):
-            diff = overall_stat-current_stat
-            if diff==0.0: return 0.0
-            print overall_stat, current_stat
-            return (overall_stat-current_stat)/float(overall_stat)
+            return overall_stat-current_stat
+#            diff = overall_stat-current_stat
+#            if diff==0.0: return 0.0
+#            elif overall_stat
+#            print overall_stat, current_stat
+#            return (overall_stat-current_stat)/float(overall_stat)
         ltuo_iid_and_tuo_interval_and_lids = \
             get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
         peak_tuo_iid_and_tuo_interval_and_lids = \
