@@ -362,27 +362,28 @@ class DataAnalysis():
             else: 
                 iid, peak = data[0].split('_')
                 iid, peak = int(iid), int(peak)
-            if peak not in mf_peak_to_plot_data: mf_peak_to_plot_data[peak] = defaultdict(list)
-            mf_peak_to_plot_data[peak]['x_normalized_iids'].append(iid)
-            mf_peak_to_plot_data[peak]['y_entropies'].append(data[1][1])
-            mf_peak_to_plot_data[peak]['y_focuses'].append(data[1][2])
-            mf_peak_to_plot_data[peak]['z_coverages'].append(data[1][3])
+            if peak < 5:
+                if peak not in mf_peak_to_plot_data: mf_peak_to_plot_data[peak] = defaultdict(list)
+                mf_peak_to_plot_data[peak]['x_normalized_iids'].append(iid)
+                mf_peak_to_plot_data[peak]['y_entropies'].append(data[1][1])
+                mf_peak_to_plot_data[peak]['y_focuses'].append(data[1][2])
+                mf_peak_to_plot_data[peak]['z_coverages'].append(data[1][3])
             
 #        plt.plot(mf_peak_to_plot_data[-1]['x_normalized_iids'], mf_peak_to_plot_data[-1]['y_entropies'])
         xmin=-2 
         xmax=24
         for peak, plot_data in mf_peak_to_plot_data.iteritems():
-            if peak!=-1:
+            if peak==-1:
                 x_normalized_iids, y_focuses = [], []
                 for x, y in zip(plot_data['x_normalized_iids'], plot_data['y_focuses']):
                     if x>=xmin and x<=xmax:
                         x_normalized_iids.append(x)
                         y_focuses.append(y)
                 print len(x_normalized_iids), len(y_focuses)
-                x_normalized_iids, y_focuses = splineSmooth(x_normalized_iids, y_focuses)
-                plt.plot(x_normalized_iids, y_focuses, label=peak)
+#                x_normalized_iids, y_focuses = splineSmooth(x_normalized_iids, y_focuses)
+                plt.plot(x_normalized_iids, y_focuses, lw=0, marker=0.0)
 #        plt.xlim(xmin=-2, xmax=24)
-        plt.ylim(ymin=0.68, ymax=0.9)
+#        plt.ylim(ymin=0.68, ymax=0.9)
         plt.legend()
         plt.show()
     @staticmethod
