@@ -54,8 +54,8 @@ def mr_data_analysis(input_files_start_time, input_files_end_time, min_hashtag_o
     output_file = f_tuo_high_accuracy_lid_and_distribution%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
     
     print PARAMS_DICT
-#    runMRJob(MRAnalysis, output_file, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
-    runMRJob(MRAnalysis, output_file, getPreprocessedHashtagsFile(), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, output_file, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, output_file, getPreprocessedHashtagsFile(), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
 
 if __name__ == '__main__':
