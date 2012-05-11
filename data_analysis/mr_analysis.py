@@ -56,6 +56,15 @@ def iterate_hashtag_occurrences(line):
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
     lid = getLatticeLid(l, LOCATION_ACCURACY)
     for h in data['h']: yield h.lower(), [lid, GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS)]
+
+def iterate_hashtag_occurrences_with_high_accuracy_lid(line):
+    data = cjson.decode(line)
+    l = None
+    if 'geo' in data: l = data['geo']
+    else: l = data['bb']
+    t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
+    lid = getLatticeLid(l, accuracy=0.0001)
+    for h in data['h']: yield h.lower(), [lid, GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS)]
     
 def combine_hashtag_instances(hashtag, ito_ltuo_lid_and_occurrence_time):
     combined_ltuo_lid_and_occurrence_time = []
@@ -157,6 +166,8 @@ class MRAnalysis(ModifiedMRJob):
         self.so_lids = set()
         # Variables for tuo_lid_and_distribution_value
         self.mf_lid_to_occurrence_count = defaultdict(float)
+        # High accuracy lid
+        self.mf_high_accuracy_lid_to_count = defaultdict(float)
     
     
     ''' Start: Methods to load hashtag objects
@@ -175,6 +186,22 @@ class MRAnalysis(ModifiedMRJob):
     ''' End: Methods to load hashtag objects
     '''
     
+    ''' Start: Methods to get distribution in high accuracy lid
+    '''
+    def map_checkin_line_to_tuo_high_accuracy_lid_and_ltuo_lid_and_count(self, key, line):
+        if False: yield # I'm a generator!
+        for h, tuo_lid_and_occurrence_time in iterate_hashtag_occurrences_with_high_accuracy_lid(line): 
+            self.mf_high_accuracy_lid_to_count[tuo_lid_and_occurrence_time[0]]+=1
+    def mapf_checkin_line_to_tuo_high_accuracy_lid_and_ltuo_lid_and_count(self):
+        for high_accuracy_lid, count in \
+                self.mf_high_accuracy_lid_to_count.iteritems(): # e = earliest, l = latest
+            yield high_accuracy_lid, count
+    def red_tuo_lid_and_ito_count_and_occurrence_time_to_tuo_lid_and_count(self, high_accuracy_lid, ito_count):
+        red_count = 0.0
+        for count in ito_count: red_count+=count
+        if red_count>500: yield high_accuracy_lid, [high_accuracy_lid, red_count]
+    ''' End: Methods to get distribution in high accuracy lid
+    '''
         
     ''' Start: Methods to load preprocessed hashtag objects
     '''    
@@ -578,9 +605,18 @@ class MRAnalysis(ModifiedMRJob):
                                    reducer=self.red_tuo_lid_other_lid_and_ito_ane_to_lid_other_lid_and_cooccurrence_count
                                    )
                        ]
+    def job_tuo_high_accuracy_lid_and_distribution(self):
+        return [
+                   self.mr(
+                           mapper=self.map_checkin_line_to_tuo_high_accuracy_lid_and_ltuo_lid_and_count, 
+                           mapper_final=self.mapf_checkin_line_to_tuo_high_accuracy_lid_and_ltuo_lid_and_count, 
+                           reducer=self.red_tuo_lid_and_ito_count_and_occurrence_time_to_tuo_lid_and_count
+                           )
+                   ]
     def steps(self):
         pass
 #        return self.job_load_hashtag_object()
+        return self.job_tuo_high_accuracy_lid_and_distribution()
 #        return self.job_load_preprocessed_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
@@ -590,6 +626,6 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_iid_and_interval_stats()
 #        return self.job_write_tuo_norm_iid_and_interval_stats()
 #        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
-        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
+#        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
 if __name__ == '__main__':
     MRAnalysis.run()

@@ -26,4 +26,6 @@ f_tuo_lid_and_ltuo_other_lid_and_temporal_distance = \
     fld_data_analysis+'/tuo_lid_and_ltuo_other_lid_and_temporal_distance'
 f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences = \
     fld_data_analysis+'/tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences'
+f_tuo_high_accuracy_lid_and_distribution = \
+    fld_data_analysis+'/tuo_high_accuracy_lid_and_distribution'
     

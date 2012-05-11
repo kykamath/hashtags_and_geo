@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from library.plotting import savefig, splineSmooth
 import shapefile, os
 from library.geo import point_inside_polygon, getLocationFromLid,\
-    getHaversineDistance
+    getHaversineDistance, plotPointsOnWorldMap
 from collections import defaultdict
 from library.stats import entropy, focus
 import numpy as np
@@ -110,6 +110,14 @@ class DataAnalysis():
         for country, occurrence_count in\
                  ltuo_country_and_s_occurrence_count:
             FileIO.writeToFileAsJson([country, occurrence_count, occurrence_count/float(total_occurrences)], output_file)
+    @staticmethod
+    def occurrence_distribution_by_world_map(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        ltuo_lid_and_distribution_value = [data for data in iterateJsonFromFile(input_file)]
+        lids, distribution_values = zip(*ltuo_lid_and_distribution_value)
+        points = [getLocationFromLid(lid.replace('_', ' ')) for lid in lids]
+        plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c=distribution_values,  lw = 0, alpha=1.)
+        plt.show()
 #    @staticmethod
 #    def fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time):
 #        input_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + 'DataAnalysis/occurrence_distribution_by_country.txt'
@@ -397,21 +405,34 @@ class DataAnalysis():
         focuses = zip(*focuses)[1]
         mf_norm_focus_to_entropies = defaultdict(list)
         mf_norm_focus_to_peaks = defaultdict(list)
+        plt.figure(num=None, figsize=(8,3), dpi=80, facecolor='w', edgecolor='k')
         for focus, entropy, peak in zip(focuses,entropies, peaks):
-            if peak<175:
+#            if peak < 6:
+#                plt.title('-6')
+#            if peak < 30:
+#                plt.title('-6')
+#            if 72<peak and peak<144:
+#                plt.title('72,144')
+#            if 144<peak and peak<288:
+#                plt.title('144,288')
+            if 288>peak:
+                plt.title('288+')
                 mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
                 mf_norm_focus_to_peaks[round(focus, 2)].append(peak)
-        plt.figure(num=None, figsize=(8,3), dpi=80, facecolor='w', edgecolor='k')
         x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems() if len(entropies)>5])
         _, z_peak = zip(*[(norm_focus, np.mean(peaks)*TIME_UNIT_IN_SECONDS/60) for norm_focus, peaks in mf_norm_focus_to_peaks.iteritems() if len(peaks)>5])
-        cm = matplotlib.cm.get_cmap('cool')
-        print len(x_focus)
+        cm = matplotlib.cm.get_cmap('bwr')
+#        print len(x_focus)
         sc = plt.scatter(x_focus, y_entropy, c=z_peak, cmap=cm, s=50, lw=0,)
         plt.colorbar(sc)
-        savefig(output_file)
+#        savefig(output_file)
+        plt.show()
     @staticmethod
-    def temporal_distance_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+    def spatial_and_community_affinities_based_on_hashtags_shared(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         input_file = f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '.png'
         ltuo_lid_other_lid_and_no_of_co_occurrences = [data for data in iterateJsonFromFile(input_file)]
         mf_distance_to_total_co_occurrences = defaultdict(float)
         for lid_other_lid, no_of_co_occurrences in ltuo_lid_other_lid_and_no_of_co_occurrences:
@@ -422,8 +443,32 @@ class DataAnalysis():
         total_occurrences = sum(mf_distance_to_total_co_occurrences.values())
         x_distance, y_total_co_occurrences = zip(*sorted(mf_distance_to_total_co_occurrences.items(), key=itemgetter(0)))
         y_total_co_occurrences = [y/total_occurrences for y in y_total_co_occurrences]
-        plt.semilogx(x_distance, y_total_co_occurrences)
-        plt.show()
+        plt.plot(x_distance, y_total_co_occurrences)
+#        plt.show()
+        savefig(output_file)
+    @staticmethod
+    def write_examples_of_locations_at_different_ends_of_distance_spectrum(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        '''
+        ['2.9000_101.5000:ilab:24.6500_-79.7500', [79.0, 12142.435092213409]] Kuala Laumpur - Miami
+        '''
+        input_file = f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '.png'
+        ltuo_lid_other_lid_and_no_of_co_occurrences = [data for data in iterateJsonFromFile(input_file)]
+        ltuo_lid_other_lid_and_tuo_no_of_co_occurrences_and_distance = []
+        for lid_other_lid, no_of_co_occurrences in ltuo_lid_other_lid_and_no_of_co_occurrences:
+            lid1, lid2 = lid_other_lid.split(':ilab:')
+            distance = getHaversineDistance(getLocationFromLid(lid1.replace('_', ' ')), getLocationFromLid(lid2.replace('_', ' ')))
+            ltuo_lid_other_lid_and_tuo_no_of_co_occurrences_and_distance.append(
+                                                                                    [lid_other_lid, [no_of_co_occurrences, distance]]
+                                                                                )
+        ltuo_lid_other_lid_and_s_tuo_no_of_co_occurrences_and_distance = \
+            sorted(ltuo_lid_other_lid_and_tuo_no_of_co_occurrences_and_distance, key=lambda (_, (no_of_occurrences, __)): no_of_occurrences)
+        ltuo_lid_other_lid_and_s_tuo_no_of_co_occurrences_and_s_distance = \
+            sorted(ltuo_lid_other_lid_and_s_tuo_no_of_co_occurrences_and_distance, key=lambda (_, (__, distance)): distance)
+#        filtered_ltuo_lid_other_lid_and_s_tuo_no_of_co_occurrences_and_s_distance = \
+#            [for ltuo_lid_other_lid_and_s_tuo_no_of_co_occurrences_and_distance in ]
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
@@ -434,6 +479,7 @@ class DataAnalysis():
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
 #        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.occurrence_distribution_by_world_map(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_entropy_and_focus(input_files_start_time, input_files_end_time, min_no_of_hashtags)
@@ -448,7 +494,8 @@ class DataAnalysis():
 #        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
-        DataAnalysis.temporal_distance_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.spatial_and_community_affinities_based_on_hashtags_shared(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.write_examples_of_locations_at_different_ends_of_distance_spectrum(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
