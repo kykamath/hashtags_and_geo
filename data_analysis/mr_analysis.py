@@ -168,7 +168,7 @@ class MRAnalysis(ModifiedMRJob):
         if hashtagObject: yield hashtag, hashtagObject 
     def map_hashtag_object_string_to_tuo_of_hashtag_and_hashtag_object(self, key, hashtag_object_line):
         hashtag_object = cjson.decode(hashtag_object_line)
-        yield hashtag_object['hashtag'], hashtag_object
+        if 'hashtag' in hashtag_object: yield hashtag_object['hashtag'], hashtag_object
     def dummy_red(self, hashtag, hashtag_object):
         yield hashtag, [hashtag, len(hashtag_object['ltuo_lid_and_s_interval'])]
     ''' End: Methods to load hashtag objects
