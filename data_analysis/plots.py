@@ -9,7 +9,7 @@ from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
     fld_sky_drive_data_analysis_images, f_tuo_lid_and_distribution_value,\
     f_tuo_rank_and_average_percentage_of_occurrences, \
     f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak, \
-    f_tuo_iid_and_interval_stats
+    f_tuo_iid_and_interval_stats, f_tuo_lid_and_ltuo_other_lid_and_temporal_distance
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
@@ -408,6 +408,12 @@ class DataAnalysis():
         plt.colorbar(sc)
         savefig(output_file)
     @staticmethod
+    def temporal_distance_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_lid_and_ltuo_other_lid_and_temporal_distance%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        tuo_lid_and_ltuo_other_lid_and_temporal_distance = [data for data in iterateJsonFromFile(input_file)]
+        for d in tuo_lid_and_ltuo_other_lid_and_temporal_distance:
+            print d
+    @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
         input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
@@ -428,8 +434,10 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        
+        DataAnalysis.temporal_distance_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
