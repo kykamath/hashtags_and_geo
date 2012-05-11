@@ -174,7 +174,6 @@ class MRAnalysis(ModifiedMRJob):
     ''' End: Methods to load hashtag objects
     '''
     
-    
     ''' Start: Methods to get total tweets and total geo tweets
     '''
     def map_checkin_line_to_tuo_stat_and_stat_value(self, key, line):

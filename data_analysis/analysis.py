@@ -31,7 +31,9 @@ def getInputFiles(startTime, endTime, folderType='world'):
         current+=relativedelta(months=1)   
         
 def getPreprocessedHashtagsFile():
-    return 'hdfs:///user/kykamath/geo/hashtags/2011-02-01_2012-04-30/50/hashtag_objects'
+    input_file = 'hdfs:///user/kykamath/geo/hashtags/2011-02-01_2012-04-30/50/hashtag_objects'
+    print input_file
+    yield input_file
 
 def mr_data_analysis(input_files_start_time, input_files_end_time, min_hashtag_occurrences):
 #    output_file = f_tuo_normalized_occurrence_count_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
