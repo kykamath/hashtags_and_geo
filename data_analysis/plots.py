@@ -9,14 +9,16 @@ from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
     fld_sky_drive_data_analysis_images, f_tuo_lid_and_distribution_value,\
     f_tuo_rank_and_average_percentage_of_occurrences, \
     f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak, \
-    f_tuo_iid_and_interval_stats, f_tuo_lid_and_ltuo_other_lid_and_temporal_distance
+    f_tuo_iid_and_interval_stats, f_tuo_lid_and_ltuo_other_lid_and_temporal_distance, \
+    f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
 import matplotlib.pyplot as plt
 from library.plotting import savefig, splineSmooth
 import shapefile, os
-from library.geo import point_inside_polygon, getLocationFromLid
+from library.geo import point_inside_polygon, getLocationFromLid,\
+    getHaversineDistance
 from collections import defaultdict
 from library.stats import entropy, focus
 import numpy as np
@@ -409,10 +411,19 @@ class DataAnalysis():
         savefig(output_file)
     @staticmethod
     def temporal_distance_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags):
-        input_file = f_tuo_lid_and_ltuo_other_lid_and_temporal_distance%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
-        tuo_lid_and_ltuo_other_lid_and_temporal_distance = [data for data in iterateJsonFromFile(input_file)]
-        for d in tuo_lid_and_ltuo_other_lid_and_temporal_distance:
-            print d
+        input_file = f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        ltuo_lid_other_lid_and_no_of_co_occurrences = [data for data in iterateJsonFromFile(input_file)]
+        mf_distance_to_total_co_occurrences = defaultdict(float)
+        for lid_other_lid, no_of_co_occurrences in ltuo_lid_other_lid_and_no_of_co_occurrences:
+            lid1, lid2 = lid_other_lid.split(':ilab:')
+            distance = getHaversineDistance(getLocationFromLid(lid1.replace('_', ' ')), getLocationFromLid(lid2.replace('_', ' ')))
+            distance=int(distance/100)*100+100
+            mf_distance_to_total_co_occurrences[distance]+=no_of_co_occurrences
+        total_occurrences = sum(mf_distance_to_total_co_occurrences.values())
+        x_distance, y_total_co_occurrences = zip(*sorted(mf_distance_to_total_co_occurrences.items(), key=itemgetter(0)))
+        y_total_co_occurrences = [y/total_occurrences for y in y_total_co_occurrences]
+        plt.semilogx(x_distance, y_total_co_occurrences)
+        plt.show()
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
