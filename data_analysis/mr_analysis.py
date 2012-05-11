@@ -35,6 +35,7 @@ K_TOP_RANK = 100
 
 # Temporal analysis
 VALID_IID_RANGE = range(-30,31)
+MIN_NUMBER_OF_SHARED_HASHTAGS = 10
 
 # Parameters for the MR Job that will be logged.
 HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
@@ -180,7 +181,8 @@ class MRAnalysis(ModifiedMRJob):
         hashtag_object = cjson.decode(hashtag_object_line)
         if 'hashtag' in hashtag_object: yield hashtag_object['hashtag'], hashtag_object
     def red_tuo_hashtag_and_ito_hashtag_object_to_tuo_hashtag_and_hashtag_object(self, hashtag, ito_hashtag_object):
-        yield hashtag, [hashtag, list(ito_hashtag_object)[0]]
+#        yield hashtag, [hashtag, list(ito_hashtag_object)[0]]
+        yield hashtag, list(ito_hashtag_object)[0]
     ''' End: Methods to load preprocessed hashtag objects
     '''
         
@@ -412,6 +414,7 @@ class MRAnalysis(ModifiedMRJob):
     '''
     def map_hashtag_object_to_tuo_lid_and_tuo_other_lid_and_temporal_distance(self, hashtag, hashtag_object):
         # Get peak
+#        hashtag_object = hashtag_object[1]
         ltuo_iid_and_tuo_interval_and_lids = \
             get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
         peak_tuo_iid_and_tuo_interval_and_lids = \
@@ -430,10 +433,21 @@ class MRAnalysis(ModifiedMRJob):
                     ltuo_valid_iid_and_focus_lid.append([iid, focus_lid])
                     so_observed_focus_lids.add(focus_lid)
         for (valid_iid1, focus_lid1), (valid_iid2, focus_lid2) in combinations(ltuo_valid_iid_and_focus_lid, 2):
-            yield focus_lid1, focus_lid2, valid_iid1-valid_iid2
-            yield focus_lid2, focus_lid1, valid_iid2-valid_iid1
+            yield focus_lid1, [focus_lid2, valid_iid1-valid_iid2]
+            yield focus_lid2, [focus_lid1, valid_iid2-valid_iid1]
     def red_tuo_lid_and_ito_other_lid_and_temporal_distance_to_ltuo_other_lid_and_temporal_ditance(self, lid, ito_other_lid_and_temporal_distance):
-        pass
+        red_mf_other_lid_to_temporal_distances = defaultdict(list)
+        for other_lid, temporal_distacne in \
+                ito_other_lid_and_temporal_distance:
+            red_mf_other_lid_to_temporal_distances[other_lid].append(temporal_distacne)
+        # Filter other lids that haven't been observed minimum number of times and
+        # yield the mean distance for others.
+        for other_lid in red_mf_other_lid_to_temporal_distances.keys()[:]:
+            if len(red_mf_other_lid_to_temporal_distances[other_lid])<MIN_NUMBER_OF_SHARED_HASHTAGS:
+                    del red_mf_other_lid_to_temporal_distances[other_lid]
+            else: red_mf_other_lid_to_temporal_distances[other_lid]=np.mean(red_mf_other_lid_to_temporal_distances[other_lid])
+        yield lid, [lid, red_mf_other_lid_to_temporal_distances]
+        
     ''' End: Methods to temporal distance between hashtags    
     '''
     
@@ -514,7 +528,7 @@ class MRAnalysis(ModifiedMRJob):
                                reducer=self.red_tuo_norm_iid_and_ito_interval_stats_to_tuo_norm_iid_and_reduced_interval_stats
                                )
                    ]
-    def job_write_tuo_lid_and_ltuo_other_lid_and_temporal_ditance(self):
+    def job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance(self):
         return self.job_load_preprocessed_hashtag_object() + \
                [
                             self.mr(
@@ -533,6 +547,6 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
 #        return self.job_write_tuo_iid_and_interval_stats()
 #        return self.job_write_tuo_norm_iid_and_interval_stats()
-#        return 
+        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
 if __name__ == '__main__':
     MRAnalysis.run()
