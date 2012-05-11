@@ -3,6 +3,7 @@ Created on May 7, 2012
 
 @author: krishnakamath
 '''
+from itertools import combinations
 import cjson, time
 from library.mrjobwrapper import ModifiedMRJob
 from library.twitter import getDateTimeObjectFromTweetTimestamp
@@ -31,6 +32,9 @@ DISTRIBUTION_ACCURACY = 100
 
 # Top K rank analysis
 K_TOP_RANK = 100
+
+# Temporal analysis
+VALID_IID_RANGE = range(-30,31)
 
 # Parameters for the MR Job that will be logged.
 HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
@@ -345,13 +349,7 @@ class MRAnalysis(ModifiedMRJob):
                             distance_from_overall_coverage ]
     '''
     def map_hashtag_object_to_tuo_norm_iid_and_interval_stats(self, hashtag, hashtag_object):
-        def distance_from_overall_locality_stat(overall_stat, current_stat):
-            return overall_stat-current_stat
-#            diff = overall_stat-current_stat
-#            if diff==0.0: return 0.0
-#            elif overall_stat
-#            print overall_stat, current_stat
-#            return (overall_stat-current_stat)/float(overall_stat)
+        def distance_from_overall_locality_stat(overall_stat, current_stat): return overall_stat-current_stat
         ltuo_iid_and_tuo_interval_and_lids = \
             get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
         peak_tuo_iid_and_tuo_interval_and_lids = \
@@ -408,6 +406,35 @@ class MRAnalysis(ModifiedMRJob):
                           np.mean(red_distance_from_overall_coverage),
                     ]]
     ''' End: Methods to get stats related to intervals
+    '''
+    
+    ''' Start: Methods to temporal distance between hashtags
+    '''
+    def map_hashtag_object_to_tuo_lid_and_tuo_other_lid_and_temporal_distance(self, hashtag, hashtag_object):
+        # Get peak
+        ltuo_iid_and_tuo_interval_and_lids = \
+            get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
+        peak_tuo_iid_and_tuo_interval_and_lids = \
+            max(ltuo_iid_and_tuo_interval_and_lids, key=lambda (_, (__, lids)): len(lids))
+        peak_iid = peak_tuo_iid_and_tuo_interval_and_lids[0]
+        # Get valid intervals with corresponding focus lids
+        ltuo_valid_iid_and_focus_lid = []
+        ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = \
+            get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_object)
+        so_observed_focus_lids = set()
+        for iid, (interval, ltuo_lid_and_occurrence_count) in \
+                ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count:
+            if (iid-peak_iid) in VALID_IID_RANGE: 
+                focus_lid  = focus(dict(ltuo_lid_and_occurrence_count))[0]
+                if focus_lid not in so_observed_focus_lids:
+                    ltuo_valid_iid_and_focus_lid.append([iid, focus_lid])
+                    so_observed_focus_lids.add(focus_lid)
+        for (valid_iid1, focus_lid1), (valid_iid2, focus_lid2) in combinations(ltuo_valid_iid_and_focus_lid, 2):
+            yield focus_lid1, focus_lid2, valid_iid1-valid_iid2
+            yield focus_lid2, focus_lid1, valid_iid2-valid_iid1
+    def red_tuo_lid_and_ito_other_lid_and_temporal_distance_to_ltuo_other_lid_and_temporal_ditance(self, lid, ito_other_lid_and_temporal_distance):
+        pass
+    ''' End: Methods to temporal distance between hashtags    
     '''
     
          
@@ -487,11 +514,18 @@ class MRAnalysis(ModifiedMRJob):
                                reducer=self.red_tuo_norm_iid_and_ito_interval_stats_to_tuo_norm_iid_and_reduced_interval_stats
                                )
                    ]
-#    def job_write_tuo_
+    def job_write_tuo_lid_and_ltuo_other_lid_and_temporal_ditance(self):
+        return self.job_load_preprocessed_hashtag_object() + \
+               [
+                            self.mr(
+                                   mapper=self.map_hashtag_object_to_tuo_lid_and_tuo_other_lid_and_temporal_distance, 
+                                   reducer=self.red_tuo_lid_and_ito_other_lid_and_temporal_distance_to_ltuo_other_lid_and_temporal_ditance
+                                   )
+                       ]
     def steps(self):
         pass
 #        return self.job_load_hashtag_object()
-        return self.job_load_preprocessed_hashtag_object()
+#        return self.job_load_preprocessed_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
@@ -499,6 +533,6 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
 #        return self.job_write_tuo_iid_and_interval_stats()
 #        return self.job_write_tuo_norm_iid_and_interval_stats()
-    
+#        return 
 if __name__ == '__main__':
     MRAnalysis.run()
