@@ -22,3 +22,6 @@ f_tuo_rank_and_average_percentage_of_occurrences =  fld_data_analysis+'/tuo_rank
 f_tuo_iid_and_interval_stats = fld_data_analysis+'/tuo_iid_and_interval_stats'
 f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage = \
     fld_data_analysis+'/tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage'
+f_tuo_lid_and_ltuo_other_lid_and_temporal_distance = \
+    fld_data_analysis+'/tuo_lid_and_ltuo_other_lid_and_temporal_distance'
+    
