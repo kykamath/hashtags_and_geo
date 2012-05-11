@@ -47,16 +47,17 @@
 
 import random
 import matplotlib.pyplot as plt
+def get_probability():
+    val = random.paretovariate(2)
+    val=val/10
+    if val>1: return 1.0
+    else: return val
 #
 l = []
 val=-1
 for i in range(1000):
-#    while val<0.5:
-#    val = random.gauss(0.5, 0.01)
-    val = random.paretovariate(0.76)
-#    if val>0.5:
-#    print val
-    l.append(val)
+#    val = random.paretovariate(2)
+    l.append(get_probability())
 print l
 plt.hist(l,100)
 #plt.xlim(xmax=1.0)
