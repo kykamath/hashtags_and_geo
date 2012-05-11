@@ -45,6 +45,7 @@ PARAMS_DICT = dict(PARAMS_DICT = True,
                    TIME_UNIT_IN_SECONDS = TIME_UNIT_IN_SECONDS,
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
                    K_TOP_RANK = K_TOP_RANK,
+                   MIN_NUMBER_OF_SHARED_HASHTAGS = MIN_NUMBER_OF_SHARED_HASHTAGS,
                    )
 
 def iterate_hashtag_occurrences(line):
@@ -446,7 +447,8 @@ class MRAnalysis(ModifiedMRJob):
             if len(red_mf_other_lid_to_temporal_distances[other_lid])<MIN_NUMBER_OF_SHARED_HASHTAGS:
                     del red_mf_other_lid_to_temporal_distances[other_lid]
             else: red_mf_other_lid_to_temporal_distances[other_lid]=np.mean(red_mf_other_lid_to_temporal_distances[other_lid])
-        yield lid, [lid, red_mf_other_lid_to_temporal_distances]
+        if red_mf_other_lid_to_temporal_distances:
+            yield lid, [lid, red_mf_other_lid_to_temporal_distances]
         
     ''' End: Methods to temporal distance between hashtags    
     '''
