@@ -166,6 +166,11 @@ class MRAnalysis(ModifiedMRJob):
     def red_tuo_hashtag_and_ito_ltuo_lid_and_occurrence_time_to_tuo_hashtag_and_hashtag_object(self, hashtag, ito_ltuo_lid_and_occurrence_time):
         hashtagObject = combine_hashtag_instances(hashtag, ito_ltuo_lid_and_occurrence_time)
         if hashtagObject: yield hashtag, hashtagObject 
+    def map_hashtag_object_string_to_tuo_of_hashtag_and_hashtag_object(self, key, hashtag_object_line):
+        hashtag_object = cjson.decode(hashtag_object_line)
+        yield hashtag_object['hashtag'], hashtag_object
+    def dummy_red(self, hashtag, hashtag_object):
+        yield hashtag, [hashtag, len(hashtag_object['ltuo_lid_and_s_interval'])]
     ''' End: Methods to load hashtag objects
     '''
     
@@ -409,6 +414,12 @@ class MRAnalysis(ModifiedMRJob):
                                                        reducer=self.red_tuo_hashtag_and_ito_ltuo_lid_and_occurrence_time_to_tuo_hashtag_and_hashtag_object
                                                        )
                                                ]
+    def job_load_preprocessed_hashtag_object(self): return [
+                                               self.mr(
+                                                       mapper=self.map_hashtag_object_string_to_tuo_of_hashtag_and_hashtag_object, 
+                                                       reducer=self.dummy_red
+                                                       )
+                                               ]
     def job_write_tuo_normalized_occurrence_count_and_distribution_value(self): 
         return [
                    self.mr(
@@ -473,7 +484,8 @@ class MRAnalysis(ModifiedMRJob):
 #    def job_write_tuo_
     def steps(self):
         pass
-        return self.job_load_hashtag_object()
+#        return self.job_load_hashtag_object()
+        return self.job_load_preprocessed_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()

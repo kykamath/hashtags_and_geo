@@ -29,6 +29,9 @@ def getInputFiles(startTime, endTime, folderType='world'):
         print input_file
         yield input_file
         current+=relativedelta(months=1)   
+        
+def getPreprocessedHashtagsFile():
+    return 'hdfs:///user/kykamath/geo/hashtags/2011-02-01_2012-04-30/50/hashtag_objects'
 
 def mr_data_analysis(input_files_start_time, input_files_end_time, min_hashtag_occurrences):
 #    output_file = f_tuo_normalized_occurrence_count_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
@@ -40,10 +43,11 @@ def mr_data_analysis(input_files_start_time, input_files_end_time, min_hashtag_o
 #    output_file = f_tuo_iid_and_interval_stats%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
 #    output_file = f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
 
-    output_file = f_hashtag_objects%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
-    
+#    output_file = f_hashtag_objects%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
+    output_file = 'temp_f'
     print PARAMS_DICT
-    runMRJob(MRAnalysis, output_file, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, output_file, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, output_file, getPreprocessedHashtagsFile(), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
 
 if __name__ == '__main__':
