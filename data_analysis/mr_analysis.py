@@ -31,7 +31,8 @@ START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
 DISTRIBUTION_ACCURACY = 100
 
 # Top K rank analysis
-K_TOP_RANK = 100
+#K_TOP_RANK = 100
+K_TOP_RANK = 11935
 
 # Temporal analysis
 VALID_IID_RANGE = range(-30,31)
@@ -301,9 +302,19 @@ class MRAnalysis(ModifiedMRJob):
         ltuo_lid_and_r_occurrence_count = sorted(mf_lid_to_occurrence_count.items(), key=itemgetter(1), reverse=True)
         total_occurrence_count = float(sum(zip(*ltuo_lid_and_r_occurrence_count)[1]))
         current_occurrence_count = 0
-        for rank, (_, occurrence_count) in enumerate(ltuo_lid_and_r_occurrence_count[:K_TOP_RANK]):
+#        for rank, (_, occurrence_count) in enumerate(ltuo_lid_and_r_occurrence_count[:K_TOP_RANK]):
+#            current_occurrence_count+=occurrence_count
+#            yield rank+1, current_occurrence_count/total_occurrence_count
+        rank = 0
+        for _, occurrence_count in ltuo_lid_and_r_occurrence_count:
             current_occurrence_count+=occurrence_count
-            yield rank+1, current_occurrence_count/total_occurrence_count
+            rank+=1
+            yield rank, current_occurrence_count/total_occurrence_count
+        # Setting ranks for extra locations to 1.
+        while rank < K_TOP_RANK:
+            rank+=1
+            yield rank, 1.0
+            
     def red_tuo_rank_and_ito_percentage_of_occurrences_to_tuo_rank_and_average_percentage_of_occurrences(self, rank, ito_percentage_of_occurrences):
         red_percentage_of_occurrences = []
         for percentage_of_occurrence in ito_percentage_of_occurrences: red_percentage_of_occurrences.append(percentage_of_occurrence)
@@ -584,7 +595,7 @@ class MRAnalysis(ModifiedMRJob):
                            )
                    ]
     def job_write_tuo_rank_and_average_percentage_of_occurrences(self):
-        return self.job_load_hashtag_object() + \
+        return self.job_load_preprocessed_hashtag_object() + \
                 [
                     self.mr(
                            mapper=self.map_hashtag_object_to_tuo_rank_and_percentage_of_occurrences, 
@@ -635,13 +646,13 @@ class MRAnalysis(ModifiedMRJob):
         pass
 #        return self.job_load_hashtag_object()
 #        return self.job_tuo_high_accuracy_lid_and_distribution()
-        return self.job_tuo_no_of_hashtags_and_count()
+#        return self.job_tuo_no_of_hashtags_and_count()
 #        return self.job_load_preprocessed_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
 #        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak()
-#        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
+        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
 #        return self.job_write_tuo_iid_and_interval_stats()
 #        return self.job_write_tuo_norm_iid_and_interval_stats()
 #        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
