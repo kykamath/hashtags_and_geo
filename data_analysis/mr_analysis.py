@@ -21,7 +21,7 @@ LOCATION_ACCURACY = 1.45 # 100 miles
 TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes Used for iid only
 #TIME_UNIT_IN_SECONDS = 60*60 # 60 minutes Used for norm iid to overcome sparcity
 
-MIN_HASHTAG_OCCURENCES = 50
+MIN_HASHTAG_OCCURENCES = 0
 #MAX_HASHTAG_OCCURENCES = 100000
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
 #START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2011, 4, 28)
@@ -209,9 +209,19 @@ class MRAnalysis(ModifiedMRJob):
         hashtag_object = cjson.decode(hashtag_object_line)
         if 'hashtag' in hashtag_object: yield hashtag_object['hashtag'], hashtag_object
     def red_tuo_hashtag_and_ito_hashtag_object_to_tuo_hashtag_and_hashtag_object(self, hashtag, ito_hashtag_object):
-#        yield hashtag, [hashtag, list(ito_hashtag_object)[0]]
         yield hashtag, list(ito_hashtag_object)[0]
     ''' End: Methods to load preprocessed hashtag objects
+    '''
+        
+    ''' Start: Methods to determine hashtag distribution
+    '''    
+    def map_hashtag_object_to_tuo_no_of_hashtags_and_count(self, hashtag, hashtag_object):
+        yield len(hashtag_object['ltuo_lid_and_s_interval']), 1.
+    def red_tuo_no_of_hashtags_and_ito_count_to_no_of_hashtags_and_count(self, no_of_hashtags, ito_count):
+        red_count = 1.0
+        for count in ito_count: red_count+=count
+        yield no_of_hashtags, [no_of_hashtags, red_count]
+    ''' End: Methods to determine hashtag distribution
     '''
         
     
@@ -550,6 +560,14 @@ class MRAnalysis(ModifiedMRJob):
                            reducer=self.red_tuo_stat_and_ito_stat_value_to_tuo_stat_and_stat_value
                            )
                    ]
+    def job_tuo_no_of_hashtags_and_count(self):
+        return self.job_load_hashtag_object() + \
+               [
+                            self.mr(
+                                   mapper=self.map_hashtag_object_to_tuo_no_of_hashtags_and_count, 
+                                   reducer=self.red_tuo_no_of_hashtags_and_ito_count_to_no_of_hashtags_and_count
+                                   )
+                       ]
     def job_write_tuo_lid_and_distribution_value(self):
         return [
                    self.mr(
@@ -616,7 +634,8 @@ class MRAnalysis(ModifiedMRJob):
     def steps(self):
         pass
 #        return self.job_load_hashtag_object()
-        return self.job_tuo_high_accuracy_lid_and_distribution()
+#        return self.job_tuo_high_accuracy_lid_and_distribution()
+        return self.job_tuo_no_of_hashtags_and_count()
 #        return self.job_load_preprocessed_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()

@@ -10,7 +10,8 @@ from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
     f_tuo_rank_and_average_percentage_of_occurrences, \
     f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak, \
     f_tuo_iid_and_interval_stats, f_tuo_lid_and_ltuo_other_lid_and_temporal_distance, \
-    f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences
+    f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences,\
+    f_tuo_high_accuracy_lid_and_distribution
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
@@ -104,6 +105,7 @@ class DataAnalysis():
         for location_count, (lid, distribution_value) in enumerate(iterateJsonFromFile(input_file)):
             print location_count
             country = CountryBoundaries.get_country(getLocationFromLid(lid.replace('_', ' ')))
+            if country=='United States Minor Outlying Islands': country='United States'
             if country: mf_country_to_occurrence_count[country]+=distribution_value
         ltuo_country_and_s_occurrence_count = sorted(mf_country_to_occurrence_count.items(), key=itemgetter(1), reverse=True)
         total_occurrences = sum(zip(*ltuo_country_and_s_occurrence_count)[1])
@@ -112,12 +114,17 @@ class DataAnalysis():
             FileIO.writeToFileAsJson([country, occurrence_count, occurrence_count/float(total_occurrences)], output_file)
     @staticmethod
     def occurrence_distribution_by_world_map(input_files_start_time, input_files_end_time, min_no_of_hashtags):
-        input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        input_file = f_tuo_high_accuracy_lid_and_distribution%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) + GeneralMethods.get_method_id() + '.png'
         ltuo_lid_and_distribution_value = [data for data in iterateJsonFromFile(input_file)]
-        lids, distribution_values = zip(*ltuo_lid_and_distribution_value)
+        lids, distribution_values = zip(*[
+                                          tuo_lid_and_distribution_value for tuo_lid_and_distribution_value in ltuo_lid_and_distribution_value 
+                                          if tuo_lid_and_distribution_value[1]>5000
+                                          ])
+        lids, distribution_values = zip(*sorted(zip(lids, distribution_values), key=itemgetter(1)))
         points = [getLocationFromLid(lid.replace('_', ' ')) for lid in lids]
-        plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c=distribution_values,  lw = 0, alpha=1.)
-        plt.show()
+        plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='r',  lw = 0, alpha=1.)
+        savefig(output_file)
 #    @staticmethod
 #    def fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time):
 #        input_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + 'DataAnalysis/occurrence_distribution_by_country.txt'
@@ -205,12 +212,18 @@ class DataAnalysis():
             [['-23.2000_-46.4000', 'Sao, Paulo', 7357670.0], ['50.7500_0.0000', 'London', 6548390.0], 
                 ['-5.8000_105.8500', 'Jakarata', 4536084.0], ['33.3500_-117.4500', 'Los Angeles', 3940885.0], 
                 ['40.6000_-73.9500', 'New York', 3747348.0]]
+        [('-23.2000_-46.4000', 0.033948282514978313), ('50.7500_0.0000', 0.030214265350071261), 
+        ('-5.8000_105.8500', 0.020929487343639069), ('33.3500_-117.4500', 0.018183239712985265), 
+        ('40.6000_-73.9500', 0.017290260175563586)]
         '''
         input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
         ltuo_lid_and_occurrene_count = []
+        total_distribution_value = 0.0
         for lid_count, (lid, distribution_value) in enumerate(iterateJsonFromFile(input_file)):
             print lid_count
+            total_distribution_value+=distribution_value
             ltuo_lid_and_occurrene_count.append([lid, distribution_value])
+        ltuo_lid_and_occurrene_count = [(lid, occurrene_count/total_distribution_value)for lid, occurrene_count in ltuo_lid_and_occurrene_count]
         print sorted(ltuo_lid_and_occurrene_count, key=itemgetter(1), reverse=True)[:5]
         
     @staticmethod
