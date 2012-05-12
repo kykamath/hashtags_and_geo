@@ -233,7 +233,7 @@ class DataAnalysis():
         ltuo_lid_and_r_occurrence_count = sorted(ltuo_lid_and_occurrene_count, key=itemgetter(1), reverse=True)
         lids = zip(*ltuo_lid_and_r_occurrence_count)[0][:200]
         points = [getLocationFromLid(lid.replace('_', ' ')) for lid in lids]
-        plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='k',  lw = 0, alpha=1.)
+        plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='m',  lw = 0, alpha=1.)
         savefig(output_file)
     @staticmethod
     def cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, no_of_hashtags):
@@ -265,7 +265,7 @@ class DataAnalysis():
         plt.scatter(x_percentage_of_locations, y_average_percentage_of_occurrences, lw=0, s=50, marker='*', c='k', label='Average distribution')  
         plt.ylim(ymax=1.06)
         plt.xlim(xmin=-5., xmax=200)
-        plt.ylabel('Cumulative fraction of occurrences')
+        plt.ylabel('Cum. fraction of occurrences')
         plt.xlabel('Locations ordered by their ranks')
         plt.grid(True)
         plt.legend(loc=4)
