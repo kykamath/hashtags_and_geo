@@ -11,7 +11,7 @@ from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
     f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak, \
     f_tuo_iid_and_interval_stats, f_tuo_lid_and_ltuo_other_lid_and_temporal_distance, \
     f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences,\
-    f_tuo_high_accuracy_lid_and_distribution
+    f_tuo_high_accuracy_lid_and_distribution, f_tuo_no_of_hashtags_and_count
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
@@ -27,11 +27,16 @@ import matplotlib
 from datetime import timedelta
 from mr_analysis import TIME_UNIT_IN_SECONDS
 from data_analysis.settings import f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
+from matplotlib import rc
+
+#rc('font',**{'family':'sans-serif','sans-serif':['Times New Roman']})
+#rc('axes',**{'labelweight':'bold'})
+#rc('savefig',**{'dpi':100})
 
 def iterateJsonFromFile(file):
     for data in FileIO.iterateJsonFromFile(file):
         if 'PARAMS_DICT' not in data: yield data
-
+        
 class CountryBoundaries:
     mf_country_to_bounding_box = {}
     f_mf_lid_to_country = os.path.expanduser('~/SkyDrive/external_apps/TM_WORLD_BORDERS_SIMPL-0.3/mf_lid_to_country.json')
@@ -123,7 +128,24 @@ class DataAnalysis():
                                           ])
         lids, distribution_values = zip(*sorted(zip(lids, distribution_values), key=itemgetter(1)))
         points = [getLocationFromLid(lid.replace('_', ' ')) for lid in lids]
-        plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='r',  lw = 0, alpha=1.)
+        plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='k',  lw = 0, alpha=1.)
+        savefig(output_file)
+    @staticmethod
+    def hashtag_distribution_loglog(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_no_of_hashtags_and_count%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), 0)
+        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) + GeneralMethods.get_method_id() + '.png'
+        ltuo_no_of_hashtags_and_count = [data for data in iterateJsonFromFile(input_file)]
+        no_of_hashtags, counts = zip(*ltuo_no_of_hashtags_and_count)
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9)
+        ax = plt.subplot(111)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        plt.scatter(no_of_hashtags, counts, c='k')
+        plt.xlabel('# of occurrences')
+        plt.ylabel('# of hashtags')
+        plt.grid(True)
+#        plt.show()
         savefig(output_file)
 #    @staticmethod
 #    def fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time):
@@ -146,7 +168,7 @@ class DataAnalysis():
         ltuo_lid_and_r_occurrence_count = sorted(ltuo_lid_and_occurrene_count, key=itemgetter(1), reverse=True)
         y_fraction_of_occurrences = [r_occurrence_count/total_occurrences for _, r_occurrence_count in ltuo_lid_and_r_occurrence_count]
         plt.semilogy(range(1,len(y_fraction_of_occurrences)+1), y_fraction_of_occurrences, lw=0, marker='o')   
-        savefig(output_file);
+        savefig(output_file)
 #    @staticmethod
 #    def cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time):
 #        input_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d')) + 'DataAnalysis/occurrence_distribution_by_country.txt'
@@ -492,8 +514,9 @@ class DataAnalysis():
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
         
 #        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.occurrence_distribution_by_world_map(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.occurrence_distribution_by_world_map(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.hashtag_distribution_loglog(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_entropy_and_focus(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_top_locations(input_files_start_time, input_files_end_time, min_no_of_hashtags)
