@@ -595,7 +595,7 @@ class MRAnalysis(ModifiedMRJob):
                                    )
                        ]
     def job_tuo_no_of_locations_and_count(self):
-        return self.job_load_preprocessed_hashtag_object() + \
+        return self.job_load_hashtag_object() + \
                [
                             self.mr(
                                    mapper=self.map_hashtag_object_to_tuo_no_of_locations_and_count, 

@@ -11,7 +11,8 @@ from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
     f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak, \
     f_tuo_iid_and_interval_stats, f_tuo_lid_and_ltuo_other_lid_and_temporal_distance, \
     f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences,\
-    f_tuo_high_accuracy_lid_and_distribution, f_tuo_no_of_hashtags_and_count
+    f_tuo_high_accuracy_lid_and_distribution, f_tuo_no_of_hashtags_and_count,\
+    f_tuo_no_of_locations_and_count
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
@@ -143,6 +144,23 @@ class DataAnalysis():
         ax.set_yscale('log')
         plt.scatter(no_of_hashtags, counts, c='k')
         plt.xlabel('# of occurrences')
+        plt.ylabel('# of hashtags')
+        plt.grid(True)
+#        plt.show()
+        savefig(output_file)
+    @staticmethod
+    def hashtag_locations_distribution_loglog(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_no_of_locations_and_count%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) + GeneralMethods.get_method_id() + '.png'
+        ltuo_no_of_locations_and_count = [data for data in iterateJsonFromFile(input_file)]
+        no_of_locations, counts = zip(*ltuo_no_of_locations_and_count)
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9)
+        ax = plt.subplot(111)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        plt.scatter(no_of_locations, counts, c='k')
+        plt.xlabel('# of locations')
         plt.ylabel('# of hashtags')
         plt.grid(True)
 #        plt.show()
@@ -558,8 +576,9 @@ class DataAnalysis():
 #        DataAnalysis.occurrence_distribution_by_country(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.occurrence_distribution_by_world_map(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.hashtag_distribution_loglog(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.hashtag_locations_distribution_loglog(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.top_k_locations_on_world_map(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_entropy_and_focus(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_top_locations(input_files_start_time, input_files_end_time, min_no_of_hashtags)
