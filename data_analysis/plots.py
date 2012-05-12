@@ -166,14 +166,28 @@ class DataAnalysis():
         total_occurrences = sum(zip(*ltuo_lid_and_occurrene_count)[1]) + 0.0
         ltuo_lid_and_r_occurrence_count = sorted(ltuo_lid_and_occurrene_count, key=itemgetter(1), reverse=True)
         y_fraction_of_occurrences = [r_occurrence_count/total_occurrences for _, r_occurrence_count in ltuo_lid_and_r_occurrence_count]
-        total_locations = len(y_fraction_of_occurrences)+0.
-        x_percentage_of_locations = [x/total_locations for x in range(1,len(y_fraction_of_occurrences)+1)]
+#        total_locations = len(y_fraction_of_occurrences)+0.
+#        x_percentage_of_locations = [x/total_locations for x in range(1,len(y_fraction_of_occurrences)+1)]
+        x_percentage_of_locations = range(1,len(y_fraction_of_occurrences)+1)
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.semilogy(x_percentage_of_locations, y_fraction_of_occurrences, lw=0, marker='o', c='k')   
         plt.ylabel('Fraction of occurrences')
-        plt.xlabel('Percentage of locations ordered by their ranks')
+        plt.xlabel('Locations ordered by their ranks')
         plt.grid(True)
+        
+        a = plt.axes([.55, .5, .3, .3])
+#        plt.plot(range(10))
+        plt.semilogy(x_percentage_of_locations[:200], y_fraction_of_occurrences[:200], lw=0, marker='o', c='k')   
+#        plt.title('Probability')
+        plt.grid(True)
+#        yticks = plt.yticks()
+#        plt.yticks([yticks[0][-1], yticks[0][0]])
+#        plt.ylim(ymin=0.00005, ymax=0.15)
+        plt.ylim(ymin=0.0007,)
+#        plt.xlim(xmin=-4, xmax=200)
+        plt.setp(a)
+        
 #        plt.show()
         savefig(output_file)
 #    @staticmethod
@@ -190,30 +204,20 @@ class DataAnalysis():
 #        plt.plot(range(1,len(y_fraction_of_occurrences)+1), y_fraction_of_occurrences, lw=0, marker='o')   
 #        savefig(output_file);
     @staticmethod
-    def complete_cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, no_of_hashtags):
+    def top_k_locations_on_world_map(input_files_start_time, input_files_end_time, no_of_hashtags):
         input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
         output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags) + GeneralMethods.get_method_id() + '.png'
         ltuo_lid_and_occurrene_count = []
         for lid_count, (lid, distribution_value) in enumerate(iterateJsonFromFile(input_file)):
-            print lid_count
+#            print lid_count
             ltuo_lid_and_occurrene_count.append([lid, distribution_value])
         total_occurrences = sum(zip(*ltuo_lid_and_occurrene_count)[1]) + 0.0
         ltuo_lid_and_r_occurrence_count = sorted(ltuo_lid_and_occurrene_count, key=itemgetter(1), reverse=True)
-        fraction_of_occurrences = [r_occurrence_count/total_occurrences for _, r_occurrence_count in ltuo_lid_and_r_occurrence_count]
-        y_fraction_of_occurrences, current_val = [], 0.0
-        for val in fraction_of_occurrences:
-            current_val+=val
-            y_fraction_of_occurrences.append(current_val)
-#        y_fraction_of_occurrences = y_fraction_of_occurrences[:50]
-        total_locations = len(y_fraction_of_occurrences)+0.
-        x_percentage_of_locations = [x/total_locations for x in range(1,len(y_fraction_of_occurrences)+1)]
-        plt.figure(num=None, figsize=(6,3))
-        plt.subplots_adjust(bottom=0.2, top=0.9)
-        plt.plot(x_percentage_of_locations, y_fraction_of_occurrences, lw=0, marker='o', c='k')   
-        plt.xlabel('Fraction of occurrences')
-        plt.ylabel('Locations in order of Rank')
-        plt.grid(True)
+        lids = zip(*ltuo_lid_and_r_occurrence_count)[0][:200]
+        points = [getLocationFromLid(lid.replace('_', ' ')) for lid in lids]
+        plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='k',  lw = 0, alpha=1.)
         plt.show()
+        exit()
         
     @staticmethod
     def cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, no_of_hashtags):
@@ -239,13 +243,17 @@ class DataAnalysis():
         ltuo_s_rank_and_average_percentage_of_occurrences = sorted(ltuo_rank_and_average_percentage_of_occurrences, key=itemgetter(0))
         y_average_percentage_of_occurrences = zip(*ltuo_s_rank_and_average_percentage_of_occurrences)[1]
         x_percentage_of_locations = [x for x in range(1,len(y_fraction_of_occurrences)+1)]
-#        print len(x_percentage_of_locations), len(y_average_percentage_of_occurrences)
-        print len(x_percentage_of_locations), len(y_fraction_of_occurrences), len(y_average_percentage_of_occurrences)
-        exit()
-        plt.plot(x_percentage_of_locations, y_fraction_of_occurrences, lw=0, marker='o')  
-        plt.plot(x_percentage_of_locations, y_average_percentage_of_occurrences, lw=0, marker='>')  
-#        savefig(output_file)
-        plt.show()
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9)
+        plt.scatter(x_percentage_of_locations, y_fraction_of_occurrences, lw=0, s=50, marker='o', c='m', label='Global distribution')  
+        plt.scatter(x_percentage_of_locations, y_average_percentage_of_occurrences, lw=0, s=50, marker='>', c='#FF9E05', label='Average distribution')  
+        plt.ylim(ymax=1.06)
+        plt.xlim(xmin=-5., xmax=200)
+        plt.ylabel('Cumulative fraction of occurrences')
+        plt.xlabel('Locations ordered by their ranks')
+        plt.grid(True)
+        plt.legend(loc=4)
+        savefig(output_file)
     @staticmethod
     def write_entropy_and_focus(input_files_start_time, input_files_end_time, no_of_hashtags):
         '''
@@ -553,8 +561,8 @@ class DataAnalysis():
 #        DataAnalysis.occurrence_distribution_by_world_map(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.hashtag_distribution_loglog(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.complete_cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.top_k_locations_on_world_map(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_entropy_and_focus(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_top_locations(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
