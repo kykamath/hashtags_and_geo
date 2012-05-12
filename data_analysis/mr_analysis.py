@@ -297,7 +297,7 @@ class MRAnalysis(ModifiedMRJob):
     
     ''' Start: Methods to get distribution from top-k hashtags
     '''
-    def map_hashtag_object_to_tuo_rank_and_percentage_of_occurrences(self, hashtag, hashtag_object):
+    def map_hashtag_object_to_tuo_cum_prct_of_occurrences_and_prct_of_occurrences(self, hashtag, hashtag_object):
         mf_lid_to_occurrence_count = get_mf_lid_to_occurrence_count(hashtag_object)
         ltuo_lid_and_r_occurrence_count = sorted(mf_lid_to_occurrence_count.items(), key=itemgetter(1), reverse=True)
         total_occurrence_count = float(sum(zip(*ltuo_lid_and_r_occurrence_count)[1]))
@@ -309,16 +309,19 @@ class MRAnalysis(ModifiedMRJob):
         for _, occurrence_count in ltuo_lid_and_r_occurrence_count:
             current_occurrence_count+=occurrence_count
             rank+=1
-            yield rank, current_occurrence_count/total_occurrence_count
+            yield rank, [current_occurrence_count/total_occurrence_count, occurrence_count/total_occurrence_count]
         # Setting ranks for extra locations to 1.
         while rank < K_TOP_RANK:
             rank+=1
-            yield rank, 1.0
+            yield rank, [1.0, 0.0]
             
-    def red_tuo_rank_and_ito_percentage_of_occurrences_to_tuo_rank_and_average_percentage_of_occurrences(self, rank, ito_percentage_of_occurrences):
-        red_percentage_of_occurrences = []
-        for percentage_of_occurrence in ito_percentage_of_occurrences: red_percentage_of_occurrences.append(percentage_of_occurrence)
-        yield rank, [rank, np.mean(red_percentage_of_occurrences)]
+    def red_tuo_rank_and_ito_percentage_of_occurrences_to_tuo_rank_and_avg_cum_prct_of_occurrences_and_avg_prct_of_occurrences(self, rank, ito_cum_prct_of_occurrences_and_prct_of_occurrences):
+        red_cum_prct_of_occurrences = []
+        red_prct_of_occurrences = []
+        for (cum_prct_of_occurrences, prct_of_occurrences) in ito_cum_prct_of_occurrences_and_prct_of_occurrences: 
+            red_cum_prct_of_occurrences.append(cum_prct_of_occurrences)
+            red_prct_of_occurrences.append(prct_of_occurrences)
+        yield rank, [rank, np.mean(red_cum_prct_of_occurrences), np.mean(red_prct_of_occurrences)]
 #        yield rank, [rank, sum(red_percentage_of_occurrences)]
     ''' End: Methods to get distribution from top-k hashtags
     '''
@@ -598,8 +601,8 @@ class MRAnalysis(ModifiedMRJob):
         return self.job_load_preprocessed_hashtag_object() + \
                 [
                     self.mr(
-                           mapper=self.map_hashtag_object_to_tuo_rank_and_percentage_of_occurrences, 
-                           reducer=self.red_tuo_rank_and_ito_percentage_of_occurrences_to_tuo_rank_and_average_percentage_of_occurrences
+                           mapper=self.map_hashtag_object_to_tuo_cum_prct_of_occurrences_and_prct_of_occurrences, 
+                           reducer=self.red_tuo_rank_and_ito_percentage_of_occurrences_to_tuo_rank_and_avg_cum_prct_of_occurrences_and_avg_prct_of_occurrences
                            )
                    ]
     def job_write_tuo_iid_and_interval_stats(self):
