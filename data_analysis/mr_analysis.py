@@ -225,6 +225,18 @@ class MRAnalysis(ModifiedMRJob):
     ''' End: Methods to determine hashtag distribution
     '''
         
+    ''' Start: Methods to determine hashtag spatial distribution
+    '''    
+    def map_hashtag_object_to_tuo_no_of_locations_and_count(self, hashtag, hashtag_object):
+        lids = zip(*hashtag_object['ltuo_lid_and_s_interval'])[0]
+        yield len(set(lids)), 1.
+    def red_tuo_no_of_locations_and_ito_count_to_no_of_locations_and_count(self, no_of_locations, ito_count):
+        red_count = 1.0
+        for count in ito_count: red_count+=count
+        yield no_of_locations, [no_of_locations, red_count]
+    ''' End: Methods to determine hashtag spatial distribution
+    '''
+        
     
     ''' Start: Methods to get total tweets and total geo tweets
     '''
@@ -582,6 +594,14 @@ class MRAnalysis(ModifiedMRJob):
                                    reducer=self.red_tuo_no_of_hashtags_and_ito_count_to_no_of_hashtags_and_count
                                    )
                        ]
+    def job_tuo_no_of_locations_and_count(self):
+        return self.job_load_preprocessed_hashtag_object() + \
+               [
+                            self.mr(
+                                   mapper=self.map_hashtag_object_to_tuo_no_of_locations_and_count, 
+                                   reducer=self.red_tuo_no_of_locations_and_ito_count_to_no_of_locations_and_count
+                                   )
+                       ]
     def job_write_tuo_lid_and_distribution_value(self):
         return [
                    self.mr(
@@ -650,12 +670,13 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_load_hashtag_object()
 #        return self.job_tuo_high_accuracy_lid_and_distribution()
 #        return self.job_tuo_no_of_hashtags_and_count()
+        return self.job_tuo_no_of_locations_and_count()
 #        return self.job_load_preprocessed_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
 #        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak()
-        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
+#        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
 #        return self.job_write_tuo_iid_and_interval_stats()
 #        return self.job_write_tuo_norm_iid_and_interval_stats()
 #        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
