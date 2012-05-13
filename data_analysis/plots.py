@@ -570,40 +570,51 @@ class DataAnalysis():
         savefig(output_file%'distace_from_overall_focus')
 
     @staticmethod
-    def locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags):
-        def getNearestNumber(num): return  (int(round(num,2)*100/100)*100 + int((round(num,2)*100%100)/3)*3)/100.
+    def ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         output_file = \
                 fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
-                + GeneralMethods.get_method_id() + '.png'
+                + GeneralMethods.get_method_id() + '/%s.png'
+        def getNearestNumber(num): return  (int(round(num,2)*100/100)*100 + int((round(num,2)*100%100)/3)*3)/100.
+        def plot_correlation_ef_plot(condition, id, hashtags, focuses, entropies, peaks):
+            mf_norm_focus_to_entropies = defaultdict(list)
+            mf_norm_focus_to_peaks = defaultdict(list)
+    #        plt.figure(num=None, figsize=(8,3), dpi=80, facecolor='w', edgecolor='k')
+            for focus, entropy, peak in zip(focuses,entropies, peaks):
+                if condition(peak):
+                    mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
+                    mf_norm_focus_to_peaks[round(focus, 2)].append(peak)
+            x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems() if len(entropies)>5])
+            _, z_peak = zip(*[(norm_focus, np.mean(peaks)*TIME_UNIT_IN_SECONDS/60) for norm_focus, peaks in mf_norm_focus_to_peaks.iteritems() if len(peaks)>5])
+            plt.figure(num=None, figsize=(6,3))
+            plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
+            cm = matplotlib.cm.get_cmap('cool')
+            sc = plt.scatter(x_focus, y_entropy, c=z_peak, cmap=cm, s=50, lw=0,)
+            plt.colorbar(sc)
+            plt.xlim(xmin=-0.1, xmax=1.1)
+            plt.ylim(ymin=-1, ymax=9)
+            plt.xlabel('Mean hashtag focus')
+            plt.ylabel('Mean hashtag entropy')
+            plt.grid(True)
+            savefig(output_file%id)
+            ltuo_hashtag_and_entropy_and_focus = zip(hashtags, entropies, focuses)
+            ltuo_hashtag_and_r_entropy_and_focus = sorted(ltuo_hashtag_and_entropy_and_focus, key=itemgetter(1), reverse=True)
+            ltuo_hashtag_and_r_entropy_and_s_focus = sorted(ltuo_hashtag_and_r_entropy_and_focus, key=itemgetter(2))
+            hashtags = zip(*ltuo_hashtag_and_r_entropy_and_s_focus)[0]
+            print id, list(hashtags[:20])
+            print id, list(reversed(hashtags))[:20]
+#            plt.show()
         input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
         ltuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak = [data for data in iterateJsonFromFile(input_file)]
-        print len(ltuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak)
-        _, _, entropies, focuses, _, peaks = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak)
+        hashtags, _, entropies, focuses, _, peaks = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak)
         focuses = zip(*focuses)[1]
-        mf_norm_focus_to_entropies = defaultdict(list)
-        mf_norm_focus_to_peaks = defaultdict(list)
-        plt.figure(num=None, figsize=(8,3), dpi=80, facecolor='w', edgecolor='k')
-        for focus, entropy, peak in zip(focuses,entropies, peaks):
-#            if peak < 6:
-#                plt.title('-6')
-#            if peak < 30:
-#                plt.title('-6')
-#            if 72<peak and peak<144:
-#                plt.title('72,144')
-#            if 144<peak and peak<288:
-#                plt.title('144,288')
-            if 288>peak:
-                plt.title('288+')
-                mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
-                mf_norm_focus_to_peaks[round(focus, 2)].append(peak)
-        x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems() if len(entropies)>5])
-        _, z_peak = zip(*[(norm_focus, np.mean(peaks)*TIME_UNIT_IN_SECONDS/60) for norm_focus, peaks in mf_norm_focus_to_peaks.iteritems() if len(peaks)>5])
-        cm = matplotlib.cm.get_cmap('bwr')
-#        print len(x_focus)
-        sc = plt.scatter(x_focus, y_entropy, c=z_peak, cmap=cm, s=50, lw=0,)
-        plt.colorbar(sc)
-#        savefig(output_file)
-        plt.show()
+        def gt_288(peak):
+            if 288>peak: return True
+        def lt_6(peak):
+            if peak < 6: return True
+        def lt_144(peak):
+            if peak < 144: return True
+        plot_correlation_ef_plot(gt_288, 'gt_288', hashtags, focuses, entropies, peaks)
+        plot_correlation_ef_plot(lt_6, 'lt_6', hashtags, focuses, entropies, peaks)
     @staticmethod
     def spatial_and_community_affinities_based_on_hashtags_shared(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         input_file = f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
@@ -672,8 +683,8 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.locality_measures_correlation_with_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.spatial_and_community_affinities_based_on_hashtags_shared(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_examples_of_locations_at_different_ends_of_distance_spectrum(input_files_start_time, input_files_end_time, min_no_of_hashtags)
