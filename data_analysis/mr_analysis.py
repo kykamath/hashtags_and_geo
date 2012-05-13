@@ -670,7 +670,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_load_hashtag_object()
 #        return self.job_tuo_high_accuracy_lid_and_distribution()
 #        return self.job_tuo_no_of_hashtags_and_count()
-        return self.job_tuo_no_of_locations_and_count()
+#        return self.job_tuo_no_of_locations_and_count()
 #        return self.job_load_preprocessed_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
@@ -678,7 +678,7 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak()
 #        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
 #        return self.job_write_tuo_iid_and_interval_stats()
-#        return self.job_write_tuo_norm_iid_and_interval_stats()
+        return self.job_write_tuo_norm_iid_and_interval_stats()
 #        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
 #        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
 if __name__ == '__main__':
