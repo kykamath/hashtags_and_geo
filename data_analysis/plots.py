@@ -143,14 +143,14 @@ class DataAnalysis():
         ax.set_xscale('log')
         ax.set_yscale('log')
         plt.scatter(no_of_hashtags, counts, c='k')
-        plt.xlabel('# of occurrences')
-        plt.ylabel('# of hashtags')
+        plt.xlabel('No. of occurrences')
+        plt.ylabel('No. of hashtags')
         plt.grid(True)
 #        plt.show()
         savefig(output_file)
     @staticmethod
     def hashtag_locations_distribution_loglog(input_files_start_time, input_files_end_time, min_no_of_hashtags):
-        input_file = f_tuo_no_of_locations_and_count%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        input_file = f_tuo_no_of_locations_and_count%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), 0)
         output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) + GeneralMethods.get_method_id() + '.png'
         ltuo_no_of_locations_and_count = [data for data in iterateJsonFromFile(input_file)]
         no_of_locations, counts = zip(*ltuo_no_of_locations_and_count)
@@ -160,8 +160,8 @@ class DataAnalysis():
         ax.set_xscale('log')
         ax.set_yscale('log')
         plt.scatter(no_of_locations, counts, c='k')
-        plt.xlabel('# of locations')
-        plt.ylabel('# of hashtags')
+        plt.xlabel('No. of locations')
+        plt.ylabel('No. of hashtags')
         plt.grid(True)
 #        plt.show()
         savefig(output_file)
