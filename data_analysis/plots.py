@@ -373,22 +373,20 @@ class DataAnalysis():
         plot_graph(focuses, 'Focus')
     @staticmethod
     def ef_plot(input_files_start_time, input_files_end_time, no_of_hashtags):
+        '''
+        Global: yearof4, britneyvmas, timessquareball
+        Local: arsadusit (thai flood relief campaign), volunteer4betterindia, onceuponatimeinnigeria
+        '''
         input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
         output_file = \
                 fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags) \
                 + GeneralMethods.get_method_id() + '.png'
-        ltuo_entropy_and_focus = [(data[2], data[3]) for data in iterateJsonFromFile(input_file)]
+        ltuo_hashtag_and_entropy_and_focus = [(data[0], data[2], data[3]) for data in iterateJsonFromFile(input_file)]
         mf_norm_focus_to_entropies = defaultdict(list)
-        for entropy, (_, focus) in ltuo_entropy_and_focus:
+        for _, entropy, (_, focus) in ltuo_hashtag_and_entropy_and_focus:
             mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
-#        plt.figure(num=None, figsize=(8,3), dpi=80, facecolor='w', edgecolor='k')
         plt.figure(num=None, figsize=(6,3))
         x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems() if len(entropies)>0])
-#        for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems():
-#            print entropies
-#            print norm_focus, np.mean(entropies)
-#        exit()
-#        cm = matplotlib.cm.get_cmap('autumn')
         plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
         plt.scatter(x_focus, y_entropy, s=50, lw=0, c='k')
         plt.xlim(xmin=-0.1, xmax=1.1)
@@ -397,8 +395,12 @@ class DataAnalysis():
         plt.ylabel('Mean hashtag entropy')
         plt.grid(True)
         savefig(output_file)
-#        plt.savefig(output_file, bbox_inches='tight')
-#        plt.show()
+        ltuo_hashtag_and_r_entropy_and_focus = sorted(ltuo_hashtag_and_entropy_and_focus, key=itemgetter(1), reverse=True)
+        ltuo_hashtag_and_r_entropy_and_s_focus = sorted(ltuo_hashtag_and_r_entropy_and_focus, key=itemgetter(2))
+        hashtags = zip(*ltuo_hashtag_and_r_entropy_and_s_focus)[0]
+        print list(hashtags[:20])
+        print list(reversed(hashtags))[:20]
+        
     @staticmethod
     def _get_country_specific_locality_info(input_files_start_time, input_files_end_time, no_of_hashtags, get_country=False):
         input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
@@ -617,14 +619,14 @@ class DataAnalysis():
 #        DataAnalysis.hashtag_distribution_loglog(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.hashtag_locations_distribution_loglog(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_location(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.top_k_locations_on_world_map(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_entropy_and_focus(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_top_locations(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.locality_measure_cdf(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.ef_plot(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.ef_plot(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False)    
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
