@@ -138,8 +138,8 @@ class DataAnalysis():
         output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) + GeneralMethods.get_method_id() + '.png'
         ltuo_no_of_hashtags_and_count = [data for data in iterateJsonFromFile(input_file)]
         no_of_hashtags, counts = zip(*ltuo_no_of_hashtags_and_count)
-        plt.figure(num=None, figsize=(6,3))
-        plt.subplots_adjust(bottom=0.2, top=0.9)
+        plt.figure(num=None, figsize=(4.3, 3))
+        plt.subplots_adjust(bottom=0.2, top=0.9, left=0.17)
         ax = plt.subplot(111)
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -147,6 +147,8 @@ class DataAnalysis():
         plt.xlabel('No. of occurrences')
         plt.ylabel('No. of hashtags')
         plt.grid(True)
+        plt.xlim(xmin=1/10, )
+        plt.ylim(ymin=1/10, )
 #        plt.show()
         savefig(output_file)
     @staticmethod
@@ -155,14 +157,16 @@ class DataAnalysis():
         output_file = fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) + GeneralMethods.get_method_id() + '.png'
         ltuo_no_of_locations_and_count = [data for data in iterateJsonFromFile(input_file)]
         no_of_locations, counts = zip(*ltuo_no_of_locations_and_count)
-        plt.figure(num=None, figsize=(6,3))
-        plt.subplots_adjust(bottom=0.2, top=0.9)
+        plt.figure(num=None, figsize=(4.3,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9, left=0.17)
         ax = plt.subplot(111)
         ax.set_xscale('log')
         ax.set_yscale('log')
         plt.scatter(no_of_locations, counts, c='k')
         plt.xlabel('No. of locations')
         plt.ylabel('No. of hashtags')
+        plt.xlim(xmin=1/10, )
+        plt.ylim(ymin=1/10, )
         plt.grid(True)
 #        plt.show()
         savefig(output_file)
@@ -670,7 +674,7 @@ class DataAnalysis():
         hashtags, _, entropies, focuses, _, peaks = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak)
         focuses = zip(*focuses)[1]
         def gt_288(peak):
-            if 288>peak: return True
+            if 288>peak and peak<1008: return True
         def lt_6(peak):
             if peak < 6: return True
         def lt_144(peak):
@@ -744,11 +748,11 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False)    
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
-        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.peak_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.occurrence_decay(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.spatial_and_community_affinities_based_on_hashtags_shared(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_examples_of_locations_at_different_ends_of_distance_spectrum(input_files_start_time, input_files_end_time, min_no_of_hashtags)
