@@ -19,7 +19,7 @@ from settings import hdfs_input_folder, \
     f_hashtag_objects, f_tuo_lid_and_ltuo_other_lid_and_temporal_distance, \
     f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences, \
     f_tuo_high_accuracy_lid_and_distribution, f_tuo_no_of_hashtags_and_count,\
-    f_tuo_no_of_locations_and_count
+    f_tuo_no_of_locations_and_count, f_tuo_iid_and_perct_change_of_occurrences
 
 def iterateJsonFromFile(file):
     for data in FileIO.iterateJsonFromFile(file):
@@ -46,6 +46,7 @@ def mr_data_analysis(input_files_start_time, input_files_end_time, min_hashtag_o
 #    output_file = f_tuo_rank_and_average_percentage_of_occurrences%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
 
 #    output_file = f_tuo_iid_and_interval_stats%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
+    output_file = f_tuo_iid_and_perct_change_of_occurrences%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
 #    output_file = f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
 
 #    output_file = f_hashtag_objects%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
@@ -54,11 +55,12 @@ def mr_data_analysis(input_files_start_time, input_files_end_time, min_hashtag_o
 #    output_file = f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
 #    output_file = f_tuo_high_accuracy_lid_and_distribution%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
 #    output_file = f_tuo_no_of_hashtags_and_count%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
-    output_file = f_tuo_no_of_locations_and_count%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
-    
+#    output_file = f_tuo_no_of_locations_and_count%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_hashtag_occurrences)
+
+
     print PARAMS_DICT
-    runMRJob(MRAnalysis, output_file, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
-#    runMRJob(MRAnalysis, output_file, getPreprocessedHashtagsFile(), jobconf={'mapred.reduce.tasks':300})
+#    runMRJob(MRAnalysis, output_file, getInputFiles(input_files_start_time, input_files_end_time), jobconf={'mapred.reduce.tasks':300})
+    runMRJob(MRAnalysis, output_file, getPreprocessedHashtagsFile(), jobconf={'mapred.reduce.tasks':300})
     FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
 
 if __name__ == '__main__':

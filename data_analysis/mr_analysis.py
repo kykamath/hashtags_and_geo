@@ -359,7 +359,6 @@ class MRAnalysis(ModifiedMRJob):
     '''
         
     ''' Start: Methods to get stats related to intervals
-    
         interval_stats = [peak, percentage_of_occurrences, cumulative_percentage_of_occurrences, entropy, focus, coverage]
     '''
     def map_hashtag_object_to_tuo_iid_and_interval_stats(self, hashtag, hashtag_object):
@@ -406,6 +405,31 @@ class MRAnalysis(ModifiedMRJob):
                     ]]
     ''' End: Methods to get stats related to intervals
     '''
+        
+    ''' Start: Methods to get iid and perct of occurrence difference
+    '''
+    def map_hashtag_object_to_tuo_iid_and_perct_of_occurrence_difference(self, hashtag, hashtag_object):
+        ltuo_iid_and_tuo_interval_and_occurrence_count = \
+            get_ltuo_iid_and_tuo_interval_and_occurrence_count(hashtag_object)
+        total_occurrences = sum(data[1][1] for data in ltuo_iid_and_tuo_interval_and_occurrence_count)+0.
+        peak_tuo_iid_and_tuo_interval_and_occurrence_count = \
+            max(ltuo_iid_and_tuo_interval_and_occurrence_count, key=lambda (_, (__, occurrence_count)): occurrence_count)
+        peak_iid = peak_tuo_iid_and_tuo_interval_and_occurrence_count[0]
+        if peak_iid<288:
+            previous_count = 0.0
+            for iid, (_, occurrence_count) in ltuo_iid_and_tuo_interval_and_occurrence_count:
+                change = occurrence_count-previous_count
+                previous_count = occurrence_count+0.
+                yield iid, change/total_occurrences
+    def red_tuo_iid_and_ito_perct_of_occurrence_difference_to_tuo_iid_and_mean_perct_of_occurrence_difference(self, iid, ito_perct_of_occurrence_difference):
+        red_perct_of_occurrence_difference = []
+        for perct_of_occurrence_difference in \
+                ito_perct_of_occurrence_difference:
+            red_perct_of_occurrence_difference.append(perct_of_occurrence_difference)
+        yield iid, [iid, np.mean(red_perct_of_occurrence_difference)]
+    ''' End: Methods to get iid and perct of occurrence difference
+    '''
+        
         
     
     ''' Start: Methods to get stats related to normalized intervals
@@ -633,6 +657,14 @@ class MRAnalysis(ModifiedMRJob):
                                reducer=self.red_tuo_iid_and_ito_interval_stats_to_tuo_iid_and_reduced_interval_stats
                                )
                    ]
+    def job_write_tuo_iid_and_perct_of_occurrence_difference(self):
+        return self.job_load_preprocessed_hashtag_object() + \
+                [
+                        self.mr(
+                               mapper=self.map_hashtag_object_to_tuo_iid_and_perct_of_occurrence_difference, 
+                               reducer=self.red_tuo_iid_and_ito_perct_of_occurrence_difference_to_tuo_iid_and_mean_perct_of_occurrence_difference
+                               )
+                   ]
     def job_write_tuo_norm_iid_and_interval_stats(self):
         return self.job_load_hashtag_object() + \
                 [
@@ -678,7 +710,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak()
 #        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
 #        return self.job_write_tuo_iid_and_interval_stats()
-        return self.job_write_tuo_norm_iid_and_interval_stats()
+        return self.job_write_tuo_iid_and_perct_of_occurrence_difference()
+#        return self.job_write_tuo_norm_iid_and_interval_stats()
 #        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
 #        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
 if __name__ == '__main__':

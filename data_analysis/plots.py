@@ -29,6 +29,7 @@ from datetime import timedelta
 from mr_analysis import TIME_UNIT_IN_SECONDS
 from data_analysis.settings import f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
 from matplotlib import rc
+from itertools import groupby
 
 #rc('font',**{'family':'sans-serif','sans-serif':['Times New Roman']})
 #rc('axes',**{'labelweight':'bold'})
@@ -323,7 +324,7 @@ class DataAnalysis():
             for k in sorted(mf_normalized_occurrences_count_to_locality_measures):
                 if len(mf_normalized_occurrences_count_to_locality_measures[k]) > 10:
                     x_occurrance_counts.append(k), y_locality_measures.append(np.mean(mf_normalized_occurrences_count_to_locality_measures[k]))
-            plt.figure(num=None, figsize=(4.3,2.5))
+            plt.figure(num=None, figsize=(4.3,3.0))
             plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15, wspace=0.)
             plt.scatter(x_occurrance_counts, y_locality_measures, lw=0, marker='o', c='k', s=50)
             plt.xlabel('No. of hashtag occurrences')
@@ -353,9 +354,9 @@ class DataAnalysis():
                 current_val+=count
                 x_measure.append(apprx)
                 y_distribution.append(current_val/total_hashtags)
-            plt.figure(num=None, figsize=(4.3,2.5))
+            plt.figure(num=None, figsize=(4.3,3))
             plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15, wspace=0)
-            plt.scatter(x_measure, y_distribution, lw=0, marker='o', c='k', s=50)
+            plt.scatter(x_measure, y_distribution, lw=0, marker='o', c='k', s=25)
             plt.ylim(ymax=1.2)
             plt.xlabel('%s'%id)
             plt.ylabel('CDF')
@@ -369,6 +370,8 @@ class DataAnalysis():
         focuses = zip(*focuses)[1]
         print 'Mean entropy: ', np.mean(entropies)
         print 'Mean focus: ', np.mean(focuses)
+        print 'Median entropy: ', np.median(entropies)
+        print 'Median focus: ', np.median(focuses)
         plot_graph(entropies, 'Entropy')
         plot_graph(focuses, 'Focus')
     @staticmethod
@@ -485,11 +488,11 @@ class DataAnalysis():
             x_iids.append((iid+1)*TIME_UNIT_IN_SECONDS/60)
             y_is_peaks.append(is_peak/total_peaks)
             z_cumulative_percentage_of_occurrencess.append(cumulative_percentage_of_occurrences)
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.3,3))
         plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
         plt.plot(x_iids, y_is_peaks, marker='o', c='k')
         plt.ylabel('Distribution of hashtags')
-        plt.xlabel('Hashtag Peak (Minutes)')
+        plt.xlabel('Hashtag peak (minutes)')
         plt.grid(True)
         plt.xlim(xmax=600)
         savefig(output_file%'peaks')
@@ -504,6 +507,53 @@ class DataAnalysis():
         plt.xlim(xmax=600)
         savefig(output_file%'cdf_occurrences_peak')
 #        plt.show()
+    @staticmethod
+    def peak_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '/%s.png'
+        peaks = [data[5] for data in iterateJsonFromFile(input_file) if data[5] < 288]
+        ltuo_peak_and_count = [(peak, len(list(ito_peaks)))
+                            for peak, ito_peaks in groupby(sorted(peaks))
+                            ]
+        ltuo_s_peak_and_count = sorted(ltuo_peak_and_count, key=itemgetter(0))        
+        current_count = 0.0
+        total_count = len(peaks)+0.
+        print total_count
+        ltuo_peak_and_cdf = []
+        for peak, count, in ltuo_s_peak_and_count:
+            current_count+=count
+            ltuo_peak_and_cdf.append([(peak+1)*TIME_UNIT_IN_SECONDS/(60.), current_count/total_count ])
+        x_peaks, y_cdf = zip(*ltuo_peak_and_cdf)
+        plt.figure(num=None, figsize=(4.3,3))
+        ax=plt.subplot(111)
+        ax.set_xscale('log')
+        plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15)
+        plt.scatter(x_peaks, y_cdf, c='k', s=50, lw=0)
+        plt.xlabel('Time (minutes)')
+        plt.ylabel('CDF')
+        plt.xlim(xmin=5.)
+        plt.grid(True)
+#        plt.show()             
+        savefig(output_file%'peak_cdf')
+        plt.clf()
+        
+#        plt.figure(num=None, figsize=(4.3,3))
+        ax=plt.subplot(111)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        x_peaks, y_counts = zip(*ltuo_s_peak_and_count)
+        x_peaks = [(peak+1)*TIME_UNIT_IN_SECONDS/(60.) for peak in x_peaks]
+        y_counts = [count/total_count for count in y_counts]
+        plt.scatter(x_peaks, y_counts, c='k', s=50, lw=0)
+        plt.xlabel('Time (minutes)')
+        plt.ylabel('Distribution of hashtags')
+        plt.xlim(xmin=5)
+        plt.ylim(ymax=1., ymin=0.00005)
+        plt.grid(True)
+        savefig(output_file%'peak_dist')
+        
     @staticmethod
     def norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         input_file = f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
@@ -683,8 +733,9 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.peak_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.spatial_and_community_affinities_based_on_hashtags_shared(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_examples_of_locations_at_different_ends_of_distance_spectrum(input_files_start_time, input_files_end_time, min_no_of_hashtags)
