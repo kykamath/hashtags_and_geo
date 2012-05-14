@@ -12,7 +12,7 @@ from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
     f_tuo_iid_and_interval_stats, f_tuo_lid_and_ltuo_other_lid_and_temporal_distance, \
     f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences,\
     f_tuo_high_accuracy_lid_and_distribution, f_tuo_no_of_hashtags_and_count,\
-    f_tuo_no_of_locations_and_count
+    f_tuo_no_of_locations_and_count, f_tuo_iid_and_perct_change_of_occurrences
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
@@ -553,7 +553,19 @@ class DataAnalysis():
         plt.ylim(ymax=1., ymin=0.00005)
         plt.grid(True)
         savefig(output_file%'peak_dist')
-        
+    @staticmethod
+    def occurrence_decay(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_iid_and_perct_change_of_occurrences%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '/%s.png'
+        ltuo_iid_and_perct_change_of_occurrences = [data for data in iterateJsonFromFile(input_file)]
+        ltuo_s_iid_and_perct_change_of_occurrences = sorted(ltuo_iid_and_perct_change_of_occurrences,
+                                                          key = itemgetter(0))[:200]
+        x_iids, y_perct_change_of_occurrences = zip(*ltuo_s_iid_and_perct_change_of_occurrences)
+        plt.scatter(x_iids, y_perct_change_of_occurrences)
+#        plt.xlim(xmax=288)
+        plt.show()
     @staticmethod
     def norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         input_file = f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
@@ -732,8 +744,9 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False)    
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
-#        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.peak_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.peak_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.occurrence_decay(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
