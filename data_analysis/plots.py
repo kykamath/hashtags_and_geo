@@ -702,6 +702,7 @@ class DataAnalysis():
         plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
         x_distance, y_total_co_occurrences = splineSmooth(x_distance, y_total_co_occurrences)
         plt.semilogx(x_distance, y_total_co_occurrences, c='k', lw=2)
+        plt.xlim(xmin=95, xmax=15000)
         plt.grid(True)
         plt.xlabel('Distance (miles)')
         plt.ylabel('Percentage of shared hastags')
@@ -726,19 +727,25 @@ class DataAnalysis():
 #                close_lids.append(lid1), close_lids.append(lid2)
             mf_distance_to_temporal_distances[distance].append(temporal_distance)
 #        total_occurrences = sum(mf_distance_to_total_co_occurrences.values())
-        x_distance, y_temporal_distances = zip(*sorted(mf_distance_to_temporal_distances.items(), key=itemgetter(0)))
-        y_temporal_distances = [np.mean(y) for y in y_temporal_distances if len(y_temporal_distances)>50]
+        x_distance, y_temporal_distances = zip(*[(x,y)
+                                                 for x, y in
+                                                    sorted(mf_distance_to_temporal_distances.items(), key=itemgetter(0))
+                                                 if len(y)>60
+                                                 ])
+        y_temporal_distances = [np.mean(y) for y in y_temporal_distances]
         y_temporal_distances = [y*TIME_UNIT_IN_SECONDS/(60.*60.)for y in y_temporal_distances]
+#        for x, y in zip(x_distance, y_temporal_distances): print x, y
 #        y_total_co_occurrences = [y/total_occurrences for y in y_total_co_occurrences]
         x_distance, y_temporal_distances = splineSmooth(x_distance, y_temporal_distances)
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
         plt.semilogx(x_distance, y_temporal_distances, c='k', lw=2)
-#        plt.scatter(x_distance, y_temporal_distances, c='k', lw=0, s=50)
+        plt.xlim(xmin=95, xmax=15000)
         plt.grid(True)
         plt.xlabel('Distance (miles)')
         plt.ylabel('Focus times diff. (hours)')
 #        plt.show()
+        print len(close_lids)
         savefig(output_file)
         
         
@@ -836,8 +843,8 @@ class DataAnalysis():
 #        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.peak_lids_dist(input_files_start_time, input_files_end_time, min_no_of_hashtags)        
-        DataAnalysis.distance_vs_no_of_common_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.distance_vs_temporal_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.distance_vs_no_of_common_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.distance_vs_temporal_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_examples_of_locations_at_different_ends_of_distance_spectrum(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
