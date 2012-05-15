@@ -898,8 +898,8 @@ class LocationRelationshipAnalysis():
         for k, v in mf_valid_focus_lid_pair_to_affinity_score.iteritems(): FileIO.writeToFileAsJson([k,v], output_file)
     @staticmethod
     def temporal_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags):
-#        input_file = f_hashtag_objects%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
-        input_file = 'data/hashtag_objects'
+        input_file = f_hashtag_objects%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+#        input_file = 'data/hashtag_objects'
         output_file = f_tuo_valid_focus_lid_pair_and_temporal_affinity_score%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
         GeneralMethods.runCommand('rm -rf %s'%output_file)
         mf_focus_lid_to_mf_hashtag_to_occurrence_iid = defaultdict(dict)
