@@ -36,7 +36,7 @@ K_TOP_RANK = 11935
 
 # Temporal analysis
 VALID_IID_RANGE = range(-30,31)
-MIN_NUMBER_OF_SHARED_HASHTAGS = 0
+MIN_NUMBER_OF_SHARED_HASHTAGS = 10
 
 # Parameters for the MR Job that will be logged.
 HASHTAG_STARTING_WINDOW, HASHTAG_ENDING_WINDOW = time.mktime(START_TIME.timetuple()), time.mktime(END_TIME.timetuple())
@@ -503,11 +503,11 @@ class MRAnalysis(ModifiedMRJob):
     def map_hashtag_object_to_tuo_lid_and_tuo_other_lid_and_temporal_distance(self, hashtag, hashtag_object):
         # Get peak
 #        hashtag_object = hashtag_object[1]
-        ltuo_iid_and_tuo_interval_and_lids = \
-            get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
-        peak_tuo_iid_and_tuo_interval_and_lids = \
-            max(ltuo_iid_and_tuo_interval_and_lids, key=lambda (_, (__, lids)): len(lids))
-        peak_iid = peak_tuo_iid_and_tuo_interval_and_lids[0]
+#        ltuo_iid_and_tuo_interval_and_lids = \
+#            get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
+#        peak_tuo_iid_and_tuo_interval_and_lids = \
+#            max(ltuo_iid_and_tuo_interval_and_lids, key=lambda (_, (__, lids)): len(lids))
+#        peak_iid = peak_tuo_iid_and_tuo_interval_and_lids[0]
         # Get valid intervals with corresponding focus lids
         ltuo_valid_iid_and_focus_lid = []
         ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = \
@@ -515,11 +515,11 @@ class MRAnalysis(ModifiedMRJob):
         so_observed_focus_lids = set()
         for iid, (interval, ltuo_lid_and_occurrence_count) in \
                 ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count:
-            if (iid-peak_iid) in VALID_IID_RANGE: 
-                focus_lid  = focus(dict(ltuo_lid_and_occurrence_count))[0]
-                if focus_lid not in so_observed_focus_lids:
-                    ltuo_valid_iid_and_focus_lid.append([iid, focus_lid])
-                    so_observed_focus_lids.add(focus_lid)
+#            if (iid-peak_iid) in VALID_IID_RANGE: 
+            focus_lid  = focus(dict(ltuo_lid_and_occurrence_count))[0]
+            if focus_lid not in so_observed_focus_lids:
+                ltuo_valid_iid_and_focus_lid.append([iid, focus_lid])
+                so_observed_focus_lids.add(focus_lid)
         for (valid_iid1, focus_lid1), (valid_iid2, focus_lid2) in combinations(ltuo_valid_iid_and_focus_lid, 2):
             yield focus_lid1, [focus_lid2, valid_iid1-valid_iid2]
             yield focus_lid2, [focus_lid1, valid_iid2-valid_iid1]
@@ -759,8 +759,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_iid_and_interval_stats()
 #        return self.job_write_tuo_iid_and_perct_of_occurrence_difference()
 #        return self.job_write_tuo_norm_iid_and_interval_stats()
-#        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
-        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
+        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
+#        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
 #        return self.job_write_tuo_no_of_peak_lids_and_count()
 if __name__ == '__main__':
     MRAnalysis.run()
