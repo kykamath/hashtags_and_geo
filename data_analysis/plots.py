@@ -726,22 +726,35 @@ class DataAnalysis():
 #            [for ltuo_lid_other_lid_and_s_tuo_no_of_co_occurrences_and_distance in ]
     @staticmethod
     def peak_lids_dist(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        '''
+        Median = 7.0
+        '''
         input_file = f_tuo_no_of_peak_lids_and_count%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
         output_file = \
                 fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
                 + GeneralMethods.get_method_id() + '.png'
         ltuo_no_of_peak_lids_and_count = [data for data in iterateJsonFromFile(input_file)]
-        x_no_of_peak_lids, y_count = zip(*ltuo_no_of_peak_lids_and_count)
+        ltuo_s_no_of_peak_lids_and_count = sorted(ltuo_no_of_peak_lids_and_count, key=itemgetter(0))
+        x_no_of_peak_lids, y_count = zip(*ltuo_s_no_of_peak_lids_and_count)
+        total_count = sum(y_count) + 0.
+        temp_y_count = []
+        current_count=0.
+        for count in y_count:
+            current_count+=count
+            temp_y_count.append(current_count/total_count)
+        y_count = temp_y_count
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
         ax = plt.subplot(111)
         plt.scatter(x_no_of_peak_lids, y_count, s=50, c='k')
         plt.xlim(xmin=1)
-        plt.ylim(ymin=1)
+        plt.ylim(ymin=0)
         ax.set_xscale('log')
-        ax.set_yscale('log')
+        plt.xlabel('No. of focus locations')
+        plt.ylabel('CDF')
         plt.grid(True)
 #        plt.show()
+        print np.median([x for x, y in ltuo_s_no_of_peak_lids_and_count for i in range(y)])
         savefig(output_file)
     @staticmethod
     def run():
@@ -769,7 +782,6 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.peak_lids_dist(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.peak_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.occurrence_decay(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
@@ -779,6 +791,9 @@ class DataAnalysis():
 #        DataAnalysis.write_examples_of_locations_at_different_ends_of_distance_spectrum(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
+
+#        DataAnalysis.peak_lids_dist(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+
         
 if __name__ == '__main__':
     DataAnalysis.run()
