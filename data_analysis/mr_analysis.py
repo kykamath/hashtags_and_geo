@@ -759,8 +759,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_iid_and_interval_stats()
 #        return self.job_write_tuo_iid_and_perct_of_occurrence_difference()
 #        return self.job_write_tuo_norm_iid_and_interval_stats()
-        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
-#        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
+#        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
+        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
 #        return self.job_write_tuo_no_of_peak_lids_and_count()
 if __name__ == '__main__':
     MRAnalysis.run()
