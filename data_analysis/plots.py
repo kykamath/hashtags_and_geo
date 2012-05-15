@@ -13,7 +13,8 @@ from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
     f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences,\
     f_tuo_high_accuracy_lid_and_distribution, f_tuo_no_of_hashtags_and_count,\
     f_tuo_no_of_locations_and_count, f_tuo_iid_and_perct_change_of_occurrences,\
-    f_tuo_no_of_peak_lids_and_count
+    f_tuo_no_of_peak_lids_and_count, f_hashtag_objects, \
+    f_tuo_valid_focus_lid_pair_and_common_hashtag_affinity_score
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
@@ -31,6 +32,8 @@ from mr_analysis import TIME_UNIT_IN_SECONDS
 from data_analysis.settings import f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
 from matplotlib import rc
 from itertools import groupby
+from mr_analysis import get_so_observed_focus_lids
+from itertools import combinations
 
 #rc('font',**{'family':'sans-serif','sans-serif':['Times New Roman']})
 #rc('axes',**{'labelweight':'bold'})
@@ -850,8 +853,63 @@ class DataAnalysis():
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
 
 
+class LocationRelationshipAnalysis():
+#    @staticmethod
+#    def get_so_observed_focus_lids(hashtag_object):
+#        # Get peak
+#        ltuo_iid_and_tuo_interval_and_lids = \
+#            get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
+#        peak_tuo_iid_and_tuo_interval_and_lids = \
+#            max(ltuo_iid_and_tuo_interval_and_lids, key=lambda (_, (__, lids)): len(lids))
+#        peak_iid = peak_tuo_iid_and_tuo_interval_and_lids[0]
+#        # Get valid intervals with corresponding focus lids
+#        ltuo_valid_iid_and_focus_lid = []
+#        ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = \
+#            get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_object)
+#        so_observed_focus_lids = set()
+#        for iid, (interval, ltuo_lid_and_occurrence_count) in \
+#                ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count:
+#            if (iid-peak_iid) in VALID_IID_RANGE: 
+#                focus_lid  = focus(dict(ltuo_lid_and_occurrence_count))[0]
+#                if focus_lid not in so_observed_focus_lids:
+#                    ltuo_valid_iid_and_focus_lid.append([iid, focus_lid])
+#                    so_observed_focus_lids.add(focus_lid)
+#        return so_observed_focus_lids
+    @staticmethod
+    def sharing_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_hashtag_objects%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+#        input_file = 'data/hashtag_objects'
+        output_file = f_tuo_valid_focus_lid_pair_and_common_hashtag_affinity_score%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        GeneralMethods.runCommand('rm -rf %s'%output_file)
+        mf_focus_lid_to_so_hashtags = defaultdict(set)
+        mf_valid_focus_lid_pair_to_affinity_score = {}
+        valid_focus_lid_pairs = set()
+        for hashtag_count, hashtag_object in enumerate(iterateJsonFromFile(input_file)): 
+            print hashtag_count
+            so_observed_focus_lids = get_so_observed_focus_lids(hashtag_object)
+            for focus_lid in so_observed_focus_lids: mf_focus_lid_to_so_hashtags[focus_lid].add(hashtag_object['hashtag'])
+            for focus_lid1, focus_lid2 in combinations(so_observed_focus_lids,2): valid_focus_lid_pairs.add(':ilab:'.join(sorted([focus_lid1, focus_lid2])))
+        for valid_focus_lid_pair in valid_focus_lid_pairs:
+            focus_lid1, focus_lid2 = valid_focus_lid_pair.split(':ilab:')
+            so_hashtags_for_focus_lid1 = mf_focus_lid_to_so_hashtags[focus_lid1]
+            so_hashtags_for_focus_lid2 = mf_focus_lid_to_so_hashtags[focus_lid2]
+            mf_valid_focus_lid_pair_to_affinity_score[valid_focus_lid_pair] = len(so_hashtags_for_focus_lid1.intersection(so_hashtags_for_focus_lid2))/(len(so_hashtags_for_focus_lid1.union(so_hashtags_for_focus_lid2))+0.)
+        for k, v in mf_valid_focus_lid_pair_to_affinity_score.iteritems(): FileIO.writeToFileAsJson([k,v], output_file)
+        
+#            ltuo_lid_and_s_interval = hashtag_object['ltuo_lid_and_s_interval']
+#            print hashtag_count
+#            for lid, _ in \
+#                    ltuo_lid_and_s_interval:
+#                print lid
+        pass
+    @staticmethod
+    def run():
+        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
+        LocationRelationshipAnalysis.sharing_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+
         
 if __name__ == '__main__':
-    DataAnalysis.run()
+#    DataAnalysis.run()
+    LocationRelationshipAnalysis.run()
 #    CountryBoundaries.run()
     

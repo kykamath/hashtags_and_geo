@@ -143,6 +143,27 @@ def get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object):
                 )
     return return_ltuo_iid_and_tuo_interval_and_lids
 
+def get_so_observed_focus_lids(hashtag_object):
+    # Get peak
+    ltuo_iid_and_tuo_interval_and_lids = \
+        get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
+    peak_tuo_iid_and_tuo_interval_and_lids = \
+        max(ltuo_iid_and_tuo_interval_and_lids, key=lambda (_, (__, lids)): len(lids))
+    peak_iid = peak_tuo_iid_and_tuo_interval_and_lids[0]
+    # Get valid intervals with corresponding focus lids
+    ltuo_valid_iid_and_focus_lid = []
+    ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = \
+        get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_object)
+    so_observed_focus_lids = set()
+    for iid, (interval, ltuo_lid_and_occurrence_count) in \
+            ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count:
+        if (iid-peak_iid) in VALID_IID_RANGE: 
+            focus_lid  = focus(dict(ltuo_lid_and_occurrence_count))[0]
+            if focus_lid not in so_observed_focus_lids:
+                ltuo_valid_iid_and_focus_lid.append([iid, focus_lid])
+                so_observed_focus_lids.add(focus_lid)
+    return so_observed_focus_lids
+
 #def get_ltuo_iid_and_tuo_interval_and_occurrences(hashtag_object):
 #    return_ltuo_iid_and_tuo_interval_and_occurrences = []
 #    mf_interval_to_mf_lid_to_occurrences = defaultdict(dict)
@@ -595,25 +616,15 @@ class MRAnalysis(ModifiedMRJob):
     ''' End: Methods to get distribution of peak lids   
     '''
     
-#    ''' Start: Methods to count no. of pairs of focus locations
-#    '''
-#    def map_hashtag_object_to_tuo_pair_of_focus_locations_and_count(self, hashtag, hashtag_object):
-#        ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = \
-#            get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_object)
-#        so_observed_focus_lids = set()
-#        for _, (_, ltuo_lid_and_occurrence_count) in \
-#                ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count:
-#            focus_lid  = focus(dict(ltuo_lid_and_occurrence_count))[0]
-#            if focus_lid not in so_observed_focus_lids: so_observed_focus_lids.add(focus_lid)
-#        for focus_lid1, focus_lid2 in combinations(list(so_observed_focus_lids), 2):
-#            
-#        
-#    def red_tuo_no_of_peak_lids_and_ito_count_to_no_of_peak_lids_and_count(self, no_of_peak_lids, ito_count):
-#        red_count = []
-#        for count in ito_count: red_count.append(count)
-#        yield no_of_peak_lids, [no_of_peak_lids, sum(red_count)]
-#    ''' End: Methods to get distribution of peak lids   
-#    '''
+    ''' Start: Methods to get hashtags for a lid
+    '''
+    def map_hashtag_object_to_tuo_lid_and_hashtags(self, hashtag, hashtag_object):
+        so_observed_focus_lids = get_so_observed_focus_lids(hashtag_object)
+        for lid in so_observed_focus_lids: yield lid, hashtag_object['hashtag']
+    def red_tuo_lid_and_ito_hashtags_to_tuo_lid_and_hashtags(self, lid, ito_hashtags):
+        yield lid, [lid, list(set(list(ito_hashtags)))]
+    ''' End: Methods to get hashtags for a lid
+    '''
     
          
     ''' MR Jobs
@@ -748,6 +759,14 @@ class MRAnalysis(ModifiedMRJob):
                                    reducer=self.red_tuo_no_of_peak_lids_and_ito_count_to_no_of_peak_lids_and_count
                                    )
                        ]
+    def job_write_tuo_lid_and_hashtags(self):
+        return self.job_load_preprocessed_hashtag_object() + \
+               [
+                            self.mr(
+                                   mapper=self.map_hashtag_object_to_tuo_lid_and_hashtags, 
+                                   reducer=self.red_tuo_lid_and_ito_hashtags_to_tuo_lid_and_hashtags
+                                   )
+                       ]
     def steps(self):
         pass
 #        return self.job_load_hashtag_object()
@@ -764,7 +783,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_iid_and_perct_of_occurrence_difference()
 #        return self.job_write_tuo_norm_iid_and_interval_stats()
 #        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
-        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
+#        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
 #        return self.job_write_tuo_no_of_peak_lids_and_count()
+        return self.job_write_tuo_lid_and_hashtags()
 if __name__ == '__main__':
     MRAnalysis.run()
