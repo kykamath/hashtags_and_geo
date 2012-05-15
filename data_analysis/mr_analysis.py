@@ -500,42 +500,38 @@ class MRAnalysis(ModifiedMRJob):
     
     ''' Start: Methods to temporal distance between hashtags
     '''
-    def map_hashtag_object_to_tuo_lid_and_tuo_other_lid_and_temporal_distance(self, hashtag, hashtag_object):
-        # Get peak
-#        hashtag_object = hashtag_object[1]
-#        ltuo_iid_and_tuo_interval_and_lids = \
-#            get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
-#        peak_tuo_iid_and_tuo_interval_and_lids = \
-#            max(ltuo_iid_and_tuo_interval_and_lids, key=lambda (_, (__, lids)): len(lids))
-#        peak_iid = peak_tuo_iid_and_tuo_interval_and_lids[0]
-        # Get valid intervals with corresponding focus lids
+    def map_hashtag_object_to_tuo_lid_other_lid_and_temporal_distance(self, hashtag, hashtag_object):
         ltuo_valid_iid_and_focus_lid = []
         ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = \
             get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_object)
         so_observed_focus_lids = set()
         for iid, (interval, ltuo_lid_and_occurrence_count) in \
                 ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count:
-#            if (iid-peak_iid) in VALID_IID_RANGE: 
             focus_lid  = focus(dict(ltuo_lid_and_occurrence_count))[0]
             if focus_lid not in so_observed_focus_lids:
                 ltuo_valid_iid_and_focus_lid.append([iid, focus_lid])
                 so_observed_focus_lids.add(focus_lid)
         for (valid_iid1, focus_lid1), (valid_iid2, focus_lid2) in combinations(ltuo_valid_iid_and_focus_lid, 2):
-            yield focus_lid1, [focus_lid2, valid_iid1-valid_iid2]
-            yield focus_lid2, [focus_lid1, valid_iid2-valid_iid1]
-    def red_tuo_lid_and_ito_other_lid_and_temporal_distance_to_ltuo_other_lid_and_temporal_ditance(self, lid, ito_other_lid_and_temporal_distance):
-        red_mf_other_lid_to_temporal_distances = defaultdict(list)
-        for other_lid, temporal_distacne in \
-                ito_other_lid_and_temporal_distance:
-            red_mf_other_lid_to_temporal_distances[other_lid].append(temporal_distacne)
-        # Filter other lids that haven't been observed minimum number of times and
-        # yield the mean distance for others.
-        for other_lid in red_mf_other_lid_to_temporal_distances.keys()[:]:
-            if len(red_mf_other_lid_to_temporal_distances[other_lid])<MIN_NUMBER_OF_SHARED_HASHTAGS:
-                    del red_mf_other_lid_to_temporal_distances[other_lid]
-            else: red_mf_other_lid_to_temporal_distances[other_lid]=np.mean(red_mf_other_lid_to_temporal_distances[other_lid])
-        if red_mf_other_lid_to_temporal_distances:
-            yield lid, [lid, red_mf_other_lid_to_temporal_distances]
+            yield ':ilab:'.join(sorted([focus_lid1, focus_lid2])), abs(valid_iid1-valid_iid2)
+#            yield focus_lid1, [focus_lid2, valid_iid1-valid_iid2]
+#            yield focus_lid2, [focus_lid1, valid_iid2-valid_iid1]
+    def red_tuo_lid_other_lid_and_ito_temporal_distance_to_tuo_lid_other_lid_and_temporal_ditance(self, lid_other_lid, ito_temporal_distance):
+#        red_mf_other_lid_to_temporal_distances = defaultdict(list)
+#        for other_lid, temporal_distacne in \
+#                ito_other_lid_and_temporal_distance:
+#            red_mf_other_lid_to_temporal_distances[other_lid].append(temporal_distacne)
+#        # Filter other lids that haven't been observed minimum number of times and
+#        # yield the mean distance for others.
+#        for other_lid in red_mf_other_lid_to_temporal_distances.keys()[:]:
+#            if len(red_mf_other_lid_to_temporal_distances[other_lid])<MIN_NUMBER_OF_SHARED_HASHTAGS:
+#                    del red_mf_other_lid_to_temporal_distances[other_lid]
+#            else: red_mf_other_lid_to_temporal_distances[other_lid]=np.mean(red_mf_other_lid_to_temporal_distances[other_lid])
+#        if red_mf_other_lid_to_temporal_distances:
+#            yield lid, [lid, red_mf_other_lid_to_temporal_distances]
+        red_temporal_distances = []
+        for temporal_distance in ito_temporal_distance: red_temporal_distances.append(temporal_distance)
+        if len(red_temporal_distances)>=MIN_NUMBER_OF_SHARED_HASHTAGS:
+            yield lid_other_lid, [lid_other_lid, np.mean(red_temporal_distances)]
     ''' End: Methods to temporal distance between hashtags    
     '''
             
@@ -716,8 +712,8 @@ class MRAnalysis(ModifiedMRJob):
         return self.job_load_preprocessed_hashtag_object() + \
                [
                             self.mr(
-                                   mapper=self.map_hashtag_object_to_tuo_lid_and_tuo_other_lid_and_temporal_distance, 
-                                   reducer=self.red_tuo_lid_and_ito_other_lid_and_temporal_distance_to_ltuo_other_lid_and_temporal_ditance
+                                   mapper=self.map_hashtag_object_to_tuo_lid_other_lid_and_temporal_distance, 
+                                   reducer=self.red_tuo_lid_other_lid_and_ito_temporal_distance_to_tuo_lid_other_lid_and_temporal_ditance
                                    )
                        ]
     def job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences(self):
@@ -759,8 +755,8 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_iid_and_interval_stats()
 #        return self.job_write_tuo_iid_and_perct_of_occurrence_difference()
 #        return self.job_write_tuo_norm_iid_and_interval_stats()
-#        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
-        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
+        return self.job_write_tuo_lid_and_ltuo_other_lid_and_temporal_distance()
+#        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
 #        return self.job_write_tuo_no_of_peak_lids_and_count()
 if __name__ == '__main__':
     MRAnalysis.run()
