@@ -700,7 +700,8 @@ class DataAnalysis():
         y_total_co_occurrences = [y/total_occurrences for y in y_total_co_occurrences]
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
-        plt.plot(x_distance, y_total_co_occurrences, c='k', lw=2)
+        x_distance, y_total_co_occurrences = splineSmooth(x_distance, y_total_co_occurrences)
+        plt.semilogx(x_distance, y_total_co_occurrences, c='k', lw=2)
         plt.grid(True)
         plt.xlabel('Distance (miles)')
         plt.ylabel('Percentage of shared hastags')
@@ -714,26 +715,40 @@ class DataAnalysis():
                 + GeneralMethods.get_method_id() + '.png'
         ltuo_lid_other_lid_and_temporal_distance = [data for data in iterateJsonFromFile(input_file)]
         mf_distance_to_temporal_distances = defaultdict(list)
+        close_lids = []
         for lid_other_lid, temporal_distance in ltuo_lid_other_lid_and_temporal_distance:
             lid1, lid2 = lid_other_lid.split(':ilab:')
             distance = getHaversineDistance(getLocationFromLid(lid1.replace('_', ' ')), getLocationFromLid(lid2.replace('_', ' ')))
             distance=int(distance/100)*100+100
+            if distance==4400: 
+                close_lids.append([getLocationFromLid(lid1.replace('_', ' ')), getLocationFromLid(lid2.replace('_', ' '))])
+#                print lid1, lid2
+#                close_lids.append(lid1), close_lids.append(lid2)
             mf_distance_to_temporal_distances[distance].append(temporal_distance)
 #        total_occurrences = sum(mf_distance_to_total_co_occurrences.values())
         x_distance, y_temporal_distances = zip(*sorted(mf_distance_to_temporal_distances.items(), key=itemgetter(0)))
-        y_temporal_distances = [np.mean(y) for y in y_temporal_distances if len(y_temporal_distances)>25]
+        y_temporal_distances = [np.mean(y) for y in y_temporal_distances if len(y_temporal_distances)>50]
         y_temporal_distances = [y*TIME_UNIT_IN_SECONDS/(60.*60.)for y in y_temporal_distances]
 #        y_total_co_occurrences = [y/total_occurrences for y in y_total_co_occurrences]
         x_distance, y_temporal_distances = splineSmooth(x_distance, y_temporal_distances)
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
-        plt.plot(x_distance, y_temporal_distances, c='k', lw=2)
+        plt.semilogx(x_distance, y_temporal_distances, c='k', lw=2)
 #        plt.scatter(x_distance, y_temporal_distances, c='k', lw=0, s=50)
         plt.grid(True)
         plt.xlabel('Distance (miles)')
         plt.ylabel('Focus times diff. (hours)')
 #        plt.show()
         savefig(output_file)
+        
+        
+#        locations = [lid for lids in close_lids for lid in lids]
+##        plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='m',  lw = 0, alpha=1.)
+#        _, m = plotPointsOnWorldMap(locations, resolution= 'l', blueMarble=False, bkcolor='#ffffff', c='#FF00FF', returnBaseMapObject=True, lw = 0)
+#        for location1, location2 in close_lids: 
+##                            if isWithinBoundingBox(location, PARTIAL_WORLD_BOUNDARY): 
+#            m.drawgreatcircle(location1[1], location1[0], location2[1], location2[0], color='#FAA31B', lw=1., alpha=0.5)
+#        plt.show()
     @staticmethod
     def write_examples_of_locations_at_different_ends_of_distance_spectrum(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         '''
