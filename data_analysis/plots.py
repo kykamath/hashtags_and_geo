@@ -683,7 +683,7 @@ class DataAnalysis():
         plot_correlation_ef_plot(gt_288, 'gt_288', hashtags, focuses, entropies, peaks)
         plot_correlation_ef_plot(lt_6, 'lt_6', hashtags, focuses, entropies, peaks)
     @staticmethod
-    def spatial_and_community_affinities_based_on_hashtags_shared(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+    def no_of_common_hashtags_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         input_file = f_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
         output_file = \
                 fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
@@ -698,9 +698,39 @@ class DataAnalysis():
         total_occurrences = sum(mf_distance_to_total_co_occurrences.values())
         x_distance, y_total_co_occurrences = zip(*sorted(mf_distance_to_total_co_occurrences.items(), key=itemgetter(0)))
         y_total_co_occurrences = [y/total_occurrences for y in y_total_co_occurrences]
-        plt.plot(x_distance, y_total_co_occurrences)
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
+        plt.plot(x_distance, y_total_co_occurrences, c='k', lw=2)
+        plt.grid(True)
+        plt.xlabel('Distance (miles)')
+        plt.ylabel('Percentage of shared hastags')
 #        plt.show()
         savefig(output_file)
+    @staticmethod
+    def temporal_distance_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_lid_and_ltuo_other_lid_and_temporal_distance%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '.png'
+        ltuo_lid_other_lid_and_temporal_distance = [data for data in iterateJsonFromFile(input_file)]
+        mf_distance_to_temporal_distances = defaultdict(list)
+        for lid_other_lid, temporal_distance in ltuo_lid_other_lid_and_temporal_distance:
+            lid1, lid2 = lid_other_lid.split(':ilab:')
+            distance = getHaversineDistance(getLocationFromLid(lid1.replace('_', ' ')), getLocationFromLid(lid2.replace('_', ' ')))
+            distance=int(distance/100)*100+100
+            mf_distance_to_temporal_distances[distance].append(temporal_distance)
+#        total_occurrences = sum(mf_distance_to_total_co_occurrences.values())
+        x_distance, y_temporal_distances = zip(*sorted(mf_distance_to_temporal_distances.items(), key=itemgetter(0)))
+        y_temporal_distances = [np.mean(y) for y in y_temporal_distances if len(y_temporal_distances)>10]
+#        y_total_co_occurrences = [y/total_occurrences for y in y_total_co_occurrences]
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
+        plt.plot(x_distance, y_temporal_distances, c='k', lw=2)
+        plt.grid(True)
+        plt.xlabel('Distance (miles)')
+        plt.ylabel('Difference between focus times')
+        plt.show()
+#        savefig(output_file)
     @staticmethod
     def write_examples_of_locations_at_different_ends_of_distance_spectrum(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         '''
@@ -786,13 +816,14 @@ class DataAnalysis():
 #        DataAnalysis.occurrence_decay(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        
-#        DataAnalysis.spatial_and_community_affinities_based_on_hashtags_shared(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+
+#        DataAnalysis.peak_lids_dist(input_files_start_time, input_files_end_time, min_no_of_hashtags)        
+#        DataAnalysis.no_of_common_hashtags_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.temporal_distance_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_examples_of_locations_at_different_ends_of_distance_spectrum(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
 
-#        DataAnalysis.peak_lids_dist(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
         
 if __name__ == '__main__':

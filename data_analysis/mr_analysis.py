@@ -501,16 +501,24 @@ class MRAnalysis(ModifiedMRJob):
     ''' Start: Methods to temporal distance between hashtags
     '''
     def map_hashtag_object_to_tuo_lid_other_lid_and_temporal_distance(self, hashtag, hashtag_object):
+        # Get peak
+        ltuo_iid_and_tuo_interval_and_lids = \
+            get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
+        peak_tuo_iid_and_tuo_interval_and_lids = \
+            max(ltuo_iid_and_tuo_interval_and_lids, key=lambda (_, (__, lids)): len(lids))
+        peak_iid = peak_tuo_iid_and_tuo_interval_and_lids[0]
+        # Get valid intervals with corresponding focus lids
         ltuo_valid_iid_and_focus_lid = []
         ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = \
             get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_object)
         so_observed_focus_lids = set()
         for iid, (interval, ltuo_lid_and_occurrence_count) in \
                 ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count:
-            focus_lid  = focus(dict(ltuo_lid_and_occurrence_count))[0]
-            if focus_lid not in so_observed_focus_lids:
-                ltuo_valid_iid_and_focus_lid.append([iid, focus_lid])
-                so_observed_focus_lids.add(focus_lid)
+            if (iid-peak_iid) in VALID_IID_RANGE:
+                focus_lid  = focus(dict(ltuo_lid_and_occurrence_count))[0]
+                if focus_lid not in so_observed_focus_lids:
+                    ltuo_valid_iid_and_focus_lid.append([iid, focus_lid])
+                    so_observed_focus_lids.add(focus_lid)
         for (valid_iid1, focus_lid1), (valid_iid2, focus_lid2) in combinations(ltuo_valid_iid_and_focus_lid, 2):
             yield ':ilab:'.join(sorted([focus_lid1, focus_lid2])), abs(valid_iid1-valid_iid2)
 #            yield focus_lid1, [focus_lid2, valid_iid1-valid_iid2]
