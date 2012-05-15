@@ -923,11 +923,7 @@ class LocationRelationshipAnalysis():
             mf_valid_focus_lid_pair_to_affinity_score[valid_focus_lid_pair] = np.mean(affinity_scores)
         for k, v in mf_valid_focus_lid_pair_to_affinity_score.iteritems(): FileIO.writeToFileAsJson([k,v], output_file)
     @staticmethod
-    def affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags):
-        input_file = f_tuo_valid_focus_lid_pair_and_common_hashtag_affinity_score%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
-        output_file = \
-                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
-                + GeneralMethods.get_method_id() + '.png'
+    def _plot_affinities(input_file, type=None):
         ltuo_valid_focus_lid_pair_and_affinity_score = [data for data in iterateJsonFromFile(input_file)]
         mf_distance_to_affinity_scores = defaultdict(list)
         for valid_focus_lid_pair, affinity_score in ltuo_valid_focus_lid_pair_and_affinity_score:
@@ -935,8 +931,9 @@ class LocationRelationshipAnalysis():
             distance = getHaversineDistance(getLocationFromLid(lid1.replace('_', ' ')), getLocationFromLid(lid2.replace('_', ' ')))
             distance=int(distance/100)*100+100
             mf_distance_to_affinity_scores[distance].append(affinity_score)
-        ltuo_distance_and_affinity_score = [(distance, np.mean(affinity_scores)) for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems() if len(affinity_scores)>0]
+        ltuo_distance_and_affinity_score = [(distance, np.mean(affinity_scores)) for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems() if len(affinity_scores)>100]
         x_distances, y_affinity_scores = zip(*sorted(ltuo_distance_and_affinity_score, key=itemgetter(0)))
+        if type=='temporal': y_affinity_scores = [y*TIME_UNIT_IN_SECONDS/(60.*60.) for y in y_affinity_scores]
 #        total_occurrences = sum(mf_distance_to_total_co_occurrences.values())
 #        x_distance, y_total_co_occurrences = zip(*sorted(mf_distance_to_total_co_occurrences.items(), key=itemgetter(0)))
 #        y_total_co_occurrences = [y/total_occurrences for y in y_total_co_occurrences]
@@ -946,16 +943,35 @@ class LocationRelationshipAnalysis():
         plt.semilogx(x_distances, y_affinity_scores, c='k', lw=2)
         plt.xlim(xmin=95, xmax=15000)
         plt.grid(True)
+    @staticmethod
+    def content_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_valid_focus_lid_pair_and_common_hashtag_affinity_score%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '.png'
+        LocationRelationshipAnalysis._plot_affinities(input_file)
         plt.xlabel('Distance (miles)')
-        plt.ylabel('Percentage of shared hastags')
-        plt.show()
-#        savefig(output_file)
+        plt.ylabel('Hashtags similarity')
+#        plt.show()
+        savefig(output_file)
+    @staticmethod
+    def temporal_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_valid_focus_lid_pair_and_temporal_affinity_score%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '.png'
+        LocationRelationshipAnalysis._plot_affinities(input_file, type='temporal')
+        plt.xlabel('Distance (miles)')
+        plt.ylabel('Temporal distance (hours)')
+#        plt.show()
+        savefig(output_file)
     @staticmethod
     def run():
         input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
 #        LocationRelationshipAnalysis.sharing_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        LocationRelationshipAnalysis.temporal_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        LocationRelationshipAnalysis.affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        LocationRelationshipAnalysis.temporal_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        LocationRelationshipAnalysis.content_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        LocationRelationshipAnalysis.temporal_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
         
 if __name__ == '__main__':
