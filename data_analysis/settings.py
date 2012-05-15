@@ -31,5 +31,6 @@ f_tuo_no_of_locations_and_count = fld_data_analysis+'/tuo_no_of_locations_and_co
 f_tuo_iid_and_perct_change_of_occurrences = fld_data_analysis+'/tuo_iid_and_perct_change_of_occurrences'
 f_tuo_no_of_peak_lids_and_count = fld_data_analysis + '/tuo_no_of_peak_lids_and_count'
 f_tuo_valid_focus_lid_pair_and_common_hashtag_affinity_score = fld_data_analysis + '/tuo_valid_focus_lid_pair_and_common_hashtag_affinity_score'
+f_tuo_valid_focus_lid_pair_and_temporal_affinity_score = fld_data_analysis + '/tuo_valid_focus_lid_pair_and_temporal_affinity_score'
 #f_tuo_lid_and_ltuo_other_lid_and_no_o = fld_data_analysis+'/tuo_iid_and_perct_change_of_occurrences'
     

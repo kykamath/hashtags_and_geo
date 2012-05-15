@@ -14,7 +14,8 @@ from settings import f_tuo_normalized_occurrence_count_and_distribution_value,\
     f_tuo_high_accuracy_lid_and_distribution, f_tuo_no_of_hashtags_and_count,\
     f_tuo_no_of_locations_and_count, f_tuo_iid_and_perct_change_of_occurrences,\
     f_tuo_no_of_peak_lids_and_count, f_hashtag_objects, \
-    f_tuo_valid_focus_lid_pair_and_common_hashtag_affinity_score
+    f_tuo_valid_focus_lid_pair_and_common_hashtag_affinity_score, \
+    f_tuo_valid_focus_lid_pair_and_temporal_affinity_score
 from library.file_io import FileIO
 from library.classes import GeneralMethods
 from operator import itemgetter
@@ -32,7 +33,7 @@ from mr_analysis import TIME_UNIT_IN_SECONDS
 from data_analysis.settings import f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
 from matplotlib import rc
 from itertools import groupby
-from mr_analysis import get_so_observed_focus_lids
+from mr_analysis import get_so_observed_focus_lids, get_ltuo_valid_iid_and_focus_lid
 from itertools import combinations
 
 #rc('font',**{'family':'sans-serif','sans-serif':['Times New Roman']})
@@ -895,17 +896,66 @@ class LocationRelationshipAnalysis():
             so_hashtags_for_focus_lid2 = mf_focus_lid_to_so_hashtags[focus_lid2]
             mf_valid_focus_lid_pair_to_affinity_score[valid_focus_lid_pair] = len(so_hashtags_for_focus_lid1.intersection(so_hashtags_for_focus_lid2))/(len(so_hashtags_for_focus_lid1.union(so_hashtags_for_focus_lid2))+0.)
         for k, v in mf_valid_focus_lid_pair_to_affinity_score.iteritems(): FileIO.writeToFileAsJson([k,v], output_file)
-        
-#            ltuo_lid_and_s_interval = hashtag_object['ltuo_lid_and_s_interval']
-#            print hashtag_count
-#            for lid, _ in \
-#                    ltuo_lid_and_s_interval:
-#                print lid
-        pass
+    @staticmethod
+    def temporal_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+#        input_file = f_hashtag_objects%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        input_file = 'data/hashtag_objects'
+        output_file = f_tuo_valid_focus_lid_pair_and_temporal_affinity_score%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        GeneralMethods.runCommand('rm -rf %s'%output_file)
+        mf_focus_lid_to_mf_hashtag_to_occurrence_iid = defaultdict(dict)
+        mf_valid_focus_lid_pair_to_affinity_score = {}
+        valid_focus_lid_pairs = set()
+        for hashtag_count, hashtag_object in enumerate(iterateJsonFromFile(input_file)): 
+            print hashtag_count
+            ltuo_valid_iid_and_focus_lid = get_ltuo_valid_iid_and_focus_lid(hashtag_object)
+            so_observed_focus_lids = set(zip(*ltuo_valid_iid_and_focus_lid)[1])
+            for valid_iid, focus_lid in ltuo_valid_iid_and_focus_lid: mf_focus_lid_to_mf_hashtag_to_occurrence_iid[focus_lid][hashtag_object['hashtag']] = valid_iid
+            for focus_lid1, focus_lid2 in combinations(so_observed_focus_lids,2): valid_focus_lid_pairs.add(':ilab:'.join(sorted([focus_lid1, focus_lid2])))
+        for valid_focus_lid_pair in valid_focus_lid_pairs:
+            focus_lid1, focus_lid2 = valid_focus_lid_pair.split(':ilab:')
+            mf_hashtag_to_occurrence_iid1 = mf_focus_lid_to_mf_hashtag_to_occurrence_iid[focus_lid1]
+            mf_hashtag_to_occurrence_iid2 = mf_focus_lid_to_mf_hashtag_to_occurrence_iid[focus_lid2]
+            common_hashtags = set(mf_hashtag_to_occurrence_iid1.keys()).intersection(set(mf_hashtag_to_occurrence_iid2.keys()))
+            affinity_scores = [
+                                   abs(mf_hashtag_to_occurrence_iid2[hashtag]-mf_hashtag_to_occurrence_iid1[hashtag]) 
+                                   for hashtag in common_hashtags
+                               ]
+            mf_valid_focus_lid_pair_to_affinity_score[valid_focus_lid_pair] = np.mean(affinity_scores)
+        for k, v in mf_valid_focus_lid_pair_to_affinity_score.iteritems(): FileIO.writeToFileAsJson([k,v], output_file)
+    @staticmethod
+    def affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_valid_focus_lid_pair_and_common_hashtag_affinity_score%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '.png'
+        ltuo_valid_focus_lid_pair_and_affinity_score = [data for data in iterateJsonFromFile(input_file)]
+        mf_distance_to_affinity_scores = defaultdict(list)
+        for valid_focus_lid_pair, affinity_score in ltuo_valid_focus_lid_pair_and_affinity_score:
+            lid1, lid2 = valid_focus_lid_pair.split(':ilab:')
+            distance = getHaversineDistance(getLocationFromLid(lid1.replace('_', ' ')), getLocationFromLid(lid2.replace('_', ' ')))
+            distance=int(distance/100)*100+100
+            mf_distance_to_affinity_scores[distance].append(affinity_score)
+        ltuo_distance_and_affinity_score = [(distance, np.mean(affinity_scores)) for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems() if len(affinity_scores)>0]
+        x_distances, y_affinity_scores = zip(*sorted(ltuo_distance_and_affinity_score, key=itemgetter(0)))
+#        total_occurrences = sum(mf_distance_to_total_co_occurrences.values())
+#        x_distance, y_total_co_occurrences = zip(*sorted(mf_distance_to_total_co_occurrences.items(), key=itemgetter(0)))
+#        y_total_co_occurrences = [y/total_occurrences for y in y_total_co_occurrences]
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
+        x_distances, y_affinity_scores = splineSmooth(x_distances, y_affinity_scores)
+        plt.semilogx(x_distances, y_affinity_scores, c='k', lw=2)
+        plt.xlim(xmin=95, xmax=15000)
+        plt.grid(True)
+        plt.xlabel('Distance (miles)')
+        plt.ylabel('Percentage of shared hastags')
+        plt.show()
+#        savefig(output_file)
     @staticmethod
     def run():
         input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
-        LocationRelationshipAnalysis.sharing_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        LocationRelationshipAnalysis.sharing_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        LocationRelationshipAnalysis.temporal_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        LocationRelationshipAnalysis.affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
         
 if __name__ == '__main__':
