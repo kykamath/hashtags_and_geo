@@ -172,6 +172,7 @@ class InfluenceAnalysis:
                            ('30.4500_-95.7000', 'college_station'),
                             ('-22.4750_-42.7750', 'rio'),
                            ('51.4750_0.0000', 'london'),
+                           ('-23.2000_-46.4000', 'sao_paulo')
                          ] 
         for model_id, hashtag_tag in ltuo_model_id_and_hashtag_tag:
             tuo_location_and_tuo_neighbor_location_and_locations_influence_score = \
