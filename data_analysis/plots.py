@@ -844,11 +844,11 @@ class DataAnalysis():
 #        DataAnalysis.peak_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.occurrence_decay(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.peak_lids_dist(input_files_start_time, input_files_end_time, min_no_of_hashtags)        
 #        DataAnalysis.distance_vs_no_of_common_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.distance_vs_temporal_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.distance_vs_temporal_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_examples_of_locations_at_different_ends_of_distance_spectrum(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
@@ -975,7 +975,7 @@ class LocationRelationshipAnalysis():
 
         
 if __name__ == '__main__':
-#    DataAnalysis.run()
-    LocationRelationshipAnalysis.run()
+    DataAnalysis.run()
+#    LocationRelationshipAnalysis.run()
 #    CountryBoundaries.run()
     
