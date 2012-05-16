@@ -970,8 +970,8 @@ class LocationRelationshipAnalysis():
         input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
 #        LocationRelationshipAnalysis.sharing_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        LocationRelationshipAnalysis.temporal_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        LocationRelationshipAnalysis.content_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        LocationRelationshipAnalysis.temporal_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        LocationRelationshipAnalysis.content_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        LocationRelationshipAnalysis.temporal_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
         
 if __name__ == '__main__':
