@@ -951,7 +951,7 @@ class LocationRelationshipAnalysis():
                 + GeneralMethods.get_method_id() + '.png'
         LocationRelationshipAnalysis._plot_affinities(input_file)
         plt.xlabel('Distance (miles)')
-        plt.ylabel('Hashtags similarity')
+        plt.ylabel('Hashtags sharing similarity')
 #        plt.show()
         savefig(output_file)
     @staticmethod
@@ -962,7 +962,7 @@ class LocationRelationshipAnalysis():
                 + GeneralMethods.get_method_id() + '.png'
         LocationRelationshipAnalysis._plot_affinities(input_file, type='temporal')
         plt.xlabel('Distance (miles)')
-        plt.ylabel('Temporal distance (hours)')
+        plt.ylabel('Hashtag adoption lag (hours)')
 #        plt.show()
         savefig(output_file)
     @staticmethod
