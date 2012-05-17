@@ -367,8 +367,32 @@ class DataAnalysis():
             plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15, wspace=0)
             plt.scatter(x_measure, y_distribution, lw=0, marker='o', c='k', s=25)
             plt.ylim(ymax=1.2)
-            plt.xlabel('%s'%id)
+            if id!='Coverage': plt.xlabel('%s'%id)
+            else: plt.xlabel('%s (miles)'%id)
             plt.ylabel('CDF')
+            plt.grid(True)
+            savefig(output_file%('cdf_'+id))
+        def plot_coverage(locality_measures, id):
+            mf_apprx_to_count = defaultdict(float)
+            for measure in locality_measures:
+                mf_apprx_to_count[round(measure,3)]+=1
+            total_hashtags = sum(mf_apprx_to_count.values())
+            current_val = 0.0
+            x_measure, y_distribution = [], []
+            for apprx, count in sorted(mf_apprx_to_count.iteritems(), key=itemgetter(0)):
+                current_val+=count
+                x_measure.append(apprx)
+                y_distribution.append(current_val/total_hashtags)
+            plt.figure(num=None, figsize=(6,3))
+            ax = plt.subplot(111)
+            ax.set_xscale('log')
+            plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15, wspace=0)
+            plt.scatter(x_measure, y_distribution, lw=0, marker='o', c='k', s=25)
+            plt.ylim(ymax=1.2)
+            if id!='Coverage': plt.xlabel('%s'%id)
+            else: plt.xlabel('Spread (miles)')
+            plt.ylabel('CDF')
+            plt.xlim(xmin=1.)
             plt.grid(True)
             savefig(output_file%('cdf_'+id))
 #            plt.show()
@@ -377,12 +401,14 @@ class DataAnalysis():
         entropies = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[2]
         focuses = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[3]
         focuses = zip(*focuses)[1]
+        coverages = zip(*ltuo_hashtag_and_occurrence_count_and_entropy_and_focus)[4]
         print 'Mean entropy: ', np.mean(entropies)
         print 'Mean focus: ', np.mean(focuses)
         print 'Median entropy: ', np.median(entropies)
         print 'Median focus: ', np.median(focuses)
         plot_graph(entropies, 'Entropy')
         plot_graph(focuses, 'Focus')
+        plot_coverage(coverages, 'Coverage')
     @staticmethod
     def ef_plot(input_files_start_time, input_files_end_time, no_of_hashtags):
         '''
@@ -583,12 +609,25 @@ class DataAnalysis():
                 + GeneralMethods.get_method_id() + '/%s.png'
         ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage = \
             [data for data in iterateJsonFromFile(input_file)]
-        x_normalized_iids, y_entropies, y_focuses, y_distance_from_overall_entropy, y_distance_from_overall_focus = \
-                                                     zip(*sorted([(data[0]*TIME_UNIT_IN_SECONDS/60, data[1][1], data[1][2], data[1][4], data[1][5]) 
+        x_normalized_iids, y_entropies, y_focuses, y_distance_from_overall_entropy, y_distance_from_overall_focus, y_coverages = \
+                                                     zip(*sorted([(data[0]*TIME_UNIT_IN_SECONDS/60, data[1][1], data[1][2], data[1][4], data[1][5], data[1][3]) 
                                                                       for data in 
                                                                         ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
                                                                   ])
                                                         )
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9)
+        plt.subplot(111)
+        plt.xlim(xmin=-20, xmax=400)
+#        plt.ylim(ymin=0.5, ymax=1.0)
+        plt.plot(x_normalized_iids, y_coverages,  lw=1, c='k')
+        plt.scatter(x_normalized_iids, y_entropies, lw=0, marker='o', s=50, c='k')
+        plt.ylabel('Interval coverage')
+        plt.xlabel('Minutes since peak')
+        plt.grid(True)
+        savefig(output_file%'coverage')
+        plt.clf() 
+        
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
@@ -887,7 +926,7 @@ class DataAnalysis():
 #        DataAnalysis.write_entropy_and_focus(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_top_locations(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
-#        DataAnalysis.locality_measure_cdf(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.locality_measure_cdf(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.ef_plot(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False)    
@@ -897,7 +936,7 @@ class DataAnalysis():
 #        DataAnalysis.peak_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.occurrence_decay(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.peak_lids_dist(input_files_start_time, input_files_end_time, min_no_of_hashtags)        
 #        DataAnalysis.distance_vs_no_of_common_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags)
