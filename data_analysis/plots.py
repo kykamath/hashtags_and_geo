@@ -642,6 +642,12 @@ class DataAnalysis():
 
     @staticmethod
     def ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        '''
+        Global anticipated: mtvema, happypiday, hockeyseason, endof2011
+        Local anticipated: ties2012, ache2012, omah2012q8
+        Global organic: chilhoodmemories, beliebersarewinning, belieberteam
+        Local organic: expoparademinas, colegiocomercial, brazilloversgagaqueenofpop
+        '''
         output_file = \
                 fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
                 + GeneralMethods.get_method_id() + '/%s.png'
@@ -671,8 +677,8 @@ class DataAnalysis():
             ltuo_hashtag_and_r_entropy_and_focus = sorted(ltuo_hashtag_and_entropy_and_focus, key=itemgetter(1), reverse=True)
             ltuo_hashtag_and_r_entropy_and_s_focus = sorted(ltuo_hashtag_and_r_entropy_and_focus, key=itemgetter(2))
             hashtags = zip(*ltuo_hashtag_and_r_entropy_and_s_focus)[0]
-            print id, list(hashtags[:20])
-            print id, list(reversed(hashtags))[:20]
+            print id, list(hashtags)
+            print id, list(reversed(hashtags))
 #            plt.show()
         input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
         ltuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak = [data for data in iterateJsonFromFile(input_file)]
@@ -815,6 +821,53 @@ class DataAnalysis():
 #        plt.show()
         print np.median([x for x, y in ltuo_s_no_of_peak_lids_and_count for i in range(y)])
         savefig(output_file)
+
+    @staticmethod
+    def coverage_vs_spatial_properties(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        output_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '_%s.png'
+        ltuo_entropy_focus_coverage = [(data[2], data[3][1], data[4]) for data in iterateJsonFromFile(input_file)]
+        mf_coverage_to_entropies = defaultdict(list)
+        mf_coverage_to_focuses = defaultdict(list)
+        for entropy, focus, coverage in ltuo_entropy_focus_coverage:
+            coverage = int(coverage/100)*100+100
+            mf_coverage_to_entropies[coverage].append(entropy)
+            mf_coverage_to_focuses[coverage].append(focus)
+#        for coverage in sorted(mf_coverage_to_entropies):
+#            print coverage, len(mf_coverage_to_entropies[coverage])
+        x_coverages, y_entropies = zip(*[(coverage, np.mean(entropies)) 
+                                         for coverage, entropies in mf_coverage_to_entropies.iteritems()
+                                         if len(entropies) > 250])
+        x_coverages, y_focuses = zip(*[(coverage, np.mean(focuses)) 
+                                         for coverage, focuses in mf_coverage_to_focuses.iteritems()
+                                         if len(focuses) > 250])
+        plt.figure(num=None, figsize=(4.3,3))
+        ax = plt.subplot(111)
+        plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15)
+        plt.scatter(x_coverages, y_entropies, lw=0, marker='o', c='k', s=25)
+#        plt.ylim(ymax=1.2)
+        plt.xlabel('Spread (miles)')
+        plt.ylabel('Entropy')
+#        ax.set_xscale('log')
+        plt.grid(True)
+        savefig(output_file%'entropy')
+        
+        plt.figure(num=None, figsize=(4.3,3))
+        ax = plt.subplot(111)
+        plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15)
+        plt.scatter(x_coverages, y_focuses, lw=0, marker='o', c='k', s=25)
+#        plt.ylim(ymax=1.2)
+        plt.xlabel('Spread (miles)')
+        plt.ylabel('Focus')
+#        ax.set_xscale('log')
+        plt.grid(True)
+        savefig(output_file%'focus')
+        
+#        plt.scatter(x_coverages, y_entropies)
+#        plt.scatter(x_coverages, y_focuses)
+#        plt.show()
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
@@ -852,30 +905,9 @@ class DataAnalysis():
 #        DataAnalysis.write_examples_of_locations_at_different_ends_of_distance_spectrum(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
-
+#        DataAnalysis.coverage_vs_spatial_properties(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 class LocationRelationshipAnalysis():
-#    @staticmethod
-#    def get_so_observed_focus_lids(hashtag_object):
-#        # Get peak
-#        ltuo_iid_and_tuo_interval_and_lids = \
-#            get_ltuo_iid_and_tuo_interval_and_lids(hashtag_object)
-#        peak_tuo_iid_and_tuo_interval_and_lids = \
-#            max(ltuo_iid_and_tuo_interval_and_lids, key=lambda (_, (__, lids)): len(lids))
-#        peak_iid = peak_tuo_iid_and_tuo_interval_and_lids[0]
-#        # Get valid intervals with corresponding focus lids
-#        ltuo_valid_iid_and_focus_lid = []
-#        ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count = \
-#            get_ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count(hashtag_object)
-#        so_observed_focus_lids = set()
-#        for iid, (interval, ltuo_lid_and_occurrence_count) in \
-#                ltuo_iid_and_tuo_interval_and_ltuo_lid_and_occurrence_count:
-#            if (iid-peak_iid) in VALID_IID_RANGE: 
-#                focus_lid  = focus(dict(ltuo_lid_and_occurrence_count))[0]
-#                if focus_lid not in so_observed_focus_lids:
-#                    ltuo_valid_iid_and_focus_lid.append([iid, focus_lid])
-#                    so_observed_focus_lids.add(focus_lid)
-#        return so_observed_focus_lids
     @staticmethod
     def sharing_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         input_file = f_hashtag_objects%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
