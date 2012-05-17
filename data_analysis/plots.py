@@ -25,7 +25,7 @@ import shapefile, os
 from library.geo import point_inside_polygon, getLocationFromLid,\
     getHaversineDistance, plotPointsOnWorldMap
 from collections import defaultdict
-from library.stats import entropy, focus
+from library.stats import entropy, focus, getOutliersRangeUsingIRQ
 import numpy as np
 import matplotlib
 from datetime import timedelta
@@ -618,10 +618,10 @@ class DataAnalysis():
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
-        plt.xlim(xmin=-20, xmax=400)
+        plt.xlim(xmin=-20, xmax=200)
 #        plt.ylim(ymin=0.5, ymax=1.0)
         plt.plot(x_normalized_iids, y_coverages,  lw=1, c='k')
-        plt.scatter(x_normalized_iids, y_entropies, lw=0, marker='o', s=50, c='k')
+        plt.scatter(x_normalized_iids, y_coverages, lw=0, marker='o', s=50, c='k')
         plt.ylabel('Interval coverage')
         plt.xlabel('Minutes since peak')
         plt.grid(True)
@@ -631,8 +631,8 @@ class DataAnalysis():
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
-        plt.xlim(xmin=-20, xmax=400)
-        plt.ylim(ymin=0.5, ymax=1.0)
+        plt.xlim(xmin=-20, xmax=120)
+        plt.ylim(ymin=0.65, ymax=0.95)
         plt.plot(x_normalized_iids, y_entropies,  lw=1, c='k')
         plt.scatter(x_normalized_iids, y_entropies, lw=0, marker='o', s=50, c='k')
         plt.ylabel('Interval entropy')
@@ -657,8 +657,8 @@ class DataAnalysis():
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
-        plt.xlim(xmin=-20, xmax=400)
-        plt.ylim(ymin=0.738, ymax=0.83)
+        plt.xlim(xmin=-20, xmax=120)
+        plt.ylim(ymin=0.738, ymax=0.79)
         plt.plot(x_normalized_iids, y_focuses, lw=1, c='k')
         plt.scatter(x_normalized_iids, y_focuses, lw=1, marker='o', s=50, c='k')     
         plt.xlabel('Minutes since peak')
@@ -863,19 +863,58 @@ class DataAnalysis():
 
     @staticmethod
     def coverage_vs_spatial_properties(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        '''
+        4000:
+            ["mtvema", 67728, 7.17935358987, 0.0903909756674, "-13.0500_-52.2000"]
+            ["myfavoritesongsever", 17990, 7.62581779614, 0.0336297943302, "37.7000_-76.8500"]
+            ["harrypotterlive", 7932, 6.69493127916, 0.100226928896, "-23.2000_-46.4000"]
+        1600:
+            ["julywish", 3955, 3.21284681657, 0.498609355247, "-5.8000_105.8500"]
+            ["iowadebate", 3345, 6.32738640295, 0.0588938714499, "33.3500_-117.4500"]
+            ["pcwindows7", 1559, 2.2814540684, 0.397049390635, "-5.8000_105.8500"]
+            ["dvdhp7", 1433, 3.73585831533, 0.287508722959, "-4.3500_-42.0500"]
+        800:
+            ["supportorhate", 2655, 0.00482746495611, 0.999623352166, "31.9000_-95.7000"]
+            ["mileynoacessomtv", 2353, 0.908884671906, 0.841903952401, "-24.6500_-52.2000"]
+            ["britneyenovidadepop", 2287, 0.558358402398, 0.890249234805, "-2.9000_-39.1500"]
+        '''
         input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
         output_file = \
                 fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
                 + GeneralMethods.get_method_id() + '_%s.png'
-        ltuo_entropy_focus_coverage = [(data[2], data[3][1], data[4]) for data in iterateJsonFromFile(input_file)]
+        output_text_file = \
+                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+                + GeneralMethods.get_method_id() + '/%s.txt'
+        ltuo_entropy_focus_coverage_hashtag_occurrence_count_and_focus_location = [(data[2], data[3][1], data[4], data[0], data[1], data[3][0]) for data in iterateJsonFromFile(input_file)]
         mf_coverage_to_entropies = defaultdict(list)
         mf_coverage_to_focuses = defaultdict(list)
-        for entropy, focus, coverage in ltuo_entropy_focus_coverage:
+        mf_coverage_boundary_to_tuo_entropy_and_focus_and_hashtag_and_occurrence_count_and_focus_location = defaultdict(list)
+        total_hashtags = len(ltuo_entropy_focus_coverage_hashtag_occurrence_count_and_focus_location)+0.
+        for entropy, focus, coverage, hashtag, occurrence_count, focus_location in ltuo_entropy_focus_coverage_hashtag_occurrence_count_and_focus_location:
             coverage = int(coverage/100)*100+100
             mf_coverage_to_entropies[coverage].append(entropy)
             mf_coverage_to_focuses[coverage].append(focus)
-#        for coverage in sorted(mf_coverage_to_entropies):
-#            print coverage, len(mf_coverage_to_entropies[coverage])
+            coverage_boundary = 800
+            if 800<coverage<1600: coverage_boundary=1600
+            elif 1600<coverage: coverage_boundary=4000
+            mf_coverage_boundary_to_tuo_entropy_and_focus_and_hashtag_and_occurrence_count_and_focus_location[coverage_boundary].append((entropy, focus, hashtag, occurrence_count, focus_location))
+        
+        for coverage_boundary, ltuo_entropy_and_focus_and_hashtag_and_occurrence_count_and_focus_location in \
+                mf_coverage_boundary_to_tuo_entropy_and_focus_and_hashtag_and_occurrence_count_and_focus_location.iteritems():
+            ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location = \
+                sorted(ltuo_entropy_and_focus_and_hashtag_and_occurrence_count_and_focus_location, key=itemgetter(3), reverse=True)
+            for entropy, focus, hashtag, occurrence_count, focus_location in \
+                    ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location:
+                FileIO.writeToFileAsJson([hashtag, occurrence_count, entropy, focus, focus_location], output_text_file%coverage_boundary)
+            print coverage_boundary, len(ltuo_entropy_and_focus_and_hashtag_and_occurrence_count_and_focus_location)/total_hashtags
+            print 'median entropy: ', np.median(zip(*ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location)[0])
+            print 'median focus: ', np.median(zip(*ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location)[1])
+#            print 'var entropy: ', np.var(zip(*ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location)[0])
+#            print 'var focus: ', np.var(zip(*ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location)[1])
+
+#            print 'range entropy: ', getOutliersRangeUsingIRQ(zip(*ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location)[0])
+#            print 'range focus: ', getOutliersRangeUsingIRQ(zip(*ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location)[1])
+            
         x_coverages, y_entropies = zip(*[(coverage, np.mean(entropies)) 
                                          for coverage, entropies in mf_coverage_to_entropies.iteritems()
                                          if len(entropies) > 250])
@@ -926,7 +965,7 @@ class DataAnalysis():
 #        DataAnalysis.write_entropy_and_focus(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.write_top_locations(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
-        DataAnalysis.locality_measure_cdf(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.locality_measure_cdf(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.ef_plot(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False)    
@@ -935,7 +974,7 @@ class DataAnalysis():
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.peak_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.occurrence_decay(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.peak_lids_dist(input_files_start_time, input_files_end_time, min_no_of_hashtags)        
