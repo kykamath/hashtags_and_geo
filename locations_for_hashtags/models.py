@@ -81,7 +81,7 @@ modelLabels = dict([(RANDOM, 'Random'),
                     (COVERAGE_BASED_AND_TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Transmitting Infl. + Spatial Infl.'),
                     ])
 
-modelMarkers = dict([(RANDOM, '7'),
+modelMarkers = dict([(RANDOM, 'None'),
                     (GREEDY_LATTICE_SELECTION_MODEL, 'o'), 
                     (BEST_RATE, 'D'), 
                     (SHARING_PROBABILITY_LATTICE_SELECTION_MODEL,  '>'), 
@@ -1013,6 +1013,8 @@ class Simulation:
 #                                                                                metric, 1, 
 #                                                                                params=params)
 
+
+# Table
 #        LatticeSelectionModel.tableCombinedWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
 #                                                                                GreedyLatticeSelectionModel,
 #                                                                                LinearRegressionLatticeSelectionModel,
