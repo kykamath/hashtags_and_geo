@@ -333,7 +333,9 @@ class LatticeSelectionModel(object):
                 for data in FileIO.iterateJsonFromFile(model.getModelSimulationFile()):
                     if tableTime==data['params']['timeUnitToPickTargetLattices'] and tableBudget==data['params']['budget']:
                         for h in data['hashtags']:
-                                metricDistributionInTimeUnits[metric].append(data['hashtags'][h]['metrics'][metric])
+                                metric_value = data['hashtags'][h]['metrics'][metric]
+                                if metric==Metrics.rate_lag: metric_value=1.0-metric_value
+                                metricDistributionInTimeUnits[metric].append(metric_value)
                 for metric, metricValues in metricDistributionInTimeUnits.iteritems():
 #                    if model.id==COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL: print '\\textbf{' + modelLabels[model.id], '} & \\textbf{' , round(np.mean(filter(lambda l: l!=None, metricValues)),3), '} \\\\'
 #                    else: print modelLabels[model.id], ' & ', round(np.mean(filter(lambda l: l!=None, metricValues)),3), '\\\\'
