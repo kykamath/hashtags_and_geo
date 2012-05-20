@@ -261,7 +261,9 @@ class LatticeSelectionModel(object):
     #                if data['hashtags'][h]['classId']==3:
 #                        for metric in metric:
                         if metric not in metricDistributionInTimeUnits: metricDistributionInTimeUnits[metric] = defaultdict(list)
-                        metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
+                        metric_value = data['hashtags'][h]['metrics'][metric]
+                        if metric==Metrics.rate_lag and metric_value!=None: metric_value = 1.0 - metric_value
+                        metricDistributionInTimeUnits[metric][t].append(metric_value)
             for metric, metricValues in metricDistributionInTimeUnits.iteritems():
                 dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
                 print modelMarkers[model.id], model.id
