@@ -985,8 +985,11 @@ class Simulation:
 #        elif int(sys.argv[1])==19: CoverageBasedAndTransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingTimeUnitToPickTargetLattices()
 #        elif int(sys.argv[1])==20: CoverageBasedAndTransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
+
+        #Other plot open
         for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
-            LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
+#            LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
+            LatticeSelectionModel.plotModelWithVaryingBudget([LatticeSelectionModel, 
                                                             GreedyLatticeSelectionModel,
                                                             LinearRegressionLatticeSelectionModel,
                                                             SharingProbabilityLatticeSelectionModel, 
@@ -998,7 +1001,7 @@ class Simulation:
                                                               metric, 
                                                               params=params)
 
-    
+        #Other plot close
 #        for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
 #            print '\n\n'
 #            LatticeSelectionModel.tableWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
