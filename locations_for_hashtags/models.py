@@ -991,9 +991,10 @@ class Simulation:
         #Start: performance plots
         for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
 #            LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
-            LatticeSelectionModel.plotModelWithVaryingBudget([LatticeSelectionModel, 
-                                                            GreedyLatticeSelectionModel,
-                                                            LinearRegressionLatticeSelectionModel,
+            LatticeSelectionModel.plotModelWithVaryingBudget([
+#                                                              LatticeSelectionModel, 
+#                                                            GreedyLatticeSelectionModel,
+#                                                            LinearRegressionLatticeSelectionModel,
                                                             SharingProbabilityLatticeSelectionModel, 
                                                             TransmittingProbabilityLatticeSelectionModel,
                                                             CoverageBasedLatticeSelectionModel,
