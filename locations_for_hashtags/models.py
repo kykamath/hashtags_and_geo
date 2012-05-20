@@ -49,20 +49,36 @@ COVERAGE_BASED_AND_GREEDY_LATTICE_SELECTION_MODEL = 'coverage_based_and_greedy'
 COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL = 'coverage_based_and_sharing_probability'
 COVERAGE_BASED_AND_TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL = 'coverage_based_and_transmitting_probability'
 
+#modelLabels = dict([(RANDOM, 'Random'),
+#                    (GREEDY_LATTICE_SELECTION_MODEL, 'Greedy'), 
+#                    (BEST_RATE, 'Best rate'), 
+#                    (SHARING_PROBABILITY_LATTICE_SELECTION_MODEL,  'Sharing Prob.'), 
+#                    (TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Transmitting Prob.'),
+#                    (SHARING_PROBABILITY_LATTICE_SELECTION_WITH_LOCALITY_CLASSIFIER_MODEL, 'Sharing Prob. + Cov. Classifer'),
+#                    (LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, 'Lin. Regression'),
+#                    (SVM_LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, 'svm_linear_regression'),
+#                    (SVM_POLY_REGRESSION_LATTICE_SELECTION_MODEL, 'svm_poly_regression'),
+#                    (SVM_RBF_REGRESSION_LATTICE_SELECTION_MODEL, 'svm_rbf_regression'),
+#                    (COVERAGE_BASED_LATTICE_SELECTION_MODEL, 'Cov. Prob.'),
+#                    (COVERAGE_BASED_AND_GREEDY_LATTICE_SELECTION_MODEL, 'Greedy + Cov. Prob.'),
+#                    (COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Sharing Prob. + Cov. Prob.'),
+#                    (COVERAGE_BASED_AND_TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Transmitting Prob. + Cov. Prob.'),
+#                    ])
+
 modelLabels = dict([(RANDOM, 'Random'),
                     (GREEDY_LATTICE_SELECTION_MODEL, 'Greedy'), 
                     (BEST_RATE, 'Best rate'), 
-                    (SHARING_PROBABILITY_LATTICE_SELECTION_MODEL,  'Sharing Prob.'), 
-                    (TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Transmitting Prob.'),
-                    (SHARING_PROBABILITY_LATTICE_SELECTION_WITH_LOCALITY_CLASSIFIER_MODEL, 'Sharing Prob. + Cov. Classifer'),
+                    (SHARING_PROBABILITY_LATTICE_SELECTION_MODEL,  'Sharing Infl.'), 
+                    (TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Transmitting Infl.'),
+                    (SHARING_PROBABILITY_LATTICE_SELECTION_WITH_LOCALITY_CLASSIFIER_MODEL, 'Sharing Infl. + Cov. Classifer'),
                     (LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, 'Lin. Regression'),
                     (SVM_LINEAR_REGRESSION_LATTICE_SELECTION_MODEL, 'svm_linear_regression'),
                     (SVM_POLY_REGRESSION_LATTICE_SELECTION_MODEL, 'svm_poly_regression'),
                     (SVM_RBF_REGRESSION_LATTICE_SELECTION_MODEL, 'svm_rbf_regression'),
-                    (COVERAGE_BASED_LATTICE_SELECTION_MODEL, 'Cov. Prob.'),
-                    (COVERAGE_BASED_AND_GREEDY_LATTICE_SELECTION_MODEL, 'Greedy + Cov. Prob.'),
-                    (COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Sharing Prob. + Cov. Prob.'),
-                    (COVERAGE_BASED_AND_TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Transmitting Prob. + Cov. Prob.'),
+                    (COVERAGE_BASED_LATTICE_SELECTION_MODEL, 'Spatial Infl.'),
+                    (COVERAGE_BASED_AND_GREEDY_LATTICE_SELECTION_MODEL, 'Greedy + Spatial Infl.'),
+                    (COVERAGE_BASED_AND_SHARING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Sharing Infl. + Spatial Infl.'),
+                    (COVERAGE_BASED_AND_TRANSMITTING_PROBABILITY_LATTICE_SELECTION_MODEL, 'Transmitting Infl. + Spatial Infl.'),
                     ])
 
 modelMarkers = dict([(RANDOM, '7'),
