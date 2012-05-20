@@ -295,7 +295,7 @@ class LatticeSelectionModel(object):
                 dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
                 plt.plot(dataX, dataY, label=modelLabels[model.id], lw=2, marker=modelMarkers[model.id])
         if metric==Metrics.rate_lag: 
-            leg=plt.legend(loc=4, ncol=1)
+            leg=plt.legend(loc=1, ncol=1)
 #            for t in leg.get_texts(): t.set_fontsize('small')
 #        elif metric==Metrics.target_selection_accuracy: leg=plt.legend(loc=5, ncol=2, mode='expand')
 #        else: leg=plt.legend(loc=3, ncol=2, mode='expand')
@@ -992,8 +992,8 @@ class Simulation:
 
         #Start: performance plots
         for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
-            LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([ 
-#            LatticeSelectionModel.plotModelWithVaryingBudget([
+#            LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([ 
+            LatticeSelectionModel.plotModelWithVaryingBudget([
 #                                                              LatticeSelectionModel, 
 #                                                            GreedyLatticeSelectionModel,
 #                                                            LinearRegressionLatticeSelectionModel,
