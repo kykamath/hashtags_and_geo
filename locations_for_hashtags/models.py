@@ -264,6 +264,7 @@ class LatticeSelectionModel(object):
                         metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
             for metric, metricValues in metricDistributionInTimeUnits.iteritems():
                 dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
+                print modelMarkers[model.id], model.id
                 plt.plot([(x+1)*5 for x in dataX], dataY, label=modelLabels[model.id], lw=2, marker=modelMarkers[model.id])
 #        if metric==Metrics.rate_lag: plt.legend(loc=1, ncol=1)
         plt.xlabel('Location subset selection time (minutes)', fontsize=20)
