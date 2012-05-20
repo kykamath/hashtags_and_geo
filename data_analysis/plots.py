@@ -974,7 +974,7 @@ class DataAnalysis():
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.peak_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.occurrence_decay(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.peak_lids_dist(input_files_start_time, input_files_end_time, min_no_of_hashtags)        
@@ -1050,7 +1050,8 @@ class LocationRelationshipAnalysis():
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
         x_distances, y_affinity_scores = splineSmooth(x_distances, y_affinity_scores)
-        plt.semilogx(x_distances, y_affinity_scores, c='k', lw=2)
+#        plt.semilogx(x_distances, y_affinity_scores, c='k', lw=2)
+        plt.plot(x_distances, y_affinity_scores, c='k', lw=2)
         plt.xlim(xmin=95, xmax=15000)
         plt.grid(True)
     @staticmethod
@@ -1080,12 +1081,12 @@ class LocationRelationshipAnalysis():
         input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
 #        LocationRelationshipAnalysis.sharing_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        LocationRelationshipAnalysis.temporal_analysis(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        LocationRelationshipAnalysis.content_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        LocationRelationshipAnalysis.temporal_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        LocationRelationshipAnalysis.content_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        LocationRelationshipAnalysis.temporal_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
         
 if __name__ == '__main__':
-    DataAnalysis.run()
-#    LocationRelationshipAnalysis.run()
+#    DataAnalysis.run()
+    LocationRelationshipAnalysis.run()
 #    CountryBoundaries.run()
     
