@@ -286,7 +286,9 @@ class LatticeSelectionModel(object):
     #                if data['hashtags'][h]['classId']==3:
 #                        for metric in metric:
                         if metric not in metricDistributionInTimeUnits: metricDistributionInTimeUnits[metric] = defaultdict(list)
-                        metricDistributionInTimeUnits[metric][t].append(data['hashtags'][h]['metrics'][metric])
+                        metric_value = data['hashtags'][h]['metrics'][metric]
+                        if metric==Metrics.rate_lag and metric_value!=None: metric_value = 1.0 - metric_value
+                        metricDistributionInTimeUnits[metric][t].append(metric_value)
             for metric, metricValues in metricDistributionInTimeUnits.iteritems():
                 dataX, dataY = zip(*[(t, np.mean(filter(lambda v: v!=None, values))) for i, (t, values) in enumerate(metricValues.iteritems())])
                 plt.plot(dataX, dataY, label=modelLabels[model.id], lw=2, marker=modelMarkers[model.id])
@@ -986,7 +988,7 @@ class Simulation:
 #        elif int(sys.argv[1])==20: CoverageBasedAndTransmittingProbabilityLatticeSelectionModel(folderType='training_world', timeRange=(2,11), testingHashtagsFile=Simulation.testingHashtagsFile, params=params).evaluateModelWithVaryingBudget()
 
 
-        #Other plot open
+        #Start: performance plots
         for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
 #            LatticeSelectionModel.plotModelWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
             LatticeSelectionModel.plotModelWithVaryingBudget([LatticeSelectionModel, 
@@ -1001,7 +1003,7 @@ class Simulation:
                                                               metric, 
                                                               params=params)
 
-        #Other plot close
+        #End: performance plots
 #        for metric in [Metrics.target_selection_accuracy, Metrics.hit_rate_after_target_selection, Metrics.rate_lag]:
 #            print '\n\n'
 #            LatticeSelectionModel.tableWithVaryingTimeUnitToPickTargetLattices([LatticeSelectionModel, 
