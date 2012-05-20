@@ -345,8 +345,10 @@ class DataAnalysis():
         ltuo_hashtag_and_occurrence_count_and_entropy_and_focus = [data for data in iterateJsonFromFile(input_file)]
         ltuo_entropy_and_occurrences_count = [(data[2], data[1]) for data in ltuo_hashtag_and_occurrence_count_and_entropy_and_focus]
         ltuo_focus_and_occurrences_count = [(data[3][1], data[1]) for data in ltuo_hashtag_and_occurrence_count_and_entropy_and_focus]
+        ltuo_coverage_and_occurrences_count = [(data[4], data[1]) for data in ltuo_hashtag_and_occurrence_count_and_entropy_and_focus]
         plot_graph(ltuo_entropy_and_occurrences_count, 'entropy')
         plot_graph(ltuo_focus_and_occurrences_count, 'focus')
+        plot_graph(ltuo_coverage_and_occurrences_count, 'spread')
     @staticmethod
     def locality_measure_cdf(input_files_start_time, input_files_end_time, no_of_hashtags):
         output_file = \
@@ -966,7 +968,7 @@ class DataAnalysis():
 #        DataAnalysis.write_top_locations(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.locality_measure_cdf(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.ef_plot(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False)    
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
@@ -1050,8 +1052,8 @@ class LocationRelationshipAnalysis():
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
         x_distances, y_affinity_scores = splineSmooth(x_distances, y_affinity_scores)
-#        plt.semilogx(x_distances, y_affinity_scores, c='k', lw=2)
-        plt.plot(x_distances, y_affinity_scores, c='k', lw=2)
+        plt.semilogx(x_distances, y_affinity_scores, c='k', lw=2)
+#        plt.plot(x_distances, y_affinity_scores, c='k', lw=2)
         plt.xlim(xmin=95, xmax=15000)
         plt.grid(True)
     @staticmethod
@@ -1086,7 +1088,7 @@ class LocationRelationshipAnalysis():
 
         
 if __name__ == '__main__':
-#    DataAnalysis.run()
-    LocationRelationshipAnalysis.run()
+    DataAnalysis.run()
+#    LocationRelationshipAnalysis.run()
 #    CountryBoundaries.run()
     
