@@ -968,18 +968,18 @@ class DataAnalysis():
             coverage_800 = len([coverage for coverage in coverages if coverage==800])
             coverage_1600 = len([coverage for coverage in coverages if coverage==1600])
             coverage_4000 = len([coverage for coverage in coverages if coverage==4000])
-            print coverage_800/total_coverages, coverage_1600/total_coverages, coverage_4000/total_coverages
+            print '%0.2f'%coverage_800/total_coverages, '%0.2f'%coverage_1600/total_coverages, '%0.2f'%coverage_4000/total_coverages
         input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
         ltuo_coverage_and_peak = [(data[4], data[5]) for data in iterateJsonFromFile(input_file)]
         total_hashtags = len(ltuo_coverage_and_peak)+0.
         ltuo_coverage_and_peak_lt_6 = [(get_coverage_boundary(coverage), peak) for coverage, peak in ltuo_coverage_and_peak if peak<=6]
         ltuo_coverage_and_peak_gt_6_lt_120 = [(get_coverage_boundary(coverage), peak) for coverage, peak in ltuo_coverage_and_peak if peak>6 and peak<=120]
         ltuo_coverage_and_peak_gt_120 = [(get_coverage_boundary(coverage), peak) for coverage, peak in ltuo_coverage_and_peak if peak>120]
-        print 'lt 30: ', len(ltuo_coverage_and_peak_lt_6)/total_hashtags
+        print 'lt 30: %0.2f'%len(ltuo_coverage_and_peak_lt_6)/total_hashtags
         print_coverage_stats(ltuo_coverage_and_peak_lt_6)
-        print 'gt 30, lt 600: ', len(ltuo_coverage_and_peak_gt_6_lt_120)/total_hashtags
+        print 'gt 30, lt 600: %0.2f'%len(ltuo_coverage_and_peak_gt_6_lt_120)/total_hashtags
         print_coverage_stats(ltuo_coverage_and_peak_gt_6_lt_120)
-        print 'gt 600: ', len(ltuo_coverage_and_peak_gt_120)/total_hashtags
+        print 'gt 600: %0.2f'%len(ltuo_coverage_and_peak_gt_120)/total_hashtags
         print_coverage_stats(ltuo_coverage_and_peak_gt_120)
     @staticmethod
     def run():
