@@ -958,7 +958,11 @@ class DataAnalysis():
     def peak_categories(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
         peaks = [data[5] for data in iterateJsonFromFile(input_file)]
-        print peaks
+        peaks_lt_30 = [peak for peak in peaks if peak<=30]
+        peaks_gt_30 = [peak for peak in peaks if peak>30]
+        print len(peaks_lt_30)
+        print len(peaks_gt_30)
+        print len(peaks_lt_30)+len(peaks_gt_30)
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
