@@ -385,7 +385,7 @@ class DataAnalysis():
                 current_val+=count
                 x_measure.append(apprx)
                 y_distribution.append(current_val/total_hashtags)
-            plt.figure(num=None, figsize=(6,3))
+            plt.figure(num=None, figsize=(4.3,3))
             ax = plt.subplot(111)
             ax.set_xscale('log')
             plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15, wspace=0)
@@ -410,7 +410,7 @@ class DataAnalysis():
         print 'Median focus: ', np.median(focuses)
         plot_graph(entropies, 'Entropy')
         plot_graph(focuses, 'Focus')
-        plot_coverage(coverages, 'Coverage')
+        plot_coverage(coverages, 'Spread')
     @staticmethod
     def ef_plot(input_files_start_time, input_files_end_time, no_of_hashtags):
         '''
@@ -949,6 +949,11 @@ class DataAnalysis():
 #        plt.scatter(x_coverages, y_focuses)
 #        plt.show()
     @staticmethod
+    def hashtag_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_hashtag_objects%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        hashtags = [hashtag for hashtag in iterateJsonFromFile(input_file)]
+        print len(hashtags)
+    @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
         input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
@@ -968,7 +973,7 @@ class DataAnalysis():
 #        DataAnalysis.write_top_locations(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 #        DataAnalysis.locality_measure_cdf(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.locality_measures_vs_nuber_of_occurreneces(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.ef_plot(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.locality_measures_locality_specific_correlation(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False)    
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
@@ -986,6 +991,8 @@ class DataAnalysis():
         
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
 #        DataAnalysis.coverage_vs_spatial_properties(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        
+        DataAnalysis.hashtag_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 class LocationRelationshipAnalysis():
     @staticmethod
