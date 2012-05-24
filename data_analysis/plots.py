@@ -952,7 +952,8 @@ class DataAnalysis():
     def hashtag_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags):
         input_file = f_hashtag_objects%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
         hashtags = [len(hashtag['ltuo_lid_and_s_interval']) for hashtag in iterateJsonFromFile(input_file)]
-        print len(hashtags)
+        print 'No. of hashtags: ', len(hashtags)
+        print 'Total no. of occurrences: ', sum(hashtags)
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
