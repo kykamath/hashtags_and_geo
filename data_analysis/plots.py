@@ -955,6 +955,11 @@ class DataAnalysis():
         print 'No. of hashtags: ', len(hashtags)
         print 'Total no. of occurrences: ', sum(hashtags)
     @staticmethod
+    def peak_categories(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        input_file = f_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+        peaks = [data[5] for data in iterateJsonFromFile(input_file)]
+        print peaks
+    @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
         input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2012, 4, 30), 50
@@ -993,7 +998,8 @@ class DataAnalysis():
 #        DataAnalysis.cumulative_fraction_of_occurrences_vs_rank_of_country(input_files_start_time, input_files_end_time)
 #        DataAnalysis.coverage_vs_spatial_properties(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
-        DataAnalysis.hashtag_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.hashtag_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.peak_categories(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 class LocationRelationshipAnalysis():
     @staticmethod
