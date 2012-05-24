@@ -962,9 +962,9 @@ class DataAnalysis():
         peaks_lt_6 = [peak for peak in peaks if peak<=6]
         peaks_gt_6_lt_120 = [peak for peak in peaks if peak>6 and peak<=120]
         peaks_gt_120 = [peak for peak in peaks if peak>120]
-        print 'lt 30: ', len(peaks_lt_6)
-        print 'gt 30, lt 600: ', len(peaks_gt_6_lt_120)
-        print 'gt 600: ', len(peaks_gt_120)
+        print 'lt 30: ', len(peaks_lt_6)/total_hashtags
+        print 'gt 30, lt 600: ', len(peaks_gt_6_lt_120)/total_hashtags
+        print 'gt 600: ', len(peaks_gt_120)/total_hashtags
     @staticmethod
     def run():
 #        input_files_start_time, input_files_end_time, min_no_of_hashtags = datetime(2011, 2, 1), datetime(2011, 2, 27), 0
