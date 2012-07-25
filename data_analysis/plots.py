@@ -1007,7 +1007,7 @@ class DataAnalysis():
 #        DataAnalysis.locality_measures_location_specific_correlation_example_hashtags(input_files_start_time, input_files_end_time, min_no_of_hashtags, plot_country=False  )
 
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-#        DataAnalysis.peak_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+        DataAnalysis.peak_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.occurrence_decay(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 #        DataAnalysis.ef_plots_for_peak(input_files_start_time, input_files_end_time, min_no_of_hashtags)
@@ -1021,7 +1021,7 @@ class DataAnalysis():
 #        DataAnalysis.coverage_vs_spatial_properties(input_files_start_time, input_files_end_time, min_no_of_hashtags)
         
 #        DataAnalysis.hashtag_stats(input_files_start_time, input_files_end_time, min_no_of_hashtags)
-        DataAnalysis.peak_categories(input_files_start_time, input_files_end_time, min_no_of_hashtags)
+#        DataAnalysis.peak_categories(input_files_start_time, input_files_end_time, min_no_of_hashtags)
 
 class LocationRelationshipAnalysis():
     @staticmethod
