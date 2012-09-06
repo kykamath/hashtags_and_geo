@@ -1256,8 +1256,8 @@ class PaperPlots:
     @staticmethod
     def run():
 #        PaperPlots.hashtag_ditribution_on_world_map_by_time_units()
-#        PaperPlots.raw_data_on_world_map()    
-        PaperPlots.coverage_metrics_on_world_map()
+        PaperPlots.raw_data_on_world_map()    
+#        PaperPlots.coverage_metrics_on_world_map()
 if __name__ == '__main__':
     
     prediction_models = [
@@ -1277,5 +1277,5 @@ if __name__ == '__main__':
     #plotCoverageDistance()
     
 #    GeneralAnalysis.run()
-    LearningAnalysis.run()
-#PaperPlots.run()
+#    LearningAnalysis.run()
+PaperPlots.run()
