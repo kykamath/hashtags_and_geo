@@ -189,12 +189,14 @@ class InfluenceAnalysis:
                         locations = [getLocationFromLid(location.replace('_', ' ')) for location in locations]
 #                        locations = filter(lambda location: isWithinBoundingBox(location, PARTIAL_WORLD_BOUNDARY), locations)
                         if locations:
-                            _, m = plotPointsOnWorldMap(locations, resolution='c', blueMarble=False, bkcolor='#CFCFCF', c='#FF00FF', returnBaseMapObject=True, lw = 0)
+                            _, m = plotPointsOnWorldMap(locations, resolution='c', blueMarble=False, bkcolor='#000000', c='#FF00FF', returnBaseMapObject=True, lw = 0)
+#                            _, m = plotPointsOnWorldMap(locations, resolution='c', blueMarble=False, bkcolor='#CFCFCF', c='#FF00FF', returnBaseMapObject=True, lw = 0)
                             for location in locations: 
     #                            if isWithinBoundingBox(location, PARTIAL_WORLD_BOUNDARY): 
                                 m.drawgreatcircle(location[1], location[0], input_location[1], input_location[0], color='#FAA31B', lw=1., alpha=0.5)
 #                            plotPointsOnWorldMap([input_location], blueMarble=False, bkcolor='#CFCFCF', c='#003CFF', s=40, lw = 0)
-                            plotPointsOnWorldMap([input_location], resolution='c', blueMarble=False, bkcolor='#CFCFCF', c='#003CFF', s=40, lw = 0)
+                            plotPointsOnWorldMap([input_location], resolution='c', blueMarble=False, bkcolor='#000000', c='#003CFF', s=40, lw = 0)
+#                            plotPointsOnWorldMap([input_location], resolution='c', blueMarble=False, bkcolor='#CFCFCF', c='#003CFF', s=40, lw = 0)
                             FileIO.createDirectoryForFile(output_file)
                             print output_file
                             savefig(output_file)
