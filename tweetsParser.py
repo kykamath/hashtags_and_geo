@@ -10,13 +10,13 @@ from library.geo import isWithinBoundingBox, getCenterOfMass,\
     getHaversineDistance
 from settings import us_boundary
 
-year = '2011'
+year = '2012'
 #checkinsFile = 'checkins/%s'%year+'_%s'
 checkinsFile = '/mnt/chevron/dataset/twitter/reduced_geo/%s'%year+'_%s'
 
 def tweetFilesIterator():
     bdeDataFolder = '/mnt/chevron/bde/Data/TweetData/GeoTweets/%s'%year+'/%s/%s/'
-    for month in range(2, 13):
+    for month in range(5, 9):
         outputFile = checkinsFile%month
         for day in range(1, 32):
             tweetsDayFolder = bdeDataFolder%(month, day)
