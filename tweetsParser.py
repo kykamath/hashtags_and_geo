@@ -11,8 +11,8 @@ from library.geo import isWithinBoundingBox, getCenterOfMass,\
 from settings import us_boundary
 
 year = '2012'
-#checkinsFile = 'checkins/%s'%year+'_%s'
-checkinsFile = '/mnt/chevron/dataset/twitter/reduced_geo/%s'%year+'_%s'
+checkinsFile = 'checkins/%s'%year+'_%s'
+#checkinsFile = '/mnt/chevron/dataset/twitter/reduced_geo/%s'%year+'_%s'
 
 def tweetFilesIterator():
     bdeDataFolder = '/mnt/chevron/bde/Data/TweetData/GeoTweets/%s'%year+'/%s/%s/'
