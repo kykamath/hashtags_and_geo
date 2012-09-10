@@ -20,10 +20,11 @@ MIN_HASHTAG_OCCURRENCES = 1000
 
 # Minimum number of hashtag occurrences at a particular utm id.
 # Used by HashtagsByUTMId
-MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = 4
+MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = 500
 
 PARAMS_DICT = dict(
-                   MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = \
+                   MIN_HASHTAG_OCCURRENCES = MIN_HASHTAG_OCCURRENCES,
+                    MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = \
                     MIN_HASHTAG_OCCURRENCES_PER_UTM_ID)
 
 def iterateHashtagObjectInstances(line):
@@ -173,5 +174,5 @@ class HashtagsByUTMId(ModifiedMRJob):
 if __name__ == '__main__':
     pass
 #    TweetStats.run()
-    HashtagsExtractor.run()
-#    HashtagsByUTMId.run()
+#    HashtagsExtractor.run()
+    HashtagsByUTMId.run()
