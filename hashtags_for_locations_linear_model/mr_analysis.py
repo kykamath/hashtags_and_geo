@@ -16,7 +16,7 @@ ACCURACY = UTMConverter.accuracy_10KM
 
 # Minimum number of hashtag occurrences
 # Used by HashtagsExtractor
-MIN_HASHTAG_OCCURRENCES = 1
+MIN_HASHTAG_OCCURRENCES = 1000
 
 # Minimum number of hashtag occurrences at a particular utm id.
 # Used by HashtagsByUTMId
@@ -56,7 +56,8 @@ class TweetStats(ModifiedMRJob):
 class HashtagsExtractor(ModifiedMRJob):
     '''
     hashtag_object = {'hashtag' : hashtag,
-                      'ltuo_occurrence_time_and_occurrence_utm_id': []
+                      'ltuo_occurrence_time_and_occurrence_utm_id': [],
+                      'num_of_occurrences' : 0
                     }
     '''
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -94,7 +95,9 @@ class HashtagsExtractor(ModifiedMRJob):
         for hashtag_object in hashtag_objects:
             combined_hashtag_object['ltuo_occ_time_and_occ_utm_id']+=\
                     hashtag_object['ltuo_occ_time_and_occ_utm_id']
-        if len(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id']) >= \
+        combined_hashtag_object['num_of_occurrences'] = \
+           len(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id']) 
+        if combined_hashtag_object['num_of_occurrences'] >= \
                 self.min_hashtag_occurrences:
             combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'] = \
                 sorted(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'],
