@@ -4,6 +4,7 @@ Created on Sept 9, 2012
 @author: kykamath
 '''
 from collections import defaultdict
+from datetime import datetime
 from library.geo import UTMConverter
 from library.mrjobwrapper import ModifiedMRJob
 from library.twitter import getDateTimeObjectFromTweetTimestamp
@@ -22,10 +23,16 @@ MIN_HASHTAG_OCCURRENCES = 1000
 # Used by HashtagsByUTMId
 MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = 500
 
+# Start time for data analysis
+START_TIME = datetime(2011, 3, 1)
+
+# Parameters for the MR Job that will be logged.
+HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())
 PARAMS_DICT = dict(
                    MIN_HASHTAG_OCCURRENCES = MIN_HASHTAG_OCCURRENCES,
                     MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = \
-                    MIN_HASHTAG_OCCURRENCES_PER_UTM_ID)
+                    MIN_HASHTAG_OCCURRENCES_PER_UTM_ID,
+                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW)
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
@@ -98,8 +105,11 @@ class HashtagsExtractor(ModifiedMRJob):
                     hashtag_object['ltuo_occ_time_and_occ_utm_id']
         combined_hashtag_object['num_of_occurrences'] = \
            len(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id']) 
+        e = min(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'], 
+                key=lambda t: t[0])
         if combined_hashtag_object['num_of_occurrences'] >= \
-                self.min_hashtag_occurrences:
+                self.min_hashtag_occurrences and \
+                e[0]>=HASHTAG_STARTING_WINDOW:
             combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'] = \
                 sorted(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'],
                        key=itemgetter(0,1))
@@ -174,5 +184,5 @@ class HashtagsByUTMId(ModifiedMRJob):
 if __name__ == '__main__':
     pass
 #    TweetStats.run()
-#    HashtagsExtractor.run()
-    HashtagsByUTMId.run()
+    HashtagsExtractor.run()
+#    HashtagsByUTMId.run()
