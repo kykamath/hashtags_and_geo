@@ -24,15 +24,17 @@ MIN_HASHTAG_OCCURRENCES = 1000
 MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = 500
 
 # Start time for data analysis
-START_TIME = datetime(2011, 3, 1)
+START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
 
 # Parameters for the MR Job that will be logged.
 HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())
+HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
 PARAMS_DICT = dict(
                    MIN_HASHTAG_OCCURRENCES = MIN_HASHTAG_OCCURRENCES,
                     MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = \
                     MIN_HASHTAG_OCCURRENCES_PER_UTM_ID,
-                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW)
+                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW,
+                    HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW)
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
@@ -107,12 +109,15 @@ class HashtagsExtractor(ModifiedMRJob):
            len(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id']) 
         e = min(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'], 
                 key=lambda t: t[0])
+        l = max(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'], 
+                key=lambda t: t[0])
         if combined_hashtag_object['num_of_occurrences'] >= \
                 self.min_hashtag_occurrences and \
-                e[0]>=HASHTAG_STARTING_WINDOW:
+                e[0]>=HASHTAG_STARTING_WINDOW and \
+                l[0]<=HASHTAG_ENDING_WINDOW:
             combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'] = \
                 sorted(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'],
-                       key=itemgetter(0,1))
+                       key=itemgetter(0))
             yield hashtag, combined_hashtag_object
     def jobs_to_extract_hashtags(self):
         return [self.mr(
@@ -184,5 +189,5 @@ class HashtagsByUTMId(ModifiedMRJob):
 if __name__ == '__main__':
     pass
 #    TweetStats.run()
-#    HashtagsExtractor.run()
-    HashtagsByUTMId.run()
+    HashtagsExtractor.run()
+#    HashtagsByUTMId.run()

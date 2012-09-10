@@ -58,10 +58,10 @@ class MRAnalysis(object):
         FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
 
 if __name__ == '__main__':
-    input_files_start_time, input_files_end_time = \
-                            datetime(2011, 2, 1), datetime(2011, 4, 30)
 #    input_files_start_time, input_files_end_time = \
-#                            datetime(2011, 2, 1), datetime(2012, 8, 31)
+#                            datetime(2011, 2, 1), datetime(2011, 4, 30)
+    input_files_start_time, input_files_end_time = \
+                            datetime(2011, 2, 1), datetime(2012, 8, 31)
 #    MRAnalysis.tweet_stats(input_files_start_time, input_files_end_time)
-#    MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
-    MRAnalysis.hashtags_by_utm_id(input_files_start_time, input_files_end_time)
+    MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
+#    MRAnalysis.hashtags_by_utm_id(input_files_start_time, input_files_end_time)
