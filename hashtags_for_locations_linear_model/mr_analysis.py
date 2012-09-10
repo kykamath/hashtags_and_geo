@@ -184,5 +184,5 @@ class HashtagsByUTMId(ModifiedMRJob):
 if __name__ == '__main__':
     pass
 #    TweetStats.run()
-    HashtagsExtractor.run()
-#    HashtagsByUTMId.run()
+#    HashtagsExtractor.run()
+    HashtagsByUTMId.run()
