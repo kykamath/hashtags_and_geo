@@ -9,4 +9,4 @@ analysis_folder = '/mnt/chevron/kykamath/data/geo/hashtags/'\
                     'hashtags_for_locations_linear_model/%s/'
                     
 # Analysis files.
-f_tweet_stats = analysis_folder%'tweet_stats'
+f_tweet_stats = analysis_folder%'tweet_stats'+'stats'

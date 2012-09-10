@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 from library.file_io import FileIO
 from library.mrjobwrapper import runMRJob
 from datetime import datetime
-from mr_analysis import MRAnalysis
+from mr_analysis import MRTweetStats
 from mr_analysis import PARAMS_DICT
 from settings import f_tweet_stats
 from settings import hdfs_input_folder
@@ -26,7 +26,7 @@ def getInputFiles(startTime, endTime, folderType='world'):
         
 def mr_analysis(input_files_start_time, input_files_end_time):
     output_file = f_tweet_stats
-    runMRJob(MRAnalysis,
+    runMRJob(MRTweetStats,
              output_file,
              getInputFiles(input_files_start_time, input_files_end_time),
              jobconf={'mapred.reduce.tasks':300})
