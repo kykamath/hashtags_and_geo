@@ -45,7 +45,7 @@ class MRAnalysis(object):
         runMRJob(mr_class,
                  output_file,
                  getInputFiles(input_files_start_time, input_files_end_time),
-                 jobconf={'mapred.reduce.tasks':300})
+                 jobconf={'mapred.reduce.tasks':500})
         FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
     @staticmethod
     def hashtags_extractor(input_files_start_time, input_files_end_time):
