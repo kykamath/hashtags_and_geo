@@ -277,7 +277,7 @@ class HastagsWithUTMIdObject(ModifiedMRJob):
         
 if __name__ == '__main__':
     pass
-    TweetStats.run()
+#    TweetStats.run()
 #    HashtagsExtractor.run()
-#    HashtagsByUTMId.run()
+    HashtagsByUTMId.run()
 #    HastagsWithUTMIdObject.run()
