@@ -1,8 +1,5 @@
 # Created on Sept 11, 2012
 # Author: Krishna Y. Kamath
-# 
-# A collection of useful R functions
-#
 
 # Function to get json object.
 # Example:
@@ -13,4 +10,5 @@ getJSONObject <- function(json_file) {
 	return(fromJSON(paste(readLines(json_file), collapse="")))
 }
 
-
+json_file <- "http://webonastick.com/uscl/feeds/uscl.json.txt"
+getJSONObject(json_file)
