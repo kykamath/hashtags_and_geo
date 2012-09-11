@@ -29,12 +29,12 @@ START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
 # Parameters for the MR Job that will be logged.
 HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
-PARAMS_DICT = dict(
+PARAMS_DICT = dict(PARAMS_DICT = True,
                    MIN_HASHTAG_OCCURRENCES = MIN_HASHTAG_OCCURRENCES,
-                    MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = \
-                    MIN_HASHTAG_OCCURRENCES_PER_UTM_ID,
-                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW,
-                    HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW)
+                   MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = \
+                   MIN_HASHTAG_OCCURRENCES_PER_UTM_ID,
+                   HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW,
+                   HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW)
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
