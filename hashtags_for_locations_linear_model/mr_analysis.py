@@ -82,9 +82,10 @@ class HashtagsExtractor(ModifiedMRJob):
         if False: yield # I'm a generator!
         for hashtag, (location, occ_time) in \
                 iterateHashtagObjectInstances(line):
-            utm_id = UTMConverter.getUTMIdFromLatLong(location[0],
-                                                      location[1],
-                                                      accuracy=ACCURACY)
+            utm_id = UTMConverter.getUTMIdInLatLongFormFromLatLong(
+                                                    location[0],
+                                                    location[1],
+                                                    accuracy=ACCURACY)
             self.mf_hastag_to_ltuo_occ_time_and_occ_utm_id[hashtag]\
                             .append((occ_time, utm_id))
     def map_final_tweet_to_hashtag_object(self):
