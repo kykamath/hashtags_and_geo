@@ -138,11 +138,13 @@ class HashtagsByUTMId(ModifiedMRJob):
                     }
     '''
     DEFAULT_INPUT_PROTOCOL='raw_value'
+    JOBS_TO_GET_VALID_UTM_IDS = 'jobs_to_get_valid_utm_ids'
     def __init__(self, *args, **kwargs):
         super(HashtagsByUTMId, self).__init__(*args, **kwargs)
         self.mf_utm_id_to_mf_hashtag_to_count = defaultdict(dict)
         self.mf_utm_id_to_total_hashtag_count = defaultdict(int)
         self.hashtags_extractor = HashtagsExtractor()
+        self.job_id = kwargs.get('job_id', None)
     def map_hashtag_object_to_utm_object(self, hashtag, hashtag_object):
         if False: yield # I'm a generator!
         for occ_time, occ_utm_id in \
@@ -159,9 +161,7 @@ class HashtagsByUTMId(ModifiedMRJob):
                            'total_hashtag_count': 
                                 self.mf_utm_id_to_total_hashtag_count[utm_id]
                         }
-    def red_tuo_utm_id_and_utm_objects_to_combined_utm_object(self,
-                                                             utm_id,
-                                                             utm_objects):
+    def _get_valid_combined_utm_object(self, utm_id, utm_objects):
         combined_utm_object = {'utm_id': utm_id,
                                'mf_hashtag_to_count': defaultdict(float),
                                'total_hashtag_count' : 0.0
@@ -176,7 +176,19 @@ class HashtagsByUTMId(ModifiedMRJob):
                                         utm_object['total_hashtag_count']
         if combined_utm_object['total_hashtag_count'] >= \
                 MIN_HASHTAG_OCCURRENCES_PER_UTM_ID:
-            yield utm_id, combined_utm_object
+            return combined_utm_object
+    def red_tuo_utm_id_and_utm_objects_to_combined_utm_object(self,
+                                                             utm_id,
+                                                             utm_objects):
+        combined_utm_object = self._get_valid_combined_utm_object(utm_id,
+                                                                  utm_objects)
+        if combined_utm_object: yield utm_id, combined_utm_object
+    def red_tuo_utm_id_and_utm_objects_to_valid_utm_id(self,
+                                                       utm_id,
+                                                       utm_objects):
+        combined_utm_object = self._get_valid_combined_utm_object(utm_id,
+                                                                  utm_objects)
+        if combined_utm_object: yield utm_id, utm_id
     def jobs_to_get_utm_object(self):
         return self.hashtags_extractor.jobs_to_extract_hashtags() +\
                 [self.mr(
@@ -185,9 +197,19 @@ class HashtagsByUTMId(ModifiedMRJob):
                     reducer=
                     self.red_tuo_utm_id_and_utm_objects_to_combined_utm_object)
                 ]
+    def jobs_to_get_valid_utm_ids(self):
+        return self.hashtags_extractor.jobs_to_extract_hashtags() +\
+                [self.mr(
+                    mapper=self.map_hashtag_object_to_utm_object,
+                    mapper_final=self.map_final_hashtag_object_to_utm_object,
+                    reducer=
+                    self.red_tuo_utm_id_and_utm_objects_to_valid_utm_id)
+                ]
     def steps(self):
-        return self.jobs_to_get_utm_object()
-
+        if self.job_id == HashtagsByUTMId.JOBS_TO_GET_VALID_UTM_IDS: 
+            return self.jobs_to_get_valid_utm_ids()
+        else: return self.jobs_to_get_utm_object()
+        
 class HastagsWithUTMIdObject(ModifiedMRJob):
     '''
     hashtag_with_utm_object = {'hashtag' : hashtag,

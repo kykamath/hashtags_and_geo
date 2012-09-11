@@ -6,6 +6,7 @@ Created on Sept 9, 2012
 from dateutil.relativedelta import relativedelta
 from library.file_io import FileIO
 from library.mrjobwrapper import runMRJob
+from library.mrjobwrapper import runMRJobAndYieldResult
 from datetime import datetime
 from mr_analysis import HashtagsByUTMId
 from mr_analysis import HashtagsExtractor
@@ -35,7 +36,17 @@ class MRAnalysis(object):
         runMRJob(mr_class,
                  output_file,
                  getInputFiles(input_files_start_time, input_files_end_time),
+                 mrJobClassParams = {'job_id': 'as'},
                  jobconf={'mapred.reduce.tasks':300})
+        FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
+    @staticmethod
+    def hashtags_extractor(input_files_start_time, input_files_end_time):
+        mr_class = HashtagsExtractor
+        output_file = f_hashtags_extractor
+        runMRJob(mr_class,
+                 output_file,
+                 getInputFiles(input_files_start_time, input_files_end_time),
+                 jobconf={'mapred.reduce.tasks':500})
         FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
     @staticmethod
     def hashtags_by_utm_id(input_files_start_time, input_files_end_time):
@@ -47,14 +58,18 @@ class MRAnalysis(object):
                  jobconf={'mapred.reduce.tasks':500})
         FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
     @staticmethod
-    def hashtags_extractor(input_files_start_time, input_files_end_time):
-        mr_class = HashtagsExtractor
-        output_file = f_hashtags_extractor
-        runMRJob(mr_class,
-                 output_file,
-                 getInputFiles(input_files_start_time, input_files_end_time),
-                 jobconf={'mapred.reduce.tasks':500})
-        FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
+    def hashtags_by_valid_utm_id(input_files_start_time, input_files_end_time):
+        mr_class = HashtagsByUTMId
+        result = runMRJobAndYieldResult(
+                    mr_class,
+                    getInputFiles(input_files_start_time,
+                                  input_files_end_time),
+                    mrJobClassParams = {'job_id': 
+                                     HashtagsByUTMId.JOBS_TO_GET_VALID_UTM_IDS},
+                    jobconf={'mapred.reduce.tasks':500}
+                )
+        for r in result:
+            print result
     @staticmethod
     def hashtags_with_utm_id_object(input_files_start_time,
                                     input_files_end_time):
@@ -72,8 +87,10 @@ if __name__ == '__main__':
                             datetime(2011, 2, 1), datetime(2011, 4, 30)
 #    input_files_start_time, input_files_end_time = \
 #                            datetime(2011, 2, 1), datetime(2012, 8, 31)
-    MRAnalysis.tweet_stats(input_files_start_time, input_files_end_time)
+#    MRAnalysis.tweet_stats(input_files_start_time, input_files_end_time)
 #    MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
+    MRAnalysis.hashtags_by_valid_utm_id(input_files_start_time,
+                                        input_files_end_time)
 #    MRAnalysis.hashtags_by_utm_id(input_files_start_time, input_files_end_time)
 #    MRAnalysis.hashtags_with_utm_id_object(input_files_start_time,
 #                                           input_files_end_time)
