@@ -3,6 +3,7 @@ Created on Sept 9, 2012
 
 @author: kykamath
 '''
+import os
 
 hdfs_input_folder = 'hdfs:///user/kykamath/geo/hashtags/%s/'
 analysis_folder = '/mnt/chevron/kykamath/data/geo/hashtags/'\
@@ -12,3 +13,9 @@ analysis_folder = '/mnt/chevron/kykamath/data/geo/hashtags/'\
 f_tweet_stats = analysis_folder%'tweet_stats'+'stats'
 f_hashtags_extractor = analysis_folder%'hashtags_extractor'+'hashtags'
 f_hashtags_by_utm_id = analysis_folder%'hashtags_by_utm_id'+'hashtags_by_utm_id'
+
+fld_google_drive_data_analysis = os.path.expanduser('~/Google Drive/Desktop/'\
+            'hashtags_and_geo/hashtags_for_locations_linear_model/%s') 
+
+# Bounding boxes
+NY_BB = [[40.574326,-74.045311], [40.939452,-73.728081]]

@@ -15,10 +15,6 @@ from settings import f_hashtags_by_utm_id
 from settings import f_hashtags_extractor
 from settings import f_tweet_stats
 from settings import hdfs_input_folder
-    
-def iterateJsonFromFile(file):
-    for data in FileIO.iterateJsonFromFile(file):
-        if 'PARAMS_DICT' not in data: yield data
 
 def getInputFiles(startTime, endTime, folderType='world'):
     current=startTime
