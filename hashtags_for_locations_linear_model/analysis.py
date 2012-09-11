@@ -69,7 +69,7 @@ class MRAnalysis(object):
                     jobconf={'mapred.reduce.tasks':500}
                 )
         for r in result:
-            print result
+            print r
     @staticmethod
     def hashtags_with_utm_id_object(input_files_start_time,
                                     input_files_end_time):
