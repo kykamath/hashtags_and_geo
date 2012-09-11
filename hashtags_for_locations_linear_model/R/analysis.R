@@ -1,14 +1,9 @@
 # Created on Sept 11, 2012
 # Author: Krishna Y. Kamath
 
-# Function to get json object.
-# Example:
-# json_file <- "http://webonastick.com/uscl/feeds/uscl.json.txt"
-# getJSONObject(json_file)
-getJSONObject <- function(json_file) {
-	library("rjson")
-	return(fromJSON(paste(readLines(json_file), collapse="")))
-}
+source('../../R/library.R')
 
-json_file <- "http://webonastick.com/uscl/feeds/uscl.json.txt"
-getJSONObject(json_file)
+data <- getJSONObject(paste('/Users/krishnakamath/Documents/workspace_sept_12/',
+					  		'hashtags_and_geo/R/data.json', sep=''))
+data$menuitem[-length(data$menuitem)]
+#getDataFrameFromListOfDicts(data$menuitem)
