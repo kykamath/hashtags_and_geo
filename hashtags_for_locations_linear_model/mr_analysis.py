@@ -142,8 +142,7 @@ class HashtagsByUTMId(ModifiedMRJob):
         super(HashtagsByUTMId, self).__init__(*args, **kwargs)
         self.mf_utm_id_to_mf_hashtag_to_count = defaultdict(dict)
         self.mf_utm_id_to_total_hashtag_count = defaultdict(int)
-        self.hashtags_extractor = \
-            HashtagsExtractor(min_hashtag_occurrences=MIN_HASHTAG_OCCURRENCES)
+        self.hashtags_extractor = HashtagsExtractor()
     def map_hashtag_object_to_utm_object(self, hashtag, hashtag_object):
         if False: yield # I'm a generator!
         for occ_time, occ_utm_id in \
@@ -178,7 +177,7 @@ class HashtagsByUTMId(ModifiedMRJob):
         if combined_utm_object['total_hashtag_count'] >= \
                 MIN_HASHTAG_OCCURRENCES_PER_UTM_ID:
             yield utm_id, combined_utm_object
-    def steps(self):
+    def jobs_to_get_utm_object(self):
         return self.hashtags_extractor.jobs_to_extract_hashtags() +\
                 [self.mr(
                     mapper=self.map_hashtag_object_to_utm_object,
@@ -186,9 +185,77 @@ class HashtagsByUTMId(ModifiedMRJob):
                     reducer=
                     self.red_tuo_utm_id_and_utm_objects_to_combined_utm_object)
                 ]
+    def steps(self):
+        return self.jobs_to_get_utm_object()
 
+class HastagsWithUTMIdObject(ModifiedMRJob):
+    '''
+    hashtag_with_utm_object = {'hashtag' : hashtag,
+                              'mf_utm_id_to_hashtag_occurrences': {
+                                'total_num_of_occurrences' : 0,
+                                  },
+                            }
+    '''
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(HastagsWithUTMIdObject, self).__init__(*args, **kwargs)
+        self.hashtags_by_utm_id = HashtagsByUTMId()
+        self.mf_hashtag_to_mf_utm_id_to_hashtag_occurrences = defaultdict(dict)
+        
+    def map_utm_object_to_hashtag_with_utm_object(self,
+                                                      utm_id,
+                                                      utm_object):
+        if False: yield # I'm a generator!
+        for hashtag, count in utm_object['mf_hashtag_to_count'].iteritems():
+            if utm_id not in \
+                    self.mf_hashtag_to_mf_utm_id_to_hashtag_occurrences\
+                                                                    [hashtag]:
+                self.mf_hashtag_to_mf_utm_id_to_hashtag_occurrences\
+                        [hashtag][utm_id] = 0.0
+            self.mf_hashtag_to_mf_utm_id_to_hashtag_occurrences\
+                        [hashtag][utm_id]+=count
+    def map_final_utm_object_to_hashtag_with_utm_object(self):
+        for hashtag, mf_utm_id_to_hashtag_occurrences in \
+                self.mf_hashtag_to_mf_utm_id_to_hashtag_occurrences.iteritems():
+            mf_utm_id_to_hashtag_occurrences['total_num_of_occurrences'] = \
+                sum(mf_utm_id_to_hashtag_occurrences.values())
+            hashtag_with_utm_object = {'hashtag' : hashtag,
+                                       'mf_utm_id_to_hashtag_occurrences': \
+                                            mf_utm_id_to_hashtag_occurrences
+                                    }
+            yield hashtag, hashtag_with_utm_object
+    def red_tuo_h_and_hashtag_with_utm_object_to_h_and_com_h_with_utm_object(
+                                                 self,
+                                                 hashtag,
+                                                 hashtag_with_utm_objects):
+        mf_utm_id_to_hashtag_occurrences = defaultdict(float)
+        for hashtag_with_utm_object in hashtag_with_utm_objects:
+            for utm_id, hashtag_occurrences in \
+                    hashtag_with_utm_object\
+                        ['mf_utm_id_to_hashtag_occurrences'].iteritems():
+                mf_utm_id_to_hashtag_occurrences[utm_id]+=hashtag_occurrences
+        combined_hashtag_with_utm_object = {'hashtag' : hashtag,
+                                   'mf_utm_id_to_hashtag_occurrences': \
+                                        mf_utm_id_to_hashtag_occurrences
+                                }
+        yield hashtag, combined_hashtag_with_utm_object
+#    reducer = \
+#        red_tuo_h_and_hashtag_with_utm_object_to_h_and_com_h_with_utm_object
+    def jobs_to_get_hashtags_with_utm_id_object(self):
+        return self.hashtags_by_utm_id.jobs_to_get_utm_object() + \
+                [self.mr(
+                    mapper=self.map_utm_object_to_hashtag_with_utm_object,
+                    mapper_final=
+                        self.map_final_utm_object_to_hashtag_with_utm_object,
+                    reducer=
+                    self.red_tuo_h_and_hashtag_with_utm_object_to_h_and_com_h_with_utm_object)
+                ]
+    def steps(self):
+        return self.jobs_to_get_hashtags_with_utm_id_object()
+        
 if __name__ == '__main__':
     pass
 #    TweetStats.run()
 #    HashtagsExtractor.run()
-    HashtagsByUTMId.run()
+#    HashtagsByUTMId.run()
+    HastagsWithUTMIdObject.run()
