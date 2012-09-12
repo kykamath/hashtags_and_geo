@@ -134,6 +134,7 @@ class HashtagsDistributionInUTM(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
         super(HashtagsDistributionInUTM, self).__init__(*args, **kwargs)
+        self.hashtags_extractor = HashtagsExtractor()
         self.mf_utm_id_to_hashtag_count = defaultdict(int)
     def map_hashtag_object_to_dist_in_utm(self, hashtag, hashtag_object):
         for occurrence_time, utm_id in \
