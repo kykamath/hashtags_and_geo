@@ -259,10 +259,7 @@ class HastagsWithUTMIdObject(ModifiedMRJob):
         for dense_utm_id in dense_utm_ids:
             combined_hashtag_with_utm_object\
                 ['mf_utm_id_to_hashtag_occurrences'][dense_utm_id] = \
-                    mf_utm_id_to_hashtag_occurrences.get(
-                                            mf_utm_id_to_hashtag_occurrences,
-                                            0.0
-                                        )
+                    mf_utm_id_to_hashtag_occurrences.get(dense_utm_id, 0.0)
         yield hashtag, combined_hashtag_with_utm_object
     def jobs_to_get_hashtags_with_utm_id_object(self):
         return self.hashtags_by_utm_id.jobs_to_get_utm_object() + \
