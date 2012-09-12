@@ -21,6 +21,7 @@ from settings import f_hashtags_extractor
 from settings import f_hashtags_with_utm_id_object
 from settings import f_tweet_stats
 from settings import hdfs_input_folder
+import rpy2.rlike.container as rlc
 import rpy2.robjects as robjects
 import time
 
@@ -123,9 +124,11 @@ class GeneralAnalysis(object):
                                                     remove_params_dict=True)]
     @staticmethod
     def test_r():
-        d = {'a': robjects.IntVector((1,2,3)), 'b': robjects.IntVector((4,5,6))}
-        print d
-    
+        od = rlc.OrdDict([('value', robjects.IntVector((1,2,3))),
+                      ('letter', robjects.StrVector(('x', 'y', 'z')))])
+        dataf = robjects.DataFrame(od)
+        print(dataf.colnames)
+        
     @staticmethod
     def run():
 #        GeneralAnalysis.print_dense_utm_ids()
