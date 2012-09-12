@@ -194,7 +194,7 @@ class HashtagsDistributionInUTM(ModifiedMRJob):
                                                              utm_id,
                                                              hashtag_counts):
         hashtags_dist = sum(hashtag_counts)
-        if hashtags_dist <= MIN_HASHTAG_OCCURRENCES_PER_UTM_ID:
+        if hashtags_dist >= MIN_HASHTAG_OCCURRENCES_PER_UTM_ID:
             accuracy = \
                 UTMConverter.getAccuracyFromUTMIdInLatLongFormFrom(utm_id)
             yield accuracy, hashtags_dist
