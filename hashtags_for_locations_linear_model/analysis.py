@@ -81,16 +81,34 @@ class MRAnalysis(object):
                  jobconf={'mapred.reduce.tasks':500})
         FileIO.writeToFileAsJson(PARAMS_DICT, output_file)    
     
+    @staticmethod
+    def run():
+        input_files_start_time, input_files_end_time = \
+                        datetime(2011, 2, 1), datetime(2011, 4, 30)
+    #    input_files_start_time, input_files_end_time = \
+    #                            datetime(2011, 2, 1), datetime(2012, 8, 31)
+    #    MRAnalysis.tweet_stats(input_files_start_time, input_files_end_time)
+    #    MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
+        MRAnalysis.hashtags_by_valid_utm_id(input_files_start_time,
+                                            input_files_end_time)
+    #    MRAnalysis.hashtags_by_utm_id(input_files_start_time, input_files_end_time)
+    #    MRAnalysis.hashtags_with_utm_id_object(input_files_start_time,
+    #                                           input_files_end_time)
+    
+class GeneralAnalysis(object):
+    @staticmethod
+    def print_valid_utm_ids():
+        ''' Prints list of valid utm_ids.
+        '''
+        print [utm_object['utm_id'] 
+               for utm_object in FileIO.iterateJsonFromFile(
+                                                    f_hashtags_by_utm_id,
+                                                    remove_params_dict=True)]
+    @staticmethod
+    def run():
+        GeneralAnalysis.print_valid_utm_ids()
 
 if __name__ == '__main__':
-    input_files_start_time, input_files_end_time = \
-                            datetime(2011, 2, 1), datetime(2011, 4, 30)
-#    input_files_start_time, input_files_end_time = \
-#                            datetime(2011, 2, 1), datetime(2012, 8, 31)
-#    MRAnalysis.tweet_stats(input_files_start_time, input_files_end_time)
-#    MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
-    MRAnalysis.hashtags_by_valid_utm_id(input_files_start_time,
-                                        input_files_end_time)
-#    MRAnalysis.hashtags_by_utm_id(input_files_start_time, input_files_end_time)
-#    MRAnalysis.hashtags_with_utm_id_object(input_files_start_time,
-#                                           input_files_end_time)
+#    MRAnalysis.run()
+    GeneralAnalysis.run()
+    
