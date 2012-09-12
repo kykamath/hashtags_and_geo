@@ -13,7 +13,7 @@ import cjson
 import time
 
 
-ACCURACY = 100 # UTM boxes in sq.m
+ACCURACY = 10*4 # UTM boxes in sq.m
 
 ACCURACIES = [10*3, 10*4, 10*5]
 
@@ -90,6 +90,17 @@ class HashtagsExtractor(ModifiedMRJob):
                                                     accuracy=ACCURACY)
             self.mf_hastag_to_ltuo_occ_time_and_occ_utm_id[hashtag]\
                             .append((occ_time, utm_id))
+    def map_tweet_to_hashtag_object_at_varying_accuracies(self, key, line):
+        if False: yield # I'm a generator!
+        for hashtag, (location, occ_time) in \
+                iterateHashtagObjectInstances(line):
+            for accuracy in ACCURACIES:
+                utm_id = UTMConverter.getUTMIdInLatLongFormFromLatLong(
+                                                        location[0],
+                                                        location[1],
+                                                        accuracy=accuracy)
+                self.mf_hastag_to_ltuo_occ_time_and_occ_utm_id[hashtag]\
+                                .append((occ_time, utm_id))
     def map_final_tweet_to_hashtag_object(self):
         for hashtag, ltuo_occ_time_and_occ_utm_id in \
                 self.mf_hastag_to_ltuo_occ_time_and_occ_utm_id.iteritems():
@@ -140,7 +151,7 @@ class HashtagsDistributionInUTM(ModifiedMRJob):
         self.mf_utm_id_to_hashtag_count = defaultdict(int)
     def map_hashtag_object_to_dist_in_utm(self, hashtag, hashtag_object):
         for occurrence_time, utm_id in \
-                hashtag_object['ltuo_occ_time_and_occ_utm_id'].iteritems():
+                hashtag_object['ltuo_occ_time_and_occ_utm_id']:
             self.mf_utm_id_to_hashtag_count[utm_id]+=1
     def map_final_hashtag_object_to_dist_in_utm(self, hashtag, hashtag_object):  
         for utm_id, hashtag_count in \
