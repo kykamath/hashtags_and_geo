@@ -15,6 +15,8 @@ import time
 
 ACCURACY = 100 # UTM boxes in sq.m
 
+ACCURACIES = [10*3, 10*4, 10*5]
+
 # Minimum number of hashtag occurrences
 # Used by HashtagsExtractor
 MIN_HASHTAG_OCCURRENCES = 250
@@ -66,7 +68,7 @@ class TweetStats(ModifiedMRJob):
 class HashtagsExtractor(ModifiedMRJob):
     '''
     hashtag_object = {'hashtag' : hashtag,
-                      'ltuo_occurrence_time_and_occurrence_utm_id': [],
+                      'ltuo_occ_time_and_occ_utm_id': [],
                       'num_of_occurrences' : 0
                     }
     '''
@@ -138,8 +140,7 @@ class HashtagsDistributionInUTM(ModifiedMRJob):
         self.mf_utm_id_to_hashtag_count = defaultdict(int)
     def map_hashtag_object_to_dist_in_utm(self, hashtag, hashtag_object):
         for occurrence_time, utm_id in \
-                hashtag_object\
-                    ['ltuo_occurrence_time_and_occurrence_utm_id'].iteritems():
+                hashtag_object['ltuo_occ_time_and_occ_utm_id'].iteritems():
             self.mf_utm_id_to_hashtag_count[utm_id]+=1
     def map_final_hashtag_object_to_dist_in_utm(self, hashtag, hashtag_object):  
         for utm_id, hashtag_count in \
