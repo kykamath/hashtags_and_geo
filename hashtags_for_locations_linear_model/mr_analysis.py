@@ -13,7 +13,7 @@ import cjson
 import time
 
 
-ACCURACY = 10 # UTM boxes of 10 sq.m
+ACCURACY = 100 # UTM boxes in sq.m
 
 # Minimum number of hashtag occurrences
 # Used by HashtagsExtractor
@@ -129,6 +129,47 @@ class HashtagsExtractor(ModifiedMRJob):
         ]
     def steps(self):
         return self.jobs_to_extract_hashtags()
+
+class HashtagsDistributionInUTM(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(HashtagsDistributionInUTM, self).__init__(*args, **kwargs)
+        self.mf_utm_id_to_hashtag_count = defaultdict(int)
+    def map_hashtag_object_to_dist_in_utm(self, hashtag, hashtag_object):
+        for occurrence_time, utm_id in \
+                hashtag_object\
+                    ['ltuo_occurrence_time_and_occurrence_utm_id'].iteritems():
+            self.mf_utm_id_to_hashtag_count[utm_id]+=1
+    def map_final_hashtag_object_to_dist_in_utm(self, hashtag, hashtag_object):  
+        for utm_id, hashtag_count in \
+                self.mf_utm_id_to_hashtag_count.iteritems():
+            yield utm_id, hashtag_count
+    def red_tuo_utm_id_and_hashtag_counts_to_accuracy_and_hashtag_dist(
+                                                             self,
+                                                             utm_id,
+                                                             hashtag_counts):
+        accuracy = UTMConverter.getAccuracyFromUTMIdInLatLongFormFrom(utm_id)
+        yield accuracy, sum(hashtag_counts)
+    def red_tuo_accuracy_and_hashtag_dists_to_accuracy_and_dist(self,
+                                                                accuracy,
+                                                                hashtag_counts):
+        yield accuracy, {'accuracy': accuracy,
+                         'hashtag_distribution': list(hashtag_counts)}
+    def jobs_to_get_utm_accuracy_distribution(self):
+        return self.hashtags_extractor.jobs_to_extract_hashtags() +\
+                [self.mr(
+                    mapper=self.map_hashtag_object_to_dist_in_utm,
+                    mapper_final=self.map_final_hashtag_object_to_dist_in_utm,
+                    reducer=
+                    self.red_tuo_utm_id_and_hashtag_counts_to_accuracy_and_hashtag_dist)
+                ] +\
+                [self.mr(
+                    mapper=self.emptyMapper,
+                    reducer=
+                    self.red_tuo_accuracy_and_hashtag_dists_to_accuracy_and_dist)
+                 ]
+    def steps(self):
+        return self.jobs_to_get_utm_accuracy_distribution()
         
 class HashtagsByUTMId(ModifiedMRJob):
     '''
@@ -266,6 +307,7 @@ class HastagsWithUTMIdObject(ModifiedMRJob):
 if __name__ == '__main__':
     pass
 #    TweetStats.run()
-    HashtagsExtractor.run()
+#    HashtagsExtractor.run()
+    HashtagsDistributionInUTM.run()
 #    HashtagsByUTMId.run()
 #    HastagsWithUTMIdObject.run()

@@ -9,12 +9,14 @@ from library.mrjobwrapper import runMRJob
 from library.mrjobwrapper import runMRJobAndYieldResult
 from datetime import datetime
 from mr_analysis import HashtagsByUTMId
+from mr_analysis import HashtagsDistributionInUTM
 from mr_analysis import HashtagsExtractor
 from mr_analysis import HastagsWithUTMIdObject
 from mr_analysis import PARAMS_DICT
 from mr_analysis import TweetStats
 from pprint import pprint
 from settings import f_hashtags_by_utm_id
+from settings import f_hashtag_dist_by_accuracy
 from settings import f_hashtags_extractor
 from settings import f_hashtags_with_utm_id_object
 from settings import f_tweet_stats
@@ -66,6 +68,14 @@ class MRAnalysis(object):
                            input_files_start_time,
                            input_files_end_time)
     @staticmethod
+    def hashtag_dist_by_accuracy(input_files_start_time, input_files_end_time):
+        mr_class = HashtagsDistributionInUTM
+        output_file = f_hashtag_dist_by_accuracy
+        MRAnalysis.run_job(mr_class,
+                           output_file,
+                           input_files_start_time,
+                           input_files_end_time)
+    @staticmethod
     def hashtags_by_utm_id(input_files_start_time, input_files_end_time):
         mr_class = HashtagsByUTMId
         output_file = f_hashtags_by_utm_id
@@ -87,13 +97,15 @@ class MRAnalysis(object):
     
     @staticmethod
     def run():
-#        input_files_start_time, input_files_end_time = \
-#                        datetime(2011, 2, 1), datetime(2011, 4, 30)
         input_files_start_time, input_files_end_time = \
-                                datetime(2011, 2, 1), datetime(2012, 8, 31)
+                        datetime(2011, 2, 1), datetime(2011, 4, 30)
+#        input_files_start_time, input_files_end_time = \
+#                                datetime(2011, 2, 1), datetime(2012, 8, 31)
 #        MRAnalysis.tweet_stats(input_files_start_time, input_files_end_time)
-        MRAnalysis.hashtags_extractor(input_files_start_time,
-                                      input_files_end_time)
+#        MRAnalysis.hashtags_extractor(input_files_start_time,
+#                                      input_files_end_time)
+        MRAnalysis.hashtag_dist_by_accuracy(input_files_start_time,
+                                            input_files_end_time)
 #        MRAnalysis.hashtags_by_utm_id(input_files_start_time,
 #                                      input_files_end_time)
 #        MRAnalysis.hashtags_with_utm_id_object(input_files_start_time,
