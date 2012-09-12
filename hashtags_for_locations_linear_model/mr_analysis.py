@@ -13,9 +13,9 @@ import cjson
 import time
 
 
-ACCURACY = 10*4 # UTM boxes in sq.m
+ACCURACY = 10**4 # UTM boxes in sq.m
 
-ACCURACIES = [10*3, 10*4, 10*5]
+ACCURACIES = [10**3, 10**4, 10**5]
 
 # Minimum number of hashtag occurrences
 # Used by HashtagsExtractor
@@ -174,6 +174,7 @@ class HashtagsDistributionInUTM(ModifiedMRJob):
         self.hashtags_extractor = HashtagsExtractor()
         self.mf_utm_id_to_hashtag_count = defaultdict(int)
     def map_hashtag_object_to_dist_in_utm(self, hashtag, hashtag_object):
+        if False: yield # I'm a generator!
         for occurrence_time, utm_id in \
                 hashtag_object['ltuo_occ_time_and_occ_utm_id']:
             self.mf_utm_id_to_hashtag_count[utm_id]+=1
