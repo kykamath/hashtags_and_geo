@@ -58,19 +58,6 @@ class MRAnalysis(object):
                  jobconf={'mapred.reduce.tasks':500})
         FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
     @staticmethod
-    def hashtags_by_valid_utm_id(input_files_start_time, input_files_end_time):
-        mr_class = HashtagsByUTMId
-        result = runMRJobAndYieldResult(
-                    mr_class,
-                    getInputFiles(input_files_start_time,
-                                  input_files_end_time),
-                    mrJobClassParams = {'job_id': 
-                                     HashtagsByUTMId.JOBS_TO_GET_VALID_UTM_IDS},
-                    jobconf={'mapred.reduce.tasks':500}
-                )
-        for r in result:
-            print r
-    @staticmethod
     def hashtags_with_utm_id_object(input_files_start_time,
                                     input_files_end_time):
         mr_class = HastagsWithUTMIdObject
@@ -88,17 +75,17 @@ class MRAnalysis(object):
     #    input_files_start_time, input_files_end_time = \
     #                            datetime(2011, 2, 1), datetime(2012, 8, 31)
     #    MRAnalysis.tweet_stats(input_files_start_time, input_files_end_time)
-    #    MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
-        MRAnalysis.hashtags_by_valid_utm_id(input_files_start_time,
-                                            input_files_end_time)
-    #    MRAnalysis.hashtags_by_utm_id(input_files_start_time, input_files_end_time)
-    #    MRAnalysis.hashtags_with_utm_id_object(input_files_start_time,
-    #                                           input_files_end_time)
+    #    MRAnalysis.hashtags_extractor(input_files_start_time,
+    #                                  input_files_end_time)
+    #    MRAnalysis.hashtags_by_utm_id(input_files_start_time,
+    #                                  input_files_end_time)
+        MRAnalysis.hashtags_with_utm_id_object(input_files_start_time,
+                                               input_files_end_time)
     
 class GeneralAnalysis(object):
     @staticmethod
-    def print_valid_utm_ids():
-        ''' Prints list of valid utm_ids.
+    def print_dense_utm_ids():
+        ''' Prints list of dense utm_ids.
         '''
         print [utm_object['utm_id'] 
                for utm_object in FileIO.iterateJsonFromFile(
@@ -106,9 +93,9 @@ class GeneralAnalysis(object):
                                                     remove_params_dict=True)]
     @staticmethod
     def run():
-        GeneralAnalysis.print_valid_utm_ids()
+        GeneralAnalysis.print_dense_utm_ids()
 
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    GeneralAnalysis.run()
+    MRAnalysis.run()
+#    GeneralAnalysis.run()
     
