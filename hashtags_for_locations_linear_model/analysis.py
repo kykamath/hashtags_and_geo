@@ -13,6 +13,7 @@ from mr_analysis import HashtagsExtractor
 from mr_analysis import HastagsWithUTMIdObject
 from mr_analysis import PARAMS_DICT
 from mr_analysis import TweetStats
+from pprint import pprint
 from settings import f_hashtags_by_utm_id
 from settings import f_hashtags_extractor
 from settings import f_hashtags_with_utm_id_object
@@ -35,14 +36,16 @@ class MRAnalysis(object):
                 output_file,
                 input_files_start_time,
                 input_files_end_time):
-        runMRJob(mr_class,
-                 output_file,
-                 getInputFiles(input_files_start_time, input_files_end_time),
-                 jobconf={'mapred.reduce.tasks':500})
         PARAMS_DICT['input_files_start_time'] = \
             time.mktime(input_files_start_time.timetuple())
         PARAMS_DICT['input_files_end_time'] = \
             time.mktime(input_files_end_time.timetuple())
+        print 'Running map reduce with the following params:', \
+                pprint(PARAMS_DICT)
+        runMRJob(mr_class,
+                 output_file,
+                 getInputFiles(input_files_start_time, input_files_end_time),
+                 jobconf={'mapred.reduce.tasks':500})
         FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
     @staticmethod
     def tweet_stats(input_files_start_time, input_files_end_time):
