@@ -109,10 +109,7 @@ class HashtagsExtractor(ModifiedMRJob):
                                     ltuo_occ_time_and_occ_utm_id
                              }
             yield hashtag, hashtag_object
-    def reduce_tuo_hashtag_and_hashtag_objects_to_combined_hashtag_object(
-                                                  self,
-                                                  hashtag,
-                                                  hashtag_objects):
+    def _get_combined_hashtag_object(self, hashtag, hashtag_objects):
         combined_hashtag_object = {'hashtag': hashtag,
                                    'ltuo_occ_time_and_occ_utm_id': []
                                 }
@@ -121,6 +118,14 @@ class HashtagsExtractor(ModifiedMRJob):
                     hashtag_object['ltuo_occ_time_and_occ_utm_id']
         combined_hashtag_object['num_of_occurrences'] = \
            len(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id']) 
+        return combined_hashtag_object
+    def red_tuo_hashtag_and_hashtag_objects_to_combined_hashtag_object(
+                                                  self,
+                                                  hashtag,
+                                                  hashtag_objects):
+        combined_hashtag_object = self._get_combined_hashtag_object(
+                                                            hashtag,
+                                                            hashtag_objects)
         e = min(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'], 
                 key=lambda t: t[0])
         l = max(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'], 
@@ -133,12 +138,31 @@ class HashtagsExtractor(ModifiedMRJob):
                 sorted(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'],
                        key=itemgetter(0))
             yield hashtag, combined_hashtag_object
+    def red_tuo_hashtag_and_hashtag_objects_to_combined_hashtag_object_at_varying_accuracies(
+                                                              self,
+                                                              hashtag,
+                                                              hashtag_objects):
+        combined_hashtag_object = self._get_combined_hashtag_object(
+                                                            hashtag,
+                                                            hashtag_objects)
+        e = min(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'], 
+                key=lambda t: t[0])
+        l = max(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'], 
+                key=lambda t: t[0])
+        if combined_hashtag_object['num_of_occurrences']/len(ACCURACIES) >= \
+                self.min_hashtag_occurrences and \
+                e[0]>=HASHTAG_STARTING_WINDOW and \
+                l[0]<=HASHTAG_ENDING_WINDOW:
+            combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'] = \
+                sorted(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'],
+                       key=itemgetter(0))
+            yield hashtag, combined_hashtag_object
     def jobs_to_extract_hashtags(self):
         return [self.mr(
         mapper=self.map_tweet_to_hashtag_object,
         mapper_final=self.map_final_tweet_to_hashtag_object,
         reducer=
-        self.reduce_tuo_hashtag_and_hashtag_objects_to_combined_hashtag_object)
+        self.red_tuo_hashtag_and_hashtag_objects_to_combined_hashtag_object)
         ]
     def steps(self):
         return self.jobs_to_extract_hashtags()
@@ -153,7 +177,7 @@ class HashtagsDistributionInUTM(ModifiedMRJob):
         for occurrence_time, utm_id in \
                 hashtag_object['ltuo_occ_time_and_occ_utm_id']:
             self.mf_utm_id_to_hashtag_count[utm_id]+=1
-    def map_final_hashtag_object_to_dist_in_utm(self, hashtag, hashtag_object):  
+    def map_final_hashtag_object_to_dist_in_utm(self):  
         for utm_id, hashtag_count in \
                 self.mf_utm_id_to_hashtag_count.iteritems():
             yield utm_id, hashtag_count
