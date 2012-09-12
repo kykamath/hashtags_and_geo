@@ -21,6 +21,7 @@ from settings import f_hashtags_extractor
 from settings import f_hashtags_with_utm_id_object
 from settings import f_tweet_stats
 from settings import hdfs_input_folder
+import rpy2.robjects as robjects
 import time
 
 def getInputFiles(startTime, endTime, folderType='world'):
@@ -121,10 +122,16 @@ class GeneralAnalysis(object):
                                                     f_hashtags_by_utm_id,
                                                     remove_params_dict=True)]
     @staticmethod
+    def test_r():
+        d = {'a': robjects.IntVector((1,2,3)), 'b': robjects.IntVector((4,5,6))}
+        print d
+    
+    @staticmethod
     def run():
-        GeneralAnalysis.print_dense_utm_ids()
+#        GeneralAnalysis.print_dense_utm_ids()
+        GeneralAnalysis.test_r()
 
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    GeneralAnalysis.run()
+#    MRAnalysis.run()
+    GeneralAnalysis.run()
     
