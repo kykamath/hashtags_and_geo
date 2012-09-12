@@ -13,11 +13,11 @@ import cjson
 import time
 
 
-ACCURACY = UTMConverter.accuracy_10KM
+ACCURACY = 10 # UTM boxes of 10 sq.m
 
 # Minimum number of hashtag occurrences
 # Used by HashtagsExtractor
-MIN_HASHTAG_OCCURRENCES = 1000
+MIN_HASHTAG_OCCURRENCES = 250
 
 # Minimum number of hashtag occurrences at a particular utm id.
 # Used by HashtagsByUTMId
@@ -266,6 +266,6 @@ class HastagsWithUTMIdObject(ModifiedMRJob):
 if __name__ == '__main__':
     pass
 #    TweetStats.run()
-#    HashtagsExtractor.run()
+    HashtagsExtractor.run()
 #    HashtagsByUTMId.run()
-    HastagsWithUTMIdObject.run()
+#    HastagsWithUTMIdObject.run()
