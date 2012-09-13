@@ -23,7 +23,7 @@ MIN_HASHTAG_OCCURRENCES = 250
 
 # Minimum number of hashtag occurrences at a particular utm id.
 # Used by HashtagsByUTMId
-MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = 50
+MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = 500
 
 # Start time for data analysis
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
@@ -332,15 +332,7 @@ class HastagsWithUTMIdObject(ModifiedMRJob):
         combined_hashtag_with_utm_object = {'hashtag' : hashtag,
                                    'mf_utm_id_to_hashtag_occurrences': \
                                             mf_utm_id_to_hashtag_occurrences
-#                                        {'total_num_of_occurrences' : 
-#                                         mf_utm_id_to_hashtag_occurrences\
-#                                                ['total_num_of_occurrences']
-#                                        }
                                 }
-#        for dense_utm_id in dense_utm_ids:
-#            combined_hashtag_with_utm_object\
-#                ['mf_utm_id_to_hashtag_occurrences'][dense_utm_id] = \
-#                    mf_utm_id_to_hashtag_occurrences.get(dense_utm_id, 0.0)
         yield hashtag, combined_hashtag_with_utm_object
     def jobs_to_get_hashtags_with_utm_id_object(self):
         return self.hashtags_by_utm_id.jobs_to_get_utm_object() + \
@@ -358,6 +350,6 @@ if __name__ == '__main__':
     pass
 #    TweetStats.run()
 #    HashtagsExtractor.run()
-    HashtagsDistributionInUTM.run()
+#    HashtagsDistributionInUTM.run()
 #    HashtagsByUTMId.run()
-#    HastagsWithUTMIdObject.run()
+    HastagsWithUTMIdObject.run()

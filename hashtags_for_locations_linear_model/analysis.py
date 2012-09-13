@@ -99,19 +99,19 @@ class MRAnalysis(object):
     
     @staticmethod
     def run():
-#        input_files_start_time, input_files_end_time = \
-#                        datetime(2011, 2, 1), datetime(2011, 4, 30)
         input_files_start_time, input_files_end_time = \
-                                datetime(2011, 2, 1), datetime(2012, 8, 31)
+                        datetime(2011, 2, 1), datetime(2011, 4, 30)
+#        input_files_start_time, input_files_end_time = \
+#                                datetime(2011, 2, 1), datetime(2012, 8, 31)
 #        MRAnalysis.tweet_stats(input_files_start_time, input_files_end_time)
 #        MRAnalysis.hashtags_extractor(input_files_start_time,
 #                                      input_files_end_time)
-        MRAnalysis.hashtag_dist_by_accuracy(input_files_start_time,
-                                            input_files_end_time)
+#        MRAnalysis.hashtag_dist_by_accuracy(input_files_start_time,
+#                                            input_files_end_time)
 #        MRAnalysis.hashtags_by_utm_id(input_files_start_time,
 #                                      input_files_end_time)
-#        MRAnalysis.hashtags_with_utm_id_object(input_files_start_time,
-#                                               input_files_end_time)
+        MRAnalysis.hashtags_with_utm_id_object(input_files_start_time,
+                                               input_files_end_time)
     
 class GeneralAnalysis(object):
     @staticmethod
@@ -124,10 +124,17 @@ class GeneralAnalysis(object):
                                                     remove_params_dict=True)]
     @staticmethod
     def test_r():
-        od = rlc.OrdDict([('value', robjects.IntVector((1,2,3))),
-                      ('letter', robjects.StrVector(('x', 'y', 'z')))])
-        dataf = robjects.DataFrame(od)
-        print(dataf.colnames)
+#        od = rlc.OrdDict([('value', robjects.IntVector((1,2,3))),
+#                      ('letter', robjects.StrVector(('x', 'y', 'z')))])
+#        dataf = robjects.DataFrame(od)
+#        print(dataf.colnames)
+        plot = robjects.r.plot
+        rnorm = robjects.r.rnorm
+        x = robjects.IntVector(range(10))
+        y = x.ro + rnorm(10)
+        print x.r_repr()
+#        plot(rnorm(100))
+#        print rnorm(100)
         
     @staticmethod
     def run():
@@ -135,6 +142,6 @@ class GeneralAnalysis(object):
         GeneralAnalysis.test_r()
 
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    GeneralAnalysis.run()
+    MRAnalysis.run()
+#    GeneralAnalysis.run()
     
