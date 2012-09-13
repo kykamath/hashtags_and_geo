@@ -81,11 +81,10 @@ class MRAnalysis(object):
     def hashtags_by_utm_id(input_files_start_time, input_files_end_time):
         mr_class = HashtagsByUTMId
         output_file = f_hashtags_by_utm_id
-        runMRJob(mr_class,
-                 output_file,
-                 getInputFiles(input_files_start_time, input_files_end_time),
-                 jobconf={'mapred.reduce.tasks':500})
-        FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
+        MRAnalysis.run_job(mr_class,
+                           output_file,
+                           input_files_start_time,
+                           input_files_end_time)
     @staticmethod
     def hashtags_with_utm_id_object(input_files_start_time,
                                     input_files_end_time):
