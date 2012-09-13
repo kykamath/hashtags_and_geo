@@ -351,5 +351,5 @@ if __name__ == '__main__':
 #    TweetStats.run()
 #    HashtagsExtractor.run()
 #    HashtagsDistributionInUTM.run()
-#    HashtagsByUTMId.run()
-    HastagsWithUTMIdObject.run()
+    HashtagsByUTMId.run()
+#    HastagsWithUTMIdObject.run()

@@ -106,10 +106,10 @@ class MRAnalysis(object):
 #                                      input_files_end_time)
 #        MRAnalysis.hashtag_dist_by_accuracy(input_files_start_time,
 #                                            input_files_end_time)
-#        MRAnalysis.hashtags_by_utm_id(input_files_start_time,
-#                                      input_files_end_time)
-        MRAnalysis.hashtags_with_utm_id_object(input_files_start_time,
-                                               input_files_end_time)
+        MRAnalysis.hashtags_by_utm_id(input_files_start_time,
+                                      input_files_end_time)
+#        MRAnalysis.hashtags_with_utm_id_object(input_files_start_time,
+#                                               input_files_end_time)
     
 class GeneralAnalysis(object):
     @staticmethod
@@ -121,23 +121,48 @@ class GeneralAnalysis(object):
                                                     f_hashtags_by_utm_id,
                                                     remove_params_dict=True)]
     @staticmethod
+    def blah_analysis():
+        so_utm_ids, hashtag_with_utm_objects = set(), []
+        for hashtag_with_utm_object in \
+                FileIO.iterateJsonFromFile(f_hashtags_with_utm_id_object,
+                                           True):
+            for utm_id, hashtag_occurrences \
+                    in hashtag_with_utm_object\
+                        ['mf_utm_id_to_hashtag_occurrences'].iteritems():
+                if utm_id!='total_num_of_occurrences': so_utm_ids.add(utm_id)
+            hashtag_with_utm_objects.append(hashtag_with_utm_object)
+        utm_ids, hashtag_vectors = sorted(list(so_utm_ids)), []
+        print len(utm_ids)
+        for hashtag_with_utm_object in hashtag_with_utm_objects:
+            hashtag_vector = \
+                map(lambda utm_id: 
+                        hashtag_with_utm_object\
+                         ['mf_utm_id_to_hashtag_occurrences'].get(utm_id, 0.0),
+                    utm_ids
+                    )
+            print len(hashtag_vector)
+#            print hashtag_with_utm_object['hashtag'], sum(hashtag_vector), \
+#                    hashtag_with_utm_object['mf_utm_id_to_hashtag_occurrences']\
+#                        ['total_num_of_occurrences']
+    @staticmethod
     def test_r():
-#        od = rlc.OrdDict([('value', robjects.IntVector((1,2,3))),
-#                      ('letter', robjects.StrVector(('x', 'y', 'z')))])
-#        dataf = robjects.DataFrame(od)
-#        print(dataf.colnames)
+        od = rlc.OrdDict([('value', robjects.IntVector((1,2,3))),
+                      ('letter', robjects.StrVector(('x', 'y', 'z')))])
+        dataf = robjects.DataFrame(od)
+        print(dataf.colnames)
         plot = robjects.r.plot
         rnorm = robjects.r.rnorm
-        x = robjects.IntVector(range(10))
-        y = x.ro + rnorm(10)
-        print x.r_repr()
-#        plot(rnorm(100))
-#        print rnorm(100)
+#        x = robjects.IntVector(range(10))
+#        y = x.ro + rnorm(10)
+#        print x.r_repr()
+        plot(rnorm(100))
+##        print rnorm(100)
         
     @staticmethod
     def run():
 #        GeneralAnalysis.print_dense_utm_ids()
-        GeneralAnalysis.test_r()
+#        GeneralAnalysis.test_r()
+        GeneralAnalysis.blah_analysis()
 
 if __name__ == '__main__':
     MRAnalysis.run()
