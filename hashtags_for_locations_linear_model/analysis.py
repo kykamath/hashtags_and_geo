@@ -97,10 +97,10 @@ class MRAnalysis(object):
     
     @staticmethod
     def run():
-        input_files_start_time, input_files_end_time = \
-                        datetime(2011, 2, 1), datetime(2011, 4, 30)
 #        input_files_start_time, input_files_end_time = \
-#                                datetime(2011, 2, 1), datetime(2012, 8, 31)
+#                        datetime(2011, 2, 1), datetime(2011, 4, 30)
+        input_files_start_time, input_files_end_time = \
+                                datetime(2011, 2, 1), datetime(2012, 8, 31)
 #        MRAnalysis.tweet_stats(input_files_start_time, input_files_end_time)
 #        MRAnalysis.hashtags_extractor(input_files_start_time,
 #                                      input_files_end_time)
@@ -122,28 +122,25 @@ class GeneralAnalysis(object):
                                                     remove_params_dict=True)]
     @staticmethod
     def blah_analysis():
-        so_utm_ids, hashtag_with_utm_objects = set(), []
-        for hashtag_with_utm_object in \
-                FileIO.iterateJsonFromFile(f_hashtags_with_utm_id_object,
-                                           True):
-            for utm_id, hashtag_occurrences \
-                    in hashtag_with_utm_object\
-                        ['mf_utm_id_to_hashtag_occurrences'].iteritems():
-                if utm_id!='total_num_of_occurrences': so_utm_ids.add(utm_id)
-            hashtag_with_utm_objects.append(hashtag_with_utm_object)
-        utm_ids, hashtag_vectors = sorted(list(so_utm_ids)), []
-        print len(utm_ids)
-        for hashtag_with_utm_object in hashtag_with_utm_objects:
-            hashtag_vector = \
-                map(lambda utm_id: 
-                        hashtag_with_utm_object\
-                         ['mf_utm_id_to_hashtag_occurrences'].get(utm_id, 0.0),
-                    utm_ids
+        so_hashtags = set()
+        for utm_object in \
+                FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True):
+            for hashtag, count \
+                    in utm_object['mf_hashtag_to_count'].iteritems():
+                if hashtag!='total_num_of_occurrences': so_hashtags.add(hashtag)
+        hashtags, utm_id_vectors = sorted(list(so_hashtags)), []
+        for utm_object in \
+                FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True):
+            print len(hashtags)
+            utm_id_vector = \
+                map(lambda hashtag: 
+                        utm_object['mf_hashtag_to_count'].get(hashtag, 0.0),
+                    hashtags
                     )
-            print len(hashtag_vector)
-#            print hashtag_with_utm_object['hashtag'], sum(hashtag_vector), \
-#                    hashtag_with_utm_object['mf_utm_id_to_hashtag_occurrences']\
-#                        ['total_num_of_occurrences']
+            print len(utm_id_vector)
+            print utm_object['utm_id'], sum(utm_id_vector), \
+                    utm_object['mf_hashtag_to_count']\
+                        ['total_hashtag_count']
     @staticmethod
     def test_r():
         od = rlc.OrdDict([('value', robjects.IntVector((1,2,3))),
