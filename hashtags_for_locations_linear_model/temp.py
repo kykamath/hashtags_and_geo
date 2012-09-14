@@ -14,8 +14,12 @@ print state
 
 g = R.lm('Life.Exp ~ Population + Income + Illiteracy + Murder + HS.Grad + Frost + Area', data=state)
 summary = R.summary(g)
-
 print summary.rx2('coefficients')
+
+g = R.lm('Life.Exp ~ Population + Income + Illiteracy + Murder + HS.Grad + Frost', data=state)
+summary = R.summary(g)
+print summary.rx2('coefficients')
+
 
 #stats = importr('stats')
 #base = importr('base')
