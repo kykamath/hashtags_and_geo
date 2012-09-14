@@ -7,6 +7,7 @@ from dateutil.relativedelta import relativedelta
 from library.file_io import FileIO
 from library.mrjobwrapper import runMRJob
 from library.mrjobwrapper import runMRJobAndYieldResult
+from library.r_helper import R_Helper
 from datetime import datetime
 from mr_analysis import HashtagsByUTMId
 from mr_analysis import HashtagsDistributionInUTM
@@ -143,28 +144,44 @@ class GeneralAnalysis(object):
 #        print df.rx(robjects.IntVector(range(1,100)), 'x')
     @staticmethod
     def blah_analysis():
-        so_hashtags = set()
-        for utm_object in \
-                FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True):
-            for hashtag, count \
-                    in utm_object['mf_hashtag_to_count'].iteritems():
-                if hashtag!='total_num_of_occurrences': so_hashtags.add(hashtag)
-        hashtags, ltuo_utm_id_and_vector = sorted(list(so_hashtags)), []
-        print len(hashtags)
-        for i, utm_object in \
-                enumerate(FileIO.iterateJsonFromFile(f_hashtags_by_utm_id,
-                                                     True)):
-            print i, utm_object['utm_id']
-            utm_id_vector = \
-                map(lambda hashtag: 
-                        utm_object['mf_hashtag_to_count'].get(hashtag, 0.0),
-                    hashtags
-                    )
-            ltuo_utm_id_and_vector.append((utm_object['utm_id'], 
-                                           robjects.FloatVector(utm_id_vector)))
-        od = rlc.OrdDict(sorted(ltuo_utm_id_and_vector, key=itemgetter(0)))
-        df_utm_vectors = robjects.DataFrame(od)
-        print df_utm_vectors.rx(1,1)
+        def get_utm_vectors():
+            so_hashtags = set()
+            for utm_object in \
+                    FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True):
+                for hashtag, count \
+                        in utm_object['mf_hashtag_to_count'].iteritems():
+                    if hashtag!='total_num_of_occurrences': so_hashtags.add(hashtag)
+            hashtags, ltuo_utm_id_and_vector = sorted(list(so_hashtags)), []
+            print len(hashtags)
+            for i, utm_object in \
+                    enumerate(FileIO.iterateJsonFromFile(f_hashtags_by_utm_id,
+                                                         True)):
+                print i, utm_object['utm_id']
+                utm_id_vector = \
+                    map(lambda hashtag: 
+                            utm_object['mf_hashtag_to_count'].get(hashtag, 0.0),
+                        hashtags
+                        )
+                ltuo_utm_id_and_vector.append((utm_object['utm_id'], 
+                                               robjects.FloatVector(utm_id_vector)))
+            od = rlc.OrdDict(sorted(ltuo_utm_id_and_vector, key=itemgetter(0)))
+            df_utm_vectors = robjects.DataFrame(od)
+            return df_utm_vectors
+        df_utm_vectors = get_utm_vectors()
+        utm_ids = df_utm_vectors.colnames
+        for utm_id in utm_ids:
+            prediction_variable = utm_id
+            predictor_variables = list(df_utm_vectors.colnames)
+            print len(utm_ids), len(predictor_variables)
+            predictor_variables.remove(utm_id)
+            print len(utm_ids), len(predictor_variables)
+            print R_Helper.variable_selection_using_backward_elimination(
+                                                       df_utm_vectors,
+                                                       prediction_variable,
+                                                       predictor_variables,
+                                                       debug=True
+                                                    )
+            exit()
 #        print len(utm_id_vector)
 #            print utm_object['utm_id'], sum(utm_id_vector), \
 #                    utm_object['total_hashtag_count']
@@ -186,8 +203,8 @@ class GeneralAnalysis(object):
     def run():
 #        GeneralAnalysis.print_dense_utm_ids()
 #        GeneralAnalysis.test_r()
-#        GeneralAnalysis.blah_analysis()
-        GeneralAnalysis.determine_influential_variables()
+        GeneralAnalysis.blah_analysis()
+#        GeneralAnalysis.determine_influential_variables()
 
 if __name__ == '__main__':
 #    MRAnalysis.run()

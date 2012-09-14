@@ -25,6 +25,10 @@ MIN_HASHTAG_OCCURRENCES = 250
 # Used by HashtagsByUTMId
 MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = 500
 
+# Generate utm object with neigbor information
+UTM_OBJECT_WITH_NEIGHBOR_INFO = True
+UTM_OBJECT_WITH_MIN_COMMON_HASHTAGS= 5
+
 # Start time for data analysis
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
 
@@ -225,7 +229,9 @@ class HashtagsByUTMId(ModifiedMRJob):
     '''
         utm_object = {'utm_id': utm_id
                       'mf_hashtag_to_count': mf_hashtag_to_count,
-                      'total_hashtag_count': total_hashtag_count
+                      'total_hashtag_count': total_hashtag_count,
+                      'mf_nei_utm_id_to_common_h_count':
+                                                mf_nei_utm_id_to_common_h_count
                     }
     '''
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -234,26 +240,46 @@ class HashtagsByUTMId(ModifiedMRJob):
         self.mf_utm_id_to_mf_hashtag_to_count = defaultdict(dict)
         self.mf_utm_id_to_total_hashtag_count = defaultdict(int)
         self.hashtags_extractor = HashtagsExtractor()
+        self.mf_utm_id_to_mf_nei_utm_id_and_common_h_count = defaultdict(dict)
     def map_hashtag_object_to_utm_object(self, hashtag, hashtag_object):
         if False: yield # I'm a generator!
+        so_utm_ids = set()
         for occ_time, occ_utm_id in \
                  hashtag_object['ltuo_occ_time_and_occ_utm_id']:
             if hashtag not in self.mf_utm_id_to_mf_hashtag_to_count[occ_utm_id]:
                 self.mf_utm_id_to_mf_hashtag_to_count[occ_utm_id][hashtag] = 0.0
             self.mf_utm_id_to_mf_hashtag_to_count[occ_utm_id][hashtag]+=1
             self.mf_utm_id_to_total_hashtag_count[occ_utm_id]+=1
+            so_utm_ids.add(occ_utm_id)
+        if UTM_OBJECT_WITH_NEIGHBOR_INFO:
+            for utm_id in so_utm_ids:
+                for nei_utm_id in so_utm_ids:
+                    if utm_id!=nei_utm_id:
+                        if nei_utm_id not in \
+                            self.mf_utm_id_to_mf_nei_utm_id_and_common_h_count\
+                                            [utm_id]:
+                            self.mf_utm_id_to_mf_nei_utm_id_and_common_h_count\
+                                            [utm_id][nei_utm_id]=0.0
+                        self.mf_utm_id_to_mf_nei_utm_id_and_common_h_count\
+                                            [utm_id][nei_utm_id]+=1.0
     def map_final_hashtag_object_to_utm_object(self):
         for utm_id, mf_hashtag_to_count in \
                 self.mf_utm_id_to_mf_hashtag_to_count.iteritems():
-            yield utm_id, {
+            utm_object = {
                            'mf_hashtag_to_count': mf_hashtag_to_count,
                            'total_hashtag_count': 
                                 self.mf_utm_id_to_total_hashtag_count[utm_id]
                         }
+            if UTM_OBJECT_WITH_NEIGHBOR_INFO:
+                utm_object['mf_nei_utm_id_to_common_h_count'] =\
+                    self.mf_utm_id_to_mf_nei_utm_id_and_common_h_count[utm_id]
+            yield utm_id, utm_object
     def _get_valid_combined_utm_object(self, utm_id, utm_objects):
         combined_utm_object = {'utm_id': utm_id,
                                'mf_hashtag_to_count': defaultdict(float),
-                               'total_hashtag_count' : 0.0
+                               'total_hashtag_count' : 0.0,
+                               'mf_nei_utm_id_to_common_h_count' : \
+                                                            defaultdict(float)
                                }
         for utm_object in utm_objects:
             if utm_object['mf_hashtag_to_count']:
@@ -263,6 +289,18 @@ class HashtagsByUTMId(ModifiedMRJob):
             if utm_object['total_hashtag_count']:
                 combined_utm_object['total_hashtag_count']+=\
                                         utm_object['total_hashtag_count']
+            if UTM_OBJECT_WITH_NEIGHBOR_INFO:
+                for nei_utm_id, common_h_count in \
+                        utm_object['mf_nei_utm_id_to_common_h_count'].\
+                                                                    iteritems():
+                    combined_utm_object\
+                        ['mf_nei_utm_id_to_common_h_count'][nei_utm_id]\
+                                                                +=common_h_count
+        if UTM_OBJECT_WITH_NEIGHBOR_INFO:
+            for nei_utm_id in combined_utm_object['mf_nei_utm_id_to_common_h_count'].keys()[:]:
+                if combined_utm_object['mf_nei_utm_id_to_common_h_count'][nei_utm_id] < UTM_OBJECT_WITH_MIN_COMMON_HASHTAGS:
+                    del combined_utm_object['mf_nei_utm_id_to_common_h_count'][nei_utm_id] 
+        else: del combined_utm_object['mf_nei_utm_id_to_common_h_count']
         if combined_utm_object['total_hashtag_count'] >= \
                 MIN_HASHTAG_OCCURRENCES_PER_UTM_ID:
             return combined_utm_object

@@ -4,29 +4,31 @@ import rpy2.rlike.container as rlc
 import rpy2.robjects as robjects
 import time
 
+from library.r_helper import R_Helper
 
 from library.file_io import FileIO
 R = robjects.r
 
-state = robjects.DataFrame.from_csvfile('/Users/kykamath/temp/state.df')
+state = robjects.DataFrame.from_csvfile('/Users/krishnakamath/Documents/workspace_sept_12/library/library/data/state.df')
 #print state
 #state_t = robjects.DataFrame(R.t(state))
+prediction_variable = 'Life.Exp'
+predictor_variables = ['Population', 'Income', 'Illiteracy',
+                       'Murder', 'HS.Grad', 'Frost', 'Area']
+print R_Helper.variable_selection_using_backward_elimination(
+                                                           state,
+                                                           prediction_variable,
+                                                           predictor_variables,
+                                                           p_to_remove=0.20,
+                                                           debug=True
+                                                        )
 
-g = R.lm('Life.Exp ~ Population + Income + Illiteracy + Murder + HS.Grad + Frost + Area', data=state)
-summary = R.summary(g)
-print summary.rx2('coefficients')
 
-g = R.lm('Life.Exp ~ Population + Income + Illiteracy + Murder + HS.Grad + Frost', data=state)
-summary = R.summary(g)
-print summary.rx2('coefficients')
+#gfit = R.lm('Species ~ Area + Elevation + Nearest + Scruz + Adjacent', gala)
+#val = R.summary(gfit)
+##print val
+#print val.colnames
 
-g = R.lm('Life.Exp ~ Population + Income + Murder + HS.Grad + Frost', data=state)
-summary = R.summary(g)
-print summary.rx2('coefficients')
-
-g = R.lm('Life.Exp ~ Population + Murder + HS.Grad + Frost', data=state)
-summary = R.summary(g)
-print summary.rx2('coefficients')
 
 #stats = importr('stats')
 #base = importr('base')
