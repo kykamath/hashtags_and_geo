@@ -9,7 +9,7 @@ from library.file_io import FileIO
 R = robjects.r
 
 state = robjects.DataFrame.from_csvfile('/Users/kykamath/temp/state.df')
-print state
+#print state
 #state_t = robjects.DataFrame(R.t(state))
 
 g = R.lm('Life.Exp ~ Population + Income + Illiteracy + Murder + HS.Grad + Frost + Area', data=state)
@@ -20,6 +20,13 @@ g = R.lm('Life.Exp ~ Population + Income + Illiteracy + Murder + HS.Grad + Frost
 summary = R.summary(g)
 print summary.rx2('coefficients')
 
+g = R.lm('Life.Exp ~ Population + Income + Murder + HS.Grad + Frost', data=state)
+summary = R.summary(g)
+print summary.rx2('coefficients')
+
+g = R.lm('Life.Exp ~ Population + Murder + HS.Grad + Frost', data=state)
+summary = R.summary(g)
+print summary.rx2('coefficients')
 
 #stats = importr('stats')
 #base = importr('base')
