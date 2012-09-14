@@ -6,23 +6,29 @@ import time
 
 
 from library.file_io import FileIO
+R = robjects.r
+
+R.install.packages('')
+
+print R.version
 
 #stats = importr('stats')
 #base = importr('base')
 faraway = importr('faraway')
 
 #pima = faraway.pima
-R = robjects.r
-gala = faraway.gala
+state = faraway.state
+
+print state
 
 #robjects.globalenv["df"] = df
 
 #gfit = R.lm('Species ~ Area + Elevation + Nearest + Scruz + Adjacent', gala)
 
-gfit = R.lm('Species ~ Area + Elevation + Nearest + Scruz + Adjacent', gala)
-val = R.summary(gfit)
-#print val
-print val.colnames
+#gfit = R.lm('Species ~ Area + Elevation + Nearest + Scruz + Adjacent', gala)
+#val = R.summary(gfit)
+##print val
+#print val.colnames
 
 #grdevices = importr('grDevices')
 #
