@@ -8,9 +8,6 @@ import time
 from library.file_io import FileIO
 R = robjects.r
 
-R.install.packages('')
-
-print R.version
 
 #stats = importr('stats')
 #base = importr('base')
