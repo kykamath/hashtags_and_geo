@@ -207,6 +207,6 @@ class GeneralAnalysis(object):
 #        GeneralAnalysis.determine_influential_variables()
 
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    GeneralAnalysis.run()
+    MRAnalysis.run()
+#    GeneralAnalysis.run()
     
