@@ -8,15 +8,26 @@ import time
 from library.file_io import FileIO
 R = robjects.r
 
+state = robjects.DataFrame.from_csvfile('/Users/kykamath/temp/state.df')
+print state
+#state_t = robjects.DataFrame(R.t(state))
+
+g = R.lm('Life.Exp ~ Population + Income + Illiteracy + Murder + HS.Grad + Frost + Area', data=state)
+summary = R.summary(g)
+
+print summary.rx2('coefficients')
 
 #stats = importr('stats')
 #base = importr('base')
-faraway = importr('faraway')
+#faraway = importr('faraway')
+
+
+#statedata <- data.frame(state.x77,row.names=state.abb,check.names=T)
 
 #pima = faraway.pima
-state = faraway.state
+#state = faraway.state
 
-print state
+#print state
 
 #robjects.globalenv["df"] = df
 
