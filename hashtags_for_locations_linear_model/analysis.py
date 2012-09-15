@@ -138,6 +138,7 @@ class GeneralAnalysis(object):
                           ('num_of_neighbors', robjects.FloatVector(num_of_neighbors))
                         ])
         df = robjects.DataFrame(od)
+        FileIO.createDirectoryForFile(output_file)
         print 'Saving df to: ', output_file
         df.to_csvfile(output_file)
     @staticmethod
