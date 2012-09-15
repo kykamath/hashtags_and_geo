@@ -171,7 +171,7 @@ class GeneralAnalysis(object):
 ##        robjects.r['dev.off']()
 ##        print df.rx(robjects.IntVector(range(1,100)), 'x')
     @staticmethod
-    def blah_analysis():
+    def significant_nei_utm_ids():
         mf_utm_id_to_valid_nei_utm_ids = {}
         def get_utm_vectors():
             so_hashtags = set()
@@ -192,9 +192,8 @@ class GeneralAnalysis(object):
             od = rlc.OrdDict(sorted(ltuo_utm_id_and_vector, key=itemgetter(0)))
             df_utm_vectors = robjects.DataFrame(od)
             return df_utm_vectors
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()
         df_utm_vectors = get_utm_vectors()
-        print df_utm_vectors.nrow
-        exit()
         utm_colnames = df_utm_vectors.colnames
         mf_utm_id_to_utm_colnames = dict(zip(sorted(mf_utm_id_to_valid_nei_utm_ids), utm_colnames))
         mf_utm_colnames_to_utm_id = dict(zip(utm_colnames, sorted(mf_utm_id_to_valid_nei_utm_ids)))
@@ -213,13 +212,11 @@ class GeneralAnalysis(object):
                                                                                                predictor_variables,
                                                                                                debug=True
                                                                                             )
-            selected_utm_ids = [mf_utm_colnames_to_utm_id[selected_utm_colname]
+            nei_utm_ids = [mf_utm_colnames_to_utm_id[selected_utm_colname]
                                 for selected_utm_colname in selected_utm_colnames]
-            print selected_utm_ids
-            exit()
-#        print len(utm_id_vector)
-#            print utm_object['utm_id'], sum(utm_id_vector), \
-#                    utm_object['total_hashtag_count']
+            print 'Writing to: ', output_file
+            FileIO.writeToFileAsJson({'utm_id': utm_id, 'nei_utm_ids': nei_utm_ids}, output_file)
+            
     @staticmethod
     def test_r():
         od = rlc.OrdDict([('value', robjects.IntVector((1,2,3))),
@@ -238,11 +235,11 @@ class GeneralAnalysis(object):
     def run():
 #        GeneralAnalysis.print_dense_utm_ids()
 #        GeneralAnalysis.test_r()
-        GeneralAnalysis.blah_analysis()
+        GeneralAnalysis.significant_nei_utm_ids()
 #        GeneralAnalysis.determine_influential_variables()
 #        GeneralAnalysis.utm_object_analysis()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    GeneralAnalysis.run()
+#    MRAnalysis.run()
+    GeneralAnalysis.run()
     
