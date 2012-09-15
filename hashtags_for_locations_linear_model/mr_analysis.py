@@ -41,8 +41,8 @@ PARAMS_DICT = dict(PARAMS_DICT = True,
                    MIN_HASHTAG_OCCURRENCES_PER_UTM_ID,
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW,
                    HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
-                   UTM_OBJECT_WITH_NEIGHBOR_INFO = True,
-                   UTM_OBJECT_WITH_MIN_COMMON_HASHTAGS= 5,)
+                   UTM_OBJECT_WITH_NEIGHBOR_INFO = UTM_OBJECT_WITH_NEIGHBOR_INFO,
+                   UTM_OBJECT_WITH_MIN_COMMON_HASHTAGS= UTM_OBJECT_WITH_MIN_COMMON_HASHTAGS)
 
 def iterateHashtagObjectInstances(line):
     data = cjson.decode(line)
