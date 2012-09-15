@@ -27,7 +27,7 @@ MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = 500
 
 # Generate utm object with neigbor information
 UTM_OBJECT_WITH_NEIGHBOR_INFO = True
-UTM_OBJECT_WITH_MIN_COMMON_HASHTAGS= 25
+UTM_OBJECT_WITH_MIN_COMMON_HASHTAGS= 50
 
 # Start time for data analysis
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
