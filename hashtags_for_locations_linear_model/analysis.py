@@ -4,6 +4,7 @@ Created on Sept 9, 2012
 @author: kykamath
 '''
 from dateutil.relativedelta import relativedelta
+from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.mrjobwrapper import runMRJob
 from library.mrjobwrapper import runMRJobAndYieldResult
@@ -22,6 +23,7 @@ from settings import f_hashtag_dist_by_accuracy
 from settings import f_hashtags_extractor
 from settings import f_hashtags_with_utm_id_object
 from settings import f_tweet_stats
+from settings import fld_google_drive_data_analysis
 from settings import hdfs_input_folder
 import rpy2.rlike.container as rlc
 import rpy2.robjects as robjects
@@ -125,8 +127,17 @@ class GeneralAnalysis(object):
                                                     remove_params_dict=True)]
     @staticmethod
     def utm_object_analysis():
+        ltuo_utm_id_and_num_of_neighbors = []
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        print output_file
+        exit()
         for utm_object in FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True):
-            print utm_object.keys()
+            ltuo_utm_id_and_num_of_neighbors.append([utm_object['utm_id'],
+                                                     len(utm_object['mf_nei_utm_id_to_common_h_count'])])
+        utm_ids, num_of_neighbors = zip(*ltuo_utm_id_and_num_of_neighbors)
+        od = rlc.OrdDict([('utm_ids', utm_ids), ('num_of_neighbors', num_of_neighbors)])
+        df = robjects.DataFrame(od)
+        df.to_csvfile('')
     @staticmethod
     def determine_influential_variables():
         x = robjects.FloatVector([random.random() for i in range(10)])
