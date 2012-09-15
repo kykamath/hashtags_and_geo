@@ -13,7 +13,7 @@ import cjson
 import time
 
 
-ACCURACY = 10**4 # UTM boxes in sq.m
+ACCURACY = 10**5 # UTM boxes in sq.m
 
 ACCURACIES = [10**3, 10**4, 10**5]
 
