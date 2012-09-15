@@ -25,6 +25,7 @@ from settings import f_hashtags_with_utm_id_object
 from settings import f_tweet_stats
 from settings import fld_google_drive_data_analysis
 from settings import hdfs_input_folder
+import numpy as np
 import rpy2.rlike.container as rlc
 import rpy2.robjects as robjects
 import random
@@ -134,7 +135,7 @@ class GeneralAnalysis(object):
             so_valid_utm_ids.add(utm_object['utm_id'])
         for utm_object in FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True):
             so_valid_nei_utm_ids = set(utm_object['mf_nei_utm_id_to_common_h_count']).intersection(so_valid_utm_ids)
-            mean_num_of_common_h_count = mean([utm_object['mf_nei_utm_id_to_common_h_count'][nei_utm_id] 
+            mean_num_of_common_h_count = np.mean([utm_object['mf_nei_utm_id_to_common_h_count'][nei_utm_id] 
                                                for nei_utm_id in so_valid_nei_utm_ids])
             ltuo_utm_id_and_num_of_neighbors_and_mean_common_h_count.append([utm_object['utm_id'], 
                                                                              len(so_valid_nei_utm_ids),
