@@ -198,7 +198,6 @@ class GeneralAnalysis(object):
         mf_utm_id_to_utm_colnames = dict(zip(sorted(mf_utm_id_to_valid_nei_utm_ids), utm_colnames))
         mf_utm_colnames_to_utm_id = dict(zip(utm_colnames, sorted(mf_utm_id_to_valid_nei_utm_ids)))
         for i, utm_colname in enumerate(utm_colnames):
-            if i<15: continue
             utm_id = mf_utm_colnames_to_utm_id[utm_colname]
             prediction_variable = utm_colname
             print i, utm_id
