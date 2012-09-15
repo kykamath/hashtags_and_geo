@@ -129,9 +129,12 @@ class GeneralAnalysis(object):
     def utm_object_analysis():
         ltuo_utm_id_and_num_of_neighbors = []
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.df'
+        so_valid_utm_ids = set()
+        for utm_object in FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True): 
+            so_valid_utm_ids.add(utm_object['utm_id'])
         for utm_object in FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True):
-            ltuo_utm_id_and_num_of_neighbors.append([utm_object['utm_id'],
-                                                     len(utm_object['mf_nei_utm_id_to_common_h_count'])])
+            so_valid_nei_utm_ids = set(utm_object['mf_nei_utm_id_to_common_h_count']).intersection(so_valid_utm_ids)
+            ltuo_utm_id_and_num_of_neighbors.append([utm_object['utm_id'], len(so_valid_nei_utm_ids)])
         utm_ids, num_of_neighbors = zip(*ltuo_utm_id_and_num_of_neighbors)
         od = rlc.OrdDict([
                           ('utm_ids', robjects.StrVector(utm_ids)),
