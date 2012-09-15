@@ -127,18 +127,23 @@ class GeneralAnalysis(object):
                                                     remove_params_dict=True)]
     @staticmethod
     def utm_object_analysis():
-        ltuo_utm_id_and_num_of_neighbors = []
+        ltuo_utm_id_and_num_of_neighbors_and_mean_common_h_count = []
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.df'
         so_valid_utm_ids = set()
         for utm_object in FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True): 
             so_valid_utm_ids.add(utm_object['utm_id'])
         for utm_object in FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True):
             so_valid_nei_utm_ids = set(utm_object['mf_nei_utm_id_to_common_h_count']).intersection(so_valid_utm_ids)
-            ltuo_utm_id_and_num_of_neighbors.append([utm_object['utm_id'], len(so_valid_nei_utm_ids)])
-        utm_ids, num_of_neighbors = zip(*ltuo_utm_id_and_num_of_neighbors)
+            mean_num_of_common_h_count = mean([utm_object['mf_nei_utm_id_to_common_h_count'][nei_utm_id] 
+                                               for nei_utm_id in so_valid_nei_utm_ids])
+            ltuo_utm_id_and_num_of_neighbors_and_mean_common_h_count.append([utm_object['utm_id'], 
+                                                                             len(so_valid_nei_utm_ids),
+                                                                             mean_num_of_common_h_count])
+        utm_ids, num_of_neighbors, mean_common_h_count = zip(*ltuo_utm_id_and_num_of_neighbors_and_mean_common_h_count)
         od = rlc.OrdDict([
                           ('utm_ids', robjects.StrVector(utm_ids)),
-                          ('num_of_neighbors', robjects.FloatVector(num_of_neighbors))
+                          ('num_of_neighbors', robjects.FloatVector(num_of_neighbors)),
+                          ('mean_common_h_count', robjects.FloatVector(mean_common_h_count))
                         ])
         df = robjects.DataFrame(od)
         FileIO.createDirectoryForFile(output_file)

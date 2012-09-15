@@ -19,7 +19,7 @@ ACCURACIES = [10**3, 10**4, 10**5]
 
 # Minimum number of hashtag occurrences
 # Used by HashtagsExtractor
-MIN_HASHTAG_OCCURRENCES = 250
+MIN_HASHTAG_OCCURRENCES = 750
 
 # Minimum number of hashtag occurrences at a particular utm id.
 # Used by HashtagsByUTMId
