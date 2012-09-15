@@ -128,16 +128,16 @@ class GeneralAnalysis(object):
     @staticmethod
     def utm_object_analysis():
         ltuo_utm_id_and_num_of_neighbors = []
-        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.df'
         print output_file
-        exit()
         for utm_object in FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True):
             ltuo_utm_id_and_num_of_neighbors.append([utm_object['utm_id'],
                                                      len(utm_object['mf_nei_utm_id_to_common_h_count'])])
         utm_ids, num_of_neighbors = zip(*ltuo_utm_id_and_num_of_neighbors)
         od = rlc.OrdDict([('utm_ids', utm_ids), ('num_of_neighbors', num_of_neighbors)])
         df = robjects.DataFrame(od)
-        df.to_csvfile('')
+        print 'Saving df to: ', output_file
+        df.to_csvfile(output_file)
     @staticmethod
     def determine_influential_variables():
         x = robjects.FloatVector([random.random() for i in range(10)])
