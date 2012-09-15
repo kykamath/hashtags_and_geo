@@ -36,6 +36,7 @@ START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
 HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
 PARAMS_DICT = dict(PARAMS_DICT = True,
+                   ACCURACY = ACCURACY,
                    MIN_HASHTAG_OCCURRENCES = MIN_HASHTAG_OCCURRENCES,
                    MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = \
                    MIN_HASHTAG_OCCURRENCES_PER_UTM_ID,
