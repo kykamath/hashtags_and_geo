@@ -124,6 +124,10 @@ class GeneralAnalysis(object):
                                                     f_hashtags_by_utm_id,
                                                     remove_params_dict=True)]
     @staticmethod
+    def utm_object_analysis():
+        for utm_object in FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True):
+            print utm_object.keys()
+    @staticmethod
     def determine_influential_variables():
         x = robjects.FloatVector([random.random() for i in range(10)])
         y = robjects.FloatVector([random.random() for i in range(10)])
@@ -203,10 +207,11 @@ class GeneralAnalysis(object):
     def run():
 #        GeneralAnalysis.print_dense_utm_ids()
 #        GeneralAnalysis.test_r()
-        GeneralAnalysis.blah_analysis()
+#        GeneralAnalysis.blah_analysis()
 #        GeneralAnalysis.determine_influential_variables()
-
+        GeneralAnalysis.utm_object_analysis()
+        
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    GeneralAnalysis.run()
+#    MRAnalysis.run()
+    GeneralAnalysis.run()
     
