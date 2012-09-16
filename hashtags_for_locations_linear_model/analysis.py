@@ -219,10 +219,7 @@ class GeneralAnalysis(object):
             FileIO.writeToFileAsJson({'utm_id': utm_id, 'nei_utm_ids': nei_utm_ids}, output_file)
     @staticmethod
     def generate_data_for_significant_nei_utm_ids():
-#        def get_utm_vectors():
         output_file = GeneralMethods.get_method_id()+'.json'
-        print output_file
-        exit()
         so_hashtags, mf_utm_id_to_valid_nei_utm_ids = set(), {}
         for utm_object in \
                 FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True):
@@ -237,7 +234,8 @@ class GeneralAnalysis(object):
             utm_id_vector =  map(lambda hashtag: utm_object['mf_hashtag_to_count'].get(hashtag, 0.0),
                                  hashtags)
             mf_utm_id_to_vector[utm_object['utm_id']] = robjects.FloatVector(utm_id_vector)
-        for utm_id, vector in mf_utm_id_to_vector.iteritems():
+        for i, (utm_id, vector) in enumerate(mf_utm_id_to_vector.iteritems()):
+            print '%s of %s'%(i+1, len(mf_utm_id_to_vector))
             ltuo_utm_id_and_vector = [(utm_id, vector)]
             for valid_nei_utm_id in mf_utm_id_to_valid_nei_utm_ids[utm_id]:
                 if valid_nei_utm_id in mf_utm_id_to_vector and valid_nei_utm_id!=utm_id:
@@ -245,8 +243,7 @@ class GeneralAnalysis(object):
             od = rlc.OrdDict(sorted(ltuo_utm_id_and_vector, key=itemgetter(0)))
             df_utm_vectors = robjects.DataFrame(od)
             df_utm_vectors_json = R_Helper.get_json_for_data_frame(df_utm_vectors)
-            print cjson.decode(df_utm_vectors_json).keys()
-            exit()
+            FileIO.writeToFile(df_utm_vectors_json, output_file)
 #            return df_utm_vectors
 #        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()
 #        df_utm_vectors = get_utm_vectors()
