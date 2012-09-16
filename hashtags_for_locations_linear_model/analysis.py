@@ -182,7 +182,6 @@ class GeneralAnalysis(object):
                 mf_utm_id_to_valid_nei_utm_ids[utm_object['utm_id']] =\
                                                                 utm_object['mf_nei_utm_id_to_common_h_count'].keys()
             hashtags, ltuo_utm_id_and_vector = sorted(list(so_hashtags)), []
-#            print len(hashtags)
             for i, utm_object in enumerate(FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True)):
 #                print i, utm_object['utm_id']
                 utm_id_vector =  map(lambda hashtag: utm_object['mf_hashtag_to_count'].get(hashtag, 0.0),
@@ -194,6 +193,8 @@ class GeneralAnalysis(object):
             return df_utm_vectors
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()
         df_utm_vectors = get_utm_vectors()
+        print df_utm_vectors.nrow
+        exit()
         utm_colnames = df_utm_vectors.colnames
         mf_utm_id_to_utm_colnames = dict(zip(sorted(mf_utm_id_to_valid_nei_utm_ids), utm_colnames))
         mf_utm_colnames_to_utm_id = dict(zip(utm_colnames, sorted(mf_utm_id_to_valid_nei_utm_ids)))
@@ -234,9 +235,9 @@ class GeneralAnalysis(object):
     def run():
 #        GeneralAnalysis.print_dense_utm_ids()
 #        GeneralAnalysis.test_r()
-#        GeneralAnalysis.significant_nei_utm_ids()
+        GeneralAnalysis.significant_nei_utm_ids()
 #        GeneralAnalysis.determine_influential_variables()
-        GeneralAnalysis.utm_object_analysis()
+#        GeneralAnalysis.utm_object_analysis()
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
