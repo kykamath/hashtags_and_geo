@@ -26,6 +26,7 @@ from settings import f_hashtags_with_utm_id_object
 from settings import f_tweet_stats
 from settings import fld_google_drive_data_analysis
 from settings import hdfs_input_folder
+import cjson
 import numpy as np
 import rpy2.rlike.container as rlc
 import rpy2.robjects as robjects
@@ -241,7 +242,7 @@ class GeneralAnalysis(object):
             od = rlc.OrdDict(sorted(ltuo_utm_id_and_vector, key=itemgetter(0)))
             df_utm_vectors = robjects.DataFrame(od)
             df_utm_vectors_json = R_Helper.get_json_for_data_frame(df_utm_vectors)
-            print df_utm_vectors_json.keys()
+            print cjson.decode(df_utm_vectors_json).keys()
             exit()
 #            return df_utm_vectors
 #        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()
