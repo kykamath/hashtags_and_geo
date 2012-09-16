@@ -220,7 +220,7 @@ class GeneralAnalysis(object):
     @staticmethod
     def generate_data_for_significant_nei_utm_ids():
 #        def get_utm_vectors():
-        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.json'
+        output_file = GeneralMethods.get_method_id()+'.json'
         print output_file
         exit()
         so_hashtags, mf_utm_id_to_valid_nei_utm_ids = set(), {}
