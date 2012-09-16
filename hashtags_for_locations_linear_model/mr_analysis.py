@@ -19,11 +19,11 @@ ACCURACIES = [10**3, 10**4, 10**5]
 
 # Minimum number of hashtag occurrences
 # Used by HashtagsExtractor
-MIN_HASHTAG_OCCURRENCES = 750
+MIN_HASHTAG_OCCURRENCES = 1000
 
 # Minimum number of hashtag occurrences at a particular utm id.
 # Used by HashtagsByUTMId
-MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = 1000
+MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = 1250
 
 # Generate utm object with neigbor information
 UTM_OBJECT_WITH_NEIGHBOR_INFO = True
