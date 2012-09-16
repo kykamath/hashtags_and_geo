@@ -234,11 +234,11 @@ class GeneralAnalysis(object):
     def run():
 #        GeneralAnalysis.print_dense_utm_ids()
 #        GeneralAnalysis.test_r()
-        GeneralAnalysis.significant_nei_utm_ids()
+#        GeneralAnalysis.significant_nei_utm_ids()
 #        GeneralAnalysis.determine_influential_variables()
-#        GeneralAnalysis.utm_object_analysis()
+        GeneralAnalysis.utm_object_analysis()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    GeneralAnalysis.run()
+#    MRAnalysis.run()
+    GeneralAnalysis.run()
     
