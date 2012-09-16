@@ -236,7 +236,7 @@ class GeneralAnalysis(object):
         for utm_id, vector in mf_utm_id_to_vector.iteritems():
             ltuo_utm_id_and_vector = [(utm_id, vector)]
             for valid_nei_utm_id in mf_utm_id_to_valid_nei_utm_ids[utm_id]:
-                if valid_nei_utm_id!=utm_id:
+                if valid_nei_utm_id in mf_utm_id_to_vector and valid_nei_utm_id!=utm_id:
                     ltuo_utm_id_and_vector.append((valid_nei_utm_id, mf_utm_id_to_vector[valid_nei_utm_id]))
             od = rlc.OrdDict(sorted(ltuo_utm_id_and_vector, key=itemgetter(0)))
             df_utm_vectors = robjects.DataFrame(od)
