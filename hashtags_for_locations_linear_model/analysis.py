@@ -3,13 +3,14 @@ Created on Sept 9, 2012
 
 @author: kykamath
 '''
+from collections import defaultdict
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.mrjobwrapper import runMRJob
 from library.mrjobwrapper import runMRJobAndYieldResult
 from library.r_helper import R_Helper
-from datetime import datetime
 from mr_analysis import HashtagsByUTMId
 from mr_analysis import HashtagsDistributionInUTM
 from mr_analysis import HashtagsExtractor
@@ -150,68 +151,71 @@ class GeneralAnalysis(object):
         FileIO.createDirectoryForFile(output_file)
         print 'Saving df to: ', output_file
         df.to_csvfile(output_file)
+#    @staticmethod
+#    def determine_influential_variables():
+#        x = robjects.FloatVector([random.random() for i in range(10)])
+#        y = robjects.FloatVector([random.random() for i in range(10)])
+##        x1 =  y + robjects.r.rnorm(10)
+#        od = rlc.OrdDict([('x', x), ('y', y)])
+#        df = robjects.DataFrame(od)
+#        df.rownames = 'a b c d e f g h i j'.split()
+##        print x.r_repr()
+##        print x.r_repr()
+##        print len(df), df[0]
+##        print df.r_repr()
+#        print df.nrow
+#        print df
+#        
+##        robjects.r.png('file.png')
+##        robjects.r.plot(x,y)
+##        robjects.r['dev.off']()
+##        print df.rx(robjects.IntVector(range(1,100)), 'x')
     @staticmethod
-    def determine_influential_variables():
-        x = robjects.FloatVector([random.random() for i in range(10)])
-        y = robjects.FloatVector([random.random() for i in range(10)])
-#        x1 =  y + robjects.r.rnorm(10)
-        od = rlc.OrdDict([('x', x), ('y', y)])
-        df = robjects.DataFrame(od)
-        df.rownames = 'a b c d e f g h i j'.split()
-#        print x.r_repr()
-#        print x.r_repr()
-#        print len(df), df[0]
-#        print df.r_repr()
-        print df.nrow
-        print df
-        
-#        robjects.r.png('file.png')
-#        robjects.r.plot(x,y)
-#        robjects.r['dev.off']()
-#        print df.rx(robjects.IntVector(range(1,100)), 'x')
-    @staticmethod
-    def blah_analysis():
+    def significant_nei_utm_ids():
+        mf_utm_id_to_valid_nei_utm_ids = {}
         def get_utm_vectors():
             so_hashtags = set()
             for utm_object in \
                     FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True):
-                for hashtag, count \
-                        in utm_object['mf_hashtag_to_count'].iteritems():
+                for hashtag, count in utm_object['mf_hashtag_to_count'].iteritems():
                     if hashtag!='total_num_of_occurrences': so_hashtags.add(hashtag)
+                mf_utm_id_to_valid_nei_utm_ids[utm_object['utm_id']] =\
+                                                                utm_object['mf_nei_utm_id_to_common_h_count'].keys()
             hashtags, ltuo_utm_id_and_vector = sorted(list(so_hashtags)), []
-            print len(hashtags)
-            for i, utm_object in \
-                    enumerate(FileIO.iterateJsonFromFile(f_hashtags_by_utm_id,
-                                                         True)):
-                print i, utm_object['utm_id']
-                utm_id_vector = \
-                    map(lambda hashtag: 
-                            utm_object['mf_hashtag_to_count'].get(hashtag, 0.0),
-                        hashtags
-                        )
+#            print len(hashtags)
+            for i, utm_object in enumerate(FileIO.iterateJsonFromFile(f_hashtags_by_utm_id, True)):
+#                print i, utm_object['utm_id']
+                utm_id_vector =  map(lambda hashtag: utm_object['mf_hashtag_to_count'].get(hashtag, 0.0),
+                                     hashtags)
                 ltuo_utm_id_and_vector.append((utm_object['utm_id'], 
                                                robjects.FloatVector(utm_id_vector)))
             od = rlc.OrdDict(sorted(ltuo_utm_id_and_vector, key=itemgetter(0)))
             df_utm_vectors = robjects.DataFrame(od)
             return df_utm_vectors
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()
         df_utm_vectors = get_utm_vectors()
-        utm_ids = df_utm_vectors.colnames
-        for utm_id in utm_ids:
-            prediction_variable = utm_id
-            predictor_variables = list(df_utm_vectors.colnames)
-            print len(utm_ids), len(predictor_variables)
-            predictor_variables.remove(utm_id)
-            print len(utm_ids), len(predictor_variables)
-            print R_Helper.variable_selection_using_backward_elimination(
-                                                       df_utm_vectors,
-                                                       prediction_variable,
-                                                       predictor_variables,
-                                                       debug=True
-                                                    )
-            exit()
-#        print len(utm_id_vector)
-#            print utm_object['utm_id'], sum(utm_id_vector), \
-#                    utm_object['total_hashtag_count']
+        utm_colnames = df_utm_vectors.colnames
+        mf_utm_id_to_utm_colnames = dict(zip(sorted(mf_utm_id_to_valid_nei_utm_ids), utm_colnames))
+        mf_utm_colnames_to_utm_id = dict(zip(utm_colnames, sorted(mf_utm_id_to_valid_nei_utm_ids)))
+        for i, utm_colname in enumerate(utm_colnames):
+            utm_id = mf_utm_colnames_to_utm_id[utm_colname]
+            prediction_variable = utm_colname
+            print i, utm_id
+            predictor_variables = [mf_utm_id_to_utm_colnames[valid_nei_utm_ids]
+                                    for valid_nei_utm_ids in mf_utm_id_to_valid_nei_utm_ids[utm_id]
+                                        if valid_nei_utm_ids in mf_utm_id_to_utm_colnames and
+                                           valid_nei_utm_ids != utm_id ]
+            selected_utm_colnames =  R_Helper.variable_selection_using_backward_elimination(
+                                                                                               df_utm_vectors,
+                                                                                               prediction_variable,
+                                                                                               predictor_variables,
+                                                                                               debug=True
+                                                                                            )
+            nei_utm_ids = [mf_utm_colnames_to_utm_id[selected_utm_colname]
+                                for selected_utm_colname in selected_utm_colnames]
+            print 'Writing to: ', output_file
+            FileIO.writeToFileAsJson({'utm_id': utm_id, 'nei_utm_ids': nei_utm_ids}, output_file)
+            
     @staticmethod
     def test_r():
         od = rlc.OrdDict([('value', robjects.IntVector((1,2,3))),
@@ -230,11 +234,11 @@ class GeneralAnalysis(object):
     def run():
 #        GeneralAnalysis.print_dense_utm_ids()
 #        GeneralAnalysis.test_r()
-#        GeneralAnalysis.blah_analysis()
+        GeneralAnalysis.significant_nei_utm_ids()
 #        GeneralAnalysis.determine_influential_variables()
-        GeneralAnalysis.utm_object_analysis()
+#        GeneralAnalysis.utm_object_analysis()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    GeneralAnalysis.run()
+#    MRAnalysis.run()
+    GeneralAnalysis.run()
     
