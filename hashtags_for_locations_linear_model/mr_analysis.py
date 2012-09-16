@@ -23,7 +23,7 @@ MIN_HASHTAG_OCCURRENCES = 750
 
 # Minimum number of hashtag occurrences at a particular utm id.
 # Used by HashtagsByUTMId
-MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = 500
+MIN_HASHTAG_OCCURRENCES_PER_UTM_ID = 1000
 
 # Generate utm object with neigbor information
 UTM_OBJECT_WITH_NEIGHBOR_INFO = True
