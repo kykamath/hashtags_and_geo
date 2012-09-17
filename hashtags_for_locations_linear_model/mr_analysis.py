@@ -399,6 +399,7 @@ class SignificantNeirghborUTMIds(ModifiedMRJob):
         del data_for_df['predictor_variables']
         del data_for_df['mf_utm_colnames_to_utm_ids']
         df_utm_vectors = R_Helper.get_data_frame_from_json(cjson.encode(data_for_df))
+        self.increment_counter()
         selected_utm_colnames = R_Helper.variable_selection_using_backward_elimination(
                                                                                        df_utm_vectors,
                                                                                        prediction_variable,
