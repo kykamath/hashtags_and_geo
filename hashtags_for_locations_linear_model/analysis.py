@@ -264,7 +264,7 @@ class GeneralAnalysis(object):
             dfm_dict['predictor_variables'] = filter(lambda colname: colname!=utm_id_colname,
                                                      df_utm_vectors.colnames)
             dfm_dict['mf_utm_colnames_to_utm_ids'] = dict(zip(df_utm_vectors.colnames, zip(*ltuo_utm_id_and_vector)[0]))
-            FileIO.writeToFile(cjson.encode(df_utm_vectors_json), output_file)
+            FileIO.writeToFileAsJson(dfm_dict, output_file)
     @staticmethod
     def test_r():
         od = rlc.OrdDict([('value', robjects.IntVector((1,2,3))),
@@ -289,6 +289,6 @@ class GeneralAnalysis(object):
 #        GeneralAnalysis.utm_object_analysis()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    GeneralAnalysis.run()
+#    MRAnalysis.run()
+    GeneralAnalysis.run()
     
