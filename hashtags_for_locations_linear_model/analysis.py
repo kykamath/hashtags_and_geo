@@ -113,7 +113,7 @@ class MRAnalysis(object):
         runMRJob(SignificantNeirghborUTMIds,
                  f_significant_nei_utm_ids,
                  [input_file],
-                 jobconf={'mapred.reduce.tasks':50})
+                 jobconf={'mapred.reduce.tasks':50, 'timeout': 86400})
     
     @staticmethod
     def run():
@@ -288,6 +288,6 @@ class GeneralAnalysis(object):
 #        GeneralAnalysis.utm_object_analysis()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    GeneralAnalysis.run()
+    MRAnalysis.run()
+#    GeneralAnalysis.run()
     
