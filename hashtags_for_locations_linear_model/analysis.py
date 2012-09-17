@@ -251,7 +251,6 @@ class GeneralAnalysis(object):
                                                      df_utm_vectors.colnames)
             dfm_dict['mf_utm_colnames_to_utm_ids'] = dict(zip(df_utm_vectors.colnames, zip(*ltuo_utm_id_and_vector)[0]))
             FileIO.writeToFile(cjson.encode(df_utm_vectors_json), output_file)
-            exit()
     @staticmethod
     def test_r():
         od = rlc.OrdDict([('value', robjects.IntVector((1,2,3))),
