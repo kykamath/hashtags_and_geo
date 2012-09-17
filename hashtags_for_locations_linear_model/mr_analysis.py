@@ -391,7 +391,7 @@ class HastagsWithUTMIdObject(ModifiedMRJob):
 class SignificantNeirghborUTMIds(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def mapper(self, key, line):
-        data_for_df = cjson.decode(cjson.decode(line))
+        data_for_df = cjson.decode(line)
         print data_for_df.keys()
         prediction_variable = data_for_df['prediction_variable']
         predictor_variables = data_for_df['predictor_variables']
