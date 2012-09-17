@@ -207,8 +207,8 @@ class GeneralAnalysis(object):
             return df_utm_vectors
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()
         df_utm_vectors = get_utm_vectors()
-        print df_utm_vectors.nrow
-        exit()
+#        print df_utm_vectors.nrow
+#        exit()
         utm_colnames = df_utm_vectors.colnames
         mf_utm_id_to_utm_colnames = dict(zip(sorted(mf_utm_id_to_valid_nei_utm_ids), utm_colnames))
         mf_utm_colnames_to_utm_id = dict(zip(utm_colnames, sorted(mf_utm_id_to_valid_nei_utm_ids)))
