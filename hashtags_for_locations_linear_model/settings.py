@@ -17,6 +17,7 @@ f_hashtag_dist_by_accuracy = analysis_folder%'hashtag_dist_by_accuracy'+\
 f_hashtags_by_utm_id = analysis_folder%'hashtags_by_utm_id'+'hashtags_by_utm_id'
 f_hashtags_with_utm_id_object = analysis_folder%'hashtags_with_utm_id_object'+\
                                                 'hashtags_with_utm_id_object'
+f_significant_nei_utm_ids = analysis_folder%'significant_nei_utm_ids'+'significant_nei_utm_ids'
 
 fld_google_drive_data_analysis = os.path.expanduser('~/Google Drive/Desktop/'\
             'hashtags_and_geo/hashtags_for_locations_linear_model/%s') 

@@ -390,26 +390,33 @@ class HastagsWithUTMIdObject(ModifiedMRJob):
 
 class SignificantNeirghborUTMIds(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
-#    def __init__(self, *args, **kwargs):
-#        super(SignificantNeirghborUTMIds, self).__init__(*args, **kwargs)
     def mapper(self, key, line):
         data_for_df = cjson.decode(line)
-        mf_utm_colnames_to_utm_ids = data_for_df['mf_utm_id_to_utm_colnames']
+        prediction_variable = data_for_df['prediction_variable']
+        predictor_variables = data_for_df['predictor_variables']
+        mf_utm_colnames_to_utm_ids = data_for_df['mf_utm_colnames_to_utm_ids']
+        del data_for_df['prediction_variable']
+        del data_for_df['predictor_variables']
         del data_for_df['mf_utm_id_to_utm_colnames']
-        data_frame = R_Helper.get_data_frame_from_json(data_for_df)
-    def red_tuo_tweet_stats_and_values_to_tweet_stats(self, key, values):
-        yield 'total_tweets', {'total_tweets': sum(values)} 
-    def steps(self):
-        return [self.mr(
-                    mapper=self.map_tweet_to_tweet_stats,
-                    mapper_final=self.map_final_tweet_to_tweet_stats,
-                    reducer=self.red_tuo_tweet_stats_and_values_to_tweet_stats)
-                ]
+        df_utm_vectors = R_Helper.get_data_frame_from_json(data_for_df)
+        selected_utm_colnames = R_Helper.variable_selection_using_backward_elimination(
+                                                                                       df_utm_vectors,
+                                                                                       prediction_variable,
+                                                                                       predictor_variables,
+                                                                                       debug=True
+                                                                                    )
+        utm_id = mf_utm_colnames_to_utm_ids[prediction_variable]
+        nei_utm_ids = [mf_utm_colnames_to_utm_ids[selected_utm_colname]
+                       for selected_utm_colname in selected_utm_colnames]
+        yield utm_id, {'utm_id': utm_id, 'nei_utm_ids': nei_utm_ids}
+    def reducer(self, utm_id, nei_utm_objects):
+        yield utm_id, list(nei_utm_objects)[0]
         
 if __name__ == '__main__':
     pass
 #    TweetStats.run()
 #    HashtagsExtractor.run()
 #    HashtagsDistributionInUTM.run()
-    HashtagsByUTMId.run()
+#    HashtagsByUTMId.run()
 #    HastagsWithUTMIdObject.run()
+    SignificantNeirghborUTMIds.run()

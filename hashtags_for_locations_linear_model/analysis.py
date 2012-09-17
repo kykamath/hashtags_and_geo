@@ -16,6 +16,7 @@ from mr_analysis import HashtagsDistributionInUTM
 from mr_analysis import HashtagsExtractor
 from mr_analysis import HastagsWithUTMIdObject
 from mr_analysis import PARAMS_DICT
+from mr_analysis import SignificantNeirghborUTMIds
 from mr_analysis import TweetStats
 from operator import itemgetter
 from pprint import pprint
@@ -23,6 +24,7 @@ from settings import f_hashtags_by_utm_id
 from settings import f_hashtag_dist_by_accuracy
 from settings import f_hashtags_extractor
 from settings import f_hashtags_with_utm_id_object
+from settings import f_significant_nei_utm_ids
 from settings import f_tweet_stats
 from settings import fld_google_drive_data_analysis
 from settings import hdfs_input_folder
@@ -102,6 +104,17 @@ class MRAnalysis(object):
                            output_file,
                            input_files_start_time,
                            input_files_end_time)
+    @staticmethod
+    def significant_nei_utm_ids():
+        input_file = hdfs_input_folder%'generate_data_for_significant_nei_utm_ids'+\
+                                                                'generate_data_for_significant_nei_utm_ids.json'
+        print input_file
+        exit()
+        runMRJob(SignificantNeirghborUTMIds,
+                 f_significant_nei_utm_ids,
+                 [input_file],
+                 jobconf={'mapred.reduce.tasks':50})
+        FileIO.writeToFileAsJson(PARAMS_DICT, f_significant_nei_utm_ids)
     
     @staticmethod
     def run():
@@ -114,10 +127,11 @@ class MRAnalysis(object):
 #                                      input_files_end_time)
 #        MRAnalysis.hashtag_dist_by_accuracy(input_files_start_time,
 #                                            input_files_end_time)
-        MRAnalysis.hashtags_by_utm_id(input_files_start_time,
-                                      input_files_end_time)
+#        MRAnalysis.hashtags_by_utm_id(input_files_start_time,
+#                                      input_files_end_time)
 #        MRAnalysis.hashtags_with_utm_id_object(input_files_start_time,
 #                                               input_files_end_time)
+        MRAnalysis.significant_nei_utm_ids()
     
 class GeneralAnalysis(object):
     @staticmethod
@@ -275,6 +289,6 @@ class GeneralAnalysis(object):
 #        GeneralAnalysis.utm_object_analysis()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    GeneralAnalysis.run()
+    MRAnalysis.run()
+#    GeneralAnalysis.run()
     
