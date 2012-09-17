@@ -244,11 +244,10 @@ class GeneralAnalysis(object):
             df_utm_vectors = robjects.DataFrame(od)
             df_utm_vectors_json = R_Helper.get_json_for_data_frame(df_utm_vectors)
             dfm_dict = cjson.decode(df_utm_vectors_json)
-            dfm_dict['ltuo_utm_id_to_utm_colnames'] = dict(zip(zip(*ltuo_utm_id_and_vector)[0],
-                                                               df_utm_vectors.colnames))
+            dfm_dict['mf_utm_id_to_utm_colnames'] = dict(zip(df_utm_vectors.colnames, zip(*ltuo_utm_id_and_vector)[0]))
             print dfm_dict.keys()
-            print len(dfm_dict), len(dfm_dict['ltuo_utm_id_to_utm_colnames'])
-            print dfm_dict['ltuo_utm_id_to_utm_colnames']
+            print len(dfm_dict), len(dfm_dict['mf_utm_id_to_utm_colnames'])
+            print dfm_dict['mf_utm_id_to_utm_colnames']
             exit()
             FileIO.writeToFile(cjson.encode(df_utm_vectors_json), output_file)
     @staticmethod
