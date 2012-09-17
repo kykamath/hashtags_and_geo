@@ -392,6 +392,7 @@ class SignificantNeirghborUTMIds(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def mapper(self, key, line):
         data_for_df = cjson.decode(line)
+        print type(data_for_df)
         prediction_variable = data_for_df['prediction_variable']
         predictor_variables = data_for_df['predictor_variables']
         mf_utm_colnames_to_utm_ids = data_for_df['mf_utm_colnames_to_utm_ids']
