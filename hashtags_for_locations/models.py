@@ -473,6 +473,7 @@ class Experiments(object):
 #        if hard_end_time: 
 #            print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
 #            end_time = hard_end_time
+        num_of_instances =  1
         while currentTime<end_time:
 #        while currentTime<self.endTime:
 #            def entry_method():
@@ -495,7 +496,8 @@ class Experiments(object):
 #                for noOfTargetHashtags in self.noOfHashtagsList:
 #                    self.conf['noOfTargetHashtags'] = noOfTargetHashtags
 #                    for modelId in self.predictionModels:
-                print timeUnitForPropagationForPrediction, timeUnitForActualPropagation
+                print num_of_instances, timeUnitForPropagationForPrediction, timeUnitForActualPropagation
+                num_of_instances+=1
                 historicalTimeUnitsMap[timeUnitForPropagationForPrediction]
                 predictionTimeUnitsMap[timeUnitForActualPropagation]
 #                hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](historicalTimeUnitsMap[timeUnitForPropagationForPrediction], **self.conf)
