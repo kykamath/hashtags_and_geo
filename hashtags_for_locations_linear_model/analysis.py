@@ -113,7 +113,7 @@ class MRAnalysis(object):
         runMRJob(SignificantNeirghborUTMIds,
                  f_significant_nei_utm_ids,
                  [input_file],
-                 jobconf={'mapred.reduce.tasks':50, 'timeout': 86400000})
+                 jobconf={'mapred.reduce.tasks':50, 'mapred.task.timeout': 86400000})
     
     @staticmethod
     def run():
