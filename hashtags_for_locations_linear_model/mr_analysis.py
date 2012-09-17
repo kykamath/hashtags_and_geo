@@ -7,6 +7,7 @@ from collections import defaultdict
 from datetime import datetime
 from library.geo import UTMConverter
 from library.mrjobwrapper import ModifiedMRJob
+from library.r_helper import R_Helper
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from operator import itemgetter
 import cjson
@@ -391,11 +392,11 @@ class SignificantNeirghborUTMIds(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
 #    def __init__(self, *args, **kwargs):
 #        super(SignificantNeirghborUTMIds, self).__init__(*args, **kwargs)
-    def map_data_frame_to_significant_neighbor_ids(self, key, line):
-        if False: yield # I'm a generator!
-        self.num_of_tweets+=1
-    def map_final_tweet_to_tweet_stats(self):
-        yield 'total_tweets', self.num_of_tweets
+    def mapper(self, key, line):
+        data_for_df = cjson.decode(line)
+        mf_utm_colnames_to_utm_ids = data_for_df['mf_utm_id_to_utm_colnames']
+        del data_for_df['mf_utm_id_to_utm_colnames']
+        data_frame = R_Helper.get_data_frame_from_json(data_for_df)
     def red_tuo_tweet_stats_and_values_to_tweet_stats(self, key, values):
         yield 'total_tweets', {'total_tweets': sum(values)} 
     def steps(self):
