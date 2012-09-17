@@ -246,7 +246,7 @@ class GeneralAnalysis(object):
             dfm_dict = cjson.decode(df_utm_vectors_json)
             dfm_dict['ltuo_utm_id_to_utm_colnames'] = dict(zip(zip(*ltuo_utm_id_and_vector)[0],
                                                                df_utm_vectors.colnames))
-            dfm_dict.keys()
+            print dfm_dict.keys()
             exit()
             FileIO.writeToFile(cjson.encode(df_utm_vectors_json), output_file)
     @staticmethod
