@@ -109,7 +109,7 @@ class MRAnalysis(object):
         input_file = hdfs_input_folder%'generate_data_for_significant_nei_utm_ids'+\
                                                                 'generate_data_for_significant_nei_utm_ids.json'
         print input_file
-        exit()
+        print f_significant_nei_utm_ids
         runMRJob(SignificantNeirghborUTMIds,
                  f_significant_nei_utm_ids,
                  [input_file],
