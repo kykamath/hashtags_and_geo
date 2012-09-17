@@ -386,6 +386,24 @@ class HastagsWithUTMIdObject(ModifiedMRJob):
                 ]
     def steps(self):
         return self.jobs_to_get_hashtags_with_utm_id_object()
+
+class SignificantNeirghborUTMIds(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+#    def __init__(self, *args, **kwargs):
+#        super(SignificantNeirghborUTMIds, self).__init__(*args, **kwargs)
+    def map_data_frame_to_significant_neighbor_ids(self, key, line):
+        if False: yield # I'm a generator!
+        self.num_of_tweets+=1
+    def map_final_tweet_to_tweet_stats(self):
+        yield 'total_tweets', self.num_of_tweets
+    def red_tuo_tweet_stats_and_values_to_tweet_stats(self, key, values):
+        yield 'total_tweets', {'total_tweets': sum(values)} 
+    def steps(self):
+        return [self.mr(
+                    mapper=self.map_tweet_to_tweet_stats,
+                    mapper_final=self.map_final_tweet_to_tweet_stats,
+                    reducer=self.red_tuo_tweet_stats_and_values_to_tweet_stats)
+                ]
         
 if __name__ == '__main__':
     pass

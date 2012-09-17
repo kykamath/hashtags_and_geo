@@ -243,33 +243,10 @@ class GeneralAnalysis(object):
             od = rlc.OrdDict(sorted(ltuo_utm_id_and_vector, key=itemgetter(0)))
             df_utm_vectors = robjects.DataFrame(od)
             df_utm_vectors_json = R_Helper.get_json_for_data_frame(df_utm_vectors)
-            FileIO.writeToFile(df_utm_vectors_json, output_file)
-#            return df_utm_vectors
-#        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()
-#        df_utm_vectors = get_utm_vectors()
-#        print df_utm_vectors.nrow
-#        exit()
-#        utm_colnames = df_utm_vectors.colnames
-#        mf_utm_id_to_utm_colnames = dict(zip(sorted(mf_utm_id_to_valid_nei_utm_ids), utm_colnames))
-#        mf_utm_colnames_to_utm_id = dict(zip(utm_colnames, sorted(mf_utm_id_to_valid_nei_utm_ids)))
-#        for i, utm_colname in enumerate(utm_colnames):
-#            utm_id = mf_utm_colnames_to_utm_id[utm_colname]
-#            print i, utm_id
-#            valid_utm_columnnames = [mf_utm_id_to_utm_colnames[valid_nei_utm_ids]
-#                                        for valid_nei_utm_ids in mf_utm_id_to_valid_nei_utm_ids[utm_id]
-#                                            if valid_nei_utm_ids in mf_utm_id_to_utm_colnames and
-#                                               valid_nei_utm_ids != utm_id ]
-            
-#            selected_utm_colnames =  R_Helper.variable_selection_using_backward_elimination(
-#                                                                                               df_utm_vectors,
-#                                                                                               prediction_variable,
-#                                                                                               predictor_variables,
-#                                                                                               debug=True
-#                                                                                            )
-#            nei_utm_ids = [mf_utm_colnames_to_utm_id[selected_utm_colname]
-#                                for selected_utm_colname in selected_utm_colnames]
-#            print 'Writing to: ', output_file
-#            FileIO.writeToFileAsJson({'utm_id': utm_id, 'nei_utm_ids': nei_utm_ids}, output_file)
+            dfm_dict = cjson.decode(df_utm_vectors_json)
+            dfm_dict['ltuo_utm_id_to_utm_colnames'] = dict(zip(zip(*ltuo_utm_id_and_vector)[0],
+                                                               df_utm_vectors.colnames))
+            FileIO.writeToFile(cjson.encode(df_utm_vectors_json), output_file)
     @staticmethod
     def test_r():
         od = rlc.OrdDict([('value', robjects.IntVector((1,2,3))),
