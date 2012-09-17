@@ -403,8 +403,7 @@ class SignificantNeirghborUTMIds(ModifiedMRJob):
         selected_utm_colnames = R_Helper.variable_selection_using_backward_elimination(
                                                                                        df_utm_vectors,
                                                                                        prediction_variable,
-                                                                                       predictor_variables,
-                                                                                       debug=True
+                                                                                       predictor_variables
                                                                                     )
         utm_id = mf_utm_colnames_to_utm_ids[prediction_variable]
         nei_utm_ids = [mf_utm_colnames_to_utm_ids[selected_utm_colname]
