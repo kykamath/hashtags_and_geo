@@ -250,9 +250,8 @@ class GeneralAnalysis(object):
             dfm_dict['predictor_variables'] = filter(lambda colname: colname!=utm_id_colname,
                                                      df_utm_vectors.colnames)
             dfm_dict['mf_utm_colnames_to_utm_ids'] = dict(zip(df_utm_vectors.colnames, zip(*ltuo_utm_id_and_vector)[0]))
-            print len(dfm_dict['predictor_variables']), len(dfm_dict)
-            exit()
             FileIO.writeToFile(cjson.encode(df_utm_vectors_json), output_file)
+            exit()
     @staticmethod
     def test_r():
         od = rlc.OrdDict([('value', robjects.IntVector((1,2,3))),
