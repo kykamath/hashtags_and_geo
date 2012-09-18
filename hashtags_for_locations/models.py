@@ -517,7 +517,7 @@ class Experiments(object):
                                                            historicalTimeUnitsMap[timeUnitForPropagationForPrediction], 
                                                            **self.conf
                                                            )
-                        print hashtagsForLattice
+                        print modelId, hashtagsForLattice, EvaluationMetrics._bestHashtagsForLocation(predictionTimeUnitsMap[timeUnitForActualPropagation])
                         exit()
                         for metric_id in self.evaluationMetrics:
                             scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](
