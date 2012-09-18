@@ -464,7 +464,6 @@ class Experiments(object):
                                                            self.startTime.strftime('%Y-%m-%d'),
                                                            self.endTime.strftime('%Y-%m-%d')
                                                            )
-        exit()
         timeUnitsToDataMap = dict([(d['tu'], d) 
                                    for d in iterateJsonFromFile(
                                         timeUnitWithOccurrencesFile%(
@@ -518,6 +517,8 @@ class Experiments(object):
                                                            historicalTimeUnitsMap[timeUnitForPropagationForPrediction], 
                                                            **self.conf
                                                            )
+                        print hashtagsForLattice
+                        exit()
                         for metric_id in self.evaluationMetrics:
                             scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](
                                                                 hashtagsForLattice,
