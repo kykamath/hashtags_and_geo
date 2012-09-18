@@ -228,10 +228,16 @@ class PredictionModels:
 #                if loc in propagation_for_prediction.occurrences:
 #                    occs = propagation_for_prediction.occurrences[loc]
 #                    hashtags_for_lattice[loc] = list(zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:])
-                if hashtag_scores: hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0])
-                while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
-                    h = hashtags.pop()
-                    if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
+                if 'hashtags_with_scores' in conf and conf['hashtags_with_scores']:
+                    hashtags_for_lattice[loc] = sorted(
+                                                        hashtag_scores.iteritems(),
+                                                        key=itemgetter(1)
+                                                    )[-conf['noOfTargetHashtags']:]
+                else:
+                    if hashtag_scores: hashtags = list(zip(*sorted(hashtag_scores.iteritems(), key=itemgetter(1)))[0])
+                    while len(hashtags_for_lattice[loc])<conf['noOfTargetHashtags'] and hashtags:
+                        h = hashtags.pop()
+                        if h not in hashtags_for_lattice[loc]: hashtags_for_lattice[loc].append(h)
         return hashtags_for_lattice
     @staticmethod
     def _hashtags_by_location_and_coverage_scores(propagation_for_prediction, location_probabilities, hashtag_coverage_scores, *args, **conf):
@@ -263,14 +269,44 @@ class PredictionModels:
         if propagation_for_prediction.occurrences:
             for loc, occs in propagation_for_prediction.occurrences.iteritems():
                 uniqueHashtags = set(zip(*occs)[0])
-                hashtags_for_lattice[loc] = random.sample(uniqueHashtags, min(len(uniqueHashtags), conf['noOfTargetHashtags']))
+                if 'hashtags_with_scores' in conf and conf['hashtags_with_scores']:
+                    hashtags_for_loc = random.sample(
+                                                      uniqueHashtags,
+                                                      min(len(uniqueHashtags), conf['noOfTargetHashtags'])
+                                                    )
+                    indices = range(1, len(hashtags_for_loc)+1)
+                    hashtags_for_lattice[loc] = zip(hashtags_for_loc, reversed(indices))
+                else:
+                    hashtags_for_lattice[loc] = random.sample(
+                                                              uniqueHashtags,
+                                                              min(len(uniqueHashtags), conf['noOfTargetHashtags'])
+                                                            )
         return hashtags_for_lattice
     @staticmethod
     def greedy(propagation_for_prediction, *args, **conf):
         hashtags_for_lattice = defaultdict(list)
         if propagation_for_prediction.occurrences:
             for loc, occs in propagation_for_prediction.occurrences.iteritems():
-                hashtags_for_lattice[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
+                if 'hashtags_with_scores' in conf and conf['hashtags_with_scores']:
+                    total_occurrences = float(len(occs))
+                    ltuo_hashtag_and_percent = [(h, len(list(hOccs))/total_occurrences)
+                                              for h, hOccs in groupby(
+                                                                      sorted(occs, key=itemgetter(0)),
+                                                                      key=itemgetter(0)
+                                                                    )
+                                             ]
+                    hashtags_for_lattice[loc] = sorted(
+                                                      ltuo_hashtag_and_percent,
+                                                      key=itemgetter(1)
+                                                      )[-conf['noOfTargetHashtags']:]
+                else:
+                    hashtags_for_lattice[loc] =\
+                             zip(*sorted(
+                                         [(h, len(list(hOccs)))
+                                          for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))
+                                         ], 
+                                        key=itemgetter(1))
+                                 )[0][-conf['noOfTargetHashtags']:]
         return hashtags_for_lattice
     @staticmethod
     def sharing_probability(propagation_for_prediction, *args, **conf): loadSharingProbabilities(); return PredictionModels._hashtags_by_location_probabilities(propagation_for_prediction, SHARING_PROBABILITIES, *args, **conf)
@@ -284,7 +320,18 @@ class PredictionModels:
             hashtag_scores_for_location = {}
             for location in LOCATIONS_LIST:
                 hashtag_scores_for_location = dict([(hashtag, hashtag_coverage_probabilities[hashtag][location]) for hashtag in hashtag_coverage_probabilities])
-                hashtags_for_lattice[location] = zip(*sorted(hashtag_scores_for_location.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
+                if 'hashtags_with_scores' in conf and conf['hashtags_with_scores']:
+                    hashtags_for_lattice[location] = sorted(
+                                                            hashtag_scores_for_location.iteritems(),
+                                                            key=itemgetter(1)
+                                                        )[-conf['noOfTargetHashtags']:]
+                else:
+                    hashtags_for_lattice[location] = zip(*
+                                                         sorted(
+                                                                hashtag_scores_for_location.iteritems(),
+                                                                key=itemgetter(1)
+                                                                )
+                                                         )[0][-conf['noOfTargetHashtags']:]
         return hashtags_for_lattice
     @staticmethod
     def sharing_probability_with_coverage(propagation_for_prediction, *args, **conf): 
@@ -305,7 +352,18 @@ class PredictionModels:
                 hashtag_scores_for_location = dict([(hashtag, coverage_distances_for_hashtags[hashtag][location]) for hashtag in coverage_distances_for_hashtags])
                 total_score = sum(hashtag_scores_for_location.values())
                 for hashtag in hashtag_scores_for_location: hashtag_scores_for_location[hashtag]/=total_score
-                hashtags_for_lattice[location] = zip(*sorted(hashtag_scores_for_location.iteritems(), key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
+                if 'hashtags_with_scores' in conf and conf['hashtags_with_scores']:
+                    hashtags_for_lattice[location] = sorted(
+                                                            hashtag_scores_for_location.iteritems(),
+                                                            key=itemgetter(1)
+                                                        )[-conf['noOfTargetHashtags']:]
+                else:
+                    hashtags_for_lattice[location] = zip(*
+                                                         sorted(
+                                                                hashtag_scores_for_location.iteritems(),
+                                                                key=itemgetter(1)
+                                                                )
+                                                         )[0][-conf['noOfTargetHashtags']:]
         return hashtags_for_lattice
     @staticmethod
     def sharing_probability_with_coverage_distance(propagation_for_prediction, *args, **conf): 
@@ -480,7 +538,10 @@ class Experiments(object):
                                    ])
         for no_of_hashtags in self.noOfHashtagsList:
             self.conf['noOfTargetHashtags'] = no_of_hashtags
-            GeneralMethods.runCommand('rm -rf %s'%self.getModelFile('linear_regression'))
+            print self.getModelFile('linear_regression')
+#            exit()
+#            GeneralMethods.runCommand('rm -rf %s'%self.getModelFile('linear_regression'))
+
 #        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
         hard_end_time = self.conf.get('hard_end_time', None)
         end_time = self.endTime
@@ -488,8 +549,6 @@ class Experiments(object):
             print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
             end_time = hard_end_time
         while currentTime<end_time:
-#        while currentTime<self.endTime:
-#            def entry_method():
             print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
             currentOccurrences = []
             currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
@@ -510,7 +569,6 @@ class Experiments(object):
                                                                             self.predictionTimeInterval
                                                                             )
                 predictionTimeUnitsMap[predictionTimeUnit].update(currentOccurrences)
-#            entry_method()
             timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
             timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
             if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and \
@@ -523,6 +581,7 @@ class Experiments(object):
                                                         )
                     mf_model_id_to_mf_location_to_hashtags_ranked_by_model = {}
                     for modelId in self.predictionModels:
+                        self.conf['hashtags_with_scores'] = True
                         hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](
                                                            historicalTimeUnitsMap[timeUnitForPropagationForPrediction], 
                                                            **self.conf
