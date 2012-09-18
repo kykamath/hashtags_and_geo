@@ -479,9 +479,8 @@ class Experiments(object):
                                                                 )
                                    ])
         for no_of_hashtags in self.noOfHashtagsList:
-            for model_id in self.predictionModels:
-                self.conf['noOfTargetHashtags'] = no_of_hashtags
-#                GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(model_id))
+            self.conf['noOfTargetHashtags'] = no_of_hashtags
+            GeneralMethods.runCommand('rm -rf %s'%self.getModelFile('linear_regression'))
 #        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
         hard_end_time = self.conf.get('hard_end_time', None)
         end_time = self.endTime
@@ -537,8 +536,8 @@ class Experiments(object):
                                      'mf_model_id_to_mf_location_to_hashtags_ranked_by_model':
                                             mf_model_id_to_mf_location_to_hashtags_ranked_by_model
                                     }
-                    print self.getModelFile('asdsad')
-#                    FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
+                    print self.getModelFile('linear_regression')
+                    FileIO.writeToFileAsJson(iterationData, self.getModelFile('linear_regression'))
 #                        print modelId, hashtagsForLattice, 
 #                    import cjson
 #                    print iterationData
