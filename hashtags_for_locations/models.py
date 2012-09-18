@@ -537,11 +537,12 @@ class Experiments(object):
                                      'mf_model_id_to_mf_location_to_hashtags_ranked_by_model':
                                             mf_model_id_to_mf_location_to_hashtags_ranked_by_model
                                     }
+                    print self.getModelFile('asdsad')
 #                    FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
 #                        print modelId, hashtagsForLattice, 
-                    import cjson
-                    print iterationData
-                    print cjson.encode(iterationData)
+#                    import cjson
+#                    print iterationData
+#                    print cjson.encode(iterationData)
                     exit()
 #                        for metric_id in self.evaluationMetrics:
 #                            scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](
