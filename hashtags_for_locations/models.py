@@ -459,21 +459,30 @@ class Experiments(object):
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
         loadLocationsList()
-        print 'Using file: ', timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'))
-        timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d')))])
-#        for no_of_hashtags in self.noOfHashtagsList:
-#            for model_id in self.predictionModels:
-#                self.conf['noOfTargetHashtags'] = no_of_hashtags
-#                print '* rm -rf %s'%self.getModelFile(model_id)
+        print 'Using file: ', timeUnitWithOccurrencesFile%(
+                                                           self.outputFolder,
+                                                           self.startTime.strftime('%Y-%m-%d'),
+                                                           self.endTime.strftime('%Y-%m-%d')
+                                                           )
+        exit()
+        timeUnitsToDataMap = dict([(d['tu'], d) 
+                                   for d in iterateJsonFromFile(
+                                        timeUnitWithOccurrencesFile%(
+                                                                     self.outputFolder,
+                                                                     self.startTime.strftime('%Y-%m-%d'),
+                                                                     self.endTime.strftime('%Y-%m-%d'))
+                                                                )
+                                   ])
+        for no_of_hashtags in self.noOfHashtagsList:
+            for model_id in self.predictionModels:
+                self.conf['noOfTargetHashtags'] = no_of_hashtags
 #                GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(model_id))
-
 #        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
-#        hard_end_time = self.conf.get('hard_end_time', None)
+        hard_end_time = self.conf.get('hard_end_time', None)
         end_time = self.endTime
-#        if hard_end_time: 
-#            print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
-#            end_time = hard_end_time
-        num_of_instances =  1
+        if hard_end_time: 
+            print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
+            end_time = hard_end_time
         while currentTime<end_time:
 #        while currentTime<self.endTime:
 #            def entry_method():
@@ -483,30 +492,103 @@ class Experiments(object):
             if currentTimeObject: currentOccurrences=currentTimeObject['oc']
             for i in range(self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
                 historicalTimeUnit = currentTime-i*timeUnitDelta
-                if historicalTimeUnit not in historicalTimeUnitsMap: historicalTimeUnitsMap[historicalTimeUnit]=Propagations(historicalTimeUnit, self.historyTimeInterval)
+                if historicalTimeUnit not in historicalTimeUnitsMap: 
+                    historicalTimeUnitsMap[historicalTimeUnit]=Propagations(
+                                                                            historicalTimeUnit,
+                                                                            self.historyTimeInterval
+                                                                            )
                 historicalTimeUnitsMap[historicalTimeUnit].update(currentOccurrences)
             for i in range(self.predictionTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
                 predictionTimeUnit = currentTime-i*timeUnitDelta
-                if predictionTimeUnit not in predictionTimeUnitsMap: predictionTimeUnitsMap[predictionTimeUnit]=Propagations(predictionTimeUnit, self.predictionTimeInterval)
+                if predictionTimeUnit not in predictionTimeUnitsMap:
+                    predictionTimeUnitsMap[predictionTimeUnit]=Propagations(
+                                                                            predictionTimeUnit,
+                                                                            self.predictionTimeInterval
+                                                                            )
                 predictionTimeUnitsMap[predictionTimeUnit].update(currentOccurrences)
 #            entry_method()
             timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
             timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
-            if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
-#                for noOfTargetHashtags in self.noOfHashtagsList:
-#                    self.conf['noOfTargetHashtags'] = noOfTargetHashtags
-#                    for modelId in self.predictionModels:
-                print num_of_instances, timeUnitForPropagationForPrediction, timeUnitForActualPropagation
-                num_of_instances+=1
-                historicalTimeUnitsMap[timeUnitForPropagationForPrediction]
-                predictionTimeUnitsMap[timeUnitForActualPropagation]
+            if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and \
+                    timeUnitForActualPropagation in predictionTimeUnitsMap:
+                for noOfTargetHashtags in self.noOfHashtagsList:
+                    self.conf['noOfTargetHashtags'] = noOfTargetHashtags
+                    for modelId in self.predictionModels:
+                        hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](
+                                                           historicalTimeUnitsMap[timeUnitForPropagationForPrediction], 
+                                                           **self.conf
+                                                           )
+                        for metric_id in self.evaluationMetrics:
+                            scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](
+                                                                hashtagsForLattice,
+                                                                predictionTimeUnitsMap[timeUnitForActualPropagation],
+                                                                **self.conf
+                                                            )
+                            iterationData = {
+                                             'conf': self._getSerializableConf(),
+                                             'tu': GeneralMethods.getEpochFromDateTimeObject(
+                                                                                         timeUnitForActualPropagation
+                                                                                         ), 
+                                             'modelId': modelId,
+                                             'metricId': metric_id,
+                                             'scoresPerLattice': scoresPerLattice}
+                            FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
+                del historicalTimeUnitsMap[timeUnitForPropagationForPrediction];
+                del predictionTimeUnitsMap[timeUnitForActualPropagation]
+            currentTime+=timeUnitDelta
+#    def runToGetDataForLinearRegression(self):
+#        currentTime = self.startTime
+#        timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
+#        historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
+#        loadLocationsList()
+#        print 'Using file: ', timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d'))
+#        timeUnitsToDataMap = dict([(d['tu'], d) for d in iterateJsonFromFile(timeUnitWithOccurrencesFile%(self.outputFolder, self.startTime.strftime('%Y-%m-%d'), self.endTime.strftime('%Y-%m-%d')))])
+##        for no_of_hashtags in self.noOfHashtagsList:
+##            for model_id in self.predictionModels:
+##                self.conf['noOfTargetHashtags'] = no_of_hashtags
+##                print '* rm -rf %s'%self.getModelFile(model_id)
+##                GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(model_id))
+#
+##        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
+##        hard_end_time = self.conf.get('hard_end_time', None)
+#        end_time = self.endTime
+##        if hard_end_time: 
+##            print '***** NOTE: Using hard end time: %s instead of %s *****'%(hard_end_time, self.endTime)
+##            end_time = hard_end_time
+#        num_of_instances =  1
+#        while currentTime<end_time:
+##        while currentTime<self.endTime:
+##            def entry_method():
+#            print currentTime, self.historyTimeInterval.seconds/60, self.predictionTimeInterval.seconds/60
+#            currentOccurrences = []
+#            currentTimeObject = timeUnitsToDataMap.get(time.mktime(currentTime.timetuple()), {})
+#            if currentTimeObject: currentOccurrences=currentTimeObject['oc']
+#            for i in range(self.historyTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
+#                historicalTimeUnit = currentTime-i*timeUnitDelta
+#                if historicalTimeUnit not in historicalTimeUnitsMap: historicalTimeUnitsMap[historicalTimeUnit]=Propagations(historicalTimeUnit, self.historyTimeInterval)
+#                historicalTimeUnitsMap[historicalTimeUnit].update(currentOccurrences)
+#            for i in range(self.predictionTimeInterval.seconds/TIME_UNIT_IN_SECONDS):
+#                predictionTimeUnit = currentTime-i*timeUnitDelta
+#                if predictionTimeUnit not in predictionTimeUnitsMap: predictionTimeUnitsMap[predictionTimeUnit]=Propagations(predictionTimeUnit, self.predictionTimeInterval)
+#                predictionTimeUnitsMap[predictionTimeUnit].update(currentOccurrences)
+##            entry_method()
+#            timeUnitForActualPropagation = currentTime-self.predictionTimeInterval
+#            timeUnitForPropagationForPrediction = timeUnitForActualPropagation-self.historyTimeInterval
+#            if timeUnitForPropagationForPrediction in historicalTimeUnitsMap and timeUnitForActualPropagation in predictionTimeUnitsMap:
+##                for noOfTargetHashtags in self.noOfHashtagsList:
+##                    self.conf['noOfTargetHashtags'] = noOfTargetHashtags
+##                    for modelId in self.predictionModels:
+#                print num_of_instances, timeUnitForPropagationForPrediction, timeUnitForActualPropagation
+#                num_of_instances+=1
+#                historicalTimeUnitsMap[timeUnitForPropagationForPrediction]
+#                predictionTimeUnitsMap[timeUnitForActualPropagation]
 #                hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](historicalTimeUnitsMap[timeUnitForPropagationForPrediction], **self.conf)
 #                for metric_id in self.evaluationMetrics:
 #                    scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](hashtagsForLattice, predictionTimeUnitsMap[timeUnitForActualPropagation], **self.conf)
 #                    iterationData = {'conf': self._getSerializableConf(), 'tu': GeneralMethods.getEpochFromDateTimeObject(timeUnitForActualPropagation), 'modelId': modelId, 'metricId': metric_id, 'scoresPerLattice': scoresPerLattice}
 #                    FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
-                del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
-            currentTime+=timeUnitDelta
+#                del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
+#            currentTime+=timeUnitDelta
 
 
 #    def runToDeterminePerformanceWithExpertAdvice(self):
@@ -654,12 +736,22 @@ class Experiments(object):
                     Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToDeterminePerformanceWithExpertAdvice()
     @staticmethod
     def generateDataForLinearRegression(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
-        noOfHashtagsList = [1,2,4,10]
+#        noOfHashtagsList = [1,2,4,10]
+        noOfHashtagsList = [100]
         for i in range(1,25):
 #        for i in [1]:
-            conf = dict(historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS), predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS), noOfHashtagsList=noOfHashtagsList)
+            conf = dict(
+                        historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS),
+                        predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS),
+                        noOfHashtagsList=noOfHashtagsList
+                        )
             conf['hard_end_time'] = datetime(2011, 9, 16)
-            Experiments(startTime, endTime, outputFolder, predictionModels, evaluationMetrics, **conf).runToGetDataForLinearRegression()
+            Experiments(startTime,
+                        endTime,
+                        outputFolder,
+                        predictionModels,
+                        evaluationMetrics,
+                        **conf).runToGetDataForLinearRegression()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
