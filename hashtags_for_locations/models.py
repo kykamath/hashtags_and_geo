@@ -139,7 +139,13 @@ class EvaluationMetrics:
     def _bestHashtagsForLocation(actualPropagation, **conf):
         bestHashtagsForLocation = {}
         for loc, occs in actualPropagation.occurrences.iteritems():
-            bestHashtagsForLocation[loc] = zip(*sorted([(h, len(list(hOccs)))for h, hOccs in groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], key=itemgetter(1)))[0][-conf['noOfTargetHashtags']:]
+            bestHashtagsForLocation[loc] = zip(*
+                                               sorted([
+                                                       (h, len(list(hOccs)))
+                                                        for h, hOccs in 
+                                                            groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], 
+                                                      key=itemgetter(1))
+                                               )[0][-conf['noOfTargetHashtags']:]
         return bestHashtagsForLocation
     @staticmethod
     def _impact(loc, hashtags, actualPropagation):
@@ -512,28 +518,46 @@ class Experiments(object):
                     timeUnitForActualPropagation in predictionTimeUnitsMap:
                 for noOfTargetHashtags in self.noOfHashtagsList:
                     self.conf['noOfTargetHashtags'] = noOfTargetHashtags
+                    mf_location_to_ideal_hashtags_rank = EvaluationMetrics._bestHashtagsForLocation(
+                                                           predictionTimeUnitsMap[timeUnitForActualPropagation],
+                                                           **self.conf
+                                                        )
+                    mf_model_id_to_mf_location_to_hashtags_ranked_by_model = {}
                     for modelId in self.predictionModels:
                         hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](
                                                            historicalTimeUnitsMap[timeUnitForPropagationForPrediction], 
                                                            **self.conf
                                                            )
-                        print modelId, hashtagsForLattice, EvaluationMetrics._bestHashtagsForLocation(predictionTimeUnitsMap[timeUnitForActualPropagation], **self.conf)
-                        exit()
-                        for metric_id in self.evaluationMetrics:
-                            scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](
-                                                                hashtagsForLattice,
-                                                                predictionTimeUnitsMap[timeUnitForActualPropagation],
-                                                                **self.conf
-                                                            )
-                            iterationData = {
-                                             'conf': self._getSerializableConf(),
-                                             'tu': GeneralMethods.getEpochFromDateTimeObject(
-                                                                                         timeUnitForActualPropagation
-                                                                                         ), 
-                                             'modelId': modelId,
-                                             'metricId': metric_id,
-                                             'scoresPerLattice': scoresPerLattice}
-                            FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
+                        mf_model_id_to_mf_location_to_hashtags_ranked_by_model[modelId] = hashtagsForLattice
+                    iterationData = {
+                                     'conf': self._getSerializableConf(),
+                                     'tu': GeneralMethods.getEpochFromDateTimeObject(timeUnitForActualPropagation), 
+                                     'mf_location_to_ideal_hashtags_rank': 
+                                            mf_location_to_ideal_hashtags_rank,
+                                     'mf_model_id_to_mf_location_to_hashtags_ranked_by_model':
+                                            mf_model_id_to_mf_location_to_hashtags_ranked_by_model
+                                    }
+#                    FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
+#                        print modelId, hashtagsForLattice, 
+                    import cjson
+                    print iterationData
+                    print cjson.encode(iterationData)
+                    exit()
+#                        for metric_id in self.evaluationMetrics:
+#                            scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](
+#                                                                hashtagsForLattice,
+#                                                                predictionTimeUnitsMap[timeUnitForActualPropagation],
+#                                                                **self.conf
+#                                                            )
+#                            iterationData = {
+#                                             'conf': self._getSerializableConf(),
+#                                             'tu': GeneralMethods.getEpochFromDateTimeObject(
+#                                                                                         timeUnitForActualPropagation
+#                                                                                         ), 
+#                                             'modelId': modelId,
+#                                             'metricId': metric_id,
+#                                             'scoresPerLattice': scoresPerLattice}
+#                            FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction];
                 del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
