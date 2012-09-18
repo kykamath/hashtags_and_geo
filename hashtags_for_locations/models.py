@@ -536,28 +536,7 @@ class Experiments(object):
                                      'mf_model_id_to_mf_location_to_hashtags_ranked_by_model':
                                             mf_model_id_to_mf_location_to_hashtags_ranked_by_model
                                     }
-                    print self.getModelFile('linear_regression')
                     FileIO.writeToFileAsJson(iterationData, self.getModelFile('linear_regression'))
-#                        print modelId, hashtagsForLattice, 
-#                    import cjson
-#                    print iterationData
-#                    print cjson.encode(iterationData)
-                    exit()
-#                        for metric_id in self.evaluationMetrics:
-#                            scoresPerLattice = EVALUATION_METRIC_METHODS[metric_id](
-#                                                                hashtagsForLattice,
-#                                                                predictionTimeUnitsMap[timeUnitForActualPropagation],
-#                                                                **self.conf
-#                                                            )
-#                            iterationData = {
-#                                             'conf': self._getSerializableConf(),
-#                                             'tu': GeneralMethods.getEpochFromDateTimeObject(
-#                                                                                         timeUnitForActualPropagation
-#                                                                                         ), 
-#                                             'modelId': modelId,
-#                                             'metricId': metric_id,
-#                                             'scoresPerLattice': scoresPerLattice}
-#                            FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction];
                 del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
@@ -770,7 +749,7 @@ class Experiments(object):
                         predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS),
                         noOfHashtagsList=noOfHashtagsList
                         )
-            conf['hard_end_time'] = datetime(2011, 9, 16)
+#            conf['hard_end_time'] = datetime(2011, 9, 16)
             Experiments(startTime,
                         endTime,
                         outputFolder,
