@@ -52,11 +52,17 @@ for data in FileIO.iterateJsonFromFile('data/linear_regression'):
     conf = data['conf']
     tu = data['tu']
     
-    mf_hashtag_to_mf_model_id_to_score = defaultdict(dict)
+    mf_to_location_to_mf_hashtag_to_mf_model_id_to_score = {}
     for model_id, mf_location_to_hashtags_ranked_by_model in \
             mf_model_id_to_mf_location_to_hashtags_ranked_by_model.iteritems():
         for location, hashtags_ranked_by_model in mf_location_to_hashtags_ranked_by_model.iteritems():
-            print model_id, location, hashtags_ranked_by_model
+            for hashtag, score in hashtags_ranked_by_model:
+                if location not in mf_to_location_to_mf_hashtag_to_mf_model_id_to_score:
+                    mf_to_location_to_mf_hashtag_to_mf_model_id_to_score[location] = defaultdict(dict)
+                mf_to_location_to_mf_hashtag_to_mf_model_id_to_score[location][location][model_id] = score
+#                print model_id, location, hashtag, score
+
+    print 'x'
         
 #    for location, ltuo_hashtag_and_perct in mf_location_to_ideal_hashtags_rank.iteritems():
 #        for hashtag, perct in ltuo_hashtag_and_perct:
