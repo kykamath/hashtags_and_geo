@@ -42,5 +42,29 @@ from operator import itemgetter
 #        tuples_of_neighbor_location_and_pure_influence_score= sorted(tuples_of_neighbor_location_and_pure_influence_score, key=itemgetter(1))
 #    print tuples_of_neighbor_location_and_pure_influence_score
 
+
+from collections import defaultdict
+
 for data in FileIO.iterateJsonFromFile('data/linear_regression'):
-    print data['mf_location_to_ideal_hashtags_rank'], data.keys()
+    mf_model_id_to_mf_location_to_hashtags_ranked_by_model =\
+                                                         data['mf_model_id_to_mf_location_to_hashtags_ranked_by_model']
+    mf_location_to_ideal_hashtags_rank = data['mf_location_to_ideal_hashtags_rank']
+    conf = data['conf']
+    tu = data['tu']
+    
+    mf_hashtag_to_mf_model_id_to_score = defaultdict(dict)
+    for model_id, mf_location_to_hashtags_ranked_by_model in \
+            mf_model_id_to_mf_location_to_hashtags_ranked_by_model.iteritems():
+        for location, hashtags_ranked_by_model in mf_location_to_hashtags_ranked_by_model.iteritems():
+            print model_id, location, hashtags_ranked_by_model
+        
+#    for location, ltuo_hashtag_and_perct in mf_location_to_ideal_hashtags_rank.iteritems():
+#        for hashtag, perct in ltuo_hashtag_and_perct:
+#            print location, hashtag, perct
+#            mf_model_id_to_score = {}
+#            for model_id, mf_location_to_hashtags_ranked_by_model in \
+#                    mf_model_id_to_mf_location_to_hashtags_ranked_by_model.iteritems():
+                
+                
+                
+                

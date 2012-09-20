@@ -285,7 +285,7 @@ class PredictionModels:
                                                       uniqueHashtags,
                                                       min(len(uniqueHashtags), conf['noOfTargetHashtags'])
                                                     )
-                    indices = range(1, len(hashtags_for_loc)+1)
+                    indices = [1/float(i) for i in range(1, len(hashtags_for_loc)+1)]
                     hashtags_for_lattice[loc] = zip(hashtags_for_loc, reversed(indices))
                 else:
                     hashtags_for_lattice[loc] = random.sample(
