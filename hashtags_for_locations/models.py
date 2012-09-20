@@ -518,16 +518,26 @@ class Experiments(object):
                             FileIO.writeToFileAsJson(iterationData, self.getModelFile(modelId))
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction]; del predictionTimeUnitsMap[timeUnitForActualPropagation]
             currentTime+=timeUnitDelta
+    def moved_model_files_to_chevron(self):
+        for no_of_hashtags in self.noOfHashtagsList:
+            self.conf['noOfTargetHashtags'] = no_of_hashtags
+            model_file = self.getModelFile('linear_regression')
+            dir = model_file.split('models_1')[1]
+            output_file = '/mnt/chevron/kykamath/temp_data' + dir[:dir.rindex('/')]+'/linear_regression'
+            FileIO.createDirectoryForFile(output_file)
+#            print 'cp %s %s'%(model_file, output_file)
+            GeneralMethods.runCommand('cp %s %s'%(model_file, output_file))
+
     def runToGetDataForLinearRegression(self):
         currentTime = self.startTime
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
         loadLocationsList()
-        print 'Using file: ', timeUnitWithOccurrencesFile%(
-                                                           self.outputFolder,
-                                                           self.startTime.strftime('%Y-%m-%d'),
-                                                           self.endTime.strftime('%Y-%m-%d')
-                                                           )
+#        print 'Using file: ', timeUnitWithOccurrencesFile%(
+#                                                           self.outputFolder,
+#                                                           self.startTime.strftime('%Y-%m-%d'),
+#                                                           self.endTime.strftime('%Y-%m-%d')
+#                                                           )
         timeUnitsToDataMap = dict([(d['tu'], d) 
                                    for d in iterateJsonFromFile(
                                         timeUnitWithOccurrencesFile%(
@@ -538,9 +548,8 @@ class Experiments(object):
                                    ])
         for no_of_hashtags in self.noOfHashtagsList:
             self.conf['noOfTargetHashtags'] = no_of_hashtags
-            print self.getModelFile('linear_regression')
-#            exit()
-#            GeneralMethods.runCommand('rm -rf %s'%self.getModelFile('linear_regression'))
+#            print self.getModelFile('linear_regression')
+            GeneralMethods.runCommand('rm -rf %s'%self.getModelFile('linear_regression'))
 
 #        map(lambda modelId: GeneralMethods.runCommand('rm -rf %s'%self.getModelFile(modelId)), self.predictionModels)
         hard_end_time = self.conf.get('hard_end_time', None)
@@ -586,6 +595,8 @@ class Experiments(object):
                                                            historicalTimeUnitsMap[timeUnitForPropagationForPrediction], 
                                                            **self.conf
                                                            )
+                        hashtagsForLattice = dict(filter(lambda (location, l): len(l)>0,
+                                                    hashtagsForLattice.iteritems()))
                         mf_model_id_to_mf_location_to_hashtags_ranked_by_model[modelId] = hashtagsForLattice
                     iterationData = {
                                      'conf': self._getSerializableConf(),
@@ -595,6 +606,8 @@ class Experiments(object):
                                      'mf_model_id_to_mf_location_to_hashtags_ranked_by_model':
                                             mf_model_id_to_mf_location_to_hashtags_ranked_by_model
                                     }
+#                    print iterationData['mf_model_id_to_mf_location_to_hashtags_ranked_by_model']['greedy']
+#                    exit()
                     FileIO.writeToFileAsJson(iterationData, self.getModelFile('linear_regression'))
                 del historicalTimeUnitsMap[timeUnitForPropagationForPrediction];
                 del predictionTimeUnitsMap[timeUnitForActualPropagation]
@@ -808,13 +821,14 @@ class Experiments(object):
                         predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS),
                         noOfHashtagsList=noOfHashtagsList
                         )
-#            conf['hard_end_time'] = datetime(2011, 9, 16)
+            conf['hard_end_time'] = datetime(2011, 9, 30)
             Experiments(startTime,
                         endTime,
                         outputFolder,
                         predictionModels,
                         evaluationMetrics,
-                        **conf).runToGetDataForLinearRegression()
+#                        **conf).runToGetDataForLinearRegression()
+                        **conf).moved_model_files_to_chevron()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
