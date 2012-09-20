@@ -139,13 +139,24 @@ class EvaluationMetrics:
     def _bestHashtagsForLocation(actualPropagation, **conf):
         bestHashtagsForLocation = {}
         for loc, occs in actualPropagation.occurrences.iteritems():
-            bestHashtagsForLocation[loc] = zip(*
-                                               sorted([
-                                                       (h, len(list(hOccs)))
+            if 'hashtags_with_scores' in conf and conf['hashtags_with_scores']:
+                num_of_occs = float(len(occs))
+                bestHashtagsForLocation[loc] = sorted([(h, len(list(hOccs))/num_of_occs)
                                                         for h, hOccs in 
-                                                            groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))], 
-                                                      key=itemgetter(1))
-                                               )[0][-conf['noOfTargetHashtags']:]
+                                                            groupby(sorted(occs, key=itemgetter(0)), key=itemgetter(0))
+                                                       ], 
+                                                      key=itemgetter(1))[-conf['noOfTargetHashtags']:]
+            else:
+                bestHashtagsForLocation[loc] = zip(*
+                                                   sorted([
+                                                           (h, len(list(hOccs)))
+                                                            for h, hOccs in 
+                                                                groupby(sorted(occs,key=itemgetter(0)),
+                                                                        key=itemgetter(0)
+                                                                    )
+                                                           ], 
+                                                          key=itemgetter(1))
+                                                   )[0][-conf['noOfTargetHashtags']:]
         return bestHashtagsForLocation
     @staticmethod
     def _impact(loc, hashtags, actualPropagation):
@@ -529,6 +540,7 @@ class Experiments(object):
             GeneralMethods.runCommand('cp %s %s'%(model_file, output_file))
 
     def runToGetDataForLinearRegression(self):
+        self.conf['hashtags_with_scores'] = True
         currentTime = self.startTime
         timeUnitDelta = timedelta(seconds=TIME_UNIT_IN_SECONDS)
         historicalTimeUnitsMap, predictionTimeUnitsMap = {}, {}
@@ -590,7 +602,6 @@ class Experiments(object):
                                                         )
                     mf_model_id_to_mf_location_to_hashtags_ranked_by_model = {}
                     for modelId in self.predictionModels:
-                        self.conf['hashtags_with_scores'] = True
                         hashtagsForLattice = PREDICTION_MODEL_METHODS[modelId](
                                                            historicalTimeUnitsMap[timeUnitForPropagationForPrediction], 
                                                            **self.conf
@@ -827,8 +838,8 @@ class Experiments(object):
                         outputFolder,
                         predictionModels,
                         evaluationMetrics,
-#                        **conf).runToGetDataForLinearRegression()
-                        **conf).moved_model_files_to_chevron()
+                        **conf).runToGetDataForLinearRegression()
+#                        **conf).moved_model_files_to_chevron()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod

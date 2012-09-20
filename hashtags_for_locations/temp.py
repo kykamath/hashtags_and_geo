@@ -42,5 +42,5 @@ from operator import itemgetter
 #        tuples_of_neighbor_location_and_pure_influence_score= sorted(tuples_of_neighbor_location_and_pure_influence_score, key=itemgetter(1))
 #    print tuples_of_neighbor_location_and_pure_influence_score
 
-for data in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models_1/2011-09-01_2011-11-01/360_60/100/linear_regression'):
-    print data['mf_model_id_to_mf_location_to_hashtags_ranked_by_model'].keys(), data.keys()
+for data in FileIO.iterateJsonFromFile('data/linear_regression'):
+    print data['mf_location_to_ideal_hashtags_rank'], data.keys()
