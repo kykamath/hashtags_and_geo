@@ -832,7 +832,7 @@ class Experiments(object):
                         predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS),
                         noOfHashtagsList=noOfHashtagsList
                         )
-            conf['hard_end_time'] = datetime(2011, 9, 30)
+            conf['hard_end_time'] = datetime(2011, 10, 31)
             Experiments(startTime,
                         endTime,
                         outputFolder,
