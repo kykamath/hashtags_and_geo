@@ -1,4 +1,10 @@
-#from library.file_io import FileIO
+from library.file_io import FileIO
+
+for data in FileIO.iterateJsonFromFile('/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models_1/2011-09-01_2011-11-01/360_900/100/linear_regression'):
+    for loc in data['mf_location_to_ideal_hashtags_rank']:
+        print data['tu'], loc, data['mf_location_to_ideal_hashtags_rank'][loc]
+    exit()
+    
 #import numpy as np
 #from operator import itemgetter
 ##def get_occurrences_stats(occurrences1, occurrences2):
