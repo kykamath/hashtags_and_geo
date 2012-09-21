@@ -45,10 +45,15 @@ def get_feature_vectors(data):
                 yield location, hashtag, perct, mf_hashtag_to_mf_model_id_to_score[hashtag]
 
 def split_feature_vectors_into_test_and_training(feature_vectors):
+    time_units = map(itemgetter('tu'), feature_vectors)
+    time_units = sorted(list(set(time_units)))
     feature_vectors.sort(key=itemgetter('tu'))
-#    feature_vectors = map(itemgetter('feature_vector'), feature_vectors)
-    test_index = int(len(feature_vectors)*(1-TESTING_RATIO))
-    return (feature_vectors[:test_index], feature_vectors[test_index:])
+    test_time_unit = time_units[int(len(time_units)*(1-TESTING_RATIO))]
+    train_feature_vectors, test_feature_vectors = [], []
+    for feature_vector in feature_vectors:
+        if feature_vector['tu'] > test_time_unit: test_feature_vectors.append(feature_vector)
+        else: train_feature_vectors.append(feature_vector)
+    return (train_feature_vectors, test_feature_vectors)
 
 class EvaluationMetric(object):
     @staticmethod
@@ -123,13 +128,18 @@ class LearningToRank(ModifiedMRJob):
                                              R_Helper.get_predicted_value(mf_parameter_names_to_values, feature_vector)
                                             ),
                                         ltuo_hashtag_and_actual_score_and_feature_vector)
-                ltuo_hashtag_and_score.sort(key=itemgetter(1))
+                ltuo_hastag_and_actual_score = map(itemgetter(0, 1), ltuo_hashtag_and_actual_score_and_score)
+                ltuo_hastag_and_score = map(itemgetter(0, 2), ltuo_hashtag_and_actual_score_and_score)
+                ltuo_hastag_and_actual_score.sort(key=itemgetter(1))
+                ltuo_hastag_and_score.sort(key=itemgetter(1))
+                yield location, ltuo_hastag_and_actual_score
+                yield location, ltuo_hastag_and_score
 #                print 'x'
             
 #            for test_feature_vectors in lo_test_feature_vectors:
                 
                 
-            yield location, [len(train_feature_vectors), len(test_feature_vectors), mf_parameter_names_to_values]
+#            yield location, [len(train_feature_vectors), len(test_feature_vectors), mf_parameter_names_to_values]
     def steps(self):
         return [self.mr(
                     mapper=self.map_data_to_feature_vectors,
