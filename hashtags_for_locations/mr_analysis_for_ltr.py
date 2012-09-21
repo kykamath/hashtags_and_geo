@@ -106,35 +106,36 @@ class LearningToRank(ModifiedMRJob):
                                                      with_variable_selection=True
                                                     )
             mf_parameter_names_to_values = dict(R_Helper.get_parameter_values(model))
+            yield location, mf_parameter_names_to_values
             
-            lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
-                                    zip(*
-                                        [(tu, map(
-                                                      itemgetter('hashtag', 'actual_score', 'feature_vector'),
-                                                      it_feature_vectors)
-                                                  )
-                                            for tu, it_feature_vectors in 
-                                                groupby(test_feature_vectors, key=itemgetter('tu'))
-                                            ]
-                                       )[1]
-            
-            for ltuo_hashtag_and_actual_score_and_feature_vector in\
-                     lo_ltuo_hashtag_and_actual_score_and_feature_vector:
-                ltuo_hashtag_and_actual_score_and_score =\
-                                    map(lambda (hashtag, actual_score, feature_vector): 
-                                            (
-                                             hashtag,
-                                             actual_score,
-                                             R_Helper.get_predicted_value(mf_parameter_names_to_values, feature_vector)
-                                            ),
-                                        ltuo_hashtag_and_actual_score_and_feature_vector)
-                ltuo_hastag_and_actual_score = map(itemgetter(0, 1), ltuo_hashtag_and_actual_score_and_score)
-                ltuo_hastag_and_score = map(itemgetter(0, 2), ltuo_hashtag_and_actual_score_and_score)
-                ltuo_hastag_and_actual_score.sort(key=itemgetter(1))
-                ltuo_hastag_and_score.sort(key=itemgetter(1))
-                yield location, ltuo_hastag_and_actual_score
-                yield location, ltuo_hastag_and_score
-#                print 'x'
+#            lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
+#                                    zip(*
+#                                        [(tu, map(
+#                                                      itemgetter('hashtag', 'actual_score', 'feature_vector'),
+#                                                      it_feature_vectors)
+#                                                  )
+#                                            for tu, it_feature_vectors in 
+#                                                groupby(test_feature_vectors, key=itemgetter('tu'))
+#                                            ]
+#                                       )[1]
+#            
+#            for ltuo_hashtag_and_actual_score_and_feature_vector in\
+#                     lo_ltuo_hashtag_and_actual_score_and_feature_vector:
+#                ltuo_hashtag_and_actual_score_and_score =\
+#                                    map(lambda (hashtag, actual_score, feature_vector): 
+#                                            (
+#                                             hashtag,
+#                                             actual_score,
+#                                             R_Helper.get_predicted_value(mf_parameter_names_to_values, feature_vector)
+#                                            ),
+#                                        ltuo_hashtag_and_actual_score_and_feature_vector)
+#                ltuo_hastag_and_actual_score = map(itemgetter(0, 1), ltuo_hashtag_and_actual_score_and_score)
+#                ltuo_hastag_and_score = map(itemgetter(0, 2), ltuo_hashtag_and_actual_score_and_score)
+#                ltuo_hastag_and_actual_score.sort(key=itemgetter(1))
+#                ltuo_hastag_and_score.sort(key=itemgetter(1))
+#                yield location, ltuo_hastag_and_actual_score
+#                yield location, ltuo_hastag_and_score
+##                print 'x'
             
 #            for test_feature_vectors in lo_test_feature_vectors:
                 
