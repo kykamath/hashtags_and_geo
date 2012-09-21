@@ -108,24 +108,31 @@ class LearningToRank(ModifiedMRJob):
         column_names = ['value_to_predict'] + LIST_OF_MODELS 
         mf_column_name_to_column_data = defaultdict(list)
         feature_vectors = list(chain(*lo_feature_vector))
-        train_feature_vectors, test_feature_vectors = split_feature_vectors_into_test_and_training(feature_vectors)
-        if train_feature_vectors and test_feature_vectors:
-            mf_parameter_names_to_values = dict(self._get_parameter_names_to_values(train_feature_vectors))
-            test_feature_vectors.sort(key=itemgetter('tu'))
-            lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
-                                    zip(
-                                        [(tu, map(
-#                                                      itemgetter('hashtag', 'actual_score', 'feature_vector'),
-                                                    itemgetter('actual_score'),
-                                                      it_feature_vectors)
-                                                  )
-                                            for tu, it_feature_vectors in 
-                                                groupby(test_feature_vectors, key=itemgetter('tu'))
-                                            ]
-                                       )
-            for ltuo_hashtag_and_actual_score_and_feature_vector in \
-                    lo_ltuo_hashtag_and_actual_score_and_feature_vector:
-                yield location, ltuo_hashtag_and_actual_score_and_feature_vector
+        
+        yield location, len(feature_vectors)
+        
+        
+#        train_feature_vectors, test_feature_vectors = split_feature_vectors_into_test_and_training(feature_vectors)
+#        if train_feature_vectors and test_feature_vectors:
+#            mf_parameter_names_to_values = dict(self._get_parameter_names_to_values(train_feature_vectors))
+#            test_feature_vectors.sort(key=itemgetter('tu'))
+#            lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
+#                                    zip(
+#                                        [(tu, map(
+##                                                      itemgetter('hashtag', 'actual_score', 'feature_vector'),
+#                                                    itemgetter('actual_score'),
+#                                                      it_feature_vectors)
+#                                                  )
+#                                            for tu, it_feature_vectors in 
+#                                                groupby(test_feature_vectors, key=itemgetter('tu'))
+#                                            ]
+#                                       )
+#            for ltuo_hashtag_and_actual_score_and_feature_vector in \
+#                    lo_ltuo_hashtag_and_actual_score_and_feature_vector:
+#                yield location, ltuo_hashtag_and_actual_score_and_feature_vector
+                
+                
+                
 #            for ltuo_hashtag_and_actual_score_and_feature_vector in \
 #                    lo_ltuo_hashtag_and_actual_score_and_feature_vector:
 #                ltuo_hashtag_and_actual_score_and_predicted_score =\
