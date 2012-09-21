@@ -111,6 +111,7 @@ class LearningToRank(ModifiedMRJob):
         train_feature_vectors, test_feature_vectors = split_feature_vectors_into_test_and_training(feature_vectors)
         if train_feature_vectors and test_feature_vectors:
             mf_parameter_names_to_values = dict(self._get_parameter_names_to_values(train_feature_vectors))
+            test_feature_vectors.sort(key=itemgetter('tu'))
             lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
                                     zip(
                                         [(tu, map(
