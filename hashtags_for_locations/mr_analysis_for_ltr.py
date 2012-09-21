@@ -47,7 +47,7 @@ def get_feature_vectors(data):
 def split_feature_vectors_into_test_and_training(feature_vectors):
     time_units = map(itemgetter('tu'), feature_vectors)
     time_units = sorted(list(set(time_units)))
-    feature_vectors.sort(key=itemgetter('tu'))
+#    feature_vectors.sort(key=itemgetter('tu'))
     test_time_unit = time_units[int(len(time_units)*(1-TESTING_RATIO))]
     train_feature_vectors, test_feature_vectors = [], []
     for feature_vector in feature_vectors:
@@ -112,7 +112,7 @@ class LearningToRank(ModifiedMRJob):
         if train_feature_vectors and test_feature_vectors:
             mf_parameter_names_to_values = dict(self._get_parameter_names_to_values(train_feature_vectors))
             lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
-                                    zip(*
+                                    zip(
                                         [(tu, map(
                                                       itemgetter('hashtag', 'actual_score', 'feature_vector'),
                                                       it_feature_vectors)
@@ -120,18 +120,21 @@ class LearningToRank(ModifiedMRJob):
                                             for tu, it_feature_vectors in 
                                                 groupby(test_feature_vectors, key=itemgetter('tu'))
                                             ]
-                                       )[1]
+                                       )
             for ltuo_hashtag_and_actual_score_and_feature_vector in \
                     lo_ltuo_hashtag_and_actual_score_and_feature_vector:
-                ltuo_hashtag_and_actual_score_and_predicted_score =\
-                            map(lambda (hashtag, actual_score, feature_vector): 
-                                    (
-                                     hashtag,
-                                     actual_score,
-                                     R_Helper.get_predicted_value(mf_parameter_names_to_values, feature_vector)
-                                    ),
-                                ltuo_hashtag_and_actual_score_and_feature_vector)
-                yield location, ltuo_hashtag_and_actual_score_and_predicted_score
+                yield location, ltuo_hashtag_and_actual_score_and_feature_vector
+#            for ltuo_hashtag_and_actual_score_and_feature_vector in \
+#                    lo_ltuo_hashtag_and_actual_score_and_feature_vector:
+#                ltuo_hashtag_and_actual_score_and_predicted_score =\
+#                            map(lambda (hashtag, actual_score, feature_vector): 
+#                                    (
+#                                     hashtag,
+#                                     actual_score,
+#                                     R_Helper.get_predicted_value(mf_parameter_names_to_values, feature_vector)
+#                                    ),
+#                                ltuo_hashtag_and_actual_score_and_feature_vector)
+#                yield location, ltuo_hashtag_and_actual_score_and_predicted_score
             
 #            for ltuo_hashtag_and_actual_score_and_feature_vector in\
 #                     lo_ltuo_hashtag_and_actual_score_and_feature_vector:
