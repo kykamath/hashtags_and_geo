@@ -47,6 +47,15 @@ def split_feature_vectors_into_test_and_training(feature_vectors):
     feature_vectors = map(itemgetter('feature_vector'), feature_vectors)
     test_index = int(len(feature_vectors)*(1-TESTING_RATIO))
     return (feature_vectors[:test_index], feature_vectors[test_index:])
+
+class EvaluationMetric(object):
+    @staticmethod
+    def accuracy(hashtags1, hashtags2, num_of_hashtags):
+        hashtags1 = hashtags1[]
+        return len(set(hashtags1).intersection(set(hashtags2)))/float(num_of_hashtags)
+    @staticmethod
+    def impact(hashtags1, hashtags2, hashtags_dist, num_of_hashtags):
+#        return len(set(hashtags1).intersection(set(hashtags2))
     
 class LearningToRank(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
