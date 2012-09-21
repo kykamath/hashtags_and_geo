@@ -108,8 +108,14 @@ class LearningToRank(ModifiedMRJob):
         column_names = ['value_to_predict'] + LIST_OF_MODELS 
         mf_column_name_to_column_data = defaultdict(list)
         feature_vectors = list(chain(*lo_feature_vector))
-        
-        yield location, len(feature_vectors)
+#        for fv in feature_vectors:
+#            yiel
+        feature_vectors.sort(key=itemgetter('tu'))
+        ltuo_tu_and_fv = [(tu, list(it))
+                            for tu, it in groupby(feature_vectors, key=itemgetter('tu'))]
+        for tu, fv in ltuo_tu_and_fv:
+            yield location, [tu, sum(map(itemgetter('actual_score'), fv))]
+#        yield location, map(itemgetter('hashtag', 'actual_score'), feature_vectors)
         
         
 #        train_feature_vectors, test_feature_vectors = split_feature_vectors_into_test_and_training(feature_vectors)
