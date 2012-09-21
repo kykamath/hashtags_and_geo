@@ -83,42 +83,66 @@ class LearningToRank(ModifiedMRJob):
     def map_final_data_to_feature_vectors(self):
         for location, feature_vectors in self.mf_location_to_feature_vectors.iteritems():
             yield location, feature_vectors
+    def _get_parameter_names_to_values(self, train_feature_vectors):
+        column_names = ['value_to_predict'] + LIST_OF_MODELS 
+        mf_column_name_to_column_data = defaultdict(list)
+        train_feature_vectors = map(itemgetter('feature_vector'), train_feature_vectors)
+        for feature_vector in train_feature_vectors:
+            for column_name in column_names:
+                mf_column_name_to_column_data[column_name].append(feature_vector.get(column_name, 0.0))
+        data = {}
+        for column_name, column_data in mf_column_name_to_column_data.iteritems():
+            data[column_name] = robjects.FloatVector(column_data)
+        data_frame = robjects.DataFrame(data)
+        prediction_variable = 'value_to_predict'
+        predictor_variables = LIST_OF_MODELS
+        model = R_Helper.linear_regression_model(
+                                                 data_frame,
+                                                 prediction_variable,
+                                                 predictor_variables,
+                                                 with_variable_selection=True
+                                                )
+        return R_Helper.get_parameter_values(model)
+    
     def red_feature_vectors_to_model(self, location, lo_feature_vector):
         column_names = ['value_to_predict'] + LIST_OF_MODELS 
         mf_column_name_to_column_data = defaultdict(list)
         feature_vectors = list(chain(*lo_feature_vector))
         train_feature_vectors, test_feature_vectors = split_feature_vectors_into_test_and_training(feature_vectors)
         if train_feature_vectors and test_feature_vectors:
-            train_feature_vectors = map(itemgetter('feature_vector'), train_feature_vectors)
-            for feature_vector in train_feature_vectors:
-                for column_name in column_names:
-                    mf_column_name_to_column_data[column_name].append(feature_vector.get(column_name, 0.0))
-            data = {}
-            for column_name, column_data in mf_column_name_to_column_data.iteritems():
-                data[column_name] = robjects.FloatVector(column_data)
-            data_frame = robjects.DataFrame(data)
-            prediction_variable = 'value_to_predict'
-            predictor_variables = LIST_OF_MODELS
-            model = R_Helper.linear_regression_model(
-                                                     data_frame,
-                                                     prediction_variable,
-                                                     predictor_variables,
-                                                     with_variable_selection=True
-                                                    )
-            mf_parameter_names_to_values = dict(R_Helper.get_parameter_values(model))
+            mf_parameter_names_to_values = dict(self._get_parameter_names_to_values(train_feature_vectors))
             yield location, mf_parameter_names_to_values
+#            def _get_parameter_names_to_values():
+#                train_feature_vectors = map(itemgetter('feature_vector'), train_feature_vectors)
+#                for feature_vector in train_feature_vectors:
+#                    for column_name in column_names:
+#                        mf_column_name_to_column_data[column_name].append(feature_vector.get(column_name, 0.0))
+#                data = {}
+#                for column_name, column_data in mf_column_name_to_column_data.iteritems():
+#                    data[column_name] = robjects.FloatVector(column_data)
+#                data_frame = robjects.DataFrame(data)
+#                prediction_variable = 'value_to_predict'
+#                predictor_variables = LIST_OF_MODELS
+#                model = R_Helper.linear_regression_model(
+#                                                         data_frame,
+#                                                         prediction_variable,
+#                                                         predictor_variables,
+#                                                         with_variable_selection=True
+#                                                        )
+#                mf_parameter_names_to_values = dict(R_Helper.get_parameter_values(model))
             
-#            lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
-#                                    zip(*
-#                                        [(tu, map(
-#                                                      itemgetter('hashtag', 'actual_score', 'feature_vector'),
-#                                                      it_feature_vectors)
-#                                                  )
-#                                            for tu, it_feature_vectors in 
-#                                                groupby(test_feature_vectors, key=itemgetter('tu'))
-#                                            ]
-#                                       )[1]
-#            
+            lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
+                                    zip(*
+                                        [(tu, map(
+                                                      itemgetter('hashtag', 'actual_score', 'feature_vector'),
+                                                      it_feature_vectors)
+                                                  )
+                                            for tu, it_feature_vectors in 
+                                                groupby(test_feature_vectors, key=itemgetter('tu'))
+                                            ]
+                                       )[1]
+            yield location, lo_ltuo_hashtag_and_actual_score_and_feature_vector
+            
 #            for ltuo_hashtag_and_actual_score_and_feature_vector in\
 #                     lo_ltuo_hashtag_and_actual_score_and_feature_vector:
 #                ltuo_hashtag_and_actual_score_and_score =\
