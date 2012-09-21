@@ -127,11 +127,11 @@ class LearningToRank(ModifiedMRJob):
             test_feature_vectors.sort(key=itemgetter('tu'))
             lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
                                     zip(
-                                        [(tu, map(
+                                        [(tu, sum(map(
 #                                                      itemgetter('hashtag', 'actual_score', 'feature_vector'),
                                                     itemgetter('actual_score'),
                                                       it_feature_vectors)
-                                                  )
+                                                  ))
                                             for tu, it_feature_vectors in 
                                                 groupby(test_feature_vectors, key=itemgetter('tu'))
                                             ]
