@@ -135,23 +135,23 @@ class LearningToRank(ModifiedMRJob):
                                                 groupby(test_feature_vectors, key=itemgetter('tu'))
                                             ]
                                        )[1]
-            for ltuo_hashtag_and_actual_score_and_feature_vector in \
-                    lo_ltuo_hashtag_and_actual_score_and_feature_vector:
-                yield location, ltuo_hashtag_and_actual_score_and_feature_vector
-                
-                
-                
 #            for ltuo_hashtag_and_actual_score_and_feature_vector in \
 #                    lo_ltuo_hashtag_and_actual_score_and_feature_vector:
-#                ltuo_hashtag_and_actual_score_and_predicted_score =\
-#                            map(lambda (hashtag, actual_score, feature_vector): 
-#                                    (
-#                                     hashtag,
-#                                     actual_score,
-#                                     R_Helper.get_predicted_value(mf_parameter_names_to_values, feature_vector)
-#                                    ),
-#                                ltuo_hashtag_and_actual_score_and_feature_vector)
-#                yield location, ltuo_hashtag_and_actual_score_and_predicted_score
+#                yield location, ltuo_hashtag_and_actual_score_and_feature_vector
+                
+                
+                
+            for ltuo_hashtag_and_actual_score_and_feature_vector in \
+                    lo_ltuo_hashtag_and_actual_score_and_feature_vector:
+                ltuo_hashtag_and_actual_score_and_predicted_score =\
+                            map(lambda (hashtag, actual_score, feature_vector): 
+                                    (
+                                     hashtag,
+                                     actual_score,
+                                     R_Helper.get_predicted_value(mf_parameter_names_to_values, feature_vector)
+                                    ),
+                                ltuo_hashtag_and_actual_score_and_feature_vector)
+                yield location, ltuo_hashtag_and_actual_score_and_predicted_score
             
 #            for ltuo_hashtag_and_actual_score_and_feature_vector in\
 #                     lo_ltuo_hashtag_and_actual_score_and_feature_vector:
