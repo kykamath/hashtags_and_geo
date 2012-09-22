@@ -100,7 +100,7 @@ class LearningToRank(ModifiedMRJob):
                                                  data_frame,
                                                  prediction_variable,
                                                  predictor_variables,
-                                                 with_variable_selection=True
+#                                                 with_variable_selection=True
                                                 )
         return R_Helper.get_parameter_values(model)
     
