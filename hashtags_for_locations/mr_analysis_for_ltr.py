@@ -21,7 +21,7 @@ LIST_OF_MODELS = [
                   'coverage_probability'
                   ]
 
-TESTING_RATIO = 0.1
+TESTING_RATIO = 0.25
 
 NUM_OF_HASHTAGS = 100
 
@@ -105,8 +105,10 @@ class LearningToRank(ModifiedMRJob):
         mf_column_name_to_column_data = defaultdict(list)
         train_feature_vectors = map(itemgetter('feature_vector'), train_feature_vectors)
         for feature_vector in train_feature_vectors:
-            for column_name in column_names:
-                mf_column_name_to_column_data[column_name].append(feature_vector.get(column_name, 0.0))
+            if feature_vector['value_to_predict']:
+                mf_column_name_to_column_data['value_to_predict'] = feature_vector['value_to_predict']
+                for column_name in LIST_OF_MODELS:
+                    mf_column_name_to_column_data[column_name].append(feature_vector.get(column_name, 0.0))
         data = {}
         for column_name, column_data in mf_column_name_to_column_data.iteritems():
             data[column_name] = robjects.FloatVector(column_data)
