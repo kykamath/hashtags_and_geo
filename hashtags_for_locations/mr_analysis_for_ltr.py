@@ -30,19 +30,36 @@ def get_feature_vectors(data):
                                                          data['mf_model_id_to_mf_location_to_hashtags_ranked_by_model']
     mf_location_to_ideal_hashtags_rank = data['mf_location_to_ideal_hashtags_rank']
     
-    mf_hashtag_to_mf_model_id_to_score = defaultdict(dict)
+    mf_location_to_mf_hashtag_to_mf_model_id_to_score = {}
     for model_id, mf_location_to_hashtags_ranked_by_model in \
             mf_model_id_to_mf_location_to_hashtags_ranked_by_model.iteritems():
         for location, hashtags_ranked_by_model in mf_location_to_hashtags_ranked_by_model.iteritems():
 #            print model_id, location, hashtags_ranked_by_model
             for hashtag, score in hashtags_ranked_by_model:
-                mf_hashtag_to_mf_model_id_to_score[hashtag][model_id] = score
+                if location not in mf_location_to_mf_hashtag_to_mf_model_id_to_score:
+                    mf_location_to_mf_hashtag_to_mf_model_id_to_score[location] = defaultdict(dict)
+                mf_location_to_mf_hashtag_to_mf_model_id_to_score[location][hashtag][model_id] = score
     
-    for location, ltuo_hashtag_and_perct in mf_location_to_ideal_hashtags_rank.iteritems():
-        for hashtag, perct in ltuo_hashtag_and_perct:
-#            if hashtag in mf_hashtag_to_mf_model_id_to_score:
-            mf_hashtag_to_mf_model_id_to_score[hashtag]['value_to_predict'] = perct
-            yield location, hashtag, perct, mf_hashtag_to_mf_model_id_to_score[hashtag]
+    for location, mf_hashtag_to_mf_model_id_to_score in \
+            mf_location_to_mf_hashtag_to_mf_model_id_to_score.iteritems():
+        ltuo_hashtag_and_perct = []
+        if location in mf_location_to_ideal_hashtags_rank: 
+            ltuo_hashtag_and_perct = mf_location_to_ideal_hashtags_rank[location]
+        mf_hashtag_to_value_to_predict = dict(ltuo_hashtag_and_perct)
+        for hashtag, mf_model_id_to_score in mf_hashtag_to_mf_model_id_to_score.iteritems():
+#            actual_score = None
+#            if hashtag in mf_hashtag_to_value_to_predict:
+#                actual_score = mf_hashtag_to_value_to_predict[hashtag]
+            mf_model_id_to_score['value_to_predict'] = mf_hashtag_to_value_to_predict.get(hashtag, None)
+            yield location, hashtag, mf_model_id_to_score
+            
+#    
+#    
+#    for location, ltuo_hashtag_and_perct in mf_location_to_ideal_hashtags_rank.iteritems():
+#        for hashtag, perct in ltuo_hashtag_and_perct:
+##            if hashtag in mf_hashtag_to_mf_model_id_to_score:
+#            mf_location_to_mf_hashtag_to_mf_model_id_to_score[location][hashtag]['value_to_predict'] = perct
+#            yield location, hashtag, perct, mf_location_to_mf_hashtag_to_mf_model_id_to_score[location][hashtag]
 
 def split_feature_vectors_into_test_and_training(feature_vectors):
     time_units = map(itemgetter('tu'), feature_vectors)
@@ -73,11 +90,11 @@ class LearningToRank(ModifiedMRJob):
     def map_data_to_feature_vectors(self, key, line):
         if False: yield # I'm a generator!
         data = cjson.decode(line)
-        for location, hashtag, actual_score, feature_vector in get_feature_vectors(data):
+        for location, hashtag, feature_vector in get_feature_vectors(data):
             self.mf_location_to_feature_vectors[location].append({
                                                                   'tu': data['tu'],
                                                                   'hashtag': hashtag,
-                                                                  'actual_score': actual_score,
+                                                                  'actual_score': feature_vector['value_to_predict'],
                                                                   'feature_vector': feature_vector
                                                                   })
     def map_final_data_to_feature_vectors(self):
@@ -105,8 +122,8 @@ class LearningToRank(ModifiedMRJob):
         return R_Helper.get_parameter_values(model)
     
     def red_feature_vectors_to_model(self, location, lo_feature_vector):
-        column_names = ['value_to_predict'] + LIST_OF_MODELS 
-        mf_column_name_to_column_data = defaultdict(list)
+#        column_names = ['value_to_predict'] + LIST_OF_MODELS 
+#        mf_column_name_to_column_data = defaultdict(list)
         feature_vectors = list(chain(*lo_feature_vector))
 #        for fv in feature_vectors:
 #            yiel
