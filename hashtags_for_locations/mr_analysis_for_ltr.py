@@ -106,22 +106,23 @@ class LearningToRank(ModifiedMRJob):
         train_feature_vectors = map(itemgetter('feature_vector'), train_feature_vectors)
         for feature_vector in train_feature_vectors:
             if feature_vector['value_to_predict']:
-                mf_column_name_to_column_data['value_to_predict'] = feature_vector['value_to_predict']
+                mf_column_name_to_column_data['value_to_predict'].append(feature_vector['value_to_predict'])
                 for column_name in LIST_OF_MODELS:
                     mf_column_name_to_column_data[column_name].append(feature_vector.get(column_name, 0.0))
         data = {}
         for column_name, column_data in mf_column_name_to_column_data.iteritems():
             data[column_name] = robjects.FloatVector(column_data)
-        data_frame = robjects.DataFrame(data)
-        prediction_variable = 'value_to_predict'
-        predictor_variables = LIST_OF_MODELS
-        model = R_Helper.linear_regression_model(
-                                                 data_frame,
-                                                 prediction_variable,
-                                                 predictor_variables,
-#                                                 with_variable_selection=True
-                                                )
-        return R_Helper.get_parameter_values(model)
+        if data:
+            data_frame = robjects.DataFrame(data)
+            prediction_variable = 'value_to_predict'
+            predictor_variables = LIST_OF_MODELS
+            model = R_Helper.linear_regression_model(
+                                                     data_frame,
+                                                     prediction_variable,
+                                                     predictor_variables,
+    #                                                 with_variable_selection=True
+                                                    )
+            return R_Helper.get_parameter_values(model)
     
     def red_feature_vectors_to_model(self, location, lo_feature_vector):
 #        column_names = ['value_to_predict'] + LIST_OF_MODELS 
@@ -142,34 +143,41 @@ class LearningToRank(ModifiedMRJob):
         filtered_test_feature_vectors = filter(lambda fv: len(fv['feature_vector'])>1, test_feature_vectors)
         
         if filtered_train_feature_vectors and filtered_test_feature_vectors:
-            mf_parameter_names_to_values = dict(self._get_parameter_names_to_values(filtered_train_feature_vectors))
-            test_feature_vectors.sort(key=itemgetter('tu'))
-            lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
-                                        [(tu, map(
-                                                  itemgetter('hashtag', 'actual_score', 'feature_vector'),
-                                                  it_feature_vectors)
-                                              )
-                                            for tu, it_feature_vectors in 
-                                                groupby(test_feature_vectors, key=itemgetter('tu'))
-                                            ]
-#                                       )[1]
-#            for ltuo_hashtag_and_actual_score_and_feature_vector in \
-#                    lo_ltuo_hashtag_and_actual_score_and_feature_vector:
-#                yield location, ltuo_hashtag_and_actual_score_and_feature_vector
-                
-                
-                
-            for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
-                    lo_ltuo_hashtag_and_actual_score_and_feature_vector:
-                ltuo_hashtag_and_actual_score_and_predicted_score =\
-                            map(lambda (hashtag, actual_score, feature_vector): 
-                                    (
-                                     hashtag,
-                                     actual_score,
-                                     R_Helper.get_predicted_value(mf_parameter_names_to_values, feature_vector)
-                                    ),
-                                ltuo_hashtag_and_actual_score_and_feature_vector)
-                yield location, [tu, ltuo_hashtag_and_actual_score_and_predicted_score]
+            parameter_names_to_values = self._get_parameter_names_to_values(filtered_train_feature_vectors)
+            if parameter_names_to_values:
+                mf_parameter_names_to_values = dict(parameter_names_to_values)
+                test_feature_vectors.sort(key=itemgetter('tu'))
+                lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
+                                                    [(tu, map(
+                                                              itemgetter('hashtag', 'actual_score', 'feature_vector'),
+                                                              it_feature_vectors)
+                                                          )
+                                                        for tu, it_feature_vectors in 
+                                                            groupby(test_feature_vectors, key=itemgetter('tu'))
+                                                    ]
+    #                                       )[1]
+    #            for ltuo_hashtag_and_actual_score_and_feature_vector in \
+    #                    lo_ltuo_hashtag_and_actual_score_and_feature_vector:
+    #                yield location, ltuo_hashtag_and_actual_score_and_feature_vector
+                    
+                    
+                    
+                for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
+                        lo_ltuo_hashtag_and_actual_score_and_feature_vector:
+                    ltuo_hashtag_and_actual_score_and_feature_vector =\
+                                                            filter(
+                                                                       lambda (_,__,fv): fv['value_to_predict']!=None,
+                                                                       ltuo_hashtag_and_actual_score_and_feature_vector
+                                                                   )
+                    ltuo_hashtag_and_actual_score_and_predicted_score =\
+                                    map(lambda (hashtag, actual_score, feature_vector): 
+                                            (
+                                             hashtag,
+                                             actual_score,
+                                             R_Helper.get_predicted_value(mf_parameter_names_to_values, feature_vector)
+                                            ),
+                                        ltuo_hashtag_and_actual_score_and_feature_vector)
+                    yield location, [tu, ltuo_hashtag_and_actual_score_and_predicted_score]
             
 #            for ltuo_hashtag_and_actual_score_and_feature_vector in\
 #                     lo_ltuo_hashtag_and_actual_score_and_feature_vector:
