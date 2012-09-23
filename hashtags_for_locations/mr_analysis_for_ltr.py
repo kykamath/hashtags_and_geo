@@ -164,11 +164,12 @@ class LearningToRank(ModifiedMRJob):
                     
                 for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
                         lo_ltuo_hashtag_and_actual_score_and_feature_vector:
-                    ltuo_hashtag_and_actual_score_and_feature_vector =\
-                                                            filter(
-                                                                       lambda (_,__,fv): fv['value_to_predict']!=None,
-                                                                       ltuo_hashtag_and_actual_score_and_feature_vector
-                                                                   )
+#                    ltuo_hashtag_and_actual_score_and_feature_vector =\
+#                                                            filter(
+#                                                                       lambda (_,__,fv): fv['value_to_predict']!=None,
+#                                                                       ltuo_hashtag_and_actual_score_and_feature_vector
+#                                                                   )
+                    for _, __, fv in ltuo_hashtag_and_actual_score_and_feature_vector: del fv['value_to_predict']
                     ltuo_hashtag_and_actual_score_and_predicted_score =\
                                     map(lambda (hashtag, actual_score, feature_vector): 
                                             (
