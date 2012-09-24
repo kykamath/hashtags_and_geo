@@ -8,8 +8,9 @@ from itertools import chain, groupby
 from library.mrjobwrapper import ModifiedMRJob
 from library.r_helper import R_Helper
 from operator import itemgetter
-import rpy2.robjects as robjects
 import cjson
+import numpy as np
+import rpy2.robjects as robjects
 
 R = robjects.r
 
@@ -91,7 +92,12 @@ class LearningToRank(ModifiedMRJob):
         if False: yield # I'm a generator!
         data = cjson.decode(line)
         for location, hashtag, feature_vector in get_feature_vectors(data):
-            self.mf_location_to_feature_vectors[location].append({
+            location_id = '%s++%s++%s'%(
+                                            location,
+                                            data['conf']['historyTimeInterval'],
+                                            data['conf']['predictionTimeInterval']
+                                        )
+            self.mf_location_to_feature_vectors[location_id].append({
                                                                   'tu': data['tu'],
                                                                   'hashtag': hashtag,
                                                                   'actual_score': feature_vector['value_to_predict'],
@@ -101,7 +107,7 @@ class LearningToRank(ModifiedMRJob):
         for location, feature_vectors in self.mf_location_to_feature_vectors.iteritems():
             yield location, feature_vectors
     def _get_parameter_names_to_values(self, train_feature_vectors):
-        column_names = ['value_to_predict'] + LIST_OF_MODELS 
+#        column_names = ['value_to_predict'] + LIST_OF_MODELS 
         mf_column_name_to_column_data = defaultdict(list)
         train_feature_vectors = map(itemgetter('feature_vector'), train_feature_vectors)
         for feature_vector in train_feature_vectors:
@@ -125,19 +131,7 @@ class LearningToRank(ModifiedMRJob):
             return R_Helper.get_parameter_values(model)
     
     def red_feature_vectors_to_model(self, location, lo_feature_vector):
-#        column_names = ['value_to_predict'] + LIST_OF_MODELS 
-#        mf_column_name_to_column_data = defaultdict(list)
         feature_vectors = list(chain(*lo_feature_vector))
-#        for fv in feature_vectors:
-#            yiel
-#        feature_vectors.sort(key=itemgetter('tu'))
-#        ltuo_tu_and_fv = [(tu, list(it))
-#                            for tu, it in groupby(feature_vectors, key=itemgetter('tu'))]
-#        for tu, fv in ltuo_tu_and_fv:
-#            yield location, [tu, sum(map(itemgetter('actual_score'), fv))]
-#        yield location, map(itemgetter('hashtag', 'actual_score'), feature_vectors)
-        
-        
         train_feature_vectors, test_feature_vectors = split_feature_vectors_into_test_and_training(feature_vectors)
         filtered_train_feature_vectors = filter(lambda fv: len(fv['feature_vector'])>1, train_feature_vectors)
         filtered_test_feature_vectors = filter(lambda fv: len(fv['feature_vector'])>1, test_feature_vectors)
@@ -145,6 +139,8 @@ class LearningToRank(ModifiedMRJob):
         if filtered_train_feature_vectors and filtered_test_feature_vectors:
             parameter_names_to_values = self._get_parameter_names_to_values(filtered_train_feature_vectors)
             if parameter_names_to_values:
+                accuracy_mf_num_of_hashtags_to_metric_values = defaultdict(list)
+                impact_mf_num_of_hashtags_to_metric_values = defaultdict(list)
                 mf_parameter_names_to_values = dict(parameter_names_to_values)
                 test_feature_vectors.sort(key=itemgetter('tu'))
                 lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
@@ -155,20 +151,9 @@ class LearningToRank(ModifiedMRJob):
                                                         for tu, it_feature_vectors in 
                                                             groupby(test_feature_vectors, key=itemgetter('tu'))
                                                     ]
-    #                                       )[1]
-    #            for ltuo_hashtag_and_actual_score_and_feature_vector in \
-    #                    lo_ltuo_hashtag_and_actual_score_and_feature_vector:
-    #                yield location, ltuo_hashtag_and_actual_score_and_feature_vector
-                    
-                    
                     
                 for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
                         lo_ltuo_hashtag_and_actual_score_and_feature_vector:
-#                    ltuo_hashtag_and_actual_score_and_feature_vector =\
-#                                                            filter(
-#                                                                       lambda (_,__,fv): fv['value_to_predict']!=None,
-#                                                                       ltuo_hashtag_and_actual_score_and_feature_vector
-#                                                                   )
                     for _, __, fv in ltuo_hashtag_and_actual_score_and_feature_vector: del fv['value_to_predict']
                     ltuo_hashtag_and_actual_score_and_predicted_score =\
                                     map(lambda (hashtag, actual_score, feature_vector): 
@@ -200,7 +185,6 @@ class LearningToRank(ModifiedMRJob):
                                                                reverse=True
                                                                )
                         
-                        mf_metric_to_ltuo_num_of_hashtags_to_metric_value = defaultdict(list)
                         for num_of_hashtags in range(1,25):
                             hashtags_dist = dict(ltuo_hashtag_and_actual_score)
                             actual_ordering_of_hashtags = zip(*ltuo_hashtag_and_actual_score)[0]
@@ -216,45 +200,35 @@ class LearningToRank(ModifiedMRJob):
                                                             predicted_ordering_of_hashtags[:num_of_hashtags],
                                                             hashtags_dist
                                                           )
-                            mf_metric_to_ltuo_num_of_hashtags_to_metric_value['accuracy'].append((
-                                                                                             num_of_hashtags,
-                                                                                             accuracy
-                                                                                             ))
-                            mf_metric_to_ltuo_num_of_hashtags_to_metric_value['impact'].append((
-                                                                                             num_of_hashtags,
-                                                                                             impact
-                                                                                             ))
+                            accuracy_mf_num_of_hashtags_to_metric_values[num_of_hashtags].append(accuracy)
+                            impact_mf_num_of_hashtags_to_metric_values[num_of_hashtags].append(impact)
                                 
-                        yield location, mf_metric_to_ltuo_num_of_hashtags_to_metric_value
+                data = location.split('++')
+                window_id = '%s_%s'%(data[1], data[2])
+                mf_metric_to_mf_num_of_hashtags_to_metric_value = defaultdict(dict)
+                for num_of_hashtags, metric_values in\
+                        accuracy_mf_num_of_hashtags_to_metric_values.iteritems():
+                    mf_metric_to_mf_num_of_hashtags_to_metric_value['accuracy'][num_of_hashtags] =\
+                                                                                                np.mean(metric_values)
+                for num_of_hashtags, metric_values in\
+                        impact_mf_num_of_hashtags_to_metric_values.iteritems():
+                    mf_metric_to_mf_num_of_hashtags_to_metric_value['impact'][num_of_hashtags] = np.mean(metric_values)
+                    
+                output_dict = {
+                               'window_id': window_id,
+                               'location': data[0],
+                               'mf_metric_to_mf_num_of_hashtags_to_metric_value': 
+                                                                        mf_metric_to_mf_num_of_hashtags_to_metric_value
+                            }
+                yield location, output_dict
                         
-#            for ltuo_hashtag_and_actual_score_and_feature_vector in\
-#                     lo_ltuo_hashtag_and_actual_score_and_feature_vector:
-#                ltuo_hashtag_and_actual_score_and_score =\
-#                                    map(lambda (hashtag, actual_score, feature_vector): 
-#                                            (
-#                                             hashtag,
-#                                             actual_score,
-#                                             R_Helper.get_predicted_value(mf_parameter_names_to_values, feature_vector)
-#                                            ),
-#                                        ltuo_hashtag_and_actual_score_and_feature_vector)
-#                ltuo_hastag_and_actual_score = map(itemgetter(0, 1), ltuo_hashtag_and_actual_score_and_score)
-#                ltuo_hastag_and_score = map(itemgetter(0, 2), ltuo_hashtag_and_actual_score_and_score)
-#                ltuo_hastag_and_actual_score.sort(key=itemgetter(1))
-#                ltuo_hastag_and_score.sort(key=itemgetter(1))
-#                yield location, ltuo_hastag_and_actual_score
-#                yield location, ltuo_hastag_and_score
-##                print 'x'
-            
-#            for test_feature_vectors in lo_test_feature_vectors:
-                
-                
-#            yield location, [len(train_feature_vectors), len(test_feature_vectors), mf_parameter_names_to_values]
     def steps(self):
         return [self.mr(
                     mapper=self.map_data_to_feature_vectors,
                     mapper_final=self.map_final_data_to_feature_vectors,
-                    reducer=self.red_feature_vectors_to_model)
-                ]
+                    reducer=self.red_feature_vectors_to_model
+                )
+            ]
 
 if __name__ == '__main__':
     LearningToRank.run()
