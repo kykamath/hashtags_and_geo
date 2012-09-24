@@ -196,6 +196,10 @@ class LearningToRank(ModifiedMRJob):
                                                            key=itemgetter(1),
                                                            reverse=True
                                                            )
+                    hashtags_dist = dict(ltuo_hashtag_and_actual_score)
+                    actual_ordering_of_hashtags = []
+                    predicted_ordering_of_hashtags = []
+                    
                     if ltuo_hashtag_and_actual_score: yield location, ltuo_hashtag_and_actual_score
                     if ltuo_hashtag_and_predicted_score: yield location, ltuo_hashtag_and_predicted_score
             
