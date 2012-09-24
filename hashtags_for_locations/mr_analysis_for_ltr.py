@@ -196,13 +196,34 @@ class LearningToRank(ModifiedMRJob):
                                                            key=itemgetter(1),
                                                            reverse=True
                                                            )
-                    hashtags_dist = dict(ltuo_hashtag_and_actual_score)
-                    actual_ordering_of_hashtags = []
-                    predicted_ordering_of_hashtags = []
                     
-                    if ltuo_hashtag_and_actual_score: yield location, ltuo_hashtag_and_actual_score
-                    if ltuo_hashtag_and_predicted_score: yield location, ltuo_hashtag_and_predicted_score
-            
+                    mf_metric_to_ltuo_num_of_hashtags_to_metric_value = defaultdict(list)
+                    for num_of_hashtags in range(1,25):
+                        hashtags_dist = dict(ltuo_hashtag_and_actual_score)
+                        actual_ordering_of_hashtags = zip(*ltuo_hashtag_and_actual_score)[0]
+                        predicted_ordering_of_hashtags = zip(*ltuo_hashtag_and_predicted_score)[0]
+                        
+                        accuracy = EvaluationMetric.accuracy(
+                                                              actual_ordering_of_hashtags[:num_of_hashtags],
+                                                              predicted_ordering_of_hashtags[:num_of_hashtags],
+                                                              num_of_hashtags
+                                                            )
+                        impact = EvaluationMetric.impact(
+                                                        actual_ordering_of_hashtags[:num_of_hashtags],
+                                                        predicted_ordering_of_hashtags[:num_of_hashtags],
+                                                        hashtags_dist
+                                                      )
+                        mf_metric_to_ltuo_num_of_hashtags_to_metric_value['accuracy'].append(
+                                                                                         num_of_hashtags,
+                                                                                         accuracy
+                                                                                         )
+                        mf_metric_to_ltuo_num_of_hashtags_to_metric_value['impact'].append(
+                                                                                         num_of_hashtags,
+                                                                                         impact
+                                                                                         )
+                            
+                    yield location, mf_metric_to_ltuo_num_of_hashtags_to_metric_value
+                        
 #            for ltuo_hashtag_and_actual_score_and_feature_vector in\
 #                     lo_ltuo_hashtag_and_actual_score_and_feature_vector:
 #                ltuo_hashtag_and_actual_score_and_score =\
