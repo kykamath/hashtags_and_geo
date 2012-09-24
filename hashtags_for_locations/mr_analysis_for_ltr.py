@@ -216,14 +216,14 @@ class LearningToRank(ModifiedMRJob):
                                                             predicted_ordering_of_hashtags[:num_of_hashtags],
                                                             hashtags_dist
                                                           )
-                            mf_metric_to_ltuo_num_of_hashtags_to_metric_value['accuracy'].append(
+                            mf_metric_to_ltuo_num_of_hashtags_to_metric_value['accuracy'].append((
                                                                                              num_of_hashtags,
                                                                                              accuracy
-                                                                                             )
-                            mf_metric_to_ltuo_num_of_hashtags_to_metric_value['impact'].append(
+                                                                                             ))
+                            mf_metric_to_ltuo_num_of_hashtags_to_metric_value['impact'].append((
                                                                                              num_of_hashtags,
                                                                                              impact
-                                                                                             )
+                                                                                             ))
                                 
                         yield location, mf_metric_to_ltuo_num_of_hashtags_to_metric_value
                         
