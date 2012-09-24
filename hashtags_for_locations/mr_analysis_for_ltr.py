@@ -178,7 +178,26 @@ class LearningToRank(ModifiedMRJob):
                                              R_Helper.get_predicted_value(mf_parameter_names_to_values, feature_vector)
                                             ),
                                         ltuo_hashtag_and_actual_score_and_feature_vector)
-                    yield location, [tu, ltuo_hashtag_and_actual_score_and_predicted_score]
+                    ltuo_hashtag_and_actual_score = [ (hashtag, actual_score)
+                                                     for hashtag, actual_score, _ in
+                                                            ltuo_hashtag_and_actual_score_and_predicted_score 
+                                                        if actual_score!=None]
+                    ltuo_hashtag_and_predicted_score = map(
+                                                        itemgetter(0,2),
+                                                        ltuo_hashtag_and_actual_score_and_predicted_score
+                                                        )
+                    ltuo_hashtag_and_actual_score = sorted(
+                                                           ltuo_hashtag_and_actual_score,
+                                                           key=itemgetter(1),
+                                                           reverse=True
+                                                           )
+                    ltuo_hashtag_and_predicted_score = sorted(
+                                                           ltuo_hashtag_and_predicted_score,
+                                                           key=itemgetter(1),
+                                                           reverse=True
+                                                           )
+                    if ltuo_hashtag_and_actual_score: yield location, ltuo_hashtag_and_actual_score
+                    if ltuo_hashtag_and_predicted_score: yield location, ltuo_hashtag_and_predicted_score
             
 #            for ltuo_hashtag_and_actual_score_and_feature_vector in\
 #                     lo_ltuo_hashtag_and_actual_score_and_feature_vector:
