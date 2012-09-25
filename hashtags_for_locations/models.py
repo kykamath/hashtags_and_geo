@@ -825,11 +825,17 @@ class Experiments(object):
     def generateDataForLinearRegression(predictionModels, evaluationMetrics, startTime, endTime, outputFolder):
 #        noOfHashtagsList = [1,2,4,10]
         noOfHashtagsList = [100]
+#        for i in range(1,25):
+#            conf = dict(
+#                        historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS),
+#                        predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS),
+#                        noOfHashtagsList=noOfHashtagsList
+#                        )
+
         for i in range(1,25):
-#        for i in [1]:
             conf = dict(
-                        historyTimeInterval = timedelta(seconds=6*TIME_UNIT_IN_SECONDS),
-                        predictionTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS),
+                        historyTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS),
+                        predictionTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS),
                         noOfHashtagsList=noOfHashtagsList
                         )
             conf['hard_end_time'] = datetime(2011, 10, 31)
@@ -838,8 +844,8 @@ class Experiments(object):
                         outputFolder,
                         predictionModels,
                         evaluationMetrics,
-#                        **conf).runToGetDataForLinearRegression()
-                        **conf).moved_model_files_to_chevron()
+                        **conf).runToGetDataForLinearRegression()
+#                        **conf).moved_model_files_to_chevron()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
