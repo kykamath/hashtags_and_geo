@@ -202,15 +202,17 @@ class LearningToRank(ModifiedMRJob):
                                                           )
                             accuracy_mf_num_of_hashtags_to_metric_values[num_of_hashtags].append(accuracy)
                             impact_mf_num_of_hashtags_to_metric_values[num_of_hashtags].append(impact)
-                            yield location, accuracy
-                            yield location, impact
-                            yield location, accuracy_mf_num_of_hashtags_to_metric_values.items()
-                            yield location, 'something'
-                            yield location, impact_mf_num_of_hashtags_to_metric_values.items()
-                            yield location, 'something else'
+#                            yield location, accuracy
+#                            yield location, impact
+#                            yield location, accuracy_mf_num_of_hashtags_to_metric_values.items()
+#                            yield location, 'something'
+#                            yield location, impact_mf_num_of_hashtags_to_metric_values.items()
+#                            yield location, 'something else'
 #                            if accuracy_mf_num_of_hashtags_to_metric_values: yield location, accuracy_mf_num_of_hashtags_to_metric_values
 #                            if impact_mf_num_of_hashtags_to_metric_values: yield location, impact_mf_num_of_hashtags_to_metric_values
-                                
+                
+                yield location, accuracy_mf_num_of_hashtags_to_metric_values.items()
+                yield location, impact_mf_num_of_hashtags_to_metric_values.items()
 #                data = location.split('++')
 #                window_id = '%s_%s'%(data[1], data[2])
 #                mf_metric_to_mf_num_of_hashtags_to_metric_value = defaultdict(dict)
