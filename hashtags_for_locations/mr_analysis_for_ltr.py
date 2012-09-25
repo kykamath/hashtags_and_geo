@@ -244,14 +244,23 @@ class LearningToRank(ModifiedMRJob):
 #                                                            mf_metric_to_ltuo_num_of_hashtags_and_metric_value.items()
 #                                }
 #                    yield window_id, output_dict
-                        
+    def red_measuring_unit_id_and_metric_values_to_measuring_unit_id_and_mean_metric_value(self,
+                                                                                           measuring_unit_id,
+                                                                                           metric_values):
+        yield measuring_unit_id, np.mean(metric_values)
     def steps(self):
         return [self.mr(
                     mapper=self.map_data_to_feature_vectors,
                     mapper_final=self.map_final_data_to_feature_vectors,
                     reducer=self.red_feature_vectors_to_model
+                ),
+                self.mr(
+#                    mapper=self.map_data_to_feature_vectors,
+#                    mapper_final=self.map_final_data_to_feature_vectors,
+                    reducer=self.red_measuring_unit_id_and_metric_values_to_measuring_unit_id_and_mean_metric_value
                 )
-            ]
+            ] 
+        
 
 if __name__ == '__main__':
     LearningToRank.run()
