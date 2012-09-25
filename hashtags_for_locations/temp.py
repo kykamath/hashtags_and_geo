@@ -3,7 +3,7 @@ from library.file_io import FileIO
 for data in FileIO.iterateJsonFromFile('linear_regression_small'):
 #    print data.leys()
     for loc in data['mf_location_to_ideal_hashtags_rank']:
-        print data['tu'], loc, data['mf_location_to_ideal_hashtags_rank'][loc]
+        print data['tu'], loc, sum(zip(*data['mf_location_to_ideal_hashtags_rank'][loc])[1])
     exit()
     
 #import numpy as np
