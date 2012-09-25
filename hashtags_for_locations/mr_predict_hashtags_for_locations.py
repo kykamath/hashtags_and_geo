@@ -107,7 +107,7 @@ class LearningToRank(object):
                 impact_mf_num_of_hashtags_to_metric_values = defaultdict(list)
                 mf_parameter_names_to_values = dict(parameter_names_to_values)
                 test_feature_vectors.sort(key=itemgetter('tu'))
-                lo_ltuo_hashtag_and_actual_score_and_feature_vector =\
+                ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector =\
                                                     [(tu, map(
                                                               itemgetter('hashtag', 'actual_score', 'feature_vector'),
                                                               it_feature_vectors)
@@ -117,7 +117,7 @@ class LearningToRank(object):
                                                     ]
                     
                 for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
-                        lo_ltuo_hashtag_and_actual_score_and_feature_vector:
+                        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector:
                     for _, __, fv in ltuo_hashtag_and_actual_score_and_feature_vector: del fv['value_to_predict']
                     ltuo_hashtag_and_actual_score_and_predicted_score =\
                                     map(lambda (hashtag, actual_score, feature_vector): 
@@ -172,8 +172,19 @@ class LearningToRank(object):
 class FollowTheLeader():
     @staticmethod
     def get_performance_metrics(feature_vectors):
-        for feature_vector in feature_vectors:
-            print feature_vector
+        feature_vectors.sort(key=itemgetter('tu'))
+        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector =\
+                                            [(tu, map(
+                                                      itemgetter('hashtag', 'actual_score', 'feature_vector'),
+                                                      it_feature_vectors)
+                                                  )
+                                                for tu, it_feature_vectors in 
+                                                    groupby(feature_vectors, key=itemgetter('tu'))
+                                            ]
+        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector.sort(key=itemgetter(0))
+        for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
+                        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector:
+            print tu, len(ltuo_hashtag_and_actual_score_and_feature_vector)
 
 class PredictingHastagsForLocations(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
