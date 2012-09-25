@@ -838,8 +838,8 @@ class Experiments(object):
                         outputFolder,
                         predictionModels,
                         evaluationMetrics,
-                        **conf).runToGetDataForLinearRegression()
-#                        **conf).moved_model_files_to_chevron()
+#                        **conf).runToGetDataForLinearRegression()
+                        **conf).moved_model_files_to_chevron()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
