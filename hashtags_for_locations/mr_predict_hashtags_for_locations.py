@@ -221,9 +221,11 @@ class PredictingHastagsForLocations(ModifiedMRJob):
 #        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
 #                                                                LearningToRank.get_performance_metrics(feature_vectors)
         accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
-                                                                FollowTheLeader.get_performance_metrics(location,
-                                                                                                        feature_vectors)
-        yield '', ''
+                                                                FollowTheLeader.get_performance_metrics(
+                                                                                                        location,
+                                                                                                        feature_vectors
+                                                                                                        )
+        yield '', 10
 
 #        if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
 #                impact_mf_num_of_hashtags_to_metric_values.items():
