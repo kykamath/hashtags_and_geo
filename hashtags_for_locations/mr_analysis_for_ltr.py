@@ -247,7 +247,6 @@ class LearningToRank(ModifiedMRJob):
     def red_measuring_unit_id_and_metric_values_to_measuring_unit_id_and_mean_metric_value(self,
                                                                                            measuring_unit_id,
                                                                                            metric_values):
-        print '****** comes here'
         yield measuring_unit_id, np.mean(list(metric_values))
     def steps(self):
         return [self.mr(
@@ -256,7 +255,7 @@ class LearningToRank(ModifiedMRJob):
                     reducer=self.red_feature_vectors_to_model
                 ),
                 self.mr(
-                    mapper=self.emptyMapper,
+#                    mapper=self.emptyMapper,
 #                    mapper_final=self.map_final_data_to_feature_vectors,
                     reducer=self.red_measuring_unit_id_and_metric_values_to_measuring_unit_id_and_mean_metric_value
                 )
