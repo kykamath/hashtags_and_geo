@@ -130,7 +130,7 @@ class LearningToRank(ModifiedMRJob):
                                                     )
             return R_Helper.get_parameter_values(model)
     
-    def red_feature_vectors_to_model(self, location, lo_feature_vector):
+    def red_feature_vectors_to_measuring_unit_id_and_metric_value(self, location, lo_feature_vector):
         feature_vectors = list(chain(*lo_feature_vector))
         train_feature_vectors, test_feature_vectors = split_feature_vectors_into_test_and_training(feature_vectors)
         filtered_train_feature_vectors = filter(lambda fv: len(fv['feature_vector'])>1, train_feature_vectors)
@@ -222,7 +222,7 @@ class LearningToRank(ModifiedMRJob):
         return [self.mr(
                     mapper=self.map_data_to_feature_vectors,
                     mapper_final=self.map_final_data_to_feature_vectors,
-                    reducer=self.red_feature_vectors_to_model
+                    reducer=self.red_feature_vectors_to_measuring_unit_id_and_metric_value
                 ),
                 self.mr(
                     reducer=self.red_measuring_unit_id_and_metric_values_to_measuring_unit_id_and_mean_metric_value
