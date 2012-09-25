@@ -202,8 +202,12 @@ class LearningToRank(ModifiedMRJob):
                                                           )
                             accuracy_mf_num_of_hashtags_to_metric_values[num_of_hashtags].append(accuracy)
                             impact_mf_num_of_hashtags_to_metric_values[num_of_hashtags].append(impact)
+                            yield location, accuracy
+                            yield location, impact
                             yield location, accuracy_mf_num_of_hashtags_to_metric_values
+                            yield location, 'something'
                             yield location, impact_mf_num_of_hashtags_to_metric_values
+                            yield location, 'something else'
 #                            if accuracy_mf_num_of_hashtags_to_metric_values: yield location, accuracy_mf_num_of_hashtags_to_metric_values
 #                            if impact_mf_num_of_hashtags_to_metric_values: yield location, impact_mf_num_of_hashtags_to_metric_values
                                 
