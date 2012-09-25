@@ -184,7 +184,12 @@ class FollowTheLeader():
         ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector.sort(key=itemgetter(0))
         for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
                         ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector:
-            print tu, location, len(ltuo_hashtag_and_actual_score_and_feature_vector)
+            ltuo_observed_hastags_and_actual_score = [(hashtag, score)
+                                                      for hashtag, score, _ in 
+                                                            ltuo_hashtag_and_actual_score_and_feature_vector
+                                                        if score!=None
+                                                    ]
+            print tu, ltuo_observed_hastags_and_actual_score
 
 class PredictingHastagsForLocations(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
