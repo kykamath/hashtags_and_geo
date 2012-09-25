@@ -217,21 +217,27 @@ class LearningToRank(ModifiedMRJob):
                         impact_mf_num_of_hashtags_to_metric_values.items():
                     data = location.split('++')
                     window_id = '%s_%s'%(data[1], data[2])
-                    mf_metric_to_mf_num_of_hashtags_to_metric_value = defaultdict(dict)
+                    mf_metric_to_ltuo_num_of_hashtags_and_metric_value = defaultdict(list)
                     for num_of_hashtags, metric_values in\
                             accuracy_mf_num_of_hashtags_to_metric_values.iteritems():
-                        mf_metric_to_mf_num_of_hashtags_to_metric_value['accuracy'][num_of_hashtags] =\
-                                                                                                np.mean(metric_values)
+                        mf_metric_to_ltuo_num_of_hashtags_and_metric_value['accuracy'].append([
+                                                                                            num_of_hashtags,
+                                                                                            np.mean(metric_values)
+                                                                                            ])
                     for num_of_hashtags, metric_values in\
                             impact_mf_num_of_hashtags_to_metric_values.iteritems():
-                        mf_metric_to_mf_num_of_hashtags_to_metric_value['impact'][num_of_hashtags] =\
-                                                                                                np.mean(metric_values)
+#                        mf_metric_to_mf_num_of_hashtags_to_metric_value['impact'][num_of_hashtags] =\
+#                                                                                                np.mean(metric_values)
+                        mf_metric_to_ltuo_num_of_hashtags_and_metric_value['impact'].append([
+                                                                                            num_of_hashtags,
+                                                                                            np.mean(metric_values)
+                                                                                            ])
                         
                     output_dict = {
                                    'window_id': window_id,
                                    'location': data[0],
-                                   'ltuo_metric_and_mf_num_of_hashtags_to_metric_value': 
-                                                                mf_metric_to_mf_num_of_hashtags_to_metric_value.items()
+                                   'ltuo_metric_and_ltuo_num_of_hashtags_and_metric_value': 
+                                                            mf_metric_to_ltuo_num_of_hashtags_and_metric_value.items()
                                 }
                     yield location, output_dict
                         
