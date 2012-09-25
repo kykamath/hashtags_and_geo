@@ -196,15 +196,25 @@ class FollowTheLeader():
         ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector.sort(key=itemgetter(0))
         for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
                         ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector:
-            ltuo_observed_hastags_and_actual_score = [(hashtag, score)
-                                                      for hashtag, score, _ in 
+            ltuo_observed_hastags_and_actual_score = [(hashtag, actual_score)
+                                                      for hashtag, actual_score, _ in 
                                                             ltuo_hashtag_and_actual_score_and_feature_vector
-                                                        if score!=None
+                                                        if actual_score!=None
                                                     ]
-            mf_model_id_to_tuo_hashtag_and_predicted_score = defaultdict(dict)
-            for _,_,fv in ltuo_hashtag_and_actual_score_and_feature_vector:
-                print fv
-    
+            mf_model_id_to_ltuo_hashtag_and_predicted_score = defaultdict(list)
+            for hashtag, actual_score, fv in ltuo_hashtag_and_actual_score_and_feature_vector:
+                if actual_score == None:
+                    for model_id, predicted_score in fv.iteritems():
+                        mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id].append([hashtag, predicted_score])
+            for model_id, ltuo_hashtag_and_predicted_score in\
+                    mf_model_id_to_ltuo_hashtag_and_predicted_score.items()[:]:
+                mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id] = sorted(
+                                                                                   ltuo_hashtag_and_predicted_score,
+                                                                                   key=itemgetter(1),
+                                                                                   reverse=True
+                                                                                   )
+                print model_id, mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id]
+                
         return {}, {}
 
 class PredictingHastagsForLocations(ModifiedMRJob):
