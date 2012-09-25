@@ -190,6 +190,8 @@ class FollowTheLeader():
                                                         if score!=None
                                                     ]
             print tu, ltuo_observed_hastags_and_actual_score
+    
+        return {}, {}
 
 class PredictingHastagsForLocations(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
