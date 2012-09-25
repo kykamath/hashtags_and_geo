@@ -239,7 +239,7 @@ class LearningToRank(ModifiedMRJob):
                                    'ltuo_metric_and_ltuo_num_of_hashtags_and_metric_value': 
                                                             mf_metric_to_ltuo_num_of_hashtags_and_metric_value.items()
                                 }
-                    yield location, output_dict
+                    yield window_id, output_dict
                         
     def steps(self):
         return [self.mr(
