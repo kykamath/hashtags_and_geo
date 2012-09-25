@@ -227,8 +227,6 @@ class PredictingHastagsForLocations(ModifiedMRJob):
                                                                                                         location,
                                                                                                         feature_vectors
                                                                                                         )
-        yield '', 10
-
 #        if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
 #                impact_mf_num_of_hashtags_to_metric_values.items():
 #            data = location.split('++')
