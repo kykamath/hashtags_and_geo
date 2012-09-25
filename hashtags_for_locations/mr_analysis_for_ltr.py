@@ -209,7 +209,7 @@ class LearningToRank(ModifiedMRJob):
                     output_dict = {
                                       'window_id': window_id,
                                       'num_of_hashtags': num_of_hashtags,
-                                      'location': location,
+                                      'location': data[0],
                                       'metric': '',
                                       'metric_value': 0.0
                                   }
