@@ -241,8 +241,7 @@ class FollowTheLeader():
                         .append([tu, mf_model_id_to_mf_metric_to_value])
         for num_of_hashtags, ltuo_tu_and_mf_model_id_to_mf_metric_to_value in \
                 mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value.iteritems():
-            for tu, mf_model_id_to_mf_metric_to_value in \
-                    ltuo_tu_and_mf_model_id_to_mf_metric_to_value.iteritems():
+            for tu, mf_model_id_to_mf_metric_to_value in ltuo_tu_and_mf_model_id_to_mf_metric_to_value:
                 print num_of_hashtags, tu, mf_model_id_to_mf_metric_to_value
                 
         return {}, {}
