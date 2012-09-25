@@ -168,7 +168,13 @@ class LearningToRank(object):
                             impact_mf_num_of_hashtags_to_metric_values[num_of_hashtags].append(impact)
                 return (accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values)
         return {}, {}
-    
+
+class FollowTheLeader():
+    @staticmethod
+    def get_performance_metrics(feature_vectors):
+        for feature_vector in feature_vectors:
+            print feature_vector
+
 class PredictingHastagsForLocations(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
@@ -196,8 +202,11 @@ class PredictingHastagsForLocations(ModifiedMRJob):
     def red_feature_vectors_to_measuring_unit_id_and_metric_value(self, location, lo_feature_vector):
         feature_vectors = list(chain(*lo_feature_vector))
         
+#        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
+#                                                                LearningToRank.get_performance_metrics(feature_vectors)
         accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
-                                                                LearningToRank.get_performance_metrics(feature_vectors)
+                                                                FollowTheLeader.get_performance_metrics(feature_vectors)
+
         if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
                 impact_mf_num_of_hashtags_to_metric_values.items():
             data = location.split('++')
