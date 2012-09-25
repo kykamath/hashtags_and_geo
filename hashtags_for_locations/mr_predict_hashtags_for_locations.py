@@ -178,7 +178,8 @@ class LearningToRank(object):
 class FollowTheLeader():
     @staticmethod
     def get_performance_metrics(location, feature_vectors):
-        for fv in feature_vectors: del fv['value_to_predict']
+        for fv in feature_vectors: 
+            if 'value_to_predict' in fv: del fv['value_to_predict']
         feature_vectors.sort(key=itemgetter('tu'))
         ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector =\
                                             [(tu, map(
