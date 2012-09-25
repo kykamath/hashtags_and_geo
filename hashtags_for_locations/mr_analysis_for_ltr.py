@@ -255,7 +255,7 @@ class LearningToRank(ModifiedMRJob):
                     reducer=self.red_feature_vectors_to_model
                 ),
                 self.mr(
-#                    mapper=self.map_data_to_feature_vectors,
+                    mapper=self.emptyMapper,
 #                    mapper_final=self.map_final_data_to_feature_vectors,
                     reducer=self.red_measuring_unit_id_and_metric_values_to_measuring_unit_id_and_mean_metric_value
                 )
