@@ -204,7 +204,7 @@ class FollowTheLeader():
                                                     ]
             if ltuo_observed_hastags_and_actual_score:
                 ltuo_observed_hastags_and_actual_score.sort(key=itemgetter(1), reverse=True)
-                actual_ordering_of_hashtags =zip(*ltuo_observed_hastags_and_actual_score)[0]
+                actual_ordering_of_hashtags =zip(*ltuo_observed_hastags_and_actual_score)[0][:1]
                 print actual_ordering_of_hashtags
 #            mf_model_id_to_ltuo_hashtag_and_predicted_score = defaultdict(list)
 #            for hashtag, actual_score, fv in ltuo_hashtag_and_actual_score_and_feature_vector:
