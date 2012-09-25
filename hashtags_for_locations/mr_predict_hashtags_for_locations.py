@@ -189,6 +189,10 @@ class FollowTheLeader():
                                                             ltuo_hashtag_and_actual_score_and_feature_vector
                                                         if score!=None
                                                     ]
+            ltuo_hashtag_and_actual_score = [ (hashtag, actual_score)
+                                                     for hashtag, actual_score, _ in
+                                                            ltuo_hashtag_and_actual_score_and_feature_vector 
+                                                        if actual_score!=None]
             print tu, ltuo_observed_hastags_and_actual_score
     
         return {}, {}
