@@ -247,6 +247,7 @@ class LearningToRank(ModifiedMRJob):
     def red_measuring_unit_id_and_metric_values_to_measuring_unit_id_and_mean_metric_value(self,
                                                                                            measuring_unit_id,
                                                                                            metric_values):
+        print '********* comes here'
         yield measuring_unit_id, np.mean(metric_values)
     def steps(self):
         return [self.mr(
