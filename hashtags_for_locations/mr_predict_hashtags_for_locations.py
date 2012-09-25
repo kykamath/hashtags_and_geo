@@ -223,6 +223,7 @@ class PredictingHastagsForLocations(ModifiedMRJob):
         accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
                                                                 FollowTheLeader.get_performance_metrics(location,
                                                                                                         feature_vectors)
+        yield '', ''
 
 #        if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
 #                impact_mf_num_of_hashtags_to_metric_values.items():
