@@ -224,29 +224,29 @@ class PredictingHastagsForLocations(ModifiedMRJob):
                                                                 FollowTheLeader.get_performance_metrics(location,
                                                                                                         feature_vectors)
 
-        if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
-                impact_mf_num_of_hashtags_to_metric_values.items():
-            data = location.split('++')
-            window_id = '%s_%s'%(data[1], data[2])
-            output_dict = {
-                              'window_id': window_id,
-                              'num_of_hashtags': -1,
-                              'location': data[0],
-                              'metric': '',
-                              'metric_value': 0.0
-                          }
-            for num_of_hashtags, metric_values in\
-                    accuracy_mf_num_of_hashtags_to_metric_values.iteritems():
-                output_dict['metric'] = 'accuracy'
-                output_dict['num_of_hashtags'] = num_of_hashtags
-                output_dict['metric_value'] = np.mean(metric_values)
-                yield 'o_d', output_dict
-            for num_of_hashtags, metric_values in\
-                    impact_mf_num_of_hashtags_to_metric_values.iteritems():
-                output_dict['metric'] = 'impact'
-                output_dict['num_of_hashtags'] = num_of_hashtags
-                output_dict['metric_value'] = np.mean(metric_values)
-                yield 'o_d', output_dict
+#        if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
+#                impact_mf_num_of_hashtags_to_metric_values.items():
+#            data = location.split('++')
+#            window_id = '%s_%s'%(data[1], data[2])
+#            output_dict = {
+#                              'window_id': window_id,
+#                              'num_of_hashtags': -1,
+#                              'location': data[0],
+#                              'metric': '',
+#                              'metric_value': 0.0
+#                          }
+#            for num_of_hashtags, metric_values in\
+#                    accuracy_mf_num_of_hashtags_to_metric_values.iteritems():
+#                output_dict['metric'] = 'accuracy'
+#                output_dict['num_of_hashtags'] = num_of_hashtags
+#                output_dict['metric_value'] = np.mean(metric_values)
+#                yield 'o_d', output_dict
+#            for num_of_hashtags, metric_values in\
+#                    impact_mf_num_of_hashtags_to_metric_values.iteritems():
+#                output_dict['metric'] = 'impact'
+#                output_dict['num_of_hashtags'] = num_of_hashtags
+#                output_dict['metric_value'] = np.mean(metric_values)
+#                yield 'o_d', output_dict
                         
     def steps(self):
         return [self.mr(
