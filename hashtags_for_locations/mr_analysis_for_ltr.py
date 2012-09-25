@@ -206,27 +206,39 @@ class LearningToRank(ModifiedMRJob):
                         impact_mf_num_of_hashtags_to_metric_values.items():
                     data = location.split('++')
                     window_id = '%s_%s'%(data[1], data[2])
+                    output_dict = {
+                                      'window_id': window_id,
+                                      'num_of_hashtags': num_of_hashtags,
+                                      'location': location,
+                                      'metric': '',
+                                      'metric_value': 0.0
+                                  }
                     for num_of_hashtags, metric_values in\
                             accuracy_mf_num_of_hashtags_to_metric_values.iteritems():
-                        measuring_unit_id = '%s_%s_%s'%(window_id, 'accuracy', num_of_hashtags)
-                        yield measuring_unit_id, np.mean(metric_values)
+#                        measuring_unit_id = '%s_%s_%s'%(window_id, 'accuracy', num_of_hashtags)
+                        output_dict['metric'] = 'accuracy'
+                        output_dict['metric_value'] = np.mean(metric_values)
+                        yield 'o_d', output_dict
                     for num_of_hashtags, metric_values in\
                             impact_mf_num_of_hashtags_to_metric_values.iteritems():
-                        measuring_unit_id = '%s_%s_%s'%(window_id, 'impact', num_of_hashtags)
-                        yield measuring_unit_id, np.mean(metric_values)
-    def red_measuring_unit_id_and_metric_values_to_measuring_unit_id_and_mean_metric_value(self,
-                                                                                           measuring_unit_id,
-                                                                                           metric_values):
-        yield measuring_unit_id, np.mean(list(metric_values))
+#                        measuring_unit_id = '%s_%s_%s'%(window_id, 'impact', num_of_hashtags)
+                        output_dict['metric'] = 'impact'
+                        output_dict['metric_value'] = np.mean(metric_values)
+                        yield 'o_d', output_dict
+                        
+#    def red_measuring_unit_id_and_metric_values_to_measuring_unit_id_and_mean_metric_value(self,
+#                                                                                           measuring_unit_id,
+#                                                                                           metric_values):
+#        yield measuring_unit_id, np.mean(list(metric_values))
     def steps(self):
         return [self.mr(
                     mapper=self.map_data_to_feature_vectors,
                     mapper_final=self.map_final_data_to_feature_vectors,
                     reducer=self.red_feature_vectors_to_measuring_unit_id_and_metric_value
                 ),
-                self.mr(
-                    reducer=self.red_measuring_unit_id_and_metric_values_to_measuring_unit_id_and_mean_metric_value
-                )
+#                self.mr(
+#                    reducer=self.red_measuring_unit_id_and_metric_values_to_measuring_unit_id_and_mean_metric_value
+#                )
             ] 
         
 
