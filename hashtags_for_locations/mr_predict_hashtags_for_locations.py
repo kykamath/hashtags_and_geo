@@ -194,6 +194,7 @@ class FollowTheLeader():
                                                     groupby(feature_vectors, key=itemgetter('tu'))
                                             ]
         ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector.sort(key=itemgetter(0))
+        mf_num_of_hashtags_to_ltuo_tu_and_lo_mf_model_id_to_ltuo_metric_and_value = defaultdict(list)
         for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
                         ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector:
             ltuo_observed_hastags_and_actual_score = [(hashtag, actual_score)
@@ -201,19 +202,31 @@ class FollowTheLeader():
                                                             ltuo_hashtag_and_actual_score_and_feature_vector
                                                         if actual_score!=None
                                                     ]
-            mf_model_id_to_ltuo_hashtag_and_predicted_score = defaultdict(list)
-            for hashtag, actual_score, fv in ltuo_hashtag_and_actual_score_and_feature_vector:
-                if actual_score == None:
-                    for model_id, predicted_score in fv.iteritems():
-                        mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id].append([hashtag, predicted_score])
-            for model_id, ltuo_hashtag_and_predicted_score in\
-                    mf_model_id_to_ltuo_hashtag_and_predicted_score.items()[:]:
-                mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id] = sorted(
-                                                                                   ltuo_hashtag_and_predicted_score,
-                                                                                   key=itemgetter(1),
-                                                                                   reverse=True
-                                                                                   )
-                print model_id, mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id]
+            ltuo_observed_hastags_and_actual_score.sort(key=itemgetter(1), reverse=True)
+            print ltuo_observed_hastags_and_actual_score
+#            mf_model_id_to_ltuo_hashtag_and_predicted_score = defaultdict(list)
+#            for hashtag, actual_score, fv in ltuo_hashtag_and_actual_score_and_feature_vector:
+#                if actual_score == None:
+#                    for model_id, predicted_score in fv.iteritems():
+#                        mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id].append([hashtag, predicted_score])
+#            for model_id, ltuo_hashtag_and_predicted_score in\
+#                    mf_model_id_to_ltuo_hashtag_and_predicted_score.items()[:]:
+#                mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id] = sorted(
+#                                                                                   ltuo_hashtag_and_predicted_score,
+#                                                                                   key=itemgetter(1),
+#                                                                                   reverse=True
+#                                                                                   )
+#            for num_of_hashtags in range(1,25):
+#                mf_model_id_to_ltuo_metric_and_value = defaultdict(list)
+#                for model_id, ltuo_hashtag_and_predicted_score in\
+#                        mf_model_id_to_ltuo_hashtag_and_predicted_score.iteritems():
+#                    accuracy = EvaluationMetric.accuracy(
+#                                                          actual_ordering_of_hashtags[:num_of_hashtags],
+#                                                          predicted_ordering_of_hashtags[:num_of_hashtags],
+#                                                          num_of_hashtags
+#                                                        )
+#                    pass
+#                print model_id, mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id]
                 
         return {}, {}
 
