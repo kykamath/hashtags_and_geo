@@ -171,7 +171,7 @@ class LearningToRank(object):
 
 class FollowTheLeader():
     @staticmethod
-    def get_performance_metrics(feature_vectors):
+    def get_performance_metrics(location, feature_vectors):
         feature_vectors.sort(key=itemgetter('tu'))
         ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector =\
                                             [(tu, map(
@@ -184,7 +184,7 @@ class FollowTheLeader():
         ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector.sort(key=itemgetter(0))
         for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
                         ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector:
-            print tu, len(ltuo_hashtag_and_actual_score_and_feature_vector)
+            print tu, location, len(ltuo_hashtag_and_actual_score_and_feature_vector)
 
 class PredictingHastagsForLocations(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -216,7 +216,8 @@ class PredictingHastagsForLocations(ModifiedMRJob):
 #        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
 #                                                                LearningToRank.get_performance_metrics(feature_vectors)
         accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
-                                                                FollowTheLeader.get_performance_metrics(feature_vectors)
+                                                                FollowTheLeader.get_performance_metrics(location,
+                                                                                                        feature_vectors)
 
         if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
                 impact_mf_num_of_hashtags_to_metric_values.items():
