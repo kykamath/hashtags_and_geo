@@ -179,6 +179,7 @@ class FollowTheLeader():
     @staticmethod
     def get_performance_metrics(location, feature_vectors):
         for fv in feature_vectors: 
+            print fv
             if 'value_to_predict' in fv: 
                 print fv
                 del fv['value_to_predict']
