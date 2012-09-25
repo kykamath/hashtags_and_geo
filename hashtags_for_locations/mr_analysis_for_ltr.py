@@ -171,7 +171,7 @@ class LearningToRank(object):
 class LearningToRanxxk1(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
-        super(LearningToRank, self).__init__(*args, **kwargs)
+        super(LearningToRanxxk1, self).__init__(*args, **kwargs)
         self.mf_location_to_feature_vectors = defaultdict(list)
     def map_data_to_feature_vectors(self, key, line):
         if False: yield # I'm a generator!
