@@ -229,7 +229,7 @@ class LearningToRank(ModifiedMRJob):
                     for num_of_hashtags, metric_values in\
                             impact_mf_num_of_hashtags_to_metric_values.iteritems():
                         measuring_unit_id = '%s_%s_%s'%(window_id, 'impact', num_of_hashtags)
-                        yield measuring_unit_id, np.mean(metric_values)
+                        yield measuring_unit_id, np.mean(list(metric_values))
 #                        mf_metric_to_mf_num_of_hashtags_to_metric_value['impact'][num_of_hashtags] =\
 #                                                                                                np.mean(metric_values)
 #                        mf_metric_to_ltuo_num_of_hashtags_and_metric_value['impact'].append([
