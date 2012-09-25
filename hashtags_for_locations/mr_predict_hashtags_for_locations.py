@@ -179,27 +179,30 @@ class FollowTheLeader():
     @staticmethod
     def get_performance_metrics(location, feature_vectors):
         for fv in feature_vectors: 
-            if 'value_to_predict' in fv: del fv['value_to_predict']
-        feature_vectors.sort(key=itemgetter('tu'))
-        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector =\
-                                            [(tu, map(
-                                                      itemgetter('hashtag', 'actual_score', 'feature_vector'),
-                                                      it_feature_vectors)
-                                                  )
-                                                for tu, it_feature_vectors in 
-                                                    groupby(feature_vectors, key=itemgetter('tu'))
-                                            ]
-        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector.sort(key=itemgetter(0))
-        for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
-                        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector:
-            ltuo_observed_hastags_and_actual_score = [(hashtag, score)
-                                                      for hashtag, score, _ in 
-                                                            ltuo_hashtag_and_actual_score_and_feature_vector
-                                                        if score!=None
-                                                    ]
-            mf_model_id_to_tuo_hashtag_and_predicted_score = defaultdict(dict)
-            for _,_,fv in ltuo_hashtag_and_actual_score_and_feature_vector:
+            if 'value_to_predict' in fv: 
                 print fv
+                del fv['value_to_predict']
+                print fv
+#        feature_vectors.sort(key=itemgetter('tu'))
+#        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector =\
+#                                            [(tu, map(
+#                                                      itemgetter('hashtag', 'actual_score', 'feature_vector'),
+#                                                      it_feature_vectors)
+#                                                  )
+#                                                for tu, it_feature_vectors in 
+#                                                    groupby(feature_vectors, key=itemgetter('tu'))
+#                                            ]
+#        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector.sort(key=itemgetter(0))
+#        for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
+#                        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector:
+#            ltuo_observed_hastags_and_actual_score = [(hashtag, score)
+#                                                      for hashtag, score, _ in 
+#                                                            ltuo_hashtag_and_actual_score_and_feature_vector
+#                                                        if score!=None
+#                                                    ]
+#            mf_model_id_to_tuo_hashtag_and_predicted_score = defaultdict(dict)
+#            for _,_,fv in ltuo_hashtag_and_actual_score_and_feature_vector:
+#                print fv
     
         return {}, {}
 
