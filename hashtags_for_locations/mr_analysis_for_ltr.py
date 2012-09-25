@@ -323,4 +323,5 @@ class LearningToRanxxk1(ModifiedMRJob):
         
 
 if __name__ == '__main__':
-    LearningToRank.run()
+    LearningToRanxxk1.run()
+    
