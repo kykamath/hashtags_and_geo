@@ -312,7 +312,7 @@ class OnlineLearning():
                                                         mf_model_id_to_cumulative_losses
                                                         ):
         for model_id, metric_value in mf_model_id_to_metric_value.iteritems():
-            if model_id not in mf_model_id_to_metric_value: mf_model_id_to_metric_value[model_id] = 0.0
+            if model_id not in mf_model_id_to_cumulative_losses: mf_model_id_to_cumulative_losses[model_id] = 0.0
             mf_model_id_to_cumulative_losses[model_id]+=(1.0 - metric_value)
     @staticmethod
     def hedging_update_losses_for_every_model(
