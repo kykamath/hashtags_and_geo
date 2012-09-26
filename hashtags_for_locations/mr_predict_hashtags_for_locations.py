@@ -447,34 +447,39 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
     def __init__(self, *args, **kwargs):
         super(PerformanceOfPredictingMethodsByVaryingNumOfHashtags, self).__init__(*args, **kwargs)
         self.predicting_hashtags_for_locations = PredictingHastagsForLocations()
-        self.mf_num_of_hashtags_w_metric_to_metric_values = defaultdict(list)
-    def map_data_to_num_of_hashtags_w_metric_and_value(self, key, performance_data):
+        self.mf_num_of_hashtags_to_metric_values = defaultdict(list)
+    def map_data_to_num_of_hashtags_and_value(self, key, performance_data):
         if False: yield # I'm a generator!
-        num_of_hashtags_w_metric = '%s_%s'%(performance_data['num_of_hashtags'], performance_data['metric'])
-        self.mf_num_of_hashtags_w_metric_to_metric_values[num_of_hashtags_w_metric].append(
+        num_of_hashtags = '%s_%s_%s'%(
+                                        performance_data['num_of_hashtags'],
+                                        performance_data['metric'],
+                                        performance_data['prediction_method']
+                                    )
+        self.mf_num_of_hashtags_to_metric_values[num_of_hashtags].append(
                                                                                       performance_data['metric_value'] 
                                                                                     )
-    def map_final_data_to_num_of_hashtags_w_metric_and_value(self):
-        for num_of_hashtags_w_metric, metric_values in\
-                self.mf_num_of_hashtags_w_metric_to_metric_values.iteritems():
-            yield num_of_hashtags_w_metric, metric_values
-    def red_num_of_hashtags_w_metrica_and_metric_values_to_performance_summary(self,
-                                                                               num_of_hashtags_w_metric,
+    def map_final_data_to_num_of_hashtags_and_value(self):
+        for num_of_hashtags, metric_values in\
+                self.mf_num_of_hashtags_to_metric_values.iteritems():
+            yield num_of_hashtags, metric_values
+    def red_num_of_hashtagsa_and_metric_values_to_performance_summary(self,
+                                                                               num_of_hashtags,
                                                                                lo_metric_values
                                                                            ):
-        num_of_hashtags, metric = num_of_hashtags_w_metric.split('_')
+        num_of_hashtags, metric, prediction_method = num_of_hashtags.split('_')
         performance_summary = {
                                'num_of_hashtags': num_of_hashtags,
                                'metric': metric,
+                               'prediction_method': prediction_method,
                                'metric_value': np.mean(list(chain(*lo_metric_values)))
                                }
         yield 'o_d', performance_summary
     def steps(self):
         return self.predicting_hashtags_for_locations.jobs_to_evaluate_prediction_methods() +\
                 [self.mr(
-                    mapper=self.map_data_to_num_of_hashtags_w_metric_and_value,
-                    mapper_final=self.map_final_data_to_num_of_hashtags_w_metric_and_value,
-                    reducer=self.red_num_of_hashtags_w_metrica_and_metric_values_to_performance_summary
+                    mapper=self.map_data_to_num_of_hashtags_and_value,
+                    mapper_final=self.map_final_data_to_num_of_hashtags_and_value,
+                    reducer=self.red_num_of_hashtagsa_and_metric_values_to_performance_summary
                 )
             ] 
 
