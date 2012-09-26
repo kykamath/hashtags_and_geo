@@ -179,11 +179,7 @@ class FollowTheLeader():
     @staticmethod
     def get_performance_metrics(location, feature_vectors):
         for fv in feature_vectors: 
-#            print fv
-            if 'value_to_predict' in fv['feature_vector']: 
-#                print fv
-                del fv['feature_vector']['value_to_predict']
-#                print fv
+            if 'value_to_predict' in fv['feature_vector']: del fv['feature_vector']['value_to_predict']
         feature_vectors.sort(key=itemgetter('tu'))
         ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector =\
                                             [(tu, map(
@@ -210,9 +206,9 @@ class FollowTheLeader():
                 mf_model_id_to_ltuo_hashtag_and_predicted_score = defaultdict(list)
                 mf_model_id_to_predicted_ordering_of_hashtags = {}
                 for hashtag, actual_score, fv in ltuo_hashtag_and_actual_score_and_feature_vector:
-                    if actual_score == None:
-                        for model_id, predicted_score in fv.iteritems():
-                            mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id].append([hashtag, predicted_score])
+#                    if actual_score == None:
+                    for model_id, predicted_score in fv.iteritems():
+                        mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id].append([hashtag, predicted_score])
                 for model_id, ltuo_hashtag_and_predicted_score in\
                         mf_model_id_to_ltuo_hashtag_and_predicted_score.items()[:]:
                     ltuo_hashtag_and_predicted_score.sort(key=itemgetter(1), reverse=True)
