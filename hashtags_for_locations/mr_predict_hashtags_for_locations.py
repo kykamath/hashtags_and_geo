@@ -269,7 +269,7 @@ class OnlineLearning():
                               ),
                          ]:
                     best_model = get_best_model(mf_model_id_to_cumulative_losses)
-                    print num_of_hashtags
+                    print num_of_hashtags, best_model
                     mf_num_of_hashtags_to_metric_values[num_of_hashtags].append(mf_model_id_to_metric_value[best_model])
                     update_losses_for_every_model(
                                                       mf_model_id_to_metric_value,
