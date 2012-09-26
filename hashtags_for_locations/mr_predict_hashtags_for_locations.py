@@ -233,6 +233,7 @@ class FollowTheLeader():
                                                                             ])
                         mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value[num_of_hashtags]\
                             .append([tu, mf_model_id_to_mf_metric_to_value])
+            return mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value
     @staticmethod
     def get_performance_metrics(feature_vectors):
         mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value =\
