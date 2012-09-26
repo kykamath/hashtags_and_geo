@@ -237,16 +237,16 @@ class OnlineLearning():
             return mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value
     @staticmethod
     def get_performance_metrics(feature_vectors, get_best_model, update_losses_for_every_model):
-        accuracy_mf_num_of_hashtags_to_metric_values = {}
-        impact_mf_num_of_hashtags_to_metric_values = {}
+        accuracy_mf_num_of_hashtags_to_metric_values = defaultdict(list)
+        impact_mf_num_of_hashtags_to_metric_values = defaultdict(list)
         mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value =\
                                                  OnlineLearning.get_performance_of_models_by_time_unit(feature_vectors)
         for num_of_hashtags, ltuo_tu_and_mf_model_id_to_mf_metric_to_value in \
                 mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value.iteritems():
 #            accuracy_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
 #            impact_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
-            accuracy_mf_model_id_to_cumulative_losses = defaultdict(list)
-            impact_mf_model_id_to_cumulative_losses = defaultdict(list)
+            accuracy_mf_model_id_to_cumulative_losses = {}
+            impact_mf_model_id_to_cumulative_losses = {}
             for tu, mf_model_id_to_mf_metric_to_value in ltuo_tu_and_mf_model_id_to_mf_metric_to_value:
                 accuracy_mf_model_id_to_metric_value = {}
                 impact_mf_model_id_to_metric_value = {}
@@ -265,7 +265,7 @@ class OnlineLearning():
                              (
                                   impact_mf_model_id_to_cumulative_losses,
                                   impact_mf_model_id_to_metric_value,
-                                  impact_mf_model_id_to_cumulative_losses
+                                  impact_mf_num_of_hashtags_to_metric_values
                               ),
                          ]:
                     best_model = get_best_model(mf_model_id_to_cumulative_losses)
