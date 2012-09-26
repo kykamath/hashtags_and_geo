@@ -245,8 +245,8 @@ class OnlineLearning():
                 mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value.iteritems():
 #            accuracy_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
 #            impact_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
-            accuracy_mf_model_id_to_cumulative_losses = {}
-            impact_mf_model_id_to_cumulative_losses = {}
+            accuracy_mf_model_id_to_cumulative_losses = defaultdict(float)
+            impact_mf_model_id_to_cumulative_losses = defaultdict(float)
             for tu, mf_model_id_to_mf_metric_to_value in ltuo_tu_and_mf_model_id_to_mf_metric_to_value:
                 accuracy_mf_model_id_to_metric_value = {}
                 impact_mf_model_id_to_metric_value = {}
