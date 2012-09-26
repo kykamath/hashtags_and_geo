@@ -442,7 +442,7 @@ class PredictingHastagsForLocations(ModifiedMRJob):
     def steps(self):
         return self.jobs_to_evaluate_prediction_methods()
 
-class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(MRJobWrapper):
+class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
         super(PerformanceOfPredictingMethodsByVaryingNumOfHashtags, self).__init__(*args, **kwargs)
