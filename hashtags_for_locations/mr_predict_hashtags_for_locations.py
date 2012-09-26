@@ -450,7 +450,7 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
         self.mf_num_of_hashtags_to_metric_values = defaultdict(list)
     def map_data_to_num_of_hashtags_and_value(self, key, performance_data):
         if False: yield # I'm a generator!
-        num_of_hashtags = '%s_%s_%s'%(
+        num_of_hashtags = '%s::%s::%s'%(
                                         performance_data['num_of_hashtags'],
                                         performance_data['metric'],
                                         performance_data['prediction_method']
@@ -463,8 +463,7 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
                 self.mf_num_of_hashtags_to_metric_values.iteritems():
             yield num_of_hashtags, metric_values
     def red_num_of_hashtagsa_and_metric_values_to_performance_summary(self, num_of_hashtags_key, lo_metric_values):
-        print num_of_hashtags_key
-        num_of_hashtags, metric, prediction_method = num_of_hashtags_key.split('_')
+        num_of_hashtags, metric, prediction_method = num_of_hashtags_key.split('::')
         performance_summary = {
                                'num_of_hashtags': num_of_hashtags,
                                'metric': metric,
