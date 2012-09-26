@@ -28,6 +28,9 @@ TESTING_RATIO = 0.25
 
 NUM_OF_HASHTAGS = 100
 
+# Beta for hedging method
+BETA = 0.5
+
 def get_feature_vectors(data):
     mf_model_id_to_mf_location_to_hashtags_ranked_by_model =\
                                                          data['mf_model_id_to_mf_location_to_hashtags_ranked_by_model']
@@ -310,7 +313,7 @@ class OnlineLearning():
                                                         mf_model_id_to_metric_value,
                                                         best_model,
                                                         mf_model_id_to_cumulative_losses
-                                                        ):
+                                                    ):
         for model_id, metric_value in mf_model_id_to_metric_value.iteritems():
             if model_id not in mf_model_id_to_cumulative_losses: mf_model_id_to_cumulative_losses[model_id] = 0.0
             mf_model_id_to_cumulative_losses[model_id]+=(1.0 - metric_value)
@@ -320,7 +323,9 @@ class OnlineLearning():
                                                 best_model,
                                                 mf_model_id_to_cumulative_losses
                                             ):
-        pass
+        for model_id, metric_value in mf_model_id_to_metric_value.iteritems():
+            if model_id not in mf_model_id_to_cumulative_losses: mf_model_id_to_cumulative_losses[model_id] = 1.0
+            mf_model_id_to_cumulative_losses[model_id]*=BETA**(1.0 - metric_value)
 
 class PredictingHastagsForLocations(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -351,11 +356,17 @@ class PredictingHastagsForLocations(ModifiedMRJob):
         
 #        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
 #                                                                LearningToRank.get_performance_metrics(feature_vectors)
+#        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
+#                OnlineLearning.get_performance_metrics(
+#                                                        feature_vectors,
+#                                                        OnlineLearning.follow_the_leader_get_best_model,
+#                                                        OnlineLearning.follow_the_leader_update_losses_for_every_model
+#                                                    )
         accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
                 OnlineLearning.get_performance_metrics(
                                                         feature_vectors,
-                                                        OnlineLearning.follow_the_leader_get_best_model,
-                                                        OnlineLearning.follow_the_leader_update_losses_for_every_model
+                                                        OnlineLearning.hedging_get_best_model,
+                                                        OnlineLearning.hedging_update_losses_for_every_model
                                                     )
         if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
                 impact_mf_num_of_hashtags_to_metric_values.items():
