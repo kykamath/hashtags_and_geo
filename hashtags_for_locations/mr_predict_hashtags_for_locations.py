@@ -26,7 +26,12 @@ LIST_OF_MODELS = [
 
 TESTING_RATIO = 0.25
 
-NUM_OF_HASHTAGS = 100
+NUM_OF_HASHTAGS = range(1, 25)
+
+# Prediction method ids.
+PREDICTION_METHOD_ID_LEARNING_TO_RANK = 'learning_to_rank'
+PREDICTION_METHOD_ID_FOLLOW_THE_LEADER = 'follow_the_leader'
+PREDICTION_METHOD_ID_HEDGING = 'hedging'
 
 # Beta for hedging method
 BETA = 0.5
@@ -72,6 +77,8 @@ def split_feature_vectors_into_test_and_training(feature_vectors):
     return (train_feature_vectors, test_feature_vectors)
 
 class EvaluationMetric(object):
+    ID_ACCURACY = 'accuracy'
+    ID_IMPACT = 'impact'
     @staticmethod
     def accuracy(best_hashtags, predicted_hashtags, num_of_hashtags):
         return len(set(best_hashtags).intersection(set(predicted_hashtags)))/float(len(best_hashtags))
@@ -160,7 +167,7 @@ class LearningToRank(object):
                                                                reverse=True
                                                                )
                         
-                        for num_of_hashtags in range(1,25):
+                        for num_of_hashtags in NUM_OF_HASHTAGS:
                             hashtags_dist = dict(ltuo_hashtag_and_actual_score)
                             actual_ordering_of_hashtags = zip(*ltuo_hashtag_and_actual_score)[0]
                             predicted_ordering_of_hashtags = zip(*ltuo_hashtag_and_predicted_score)[0]
@@ -218,7 +225,7 @@ class OnlineLearning():
                         ltuo_hashtag_and_predicted_score.sort(key=itemgetter(1), reverse=True)
                         mf_model_id_to_predicted_ordering_of_hashtags[model_id] =\
                                                                             zip(*ltuo_hashtag_and_predicted_score)[0]
-                    for num_of_hashtags in range(1,25):
+                    for num_of_hashtags in NUM_OF_HASHTAGS:
                         mf_model_id_to_mf_metric_to_value = {}
                         for model_id, predicted_ordering_of_hashtags in\
                                 mf_model_id_to_predicted_ordering_of_hashtags.iteritems():
@@ -232,10 +239,11 @@ class OnlineLearning():
                                                             predicted_ordering_of_hashtags[:num_of_hashtags],
                                                             hashtags_dist
                                                           )
-                            mf_model_id_to_mf_metric_to_value[model_id] = dict([
-                                                                                ('accuracy', accuracy),
-                                                                                ('impact', impact)
-                                                                            ])
+                            mf_model_id_to_mf_metric_to_value[model_id] =\
+                                                                        dict([
+                                                                            (EvaluationMetric.ID_ACCURACY, accuracy),
+                                                                            (EvaluationMetric.ID_IMPACT, impact)
+                                                                        ])
                         mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value[num_of_hashtags]\
                             .append([tu, mf_model_id_to_mf_metric_to_value])
             return mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value
@@ -256,8 +264,10 @@ class OnlineLearning():
                 impact_mf_model_id_to_metric_value = {}
                 for model_id in LIST_OF_MODELS:
                     mf_metric_to_value = mf_model_id_to_mf_metric_to_value.get(model_id, {})
-                    accuracy_mf_model_id_to_metric_value[model_id] = mf_metric_to_value.get('accuracy', 0.0)
-                    impact_mf_model_id_to_metric_value[model_id] = mf_metric_to_value.get('impact', 0.0)
+                    accuracy_mf_model_id_to_metric_value[model_id] =\
+                                                            mf_metric_to_value.get(EvaluationMetric.ID_ACCURACY, 0.0)
+                    impact_mf_model_id_to_metric_value[model_id] =\
+                                                                mf_metric_to_value.get(EvaluationMetric.ID_IMPACT, 0.0)
                 for mf_model_id_to_cumulative_losses, mf_model_id_to_metric_value, mf_num_of_hashtags_to_metric_values\
                         in \
                         [
@@ -371,13 +381,13 @@ class PredictingHastagsForLocations(ModifiedMRJob):
                           }
             for num_of_hashtags, metric_values in\
                     accuracy_mf_num_of_hashtags_to_metric_values.iteritems():
-                output_dict['metric'] = 'accuracy'
+                output_dict['metric'] = EvaluationMetric.ID_ACCURACY
                 output_dict['num_of_hashtags'] = num_of_hashtags
                 output_dict['metric_value'] = np.mean(metric_values)
                 yield 'o_d', output_dict
             for num_of_hashtags, metric_values in\
                     impact_mf_num_of_hashtags_to_metric_values.iteritems():
-                output_dict['metric'] = 'impact'
+                output_dict['metric'] = EvaluationMetric.ID_IMPACT
                 output_dict['num_of_hashtags'] = num_of_hashtags
                 output_dict['metric_value'] = np.mean(metric_values)
                 yield 'o_d', output_dict
@@ -388,7 +398,7 @@ class PredictingHastagsForLocations(ModifiedMRJob):
         accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
                                                                 LearningToRank.get_performance_metrics(feature_vectors)
         for output in self._yield_results(
-                                    'learning_to_rank',
+                                    PREDICTION_METHOD_ID_LEARNING_TO_RANK,
                                     location,
                                     accuracy_mf_num_of_hashtags_to_metric_values,
                                     impact_mf_num_of_hashtags_to_metric_values
@@ -398,12 +408,12 @@ class PredictingHastagsForLocations(ModifiedMRJob):
         for prediction_method, get_best_model, update_losses_for_every_model in\
                 [
                      (  
-                        'follow_the_leader',
+                        PREDICTION_METHOD_ID_FOLLOW_THE_LEADER,
                         OnlineLearning.follow_the_leader_get_best_model,
                         OnlineLearning.follow_the_leader_update_losses_for_every_model
                       ),
                      (
-                        'hedging',
+                        PREDICTION_METHOD_ID_HEDGING,
                         OnlineLearning.hedging_get_best_model,
                         OnlineLearning.hedging_update_losses_for_every_model
                       )
