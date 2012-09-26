@@ -395,11 +395,11 @@ class PredictingHastagsForLocations(ModifiedMRJob):
                         OnlineLearning.follow_the_leader_get_best_model,
                         OnlineLearning.follow_the_leader_update_losses_for_every_model
                       ),
-                     (
-                        'hedging',
-                        OnlineLearning.hedging_get_best_model,
-                        OnlineLearning.hedging_update_losses_for_every_model
-                      )
+#                     (
+#                        'hedging',
+#                        OnlineLearning.hedging_get_best_model,
+#                        OnlineLearning.hedging_update_losses_for_every_model
+#                      )
                  ]:
             accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
                                                 OnlineLearning.get_performance_metrics(
