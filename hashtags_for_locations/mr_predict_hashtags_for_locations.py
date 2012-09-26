@@ -177,64 +177,62 @@ class LearningToRank(object):
 
 class FollowTheLeader():
     @staticmethod
-    def get_performance_metrics(location, feature_vectors):
-        for fv in feature_vectors: 
-            if 'value_to_predict' in fv['feature_vector']: del fv['feature_vector']['value_to_predict']
-        feature_vectors.sort(key=itemgetter('tu'))
-        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector =\
-                                            [(tu, map(
-                                                      itemgetter('hashtag', 'actual_score', 'feature_vector'),
-                                                      it_feature_vectors)
-                                                  )
-                                                for tu, it_feature_vectors in 
-                                                    groupby(feature_vectors, key=itemgetter('tu'))
-                                            ]
-        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector.sort(key=itemgetter(0))
-        mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value = defaultdict(list)
-        for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
-                        ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector:
-            ltuo_observed_hastags_and_actual_score = [(hashtag, actual_score)
-                                                      for hashtag, actual_score, _ in 
-                                                            ltuo_hashtag_and_actual_score_and_feature_vector
-                                                        if actual_score!=None
-                                                    ]
-            if ltuo_observed_hastags_and_actual_score:
-                ltuo_observed_hastags_and_actual_score.sort(key=itemgetter(1), reverse=True)
-                actual_ordering_of_hashtags = zip(*ltuo_observed_hastags_and_actual_score)[0]
-                hashtags_dist = dict(ltuo_observed_hastags_and_actual_score)
-                
-                mf_model_id_to_ltuo_hashtag_and_predicted_score = defaultdict(list)
-                mf_model_id_to_predicted_ordering_of_hashtags = {}
-                for hashtag, actual_score, fv in ltuo_hashtag_and_actual_score_and_feature_vector:
-#                    if actual_score == None:
-                    for model_id, predicted_score in fv.iteritems():
-                        mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id].append([hashtag, predicted_score])
-                for model_id, ltuo_hashtag_and_predicted_score in\
-                        mf_model_id_to_ltuo_hashtag_and_predicted_score.items()[:]:
-                    ltuo_hashtag_and_predicted_score.sort(key=itemgetter(1), reverse=True)
-#                    mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id] = sorted(
-#                                                                                       ltuo_hashtag_and_predicted_score,
-#                                                                                       key=itemgetter(1),
-#                                                                                       reverse=True
-#                                                                                       )
-                    mf_model_id_to_predicted_ordering_of_hashtags[model_id] = zip(*ltuo_hashtag_and_predicted_score)[0]
-                for num_of_hashtags in range(1,25):
-                    mf_model_id_to_mf_metric_to_value = {}
-                    for model_id, predicted_ordering_of_hashtags in\
-                            mf_model_id_to_predicted_ordering_of_hashtags.iteritems():
-                        accuracy = EvaluationMetric.accuracy(
-                                                              actual_ordering_of_hashtags[:num_of_hashtags],
-                                                              predicted_ordering_of_hashtags[:num_of_hashtags],
-                                                              num_of_hashtags
-                                                            )
-                        impact = EvaluationMetric.impact(
-                                                        actual_ordering_of_hashtags[:num_of_hashtags],
-                                                        predicted_ordering_of_hashtags[:num_of_hashtags],
-                                                        hashtags_dist
+    def get_performance_of_models_by_time_unit(feature_vectors):
+            for fv in feature_vectors: 
+                if 'value_to_predict' in fv['feature_vector']: del fv['feature_vector']['value_to_predict']
+            feature_vectors.sort(key=itemgetter('tu'))
+            ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector =\
+                                                [(tu, map(
+                                                          itemgetter('hashtag', 'actual_score', 'feature_vector'),
+                                                          it_feature_vectors)
                                                       )
-                        mf_model_id_to_mf_metric_to_value[model_id] = dict([('accuracy', accuracy), ('impact', impact)])
-                    mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value[num_of_hashtags]\
-                        .append([tu, mf_model_id_to_mf_metric_to_value])
+                                                    for tu, it_feature_vectors in 
+                                                        groupby(feature_vectors, key=itemgetter('tu'))
+                                                ]
+            ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector.sort(key=itemgetter(0))
+            mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value = defaultdict(list)
+            for tu, ltuo_hashtag_and_actual_score_and_feature_vector in \
+                            ltuo_tu_and_ltuo_hashtag_and_actual_score_and_feature_vector:
+                ltuo_observed_hastags_and_actual_score = [(hashtag, actual_score)
+                                                          for hashtag, actual_score, _ in 
+                                                                ltuo_hashtag_and_actual_score_and_feature_vector
+                                                            if actual_score!=None
+                                                        ]
+                if ltuo_observed_hastags_and_actual_score:
+                    ltuo_observed_hastags_and_actual_score.sort(key=itemgetter(1), reverse=True)
+                    actual_ordering_of_hashtags = zip(*ltuo_observed_hastags_and_actual_score)[0]
+                    hashtags_dist = dict(ltuo_observed_hastags_and_actual_score)
+                    
+                    mf_model_id_to_ltuo_hashtag_and_predicted_score = defaultdict(list)
+                    mf_model_id_to_predicted_ordering_of_hashtags = {}
+                    for hashtag, actual_score, fv in ltuo_hashtag_and_actual_score_and_feature_vector:
+                        for model_id, predicted_score in fv.iteritems():
+                            mf_model_id_to_ltuo_hashtag_and_predicted_score[model_id].append([hashtag, predicted_score])
+                    for model_id, ltuo_hashtag_and_predicted_score in\
+                            mf_model_id_to_ltuo_hashtag_and_predicted_score.items()[:]:
+                        ltuo_hashtag_and_predicted_score.sort(key=itemgetter(1), reverse=True)
+                        mf_model_id_to_predicted_ordering_of_hashtags[model_id] = zip(*ltuo_hashtag_and_predicted_score)[0]
+                    for num_of_hashtags in range(1,25):
+                        mf_model_id_to_mf_metric_to_value = {}
+                        for model_id, predicted_ordering_of_hashtags in\
+                                mf_model_id_to_predicted_ordering_of_hashtags.iteritems():
+                            accuracy = EvaluationMetric.accuracy(
+                                                                  actual_ordering_of_hashtags[:num_of_hashtags],
+                                                                  predicted_ordering_of_hashtags[:num_of_hashtags],
+                                                                  num_of_hashtags
+                                                                )
+                            impact = EvaluationMetric.impact(
+                                                            actual_ordering_of_hashtags[:num_of_hashtags],
+                                                            predicted_ordering_of_hashtags[:num_of_hashtags],
+                                                            hashtags_dist
+                                                          )
+                            mf_model_id_to_mf_metric_to_value[model_id] = dict([('accuracy', accuracy), ('impact', impact)])
+                        mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value[num_of_hashtags]\
+                            .append([tu, mf_model_id_to_mf_metric_to_value])
+    @staticmethod
+    def get_performance_metrics(feature_vectors):
+        mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value =\
+                                                 FollowTheLeader.get_performance_of_models_by_time_unit(feature_vectors)
         for num_of_hashtags, ltuo_tu_and_mf_model_id_to_mf_metric_to_value in \
                 mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value.iteritems():
             for tu, mf_model_id_to_mf_metric_to_value in ltuo_tu_and_mf_model_id_to_mf_metric_to_value:
@@ -272,10 +270,7 @@ class PredictingHastagsForLocations(ModifiedMRJob):
 #        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
 #                                                                LearningToRank.get_performance_metrics(feature_vectors)
         accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
-                                                                FollowTheLeader.get_performance_metrics(
-                                                                                                        location,
-                                                                                                        feature_vectors
-                                                                                                        )
+                                                                FollowTheLeader.get_performance_metrics(feature_vectors)
         yield '', ''
 
 #        if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
