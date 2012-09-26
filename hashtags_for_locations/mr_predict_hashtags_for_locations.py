@@ -6,7 +6,7 @@ Created on Sep 19, 2012
 from collections import defaultdict
 from itertools import chain, groupby
 from library.classes import GeneralMethods
-from library.mrjobwrapper import ModifiedMRJob
+from library.mrjobwrapper import ModifiedMRJob, MRJobWrapper
 from library.r_helper import R_Helper
 from operator import itemgetter
 import cjson
@@ -431,16 +431,48 @@ class PredictingHastagsForLocations(ModifiedMRJob):
                                     impact_mf_num_of_hashtags_to_metric_values
                             ):
                 yield output
-            
-    def steps(self):
+    def jobs_to_evaluate_prediction_methods(self):
         return [self.mr(
                     mapper=self.map_data_to_feature_vectors,
                     mapper_final=self.map_final_data_to_feature_vectors,
                     reducer=self.red_feature_vectors_to_measuring_unit_id_and_metric_value
-                ),
+                )
             ] 
-        
+    
+    def steps(self):
+        return self.jobs_to_evaluate_prediction_methods()
+
+class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(MRJobWrapper):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(PerformanceOfPredictingMethodsByVaryingNumOfHashtags, self).__init__(*args, **kwargs)
+        self.predicting_hashtags_for_locations = PredictingHastagsForLocations()
+        self.mf_num_of_hashtags_w_metric_to_metric_values = defaultdict(list)
+    def map_data_to_num_of_hashtags_w_metric_and_value(self, key, performance_data):
+        if False: yield # I'm a generator!
+        num_of_hashtags_w_metric = '%s_%s'%(performance_data['num_of_hashtags'], performance_data['metric'])
+        self.mf_num_of_hashtags_w_metric_to_metric_values[num_of_hashtags_w_metric].append(
+                                                                                      performance_data['metric_value'] 
+                                                                                    )
+    def map_final_data_to_num_of_hashtags_w_metric_and_value(self):
+        for num_of_hashtags_w_metric, metric_values in\
+                self.mf_num_of_hashtags_w_metric_to_metric_values.iteritems():
+            yield num_of_hashtags_w_metric, metric_values
+    def red_num_of_hashtags_w_metrica_and_metric_values_to_performance_summary(self,
+                                                                               num_of_hashtags_w_metric,
+                                                                               lo_metric_values
+                                                                           ):
+        num_of_hashtags, metric = num_of_hashtags_w_metric.split('_')
+        performance_summary = {
+                               'num_of_hashtags': num_of_hashtags,
+                               'metric': metric,
+                               'metric_value': np.mean(list(chain(*lo_metric_values)))
+                               }
+        yield 'o_d', performance_summary
+    def steps(self):
+        pass
 
 if __name__ == '__main__':
-    PredictingHastagsForLocations.run()
+#    PredictingHastagsForLocations.run()
+    PerformanceOfPredictingMethodsByVaryingNumOfHashtags.run()
     
