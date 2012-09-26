@@ -10,6 +10,7 @@ from library.r_helper import R_Helper
 from operator import itemgetter
 import cjson
 import numpy as np
+import random
 import rpy2.robjects as robjects
 
 R = robjects.r
@@ -242,8 +243,10 @@ class OnlineLearning():
                                                  OnlineLearning.get_performance_of_models_by_time_unit(feature_vectors)
         for num_of_hashtags, ltuo_tu_and_mf_model_id_to_mf_metric_to_value in \
                 mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value.iteritems():
-            accuracy_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
-            impact_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
+#            accuracy_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
+#            impact_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
+            accuracy_mf_model_id_to_cumulative_losses = {}
+            impact_mf_model_id_to_cumulative_losses = {}
             for tu, mf_model_id_to_mf_metric_to_value in ltuo_tu_and_mf_model_id_to_mf_metric_to_value:
                 accuracy_mf_model_id_to_metric_value = {}
                 impact_mf_model_id_to_metric_value = {}
@@ -275,14 +278,27 @@ class OnlineLearning():
         return accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values
     @staticmethod
     def follow_the_leader_get_best_model(mf_model_id_to_cumulative_losses):
-        pass
+        if not mf_model_id_to_cumulative_losses: return random.sample(LIST_OF_MODELS, 1)
+        else: 
+            model_id_and_cumulative_loss = (None, ())
+            for model_id in LIST_OF_MODELS: 
+                if model_id in mf_model_id_to_cumulative_losses: 
+                    model_id_and_cumulative_loss = min(
+                                                        [
+                                                             model_id_and_cumulative_loss, 
+                                                             (model_id, mf_model_id_to_cumulative_losses[model_id])
+                                                         ],
+                                                        key=itemgetter(1)
+                                                    )
+            return model_id_and_cumulative_loss[0]
     @staticmethod
     def follow_the_leader_update_losses_for_every_model(
                                                         mf_model_id_to_metric_value,
                                                         best_model,
                                                         mf_model_id_to_cumulative_losses
                                                         ):
-        pass
+        for model_id, metric_value in mf_model_id_to_metric_value.iteritems():
+            mf_model_id_to_cumulative_losses[model_id]+=(1.0 - metric_value)
     @staticmethod
     def hedging_get_best_model(mf_model_id_to_cumulative_losses):
         pass
@@ -324,32 +340,34 @@ class PredictingHastagsForLocations(ModifiedMRJob):
 #        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
 #                                                                LearningToRank.get_performance_metrics(feature_vectors)
         accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
-                                                                OnlineLearning.get_performance_metrics(feature_vectors)
-        yield '', ''
-
-#        if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
-#                impact_mf_num_of_hashtags_to_metric_values.items():
-#            data = location.split('++')
-#            window_id = '%s_%s'%(data[1], data[2])
-#            output_dict = {
-#                              'window_id': window_id,
-#                              'num_of_hashtags': -1,
-#                              'location': data[0],
-#                              'metric': '',
-#                              'metric_value': 0.0
-#                          }
-#            for num_of_hashtags, metric_values in\
-#                    accuracy_mf_num_of_hashtags_to_metric_values.iteritems():
-#                output_dict['metric'] = 'accuracy'
-#                output_dict['num_of_hashtags'] = num_of_hashtags
-#                output_dict['metric_value'] = np.mean(metric_values)
-#                yield 'o_d', output_dict
-#            for num_of_hashtags, metric_values in\
-#                    impact_mf_num_of_hashtags_to_metric_values.iteritems():
-#                output_dict['metric'] = 'impact'
-#                output_dict['num_of_hashtags'] = num_of_hashtags
-#                output_dict['metric_value'] = np.mean(metric_values)
-#                yield 'o_d', output_dict
+                OnlineLearning.get_performance_metrics(
+                                                        feature_vectors,
+                                                        OnlineLearning.follow_the_leader_get_best_model,
+                                                        OnlineLearning.follow_the_leader_update_losses_for_every_model
+                                                    )
+        if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
+                impact_mf_num_of_hashtags_to_metric_values.items():
+            data = location.split('++')
+            window_id = '%s_%s'%(data[1], data[2])
+            output_dict = {
+                              'window_id': window_id,
+                              'num_of_hashtags': -1,
+                              'location': data[0],
+                              'metric': '',
+                              'metric_value': 0.0
+                          }
+            for num_of_hashtags, metric_values in\
+                    accuracy_mf_num_of_hashtags_to_metric_values.iteritems():
+                output_dict['metric'] = 'accuracy'
+                output_dict['num_of_hashtags'] = num_of_hashtags
+                output_dict['metric_value'] = np.mean(metric_values)
+                yield 'o_d', output_dict
+            for num_of_hashtags, metric_values in\
+                    impact_mf_num_of_hashtags_to_metric_values.iteritems():
+                output_dict['metric'] = 'impact'
+                output_dict['num_of_hashtags'] = num_of_hashtags
+                output_dict['metric_value'] = np.mean(metric_values)
+                yield 'o_d', output_dict
                         
     def steps(self):
         return [self.mr(
