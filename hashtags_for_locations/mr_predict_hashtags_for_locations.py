@@ -211,7 +211,8 @@ class FollowTheLeader():
                     for model_id, ltuo_hashtag_and_predicted_score in\
                             mf_model_id_to_ltuo_hashtag_and_predicted_score.items()[:]:
                         ltuo_hashtag_and_predicted_score.sort(key=itemgetter(1), reverse=True)
-                        mf_model_id_to_predicted_ordering_of_hashtags[model_id] = zip(*ltuo_hashtag_and_predicted_score)[0]
+                        mf_model_id_to_predicted_ordering_of_hashtags[model_id] =\
+                                                                            zip(*ltuo_hashtag_and_predicted_score)[0]
                     for num_of_hashtags in range(1,25):
                         mf_model_id_to_mf_metric_to_value = {}
                         for model_id, predicted_ordering_of_hashtags in\
@@ -226,7 +227,10 @@ class FollowTheLeader():
                                                             predicted_ordering_of_hashtags[:num_of_hashtags],
                                                             hashtags_dist
                                                           )
-                            mf_model_id_to_mf_metric_to_value[model_id] = dict([('accuracy', accuracy), ('impact', impact)])
+                            mf_model_id_to_mf_metric_to_value[model_id] = dict([
+                                                                                ('accuracy', accuracy),
+                                                                                ('impact', impact)
+                                                                            ])
                         mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value[num_of_hashtags]\
                             .append([tu, mf_model_id_to_mf_metric_to_value])
     @staticmethod
@@ -236,7 +240,14 @@ class FollowTheLeader():
         for num_of_hashtags, ltuo_tu_and_mf_model_id_to_mf_metric_to_value in \
                 mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value.iteritems():
             for tu, mf_model_id_to_mf_metric_to_value in ltuo_tu_and_mf_model_id_to_mf_metric_to_value:
-                print num_of_hashtags, tu, mf_model_id_to_mf_metric_to_value
+                accuracy_mf_model_id_to_metric_value = {}
+                impact_mf_model_id_to_metric_value = {}
+                for model_id in LIST_OF_MODELS:
+                    mf_metric_to_value = mf_model_id_to_mf_metric_to_value.get(model_id, {})
+                    accuracy_mf_model_id_to_metric_value[model_id] = mf_metric_to_value.get('accuracy', 0.0)
+                    impact_mf_model_id_to_metric_value[model_id] = mf_metric_to_value.get('impact', 0.0)
+                print accuracy_mf_model_id_to_metric_value
+                print impact_mf_model_id_to_metric_value
                 
         return {}, {}
 
