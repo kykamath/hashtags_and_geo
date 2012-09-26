@@ -235,11 +235,15 @@ class FollowTheLeader():
                             .append([tu, mf_model_id_to_mf_metric_to_value])
             return mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value
     @staticmethod
-    def get_performance_metrics(feature_vectors):
+    def get_performance_metrics(feature_vectors, get_best_model, update_losses_for_every_model):
+        accuracy_mf_num_of_hashtags_to_metric_values = {}
+        impact_mf_num_of_hashtags_to_metric_values = {}
         mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value =\
                                                  FollowTheLeader.get_performance_of_models_by_time_unit(feature_vectors)
         for num_of_hashtags, ltuo_tu_and_mf_model_id_to_mf_metric_to_value in \
                 mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value.iteritems():
+            accuracy_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
+            impact_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
             for tu, mf_model_id_to_mf_metric_to_value in ltuo_tu_and_mf_model_id_to_mf_metric_to_value:
                 accuracy_mf_model_id_to_metric_value = {}
                 impact_mf_model_id_to_metric_value = {}
@@ -247,10 +251,31 @@ class FollowTheLeader():
                     mf_metric_to_value = mf_model_id_to_mf_metric_to_value.get(model_id, {})
                     accuracy_mf_model_id_to_metric_value[model_id] = mf_metric_to_value.get('accuracy', 0.0)
                     impact_mf_model_id_to_metric_value[model_id] = mf_metric_to_value.get('impact', 0.0)
-                print accuracy_mf_model_id_to_metric_value
-                print impact_mf_model_id_to_metric_value
+                for mf_model_id_to_cumulative_losses, mf_model_id_to_metric_value in \
+                        [
+                         (accuracy_mf_model_id_to_cumulative_losses, accuracy_mf_model_id_to_metric_value),
+                         (impact_mf_model_id_to_cumulative_losses, impact_mf_model_id_to_metric_value),
+                         ]:
+                    best_model = get_best_model(mf_model_id_to_cumulative_losses)
+                    update_losses_for_every_model(
+                                                      mf_model_id_to_metric_value,
+                                                      best_model,
+                                                      mf_model_id_to_cumulative_losses
+                                                  )
+#                print accuracy_mf_model_id_to_metric_value
+#                print impact_mf_model_id_to_metric_value
                 
-        return {}, {}
+        return accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values
+    @staticmethod
+    def follow_the_leader_get_best_model(mf_model_id_to_cumulative_losses):
+        pass
+    @staticmethod
+    def follow_the_leader_update_losses_for_every_model(
+                                                        mf_model_id_to_metric_value,
+                                                        best_model,
+                                                        mf_model_id_to_cumulative_losses
+                                                        ):
+        pass
 
 class PredictingHastagsForLocations(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
