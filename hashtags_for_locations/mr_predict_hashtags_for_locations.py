@@ -175,7 +175,7 @@ class LearningToRank(object):
                 return (accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values)
         return {}, {}
 
-class FollowTheLeader():
+class OnlineLearning():
     @staticmethod
     def get_performance_of_models_by_time_unit(feature_vectors):
             for fv in feature_vectors: 
@@ -239,7 +239,7 @@ class FollowTheLeader():
         accuracy_mf_num_of_hashtags_to_metric_values = {}
         impact_mf_num_of_hashtags_to_metric_values = {}
         mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value =\
-                                                 FollowTheLeader.get_performance_of_models_by_time_unit(feature_vectors)
+                                                 OnlineLearning.get_performance_of_models_by_time_unit(feature_vectors)
         for num_of_hashtags, ltuo_tu_and_mf_model_id_to_mf_metric_to_value in \
                 mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value.iteritems():
             accuracy_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
@@ -251,20 +251,27 @@ class FollowTheLeader():
                     mf_metric_to_value = mf_model_id_to_mf_metric_to_value.get(model_id, {})
                     accuracy_mf_model_id_to_metric_value[model_id] = mf_metric_to_value.get('accuracy', 0.0)
                     impact_mf_model_id_to_metric_value[model_id] = mf_metric_to_value.get('impact', 0.0)
-                for mf_model_id_to_cumulative_losses, mf_model_id_to_metric_value in \
+                for mf_model_id_to_cumulative_losses, mf_model_id_to_metric_value, mf_num_of_hashtags_to_metric_values\
+                        in \
                         [
-                         (accuracy_mf_model_id_to_cumulative_losses, accuracy_mf_model_id_to_metric_value),
-                         (impact_mf_model_id_to_cumulative_losses, impact_mf_model_id_to_metric_value),
+                             (
+                                  accuracy_mf_model_id_to_cumulative_losses,
+                                  accuracy_mf_model_id_to_metric_value,
+                                  accuracy_mf_num_of_hashtags_to_metric_values
+                              ),
+                             (
+                                  impact_mf_model_id_to_cumulative_losses,
+                                  impact_mf_model_id_to_metric_value,
+                                  impact_mf_model_id_to_cumulative_losses
+                              ),
                          ]:
                     best_model = get_best_model(mf_model_id_to_cumulative_losses)
+                    mf_num_of_hashtags_to_metric_values[num_of_hashtags] = mf_model_id_to_metric_value[num_of_hashtags]
                     update_losses_for_every_model(
                                                       mf_model_id_to_metric_value,
                                                       best_model,
                                                       mf_model_id_to_cumulative_losses
                                                   )
-#                print accuracy_mf_model_id_to_metric_value
-#                print impact_mf_model_id_to_metric_value
-                
         return accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values
     @staticmethod
     def follow_the_leader_get_best_model(mf_model_id_to_cumulative_losses):
@@ -275,6 +282,16 @@ class FollowTheLeader():
                                                         best_model,
                                                         mf_model_id_to_cumulative_losses
                                                         ):
+        pass
+    @staticmethod
+    def hedging_get_best_model(mf_model_id_to_cumulative_losses):
+        pass
+    @staticmethod
+    def hedging_update_losses_for_every_model(
+                                                mf_model_id_to_metric_value,
+                                                best_model,
+                                                mf_model_id_to_cumulative_losses
+                                            ):
         pass
 
 class PredictingHastagsForLocations(ModifiedMRJob):
@@ -307,7 +324,7 @@ class PredictingHastagsForLocations(ModifiedMRJob):
 #        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
 #                                                                LearningToRank.get_performance_metrics(feature_vectors)
         accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
-                                                                FollowTheLeader.get_performance_metrics(feature_vectors)
+                                                                OnlineLearning.get_performance_metrics(feature_vectors)
         yield '', ''
 
 #        if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
