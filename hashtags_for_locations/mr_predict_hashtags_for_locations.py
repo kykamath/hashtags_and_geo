@@ -236,13 +236,15 @@ class FollowTheLeader():
                                                         predicted_ordering_of_hashtags[:num_of_hashtags],
                                                         hashtags_dist
                                                       )
+                        if accuracy!=0: print accuracy
+                        if impact!=0: print impact
                         mf_model_id_to_mf_metric_to_value[model_id] = dict([('accuracy', accuracy), ('impact', impact)])
                     mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value[num_of_hashtags]\
                         .append([tu, mf_model_id_to_mf_metric_to_value])
-        for num_of_hashtags, ltuo_tu_and_mf_model_id_to_mf_metric_to_value in \
-                mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value.iteritems():
-            for tu, mf_model_id_to_mf_metric_to_value in ltuo_tu_and_mf_model_id_to_mf_metric_to_value:
-                print num_of_hashtags, tu, mf_model_id_to_mf_metric_to_value
+#        for num_of_hashtags, ltuo_tu_and_mf_model_id_to_mf_metric_to_value in \
+#                mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value.iteritems():
+#            for tu, mf_model_id_to_mf_metric_to_value in ltuo_tu_and_mf_model_id_to_mf_metric_to_value:
+#                print num_of_hashtags, tu, mf_model_id_to_mf_metric_to_value
                 
         return {}, {}
 
