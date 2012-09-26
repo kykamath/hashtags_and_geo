@@ -385,8 +385,15 @@ class PredictingHastagsForLocations(ModifiedMRJob):
     def red_feature_vectors_to_measuring_unit_id_and_metric_value(self, location, lo_feature_vector):
         feature_vectors = list(chain(*lo_feature_vector))
         
-#        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
-#                                                                LearningToRank.get_performance_metrics(feature_vectors)
+        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
+                                                                LearningToRank.get_performance_metrics(feature_vectors)
+        for output in self._yield_results(
+                                    'learning_to_rank',
+                                    location,
+                                    accuracy_mf_num_of_hashtags_to_metric_values,
+                                    impact_mf_num_of_hashtags_to_metric_values
+                            ):
+                yield output
 
         for prediction_method, get_best_model, update_losses_for_every_model in\
                 [
@@ -395,11 +402,11 @@ class PredictingHastagsForLocations(ModifiedMRJob):
                         OnlineLearning.follow_the_leader_get_best_model,
                         OnlineLearning.follow_the_leader_update_losses_for_every_model
                       ),
-#                     (
-#                        'hedging',
-#                        OnlineLearning.hedging_get_best_model,
-#                        OnlineLearning.hedging_update_losses_for_every_model
-#                      )
+                     (
+                        'hedging',
+                        OnlineLearning.hedging_get_best_model,
+                        OnlineLearning.hedging_update_losses_for_every_model
+                      )
                  ]:
             accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
                                                 OnlineLearning.get_performance_metrics(
