@@ -450,6 +450,7 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
         self.mf_num_of_hashtags_to_metric_values = defaultdict(list)
     def map_data_to_num_of_hashtags_and_value(self, key, performance_data):
         if False: yield # I'm a generator!
+        performance_data = cjson.decode(performance_data)
         num_of_hashtags = '%s::%s::%s'%(
                                         performance_data['num_of_hashtags'],
                                         performance_data['metric'],
