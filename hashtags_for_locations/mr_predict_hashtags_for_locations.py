@@ -481,6 +481,6 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
             ] 
 
 if __name__ == '__main__':
-#    PredictingHastagsForLocations.run()
-    PerformanceOfPredictingMethodsByVaryingNumOfHashtags.run()
+    PredictingHastagsForLocations.run()
+#    PerformanceOfPredictingMethodsByVaryingNumOfHashtags.run()
     
