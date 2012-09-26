@@ -407,12 +407,13 @@ class PredictingHastagsForLocations(ModifiedMRJob):
                                                                                         get_best_model,
                                                                                         update_losses_for_every_model
                                                                                     )
-            self._yield_results(
+            for output in self._yield_results(
                                     prediction_method,
                                     location,
                                     accuracy_mf_num_of_hashtags_to_metric_values,
                                     impact_mf_num_of_hashtags_to_metric_values
-                            )  
+                            ):
+                yield output
             
     def steps(self):
         return [self.mr(
