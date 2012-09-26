@@ -472,15 +472,15 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
                                }
         yield 'o_d', performance_summary
     def steps(self):
-        return self.predicting_hashtags_for_locations.jobs_to_evaluate_prediction_methods() +\
-                [self.mr(
-                    mapper=self.map_data_to_num_of_hashtags_and_value,
-                    mapper_final=self.map_final_data_to_num_of_hashtags_and_value,
-                    reducer=self.red_num_of_hashtagsa_and_metric_values_to_performance_summary
-                )
-            ] 
+#        return self.predicting_hashtags_for_locations.jobs_to_evaluate_prediction_methods() +\
+        return [self.mr(
+                        mapper=self.map_data_to_num_of_hashtags_and_value,
+                        mapper_final=self.map_final_data_to_num_of_hashtags_and_value,
+                        reducer=self.red_num_of_hashtagsa_and_metric_values_to_performance_summary
+                    )
+                ] 
 
 if __name__ == '__main__':
-    PredictingHastagsForLocations.run()
-#    PerformanceOfPredictingMethodsByVaryingNumOfHashtags.run()
+#    PredictingHastagsForLocations.run()
+    PerformanceOfPredictingMethodsByVaryingNumOfHashtags.run()
     
