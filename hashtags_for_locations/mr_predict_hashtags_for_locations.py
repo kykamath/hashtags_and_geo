@@ -279,7 +279,7 @@ class OnlineLearning():
         return accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values
     @staticmethod
     def follow_the_leader_get_best_model(mf_model_id_to_cumulative_losses):
-        if not mf_model_id_to_cumulative_losses: return random.sample(LIST_OF_MODELS, 1)
+        if not mf_model_id_to_cumulative_losses: return random.sample(LIST_OF_MODELS, 1)[0]
         else: 
             model_id_and_cumulative_loss = (None, ())
             for model_id in LIST_OF_MODELS: 
@@ -291,7 +291,6 @@ class OnlineLearning():
                                                          ],
                                                         key=itemgetter(1)
                                                     )
-            print '*****', model_id_and_cumulative_loss
             return model_id_and_cumulative_loss[0]
     @staticmethod
     def follow_the_leader_update_losses_for_every_model(
