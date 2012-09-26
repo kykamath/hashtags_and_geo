@@ -351,28 +351,19 @@ class PredictingHastagsForLocations(ModifiedMRJob):
         for location, feature_vectors in self.mf_location_to_feature_vectors.iteritems():
             yield location, feature_vectors
     
-    def red_feature_vectors_to_measuring_unit_id_and_metric_value(self, location, lo_feature_vector):
-        feature_vectors = list(chain(*lo_feature_vector))
-        
-#        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
-#                                                                LearningToRank.get_performance_metrics(feature_vectors)
-#        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
-#                OnlineLearning.get_performance_metrics(
-#                                                        feature_vectors,
-#                                                        OnlineLearning.follow_the_leader_get_best_model,
-#                                                        OnlineLearning.follow_the_leader_update_losses_for_every_model
-#                                                    )
-        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
-                OnlineLearning.get_performance_metrics(
-                                                        feature_vectors,
-                                                        OnlineLearning.hedging_get_best_model,
-                                                        OnlineLearning.hedging_update_losses_for_every_model
-                                                    )
+    def _yield_results(
+                           self,
+                           prediction_method,
+                           location,
+                           accuracy_mf_num_of_hashtags_to_metric_values,
+                           impact_mf_num_of_hashtags_to_metric_values
+                       ):
         if accuracy_mf_num_of_hashtags_to_metric_values.items() and\
                 impact_mf_num_of_hashtags_to_metric_values.items():
             data = location.split('++')
             window_id = '%s_%s'%(data[1], data[2])
             output_dict = {
+                              'prediction_method': prediction_method,
                               'window_id': window_id,
                               'num_of_hashtags': -1,
                               'location': data[0],
@@ -391,7 +382,39 @@ class PredictingHastagsForLocations(ModifiedMRJob):
                 output_dict['num_of_hashtags'] = num_of_hashtags
                 output_dict['metric_value'] = np.mean(metric_values)
                 yield 'o_d', output_dict
-                        
+    
+    def red_feature_vectors_to_measuring_unit_id_and_metric_value(self, location, lo_feature_vector):
+        feature_vectors = list(chain(*lo_feature_vector))
+        
+#        accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
+#                                                                LearningToRank.get_performance_metrics(feature_vectors)
+
+        for prediction_method, get_best_model, update_losses_for_every_model in\
+                [
+                     (  
+                        'follow_the_leader',
+                        OnlineLearning.follow_the_leader_get_best_model,
+                        OnlineLearning.follow_the_leader_update_losses_for_every_model
+                      ),
+                     (
+                        'hedging',
+                        OnlineLearning.hedging_get_best_model,
+                        OnlineLearning.hedging_update_losses_for_every_model
+                      )
+                 ]:
+            accuracy_mf_num_of_hashtags_to_metric_values, impact_mf_num_of_hashtags_to_metric_values=\
+                                                OnlineLearning.get_performance_metrics(
+                                                                                        feature_vectors,
+                                                                                        get_best_model,
+                                                                                        update_losses_for_every_model
+                                                                                    )
+            self._yield_results(
+                                    prediction_method,
+                                    location,
+                                    accuracy_mf_num_of_hashtags_to_metric_values,
+                                    impact_mf_num_of_hashtags_to_metric_values
+                            )  
+            
     def steps(self):
         return [self.mr(
                     mapper=self.map_data_to_feature_vectors,
