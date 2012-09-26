@@ -5,6 +5,7 @@ Created on Sep 19, 2012
 '''
 from collections import defaultdict
 from itertools import chain, groupby
+from library.classes import GeneralMethods
 from library.mrjobwrapper import ModifiedMRJob
 from library.r_helper import R_Helper
 from operator import itemgetter
@@ -102,7 +103,7 @@ class LearningToRank(object):
                                                     )
             return R_Helper.get_parameter_values(model)
     @staticmethod
-    def get_performance_metrics(feature_vectors):
+    def get_performance_metrics(feature_vectors, *args, **kwargs):
         train_feature_vectors, test_feature_vectors = split_feature_vectors_into_test_and_training(feature_vectors)
         filtered_train_feature_vectors = filter(lambda fv: len(fv['feature_vector'])>1, train_feature_vectors)
         filtered_test_feature_vectors = filter(lambda fv: len(fv['feature_vector'])>1, test_feature_vectors)
@@ -245,8 +246,8 @@ class OnlineLearning():
                 mf_num_of_hashtags_to_ltuo_tu_and_mf_model_id_to_mf_metric_to_value.iteritems():
 #            accuracy_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
 #            impact_mf_model_id_to_cumulative_losses = dict([(model_id, 0.0) for model_id in LIST_OF_MODELS])
-            accuracy_mf_model_id_to_cumulative_losses = defaultdict(float)
-            impact_mf_model_id_to_cumulative_losses = defaultdict(float)
+            accuracy_mf_model_id_to_cumulative_losses = {}
+            impact_mf_model_id_to_cumulative_losses = {}
             for tu, mf_model_id_to_mf_metric_to_value in ltuo_tu_and_mf_model_id_to_mf_metric_to_value:
                 accuracy_mf_model_id_to_metric_value = {}
                 impact_mf_model_id_to_metric_value = {}
@@ -293,6 +294,18 @@ class OnlineLearning():
                                                     )
             return model_id_and_cumulative_loss[0]
     @staticmethod
+    def hedging_get_best_model(mf_model_id_to_cumulative_losses):
+        if not mf_model_id_to_cumulative_losses: return random.sample(LIST_OF_MODELS, 1)[0]
+        else:
+            total_weight = float(sum(mf_model_id_to_cumulative_losses.values()))
+            for model in mf_model_id_to_cumulative_losses.keys(): mf_model_id_to_cumulative_losses[model]/=total_weight 
+            id_and_model_id_and_cumulative_losses = [(id, model_id, cumulative_loss)
+                                                        for id, (model_id, cumulative_loss) in 
+                                                            enumerate(mf_model_id_to_cumulative_losses.iteritems())
+                                                    ]
+            selected_id = GeneralMethods.weightedChoice(zip(*id_and_model_id_and_cumulative_losses)[2])
+            return filter(lambda (id, model, _): id==selected_id, id_and_model_id_and_cumulative_losses)[0][1]
+    @staticmethod
     def follow_the_leader_update_losses_for_every_model(
                                                         mf_model_id_to_metric_value,
                                                         best_model,
@@ -300,9 +313,6 @@ class OnlineLearning():
                                                         ):
         for model_id, metric_value in mf_model_id_to_metric_value.iteritems():
             mf_model_id_to_cumulative_losses[model_id]+=(1.0 - metric_value)
-    @staticmethod
-    def hedging_get_best_model(mf_model_id_to_cumulative_losses):
-        pass
     @staticmethod
     def hedging_update_losses_for_every_model(
                                                 mf_model_id_to_metric_value,
