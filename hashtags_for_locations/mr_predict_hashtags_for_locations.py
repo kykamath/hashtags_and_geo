@@ -291,7 +291,7 @@ class OnlineLearning():
                                                          ],
                                                         key=itemgetter(1)
                                                     )
-            print model_id_and_cumulative_loss
+            print '*****', model_id_and_cumulative_loss
             return model_id_and_cumulative_loss[0]
     @staticmethod
     def follow_the_leader_update_losses_for_every_model(
