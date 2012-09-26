@@ -462,11 +462,9 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
         for num_of_hashtags, metric_values in\
                 self.mf_num_of_hashtags_to_metric_values.iteritems():
             yield num_of_hashtags, metric_values
-    def red_num_of_hashtagsa_and_metric_values_to_performance_summary(self,
-                                                                               num_of_hashtags,
-                                                                               lo_metric_values
-                                                                           ):
-        num_of_hashtags, metric, prediction_method = num_of_hashtags.split('_')
+    def red_num_of_hashtagsa_and_metric_values_to_performance_summary(self, num_of_hashtags_key, lo_metric_values):
+        print num_of_hashtags_key
+        num_of_hashtags, metric, prediction_method = num_of_hashtags_key.split('_')
         performance_summary = {
                                'num_of_hashtags': num_of_hashtags,
                                'metric': metric,
