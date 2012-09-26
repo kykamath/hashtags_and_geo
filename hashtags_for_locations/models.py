@@ -832,7 +832,7 @@ class Experiments(object):
 #                        noOfHashtagsList=noOfHashtagsList
 #                        )
 
-        for i in range(11,25):
+        for i in range(19,25):
             conf = dict(
                         historyTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS),
                         predictionTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS),
