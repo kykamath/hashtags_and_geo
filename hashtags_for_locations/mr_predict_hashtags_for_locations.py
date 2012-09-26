@@ -226,6 +226,7 @@ class FollowTheLeader():
                     mf_model_id_to_mf_metric_to_value = {}
                     for model_id, predicted_ordering_of_hashtags in\
                             mf_model_id_to_predicted_ordering_of_hashtags.iteritems():
+                        print actual_ordering_of_hashtags[:num_of_hashtags], predicted_ordering_of_hashtags[:num_of_hashtags]
                         accuracy = EvaluationMetric.accuracy(
                                                               actual_ordering_of_hashtags[:num_of_hashtags],
                                                               predicted_ordering_of_hashtags[:num_of_hashtags],
