@@ -57,14 +57,15 @@ def get_feature_vectors(data):
         if location in mf_location_to_ideal_hashtags_rank: 
             ltuo_hashtag_and_perct = mf_location_to_ideal_hashtags_rank[location]
         mf_hashtag_to_value_to_predict = dict(ltuo_hashtag_and_perct)
-        for hashtag, mf_model_id_to_score in mf_hashtag_to_mf_model_id_to_score.iteritems():
-            mf_model_id_to_score['value_to_predict'] = mf_hashtag_to_value_to_predict.get(hashtag, None)
-            yielded_hashtags.add(hashtag)
-            yield location, hashtag, mf_model_id_to_score
-        for hashtag, value_to_predict in mf_hashtag_to_value_to_predict.iteritems():
-            if hashtag not in yielded_hashtags:
+        if mf_hashtag_to_value_to_predict:
+            for hashtag, mf_model_id_to_score in mf_hashtag_to_mf_model_id_to_score.iteritems():
+                mf_model_id_to_score['value_to_predict'] = mf_hashtag_to_value_to_predict.get(hashtag, None)
                 yielded_hashtags.add(hashtag)
-                yield location, hashtag, {'value_to_predict': value_to_predict}
+                yield location, hashtag, mf_model_id_to_score
+            for hashtag, value_to_predict in mf_hashtag_to_value_to_predict.iteritems():
+                if hashtag not in yielded_hashtags:
+                    yielded_hashtags.add(hashtag)
+                    yield location, hashtag, {'value_to_predict': value_to_predict}
             
 def split_feature_vectors_into_test_and_training(feature_vectors):
     time_units = map(itemgetter('tu'), feature_vectors)
