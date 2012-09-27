@@ -832,7 +832,7 @@ class Experiments(object):
 #                        noOfHashtagsList=noOfHashtagsList
 #                        )
 
-        for i in range(19,25):
+        for i in range(1,25):
             conf = dict(
                         historyTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS),
                         predictionTimeInterval = timedelta(seconds=1*TIME_UNIT_IN_SECONDS),
@@ -844,8 +844,8 @@ class Experiments(object):
                         outputFolder,
                         predictionModels,
                         evaluationMetrics,
-                        **conf).runToGetDataForLinearRegression()
-#                        **conf).moved_model_files_to_chevron()
+#                        **conf).runToGetDataForLinearRegression()
+                        **conf).moved_model_files_to_chevron()
     @staticmethod
     def getImageFileName(metric): return 'images/%s_%s.png'%(inspect.stack()[1][3], metric)
     @staticmethod
