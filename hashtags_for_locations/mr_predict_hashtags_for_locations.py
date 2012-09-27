@@ -29,9 +29,9 @@ TESTING_RATIO = 0.25
 NUM_OF_HASHTAGS = range(1, 25)
 
 # Prediction method ids.
-PREDICTION_METHOD_ID_LEARNING_TO_RANK = 'learning_to_rank'
 PREDICTION_METHOD_ID_FOLLOW_THE_LEADER = 'follow_the_leader'
 PREDICTION_METHOD_ID_HEDGING = 'hedging'
+PREDICTION_METHOD_ID_LEARNING_TO_RANK = 'learning_to_rank'
 
 # Beta for hedging method
 BETA = 0.5
@@ -480,6 +480,6 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
                 ] 
 
 if __name__ == '__main__':
-#    PredictingHastagsForLocations.run()
-    PerformanceOfPredictingMethodsByVaryingNumOfHashtags.run()
+    PredictingHastagsForLocations.run()
+#    PerformanceOfPredictingMethodsByVaryingNumOfHashtags.run()
     
