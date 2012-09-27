@@ -3,11 +3,14 @@ Created on Sep 26, 2012
 
 @author: krishnakamath
 '''
+from datetime import timedelta
 from itertools import groupby
 from library.mrjobwrapper import runMRJob
 from library.file_io import FileIO
 #from mr_predict_hashtags_for_locations import PredictingHastagsForLocations
 from operator import itemgetter
+
+TIME_UNIT_IN_SECONDS = 60*60
 
 dfs_data_folder = 'hdfs:///user/kykamath/geo/hashtags/'
 analysis_folder = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/predict_hashtags_for_locations/%s'
@@ -15,6 +18,19 @@ analysis_folder = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_location
 f_prediction_performance = analysis_folder%'prediction_performance'
 
 class MRAnalysis():
+    @staticmethod
+    def get_input_files(min_time = 1, max_time=25):
+        range_1 = [(i,1)for i in range(min_time, max_time-1)]
+        range_2 = [(1,i)for i in range(min_time, max_time-1)]
+        for i, j in range_1+range_2:
+            historyTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS)
+            predictionTimeInterval = timedelta(seconds=j*TIME_UNIT_IN_SECONDS)
+            yield '%s2011-09-01_2011-11-01/%s_%s/100/linear_regression'%(
+                                                                          dfs_data_folder,
+                                                                          historyTimeInterval.seconds/60,
+                                                                          predictionTimeInterval.seconds/60
+                                                                        )
+            
     @staticmethod
     def experiments():
         runMRJob(
@@ -25,7 +41,8 @@ class MRAnalysis():
                  )
     @staticmethod
     def run():
-        MRAnalysis.experiments()
+#        MRAnalysis.experiments()
+        MRAnalysis.get_input_files()
         
 class Plots():
     @staticmethod
@@ -49,5 +66,5 @@ class Plots():
         Plots.temp()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    Plots.run()
+    MRAnalysis.run()
+#    Plots.run()
