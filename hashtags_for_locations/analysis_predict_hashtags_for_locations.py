@@ -50,8 +50,8 @@ class MRAnalysis():
                  )
     @staticmethod
     def run():
-#        MRAnalysis.experiments()
-        print list(MRAnalysis.get_input_files())
+        MRAnalysis.experiments()
+#        print list(MRAnalysis.get_input_files())
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
@@ -120,6 +120,7 @@ class PredictHashtagsForLocationsPlots():
                                                                                         [prediction_method]['marker'],
                      c=PredictHashtagsForLocationsPlots.mf_prediction_method_to_properties_dict\
                                                                                         [prediction_method]['color'],
+                     lw=1.3
                     )
             plt.ylabel(
                        PredictHashtagsForLocationsPlots.mf_evaluation_metric_to_properties_dict[metric]['label']
@@ -134,5 +135,5 @@ class PredictHashtagsForLocationsPlots():
         PredictHashtagsForLocationsPlots.performance_by_varying_number_of_hashtags()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
