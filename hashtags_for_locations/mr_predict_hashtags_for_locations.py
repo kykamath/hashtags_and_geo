@@ -464,7 +464,7 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
     def red_num_of_hashtagsa_and_metric_values_to_performance_summary(self, num_of_hashtags_key, lo_metric_values):
         num_of_hashtags, metric, prediction_method = num_of_hashtags_key.split('::')
         performance_summary = {
-                               'num_of_hashtags': num_of_hashtags,
+                               'num_of_hashtags': float(num_of_hashtags),
                                'metric': metric,
                                'prediction_method': prediction_method,
                                'metric_value': np.mean(list(chain(*lo_metric_values)))
