@@ -45,7 +45,7 @@ class MRAnalysis():
         runMRJob(
                  PredictingHastagsForLocations,
                  f_prediction_performance,
-                 MRAnalysis.get_input_files(),
+                 MRAnalysis.get_input_files(max_time=11),
                  jobconf={'mapred.reduce.tasks':500}
                  )
     @staticmethod
