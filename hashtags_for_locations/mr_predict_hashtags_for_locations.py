@@ -469,7 +469,7 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
                                'prediction_method': prediction_method,
                                'metric_value': np.mean(list(chain(*lo_metric_values)))
                                }
-        yield performance_summary
+        yield 'o_d', performance_summary
     def steps(self):
 #        return self.predicting_hashtags_for_locations.jobs_to_evaluate_prediction_methods() +\
         return [self.mr(
