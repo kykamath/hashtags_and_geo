@@ -31,7 +31,7 @@ class MRAnalysis():
     @staticmethod
     def get_input_files(min_time = 1, max_time=25):
         range_1 = [(i,1)for i in range(min_time, max_time-1)]
-        range_2 = [(1,i)for i in range(min_time, max_time-1)]
+        range_2 = [(6,i)for i in range(min_time, max_time-1)]
         for i, j in range_1+range_2:
             historyTimeInterval = timedelta(seconds=i*TIME_UNIT_IN_SECONDS)
             predictionTimeInterval = timedelta(seconds=j*TIME_UNIT_IN_SECONDS)
