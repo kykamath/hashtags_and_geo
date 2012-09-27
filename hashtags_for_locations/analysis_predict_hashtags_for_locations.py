@@ -46,7 +46,7 @@ class MRAnalysis():
                  PredictingHastagsForLocations,
                  f_prediction_performance,
                  MRAnalysis.get_input_files(max_time=12),
-                 jobconf={'mapred.reduce.tasks':500}
+                 jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
                  )
     @staticmethod
     def run():
