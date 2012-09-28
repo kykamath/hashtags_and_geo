@@ -125,20 +125,20 @@ class PropagationMatrix(ModifiedMRJob):
                 occ_times.sort()
                 occ_times = filter_outliers(occ_times)
                 lifespan = occ_times[-1] - occ_times[0]
-                print lifespan, len(occ_times), occ_times
-                occ_times_at_gap_perct = get_items_at_gap(occ_times, GAP_PERCT)
-                ltuo_perct_and_occ_time = [
-                                           (int((GAP_PERCT*i+GAP_PERCT)*100), j)
-                                            for i, j in enumerate(occ_times_at_gap_perct)
-                                        ]
-                for perct1, occ_time1 in ltuo_perct_and_occ_time:
-                    for perct2, occ_time2 in ltuo_perct_and_occ_time:
-                        perct_pair = '%s_%s'%(perct1, perct2)
-                        if perct2>perct1:
-                            self.mf_perct_pair_to_time_differences[perct_pair].append(
+                if lifespan > 0.0:
+                    occ_times_at_gap_perct = get_items_at_gap(occ_times, GAP_PERCT)
+                    ltuo_perct_and_occ_time = [
+                                               (int((GAP_PERCT*i+GAP_PERCT)*100), j)
+                                                for i, j in enumerate(occ_times_at_gap_perct)
+                                            ]
+                    for perct1, occ_time1 in ltuo_perct_and_occ_time:
+                        for perct2, occ_time2 in ltuo_perct_and_occ_time:
+                            perct_pair = '%s_%s'%(perct1, perct2)
+                            if perct2>perct1:
+                                self.mf_perct_pair_to_time_differences[perct_pair].append(
                                                                               max(occ_time2-occ_time1, 0.0)/lifespan
                                                                             )
-                        else: self.mf_perct_pair_to_time_differences[perct_pair] = [1.0] 
+                            else: self.mf_perct_pair_to_time_differences[perct_pair] = [1.0] 
     def mapper_final(self):
         for perct_pair, time_differences in self.mf_perct_pair_to_time_differences.iteritems():
             yield perct_pair, time_differences
