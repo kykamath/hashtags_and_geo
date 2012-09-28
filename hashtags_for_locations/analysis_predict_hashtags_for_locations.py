@@ -210,8 +210,8 @@ class PredictHashtagsForLocationsPlots():
 #                                                                  f_performance_of_predicting_by_varying_num_of_hashtags
 #                                                              )
         PredictHashtagsForLocationsPlots.performance_by_varying_parameter(
-                                                      'prediction_time_interval',
-                                                      f_performance_of_predicting_by_varying_prediction_time_interval
+                                                      'historical_time_interval',
+                                                      f_performance_of_predicting_by_varying_historical_time_interval
                                                   )
         
         
