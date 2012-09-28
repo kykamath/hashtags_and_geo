@@ -209,7 +209,7 @@ class PredictHashtagsForLocationsPlots():
     def run():
         PredictHashtagsForLocationsPlots.performance_by_varying_parameter(
                                                                   'num_of_hashtags',
-                                                                  f_performance_of_predicting_by_varying_num_of_hashtags
+                                                                  f_performance_of_predicting_by_varying_historical_time_interval
                                                               )
         
 if __name__ == '__main__':
