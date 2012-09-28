@@ -471,7 +471,9 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
                                                                  float,
                                                                  performance_data['window_id'].split('_')
                                                                  )
-        if historical_time_interval==21600.0:
+        if historical_time_interval==21600.0 and\
+                performance_data['num_of_hashtags']==10 and\
+                prediction_time_interval == 7200:
             prediction_time_interval = '%s::%s::%s::%s'%(
                                             prediction_time_interval,
                                             'prediction_time_interval',
@@ -532,8 +534,8 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
                     )
                 ]
     def steps(self):
-        return self.jobs_for_performance_of_predicting_by_varying_num_of_hashtags()
-#        return self.jobs_for_performance_of_predicting_by_varying_prediction_time_interval()
+#        return self.jobs_for_performance_of_predicting_by_varying_num_of_hashtags()
+        return self.jobs_for_performance_of_predicting_by_varying_prediction_time_interval()
 #        return self.jobs_for_performance_of_predicting_by_varying_historical_time_interval()
 
 if __name__ == '__main__':
