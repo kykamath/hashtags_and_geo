@@ -270,5 +270,5 @@ class PredictHashtagsForLocationsPlots():
         PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
