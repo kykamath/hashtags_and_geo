@@ -156,7 +156,7 @@ class PredictHashtagsForLocationsPlots():
 #            savefig(output_file_format%metric)
     @staticmethod
     def performance_by_varying_parameter(parameter, input_file):
-        print GeneralMethods.get_method_id()
+        print GeneralMethods.get_method_id()[2:]
         exit()
         output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s_%s.png'
         performance_data = list(FileIO.iterateJsonFromFile(input_file))
@@ -209,7 +209,7 @@ class PredictHashtagsForLocationsPlots():
     def run():
         PredictHashtagsForLocationsPlots.performance_by_varying_parameter(
                                                                   'num_of_hashtags',
-                                                                  f_performance_of_predicting_by_varying_historical_time_interval
+                                                                  f_performance_of_predicting_by_varying_num_of_hashtags
                                                               )
         
 if __name__ == '__main__':
