@@ -109,7 +109,7 @@ class PropagationMatrix(ModifiedMRJob):
         MIN_OCCURRENCES = 250
         GAP_PERCT = 0.02
         hashtag_object = cjson.decode(line)
-        if hashtag_object['num_of_occurrences'] >= MIN_OCCURRENCES:
+        if len(hashtag_object['ltuo_occ_time_and_occ_utm_id']) >= MIN_OCCURRENCES:
             ltuo_occ_time_and_occ_utm_id = hashtag_object['ltuo_occ_time_and_occ_utm_id']
             ltuo_occ_time_and_occ_utm_id.sort(key=itemgetter(1))
             ltuo_occ_utm_id_and_occ_times =\
