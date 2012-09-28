@@ -537,6 +537,6 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
 #        return self.jobs_for_performance_of_predicting_by_varying_historical_time_interval()
 
 if __name__ == '__main__':
-    PredictingHastagsForLocations.run()
-#    PerformanceOfPredictingMethodsByVaryingParameter.run()
+#    PredictingHastagsForLocations.run()
+    PerformanceOfPredictingMethodsByVaryingParameter.run()
     
