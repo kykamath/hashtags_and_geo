@@ -64,7 +64,7 @@ class MRAnalysis():
     @staticmethod
     def run():
 #        MRAnalysis.generate_data_for_experiments()
-        MRAnalysis.performance_of_predicting_by_varying_num_of_hashtags
+        MRAnalysis.performance_of_predicting_by_varying_num_of_hashtags()
 #        print list(MRAnalysis.get_input_files())
         
 class PredictHashtagsForLocationsPlots():
