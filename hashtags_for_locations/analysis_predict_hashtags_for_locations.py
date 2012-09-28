@@ -71,12 +71,12 @@ class MRAnalysis():
 #        MRAnalysis.performance_of_predicting_by_varying_parameter(
 #                                                                f_performance_of_predicting_by_varying_num_of_hashtags
 #                                                            )
-        MRAnalysis.performance_of_predicting_by_varying_parameter(
-                                                        f_performance_of_predicting_by_varying_prediction_time_interval
-                                                    )
 #        MRAnalysis.performance_of_predicting_by_varying_parameter(
-#                                                        f_performance_of_predicting_by_varying_historical_time_interval
+#                                                        f_performance_of_predicting_by_varying_prediction_time_interval
 #                                                    )
+        MRAnalysis.performance_of_predicting_by_varying_parameter(
+                                                        f_performance_of_predicting_by_varying_historical_time_interval
+                                                    )
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\

@@ -490,8 +490,7 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
                                                                  performance_data['window_id'].split('_')
                                                                  )
         if prediction_time_interval==3600.0 and\
-                performance_data['num_of_hashtags']==10 and\
-                historical_time_interval==21600.0:
+                performance_data['num_of_hashtags']==10:
             historical_time_interval = '%s::%s::%s::%s'%(
                                             historical_time_interval,
                                             'historical_time_interval',
@@ -536,8 +535,8 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
                 ]
     def steps(self):
 #        return self.jobs_for_performance_of_predicting_by_varying_num_of_hashtags()
-        return self.jobs_for_performance_of_predicting_by_varying_prediction_time_interval()
-#        return self.jobs_for_performance_of_predicting_by_varying_historical_time_interval()
+#        return self.jobs_for_performance_of_predicting_by_varying_prediction_time_interval()
+        return self.jobs_for_performance_of_predicting_by_varying_historical_time_interval()
 
 if __name__ == '__main__':
 #    PredictingHastagsForLocations.run()
