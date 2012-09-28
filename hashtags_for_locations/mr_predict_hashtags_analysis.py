@@ -125,6 +125,7 @@ class PropagationMatrix(ModifiedMRJob):
                 occ_times.sort()
                 occ_times = filter_outliers(occ_times)
                 lifespan = occ_times[-1] - occ_times[0]
+                print lifespan, len(occ_times)
                 occ_times_at_gap_perct = get_items_at_gap(occ_times, GAP_PERCT)
                 ltuo_perct_and_occ_time = [
                                            (int((GAP_PERCT*i+GAP_PERCT)*100), j)
