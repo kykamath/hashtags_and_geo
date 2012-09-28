@@ -4,11 +4,14 @@ Created on Sep 26, 2012
 @author: krishnakamath
 '''
 from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 from itertools import groupby
 from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.mrjobwrapper import runMRJob
 from library.plotting import savefig
+from mr_predict_hashtags_analysis import HashtagsExtractor
+from mr_predict_hashtags_analysis import PARAMS_DICT
 from mr_predict_hashtags_for_locations import EvaluationMetric
 from mr_predict_hashtags_for_locations import PredictingHastagsForLocations
 from mr_predict_hashtags_for_locations import PerformanceOfPredictingMethodsByVaryingParameter
@@ -16,8 +19,11 @@ from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_FOLLOW_THE_LE
 from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_HEDGING
 from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_LEARNING_TO_RANK
 from operator import itemgetter
+from pprint import pprint
+import datetime
 import matplotlib.pyplot as plt
 import os
+import time
 
 TIME_UNIT_IN_SECONDS = 60*60
 
@@ -33,6 +39,8 @@ f_performance_of_predicting_by_varying_prediction_time_interval =\
                                         analysis_folder%'performance_of_predicting_by_varying_prediction_time_interval'
 f_performance_of_predicting_by_varying_historical_time_interval =\
                                         analysis_folder%'performance_of_predicting_by_varying_historical_time_interval'
+                                        
+f_hashtags_extractor = analysis_folder%'hashtags_extractor/'+'hashtags'
 
 class MRAnalysis():
     @staticmethod
@@ -47,6 +55,25 @@ class MRAnalysis():
                                                                           historyTimeInterval.seconds/60,
                                                                           predictionTimeInterval.seconds/60
                                                                         )
+    @staticmethod
+    def get_input_files_with_tweets(startTime, endTime, folderType='world'):
+        current=startTime
+        while current<=endTime:
+            input_file = dfs_data_folder%folderType+'%s_%s'%(current.year,
+                                                               current.month)
+            print input_file
+            yield input_file
+            current+=relativedelta(months=1)
+    @staticmethod
+    def run_job(mr_class, output_file, input_files_start_time, input_files_end_time):
+        PARAMS_DICT['input_files_start_time'] = time.mktime(input_files_start_time.timetuple())
+        PARAMS_DICT['input_files_end_time'] = time.mktime(input_files_end_time.timetuple())
+        print 'Running map reduce with the following params:', pprint(PARAMS_DICT)
+        runMRJob(mr_class,
+                 output_file,
+                 MRAnalysis.get_input_files_with_tweets(input_files_start_time, input_files_end_time),
+                 jobconf={'mapred.reduce.tasks':500})
+        FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
     @staticmethod
     def generate_data_for_experiments():
         runMRJob(
@@ -66,17 +93,31 @@ class MRAnalysis():
                  jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
                  )
     @staticmethod
+    def hashtags_extractor(input_files_start_time, input_files_end_time):
+        mr_class = HashtagsExtractor
+        output_file = f_hashtags_extractor
+        MRAnalysis.run_job(mr_class,
+                           output_file,
+                           input_files_start_time,
+                           input_files_end_time)
+    @staticmethod
     def run():
+#        #Generate main data
 #        MRAnalysis.generate_data_for_experiments()
+
+#        # Performance at varying paramters
 #        MRAnalysis.performance_of_predicting_by_varying_parameter(
 #                                                                f_performance_of_predicting_by_varying_num_of_hashtags
 #                                                            )
 #        MRAnalysis.performance_of_predicting_by_varying_parameter(
 #                                                        f_performance_of_predicting_by_varying_prediction_time_interval
 #                                                    )
-        MRAnalysis.performance_of_predicting_by_varying_parameter(
-                                                        f_performance_of_predicting_by_varying_historical_time_interval
-                                                    )
+#        MRAnalysis.performance_of_predicting_by_varying_parameter(
+#                                                        f_performance_of_predicting_by_varying_historical_time_interval
+#                                                    )
+        input_files_start_time, input_files_end_time = \
+                                datetime(2011, 2, 1), datetime(2012, 8, 31)
+        MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
@@ -150,6 +191,7 @@ class PredictHashtagsForLocationsPlots():
             plt.ylabel(
                        PredictHashtagsForLocationsPlots.mf_evaluation_metric_to_properties_dict[metric]['label']
                        )
+            plt.ylim(ymin=0.1, ymax=0.75)
             plt.xlabel('Number of hashtags (k)')
             plt.legend(loc=4)
             plt.grid(True)
@@ -201,6 +243,7 @@ class PredictHashtagsForLocationsPlots():
             plt.ylabel(
                        PredictHashtagsForLocationsPlots.mf_evaluation_metric_to_properties_dict[metric]['label']
                        )
+            plt.ylim(ymin=0.1, ymax=0.75)
             plt.xlabel('Length of prediction time window (Hours)')
             plt.legend(loc=4)
             plt.grid(True)
@@ -259,6 +302,7 @@ class PredictHashtagsForLocationsPlots():
             plt.ylabel(
                        PredictHashtagsForLocationsPlots.mf_evaluation_metric_to_properties_dict[metric]['label']
                        )
+            plt.ylim(ymin=0.1, ymax=0.75)
             plt.xlabel('Length of historical time window (Hours)')
             plt.legend(loc=4)
             plt.grid(True)
@@ -270,5 +314,5 @@ class PredictHashtagsForLocationsPlots():
         PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    PredictHashtagsForLocationsPlots.run()
+#    MRAnalysis.run()
+    PredictHashtagsForLocationsPlots.run()
