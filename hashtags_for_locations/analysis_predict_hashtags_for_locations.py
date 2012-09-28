@@ -11,7 +11,7 @@ from library.mrjobwrapper import runMRJob
 from library.plotting import savefig
 from mr_predict_hashtags_for_locations import EvaluationMetric
 from mr_predict_hashtags_for_locations import PredictingHastagsForLocations
-from mr_predict_hashtags_for_locations import PerformanceOfPredictingMethodsByVaryingNumOfHashtags
+from mr_predict_hashtags_for_locations import PerformanceOfPredictingMethodsByVaryingParameter
 from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_FOLLOW_THE_LEADER
 from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_HEDGING
 from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_LEARNING_TO_RANK
@@ -29,6 +29,10 @@ fld_google_drive_data_analysis = os.path.expanduser('~/Google Drive/Desktop/'\
 f_prediction_performance = analysis_folder%'prediction_performance'
 f_performance_of_predicting_by_varying_num_of_hashtags =\
                                                 analysis_folder%'performance_of_predicting_by_varying_num_of_hashtags'
+f_performance_of_predicting_by_varying_prediction_time_interval =\
+                                        analysis_folder%'performance_of_predicting_by_varying_prediction_time_interval'
+f_performance_of_predicting_by_varying_historical_time_interval =\
+                                        analysis_folder%'performance_of_predicting_by_varying_historical_time_interval'
 
 class MRAnalysis():
     @staticmethod
@@ -52,20 +56,27 @@ class MRAnalysis():
                  jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
                  )
     @staticmethod
-    def performance_of_predicting_by_varying_num_of_hashtags():
+    def performance_of_predicting_by_varying_parameter(output_file):
         input_file = '%s/prediction_performance_max_time_12/prediction_performance'%dfs_data_folder
         print input_file
         runMRJob(
-                 PerformanceOfPredictingMethodsByVaryingNumOfHashtags,
-                 f_performance_of_predicting_by_varying_num_of_hashtags,
+                 PerformanceOfPredictingMethodsByVaryingParameter,
+                 output_file,
                  [input_file],
                  jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
                  )
     @staticmethod
     def run():
-        MRAnalysis.generate_data_for_experiments()
-#        MRAnalysis.performance_of_predicting_by_varying_num_of_hashtags()
-#        print list(MRAnalysis.get_input_files())
+#        MRAnalysis.generate_data_for_experiments()
+#        MRAnalysis.performance_of_predicting_by_varying_parameter(
+#                                                                f_performance_of_predicting_by_varying_num_of_hashtags
+#                                                            )
+        MRAnalysis.performance_of_predicting_by_varying_parameter(
+                                                        f_performance_of_predicting_by_varying_prediction_time_interval
+                                                    )
+#        MRAnalysis.performance_of_predicting_by_varying_parameter(
+#                                                        f_performance_of_predicting_by_varying_historical_time_interval
+#                                                    )
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
