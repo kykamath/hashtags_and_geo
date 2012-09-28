@@ -154,6 +154,57 @@ class PredictHashtagsForLocationsPlots():
             plt.legend(loc=4)
             plt.grid(True)
             savefig(output_file_format%metric)
+    @staticmethod
+    def performance_by_varying_prediction_time_interval():
+        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'_%s.png'
+        performance_data = list(FileIO.iterateJsonFromFile(
+                                                       f_performance_of_predicting_by_varying_prediction_time_interval
+                                                    ))
+        performance_data.sort(key=itemgetter('metric'))
+        ltuo_metric_and_ltuo_prediction_method_and_prediction_time_interval_and_metric_value =\
+            [(
+              metric, 
+              map(itemgetter('prediction_method', 'prediction_time_interval', 'metric_value'), it_perf_data)
+              )
+             for metric, it_perf_data in 
+                groupby(performance_data, key=itemgetter('metric'))
+            ]
+        for metric, ltuo_prediction_method_and_prediction_time_interval_and_metric_value in\
+                ltuo_metric_and_ltuo_prediction_method_and_prediction_time_interval_and_metric_value:
+            plt.figure(num=None, figsize=(6,3))
+            ltuo_prediction_method_and_prediction_time_interval_and_metric_value.sort(key=itemgetter(0))
+            prediction_method_and_ltuo_prediction_time_interval_and_metric_value =\
+                [(
+                  prediction_method,
+                  map(itemgetter(1,2), ito_prediction_method_and_prediction_time_interval_and_metric_value )
+                  )
+                 for prediction_method, ito_prediction_method_and_prediction_time_interval_and_metric_value in 
+                    groupby(
+                            ltuo_prediction_method_and_prediction_time_interval_and_metric_value,
+                            key=itemgetter(0)
+                            )]
+            for prediction_method, ltuo_prediction_time_interval_and_metric_value in\
+                    prediction_method_and_ltuo_prediction_time_interval_and_metric_value:
+                ltuo_prediction_time_interval_and_metric_value.sort(key=itemgetter(0))
+                prediction_time_intervals, metric_values = zip(*ltuo_prediction_time_interval_and_metric_value)
+                plt.plot(
+                     prediction_time_intervals,
+                     metric_values,
+                     label=PredictHashtagsForLocationsPlots.mf_prediction_method_to_properties_dict\
+                                                                                        [prediction_method]['label'],
+                     marker=PredictHashtagsForLocationsPlots.mf_prediction_method_to_properties_dict\
+                                                                                        [prediction_method]['marker'],
+                     c=PredictHashtagsForLocationsPlots.mf_prediction_method_to_properties_dict\
+                                                                                        [prediction_method]['color'],
+                     lw=1.3
+                    )
+            plt.ylabel(
+                       PredictHashtagsForLocationsPlots.mf_evaluation_metric_to_properties_dict[metric]['label']
+                       )
+            plt.xlabel('Length of prediction time window')
+            plt.legend(loc=4)
+            plt.grid(True)
+            savefig(output_file_format%metric)
 #    @staticmethod
 #    def performance_by_varying_parameter(parameter, input_file):
 #        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
@@ -206,6 +257,7 @@ class PredictHashtagsForLocationsPlots():
     @staticmethod
     def run():
         PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
+        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_parameter(
 #                                                                  'num_of_hashtags',
 #                                                                  f_performance_of_predicting_by_varying_num_of_hashtags
