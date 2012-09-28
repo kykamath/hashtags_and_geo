@@ -447,7 +447,6 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
         super(PerformanceOfPredictingMethodsByVaryingNumOfHashtags, self).__init__(*args, **kwargs)
-        self.predicting_hashtags_for_locations = PredictingHastagsForLocations()
         self.mf_num_of_hashtags_to_metric_values = defaultdict(list)
     def map_data_to_num_of_hashtags_and_value(self, key, performance_data):
         if False: yield # I'm a generator!
@@ -472,7 +471,6 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
                                }
         yield 'o_d', performance_summary
     def steps(self):
-#        return self.predicting_hashtags_for_locations.jobs_to_evaluate_prediction_methods() +\
         return [self.mr(
                         mapper=self.map_data_to_num_of_hashtags_and_value,
                         mapper_final=self.map_final_data_to_num_of_hashtags_and_value,
@@ -480,7 +478,28 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
                     )
                 ]
 
+class PerformanceOfPredictingMethodsByVaryingPredictionTimeInterval(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(PerformanceOfPredictingMethodsByVaryingPredictionTimeInterval, self).__init__(*args, **kwargs)
+        self.mf_prediction_window_to_metric_values = defaultdict(list)
+    def map_data_to_prediction_window_and_value(self, key, performance_data):
+        if False: yield # I'm a generator!
+        performance_data = cjson.decode(performance_data)
+        historical_time_interval, prediction_time_interval = map(
+                                                                 float,
+                                                                 performance_data['num_of_hashtags'].split('_')
+                                                                 )
+        print historical_time_interval, prediction_time_interval
+    def steps(self):
+        return [self.mr(
+                        mapper=self.map_data_to_prediction_window_and_value,
+#                        mapper_final=self.map_final_data_to_num_of_hashtags_and_value,
+#                        reducer=self.red_num_of_hashtagsa_and_metric_values_to_performance_summary
+                    )
+                ]
 if __name__ == '__main__':
 #    PredictingHastagsForLocations.run()
-    PerformanceOfPredictingMethodsByVaryingNumOfHashtags.run()
+#    PerformanceOfPredictingMethodsByVaryingNumOfHashtags.run()
+    PerformanceOfPredictingMethodsByVaryingPredictionTimeInterval.run()
     

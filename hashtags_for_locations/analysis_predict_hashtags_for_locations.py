@@ -48,7 +48,7 @@ class MRAnalysis():
         runMRJob(
                  PredictingHastagsForLocations,
                  f_prediction_performance,
-                 MRAnalysis.get_input_files(max_time=12),
+                 MRAnalysis.get_input_files(max_time=25),
                  jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
                  )
     @staticmethod
@@ -63,8 +63,8 @@ class MRAnalysis():
                  )
     @staticmethod
     def run():
-#        MRAnalysis.generate_data_for_experiments()
-        MRAnalysis.performance_of_predicting_by_varying_num_of_hashtags()
+        MRAnalysis.generate_data_for_experiments()
+#        MRAnalysis.performance_of_predicting_by_varying_num_of_hashtags()
 #        print list(MRAnalysis.get_input_files())
         
 class PredictHashtagsForLocationsPlots():
@@ -97,7 +97,7 @@ class PredictHashtagsForLocationsPlots():
     @staticmethod
     def performance_by_varying_number_of_hashtags():
         output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'_%s.png'
-        performance_data = list(FileIO.iterateJsonFromFile('temp_f'))
+        performance_data = list(FileIO.iterateJsonFromFile(f_performance_of_predicting_by_varying_num_of_hashtags))
         performance_data.sort(key=itemgetter('metric'))
         ltuo_metric_and_ltuo_prediction_method_and_num_of_hashtags_and_metric_value =\
             [(
