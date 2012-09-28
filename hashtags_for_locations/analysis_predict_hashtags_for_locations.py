@@ -67,16 +67,16 @@ class MRAnalysis():
                  )
     @staticmethod
     def run():
-#        MRAnalysis.generate_data_for_experiments()
+        MRAnalysis.generate_data_for_experiments()
 #        MRAnalysis.performance_of_predicting_by_varying_parameter(
 #                                                                f_performance_of_predicting_by_varying_num_of_hashtags
 #                                                            )
 #        MRAnalysis.performance_of_predicting_by_varying_parameter(
 #                                                        f_performance_of_predicting_by_varying_prediction_time_interval
 #                                                    )
-        MRAnalysis.performance_of_predicting_by_varying_parameter(
-                                                        f_performance_of_predicting_by_varying_historical_time_interval
-                                                    )
+#        MRAnalysis.performance_of_predicting_by_varying_parameter(
+#                                                        f_performance_of_predicting_by_varying_historical_time_interval
+#                                                    )
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
@@ -269,5 +269,5 @@ class PredictHashtagsForLocationsPlots():
         
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
