@@ -494,8 +494,16 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
                         reducer=self.red_varying_parameter_and_metric_values_to_performance_summary
                     )
                 ]
+    def jobs_for_performance_of_predicting_by_varying_prediction_time_interval(self):
+        return [self.mr(
+                        mapper=self.map_data_to_num_of_hashtags_and_value,
+                        mapper_final=self.map_final_data_to_varying_parameter_and_value,
+                        reducer=self.red_varying_parameter_and_metric_values_to_performance_summary
+                    )
+                ]
     def steps(self):
-        return self.jobs_for_performance_of_predicting_by_varying_num_of_hashtags()
+#        return self.jobs_for_performance_of_predicting_by_varying_num_of_hashtags()
+        return self.jobs_for_performance_of_predicting_by_varying_prediction_time_interval()
 
 #class PerformanceOfPredictingMethodsByVaryingPredictionTimeInterval(ModifiedMRJob):
 #    DEFAULT_INPUT_PROTOCOL='raw_value'
