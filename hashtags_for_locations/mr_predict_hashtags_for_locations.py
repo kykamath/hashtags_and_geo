@@ -443,63 +443,73 @@ class PredictingHastagsForLocations(ModifiedMRJob):
     def steps(self):
         return self.jobs_to_evaluate_prediction_methods()
 
-class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
+class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
-        super(PerformanceOfPredictingMethodsByVaryingNumOfHashtags, self).__init__(*args, **kwargs)
-        self.mf_num_of_hashtags_to_metric_values = defaultdict(list)
+        super(PerformanceOfPredictingMethodsByVaryingParameter, self).__init__(*args, **kwargs)
+        self.mf_varying_parameter_to_metric_values = defaultdict(list)
     def map_data_to_num_of_hashtags_and_value(self, key, performance_data):
         if False: yield # I'm a generator!
         performance_data = cjson.decode(performance_data)
-        num_of_hashtags = '%s::%s::%s'%(
+        num_of_hashtags = '%s:%s::%s::%s'%(
                                         performance_data['num_of_hashtags'],
+                                        'num_of_hashtags',
                                         performance_data['metric'],
                                         performance_data['prediction_method']
                                     )
-        self.mf_num_of_hashtags_to_metric_values[num_of_hashtags].append(performance_data['metric_value'])
-    def map_final_data_to_num_of_hashtags_and_value(self):
-        for num_of_hashtags, metric_values in\
-                self.mf_num_of_hashtags_to_metric_values.iteritems():
-            yield num_of_hashtags, metric_values
-    def red_num_of_hashtagsa_and_metric_values_to_performance_summary(self, num_of_hashtags_key, lo_metric_values):
-        num_of_hashtags, metric, prediction_method = num_of_hashtags_key.split('::')
+        self.mf_varying_parameter_to_metric_values[num_of_hashtags].append(performance_data['metric_value'])
+    def map_final_data_to_varying_parameter_and_value(self):
+        for varying_parameter, metric_values in\
+                self.mf_varying_parameter_to_metric_values.iteritems():
+            yield varying_parameter, metric_values
+    def red_varying_parameter_and_metric_values_to_performance_summary(self, varying_parameter_key, lo_metric_values):
+        varying_parameter, varying_parameter_id, metric, prediction_method = varying_parameter_key.split('::')
         performance_summary = {
-                               'num_of_hashtags': float(num_of_hashtags),
+                               varying_parameter_id: float(varying_parameter),
                                'metric': metric,
                                'prediction_method': prediction_method,
                                'metric_value': np.mean(list(chain(*lo_metric_values)))
                                }
         yield 'o_d', performance_summary
-    def steps(self):
+    def jobs_for_performance_of_predicting_by_varying_num_of_hashtags(self):
         return [self.mr(
                         mapper=self.map_data_to_num_of_hashtags_and_value,
-                        mapper_final=self.map_final_data_to_num_of_hashtags_and_value,
-                        reducer=self.red_num_of_hashtagsa_and_metric_values_to_performance_summary
+                        mapper_final=self.map_final_data_to_varying_parameter_and_value,
+                        reducer=self.red_varying_parameter_and_metric_values_to_performance_summary
                     )
                 ]
-
-class PerformanceOfPredictingMethodsByVaryingPredictionTimeInterval(ModifiedMRJob):
-    DEFAULT_INPUT_PROTOCOL='raw_value'
-    def __init__(self, *args, **kwargs):
-        super(PerformanceOfPredictingMethodsByVaryingPredictionTimeInterval, self).__init__(*args, **kwargs)
-        self.mf_prediction_window_to_metric_values = defaultdict(list)
-    def map_data_to_prediction_window_and_value(self, key, performance_data):
-        if False: yield # I'm a generator!
-        performance_data = cjson.decode(performance_data)
-        historical_time_interval, prediction_time_interval = map(
-                                                                 float,
-                                                                 performance_data['window_id'].split('_')
-                                                                 )
-        print historical_time_interval, prediction_time_interval
     def steps(self):
-        return [self.mr(
-                        mapper=self.map_data_to_prediction_window_and_value,
-#                        mapper_final=self.map_final_data_to_num_of_hashtags_and_value,
-#                        reducer=self.red_num_of_hashtagsa_and_metric_values_to_performance_summary
-                    )
-                ]
+        return self.jobs_for_performance_of_predicting_by_varying_num_of_hashtags()
+
+#class PerformanceOfPredictingMethodsByVaryingPredictionTimeInterval(ModifiedMRJob):
+#    DEFAULT_INPUT_PROTOCOL='raw_value'
+#    def __init__(self, *args, **kwargs):
+#        super(PerformanceOfPredictingMethodsByVaryingPredictionTimeInterval, self).__init__(*args, **kwargs)
+#        self.mf_prediction_window_to_metric_values = defaultdict(list)
+#    def map_data_to_prediction_window_and_value(self, key, performance_data):
+#        if False: yield # I'm a generator!
+#        performance_data = cjson.decode(performance_data)
+#        historical_time_interval, prediction_time_interval = map(
+#                                                                 float,
+#                                                                 performance_data['window_id'].split('_')
+#                                                                 )
+#        if historical_time_interval==21600.0:
+#            prediction_time_interval = '%s::%s::%s'%(
+#                                            prediction_time_interval,
+#                                            performance_data['metric'],
+#                                            performance_data['prediction_method']
+#                                        )
+#            
+#            
+#    def steps(self):
+#        return [self.mr(
+#                        mapper=self.map_data_to_prediction_window_and_value,
+##                        mapper_final=self.map_final_data_to__and_value,
+##                        reducer=self.red_num_of_hashtagsa_and_metric_values_to_performance_summary
+#                    )
+#                ]
 if __name__ == '__main__':
 #    PredictingHastagsForLocations.run()
-#    PerformanceOfPredictingMethodsByVaryingNumOfHashtags.run()
-    PerformanceOfPredictingMethodsByVaryingPredictionTimeInterval.run()
+    PerformanceOfPredictingMethodsByVaryingParameter.run()
+#    PerformanceOfPredictingMethodsByVaryingPredictionTimeInterval.run()
     
