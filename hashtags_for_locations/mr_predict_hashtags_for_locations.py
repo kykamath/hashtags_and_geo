@@ -458,9 +458,25 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
                                         performance_data['prediction_method']
                                     )
         self.mf_varying_parameter_to_metric_values[num_of_hashtags].append(performance_data['metric_value'])
+    def map_data_to_prediction_window_and_value(self, key, performance_data):
+        if False: yield # I'm a generator!
+        performance_data = cjson.decode(performance_data)
+        historical_time_interval, prediction_time_interval = map(
+                                                                 float,
+                                                                 performance_data['window_id'].split('_')
+                                                                 )
+        if historical_time_interval==21600.0:
+            prediction_time_interval = '%s::%s::%s::%s'%(
+                                            prediction_time_interval,
+                                            'prediction_time_interval',
+                                            performance_data['metric'],
+                                            performance_data['prediction_method']
+                                        )
+            self.mf_varying_parameter_to_metric_values[prediction_time_interval].append(
+                                                                                    performance_data['metric_value']
+                                                                                )
     def map_final_data_to_varying_parameter_and_value(self):
-        for varying_parameter, metric_values in\
-                self.mf_varying_parameter_to_metric_values.iteritems():
+        for varying_parameter, metric_values in self.mf_varying_parameter_to_metric_values.iteritems():
             yield varying_parameter, metric_values
     def red_varying_parameter_and_metric_values_to_performance_summary(self, varying_parameter_key, lo_metric_values):
         varying_parameter, varying_parameter_id, metric, prediction_method = varying_parameter_key.split('::')
