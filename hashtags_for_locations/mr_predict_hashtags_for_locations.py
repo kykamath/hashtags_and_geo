@@ -472,8 +472,7 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
                                                                  performance_data['window_id'].split('_')
                                                                  )
         if historical_time_interval==21600.0 and\
-                performance_data['num_of_hashtags']==10 and\
-                prediction_time_interval == 7200:
+                performance_data['num_of_hashtags']==10:
             prediction_time_interval = '%s::%s::%s::%s'%(
                                             prediction_time_interval,
                                             'prediction_time_interval',
@@ -490,7 +489,9 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
                                                                  float,
                                                                  performance_data['window_id'].split('_')
                                                                  )
-        if prediction_time_interval==3600.0:
+        if prediction_time_interval==3600.0 and\
+                performance_data['num_of_hashtags']==10 and\
+                historical_time_interval==21600.0:
             historical_time_interval = '%s::%s::%s::%s'%(
                                             historical_time_interval,
                                             'historical_time_interval',
