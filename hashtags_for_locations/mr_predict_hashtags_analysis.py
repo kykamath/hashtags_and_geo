@@ -17,7 +17,7 @@ ACCURACY = 10**4 # UTM boxes in sq.m
 
 # Minimum number of hashtag occurrences
 # Used by HashtagsExtractor
-MIN_HASHTAG_OCCURRENCES = 1000
+MIN_HASHTAG_OCCURRENCES = 250
 
 ## Minimum number of hashtag occurrences at a particular utm id.
 ## Used by HashtagsByUTMId
