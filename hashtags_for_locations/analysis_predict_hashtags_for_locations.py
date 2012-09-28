@@ -156,7 +156,7 @@ class PredictHashtagsForLocationsPlots():
 #            savefig(output_file_format%metric)
     @staticmethod
     def performance_by_varying_parameter(parameter, input_file):
-        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'%s_%s.png'
+        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s_%s.png'
         performance_data = list(FileIO.iterateJsonFromFile(input_file))
         performance_data.sort(key=itemgetter('metric'))
         ltuo_metric_and_ltuo_prediction_method_and_parameter_and_metric_value =\
