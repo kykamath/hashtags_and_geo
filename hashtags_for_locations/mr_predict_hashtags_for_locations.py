@@ -458,7 +458,7 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
                                         performance_data['prediction_method']
                                     )
         self.mf_varying_parameter_to_metric_values[num_of_hashtags].append(performance_data['metric_value'])
-    def map_data_to_prediction_window_and_value(self, key, performance_data):
+    def map_data_to_prediction_time_interval_and_value(self, key, performance_data):
         if False: yield # I'm a generator!
         performance_data = cjson.decode(performance_data)
         historical_time_interval, prediction_time_interval = map(
@@ -496,7 +496,7 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
                 ]
     def jobs_for_performance_of_predicting_by_varying_prediction_time_interval(self):
         return [self.mr(
-                        mapper=self.map_data_to_num_of_hashtags_and_value,
+                        mapper=self.map_data_to_prediction_time_interval_and_value,
                         mapper_final=self.map_final_data_to_varying_parameter_and_value,
                         reducer=self.red_varying_parameter_and_metric_values_to_performance_summary
                     )
