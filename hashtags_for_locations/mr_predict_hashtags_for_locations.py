@@ -6,7 +6,7 @@ Created on Sep 19, 2012
 from collections import defaultdict
 from itertools import chain, groupby
 from library.classes import GeneralMethods
-from library.mrjobwrapper import ModifiedMRJob, MRJobWrapper
+from library.mrjobwrapper import ModifiedMRJob
 from library.r_helper import R_Helper
 from operator import itemgetter
 import cjson
@@ -478,9 +478,9 @@ class PerformanceOfPredictingMethodsByVaryingNumOfHashtags(ModifiedMRJob):
                         mapper_final=self.map_final_data_to_num_of_hashtags_and_value,
                         reducer=self.red_num_of_hashtagsa_and_metric_values_to_performance_summary
                     )
-                ] 
+                ]
 
 if __name__ == '__main__':
-    PredictingHastagsForLocations.run()
-#    PerformanceOfPredictingMethodsByVaryingNumOfHashtags.run()
+#    PredictingHastagsForLocations.run()
+    PerformanceOfPredictingMethodsByVaryingNumOfHashtags.run()
     
