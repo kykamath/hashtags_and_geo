@@ -135,10 +135,13 @@ class PropagationMatrix(ModifiedMRJob):
                         for perct2, occ_time2 in ltuo_perct_and_occ_time:
                             perct_pair = '%s_%s'%(perct1, perct2)
                             if perct2>perct1:
+#                                self.mf_perct_pair_to_time_differences[perct_pair].append(
+#                                                                              max(occ_time2-occ_time1, 0.0)/lifespan
+#                                                                            )
                                 self.mf_perct_pair_to_time_differences[perct_pair].append(
-                                                                              max(occ_time2-occ_time1, 0.0)/lifespan
+                                                                              max(occ_time2-occ_time1, 0.0)
                                                                             )
-                            else: self.mf_perct_pair_to_time_differences[perct_pair] = [1.0] 
+                            else: self.mf_perct_pair_to_time_differences[perct_pair] = [0.0] 
     def mapper_final(self):
         for perct_pair, time_differences in self.mf_perct_pair_to_time_differences.iteritems():
             yield perct_pair, time_differences
