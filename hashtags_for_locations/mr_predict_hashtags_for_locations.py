@@ -488,7 +488,7 @@ class PerformanceOfPredictingMethodsByVaryingPredictionTimeInterval(ModifiedMRJo
         performance_data = cjson.decode(performance_data)
         historical_time_interval, prediction_time_interval = map(
                                                                  float,
-                                                                 performance_data['num_of_hashtags'].split('_')
+                                                                 performance_data['window_id'].split('_')
                                                                  )
         print historical_time_interval, prediction_time_interval
     def steps(self):
