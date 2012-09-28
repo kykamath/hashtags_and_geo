@@ -527,8 +527,8 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
                 ]
     def steps(self):
 #        return self.jobs_for_performance_of_predicting_by_varying_num_of_hashtags()
-        return self.jobs_for_performance_of_predicting_by_varying_prediction_time_interval()
-#        return self.jobs_for_performance_of_predicting_by_varying_historical_time_interval()
+#        return self.jobs_for_performance_of_predicting_by_varying_prediction_time_interval()
+        return self.jobs_for_performance_of_predicting_by_varying_historical_time_interval()
 
 if __name__ == '__main__':
 #    PredictingHastagsForLocations.run()
