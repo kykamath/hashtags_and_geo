@@ -3,6 +3,7 @@ Created on Sep 26, 2012
 
 @author: krishnakamath
 '''
+from datetime import datetime
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from itertools import groupby
@@ -20,7 +21,6 @@ from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_HEDGING
 from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_LEARNING_TO_RANK
 from operator import itemgetter
 from pprint import pprint
-import datetime
 import matplotlib.pyplot as plt
 import os
 import time
