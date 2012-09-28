@@ -8,9 +8,12 @@ from datetime import datetime
 from library.geo import UTMConverter
 from library.mrjobwrapper import ModifiedMRJob
 from library.r_helper import R_Helper
+from library.stats import filter_outliers
 from library.twitter import getDateTimeObjectFromTweetTimestamp
+from itertools import chain, groupby
 from operator import itemgetter
 import cjson
+import numpy as np
 import time
 
 ACCURACY = 10**4 # UTM boxes in sq.m
@@ -44,6 +47,12 @@ def iterateHashtagObjectInstances(line):
     else: l = data['bb']
     t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
     for h in data['h']: yield h.lower(), [l, t]
+def get_items_at_gap(input_list, gap_perct):
+    list_len = len(input_list)
+    return map(
+                  lambda index: input_list[index],
+                  map(lambda index: int(index)-1, np.arange(gap_perct,1+gap_perct,gap_perct)*list_len)
+              )
 
 class HashtagsExtractor(ModifiedMRJob):
     '''
@@ -90,6 +99,53 @@ class HashtagsExtractor(ModifiedMRJob):
                 )]
     def steps(self): return self.jobs_to_extract_hashtags()
     
+class PropagationMatrix(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self,  min_hashtag_occurrences = MIN_HASHTAG_OCCURRENCES, *args, **kwargs):
+        super(PropagationMatrix, self).__init__(*args, **kwargs)
+        self.mf_perct_pair_to_time_differences = defaultdict(list)
+    def mapper(self, key, line):
+        if False: yield # I'm a generator!
+        MIN_OCCURRENCES = 250
+        GAP_PERCT = 0.02
+        hashtag_object = cjson.decode(line)
+        if hashtag_object['num_of_occurrences'] >= MIN_OCCURRENCES:
+            ltuo_occ_time_and_occ_utm_id = hashtag_object['ltuo_occ_time_and_occ_utm_id']
+            ltuo_occ_time_and_occ_utm_id.sort(key=itemgetter(1))
+            ltuo_occ_utm_id_and_occ_times =\
+                [ (occ_utm_id,map(itemgetter(0), it_occ_time_and_occ_utm_id))
+                 for occ_utm_id, it_occ_time_and_occ_utm_id in
+                    groupby(ltuo_occ_time_and_occ_utm_id, key=itemgetter(1))
+                ]
+            ltuo_occ_utm_id_and_occ_times = filter(
+                                                       lambda (_, occ_times): len(occ_times)>25,
+                                                       ltuo_occ_utm_id_and_occ_times
+                                                   )
+            for occ_utm_id, occ_times in ltuo_occ_utm_id_and_occ_times:
+                occ_times.sort()
+                occ_times = filter_outliers(occ_times)
+                lifespan = occ_times[-1] - occ_times[0]
+                occ_times_at_gap_perct = get_items_at_gap(occ_times, GAP_PERCT)
+                ltuo_perct_and_occ_time = [
+                                           (int((GAP_PERCT*i+GAP_PERCT)*100), j)
+                                            for i, j in enumerate(occ_times_at_gap_perct)
+                                        ]
+                for perct1, occ_time1 in ltuo_perct_and_occ_time:
+                    for perct2, occ_time2 in ltuo_perct_and_occ_time:
+                        perct_pair = '%s_%s'%(perct1, perct2)
+                        if perct2>perct1:
+                            self.mf_perct_pair_to_time_differences[perct_pair].append(
+                                                                              max(occ_time2-occ_time1, 0.0)/lifespan
+                                                                            )
+                        else: self.mf_perct_pair_to_time_differences[perct_pair] = [1.0] 
+    def mapper_final(self):
+        for perct_pair, time_differences in self.mf_perct_pair_to_time_differences.iteritems():
+            yield perct_pair, time_differences
+    def reducer(self, perct_pair, it_time_differences):
+        time_differences = list(chain(*it_time_differences))
+        time_differences = filter_outliers(time_differences)
+        yield perct_pair, {'perct_pair': perct_pair, 'time_differences': np.mean(time_differences)}
 if __name__ == '__main__':
     pass
-    HashtagsExtractor.run()
+#    HashtagsExtractor.run()
+    PropagationMatrix.run()

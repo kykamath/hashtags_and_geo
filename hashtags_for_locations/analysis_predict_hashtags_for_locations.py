@@ -12,6 +12,7 @@ from library.file_io import FileIO
 from library.mrjobwrapper import runMRJob
 from library.plotting import savefig
 from mr_predict_hashtags_analysis import HashtagsExtractor
+from mr_predict_hashtags_analysis import PropagationMatrix
 from mr_predict_hashtags_analysis import PARAMS_DICT
 from mr_predict_hashtags_for_locations import EvaluationMetric
 from mr_predict_hashtags_for_locations import PredictingHastagsForLocations
@@ -40,8 +41,10 @@ f_performance_of_predicting_by_varying_prediction_time_interval =\
                                         analysis_folder%'performance_of_predicting_by_varying_prediction_time_interval'
 f_performance_of_predicting_by_varying_historical_time_interval =\
                                         analysis_folder%'performance_of_predicting_by_varying_historical_time_interval'
-                                        
+                    
+df_hashtags_extractor = 'hdfs:///user/kykamath/geo/hashtags/2011_2_to_2012_8/min_num_of_hashtags_250/hashtags'
 f_hashtags_extractor = analysis_folder%'hashtags_extractor/'+'hashtags'
+f_propagation_matrix = analysis_folder%'propagation_matrix/'+'propagation_matrix'
 
 class MRAnalysis():
     @staticmethod
@@ -96,10 +99,10 @@ class MRAnalysis():
     def hashtags_extractor(input_files_start_time, input_files_end_time):
         mr_class = HashtagsExtractor
         output_file = f_hashtags_extractor
-        MRAnalysis.run_job(mr_class,
-                           output_file,
-                           input_files_start_time,
-                           input_files_end_time)
+        MRAnalysis.run_job(mr_class, output_file, input_files_start_time, input_files_end_time)
+    @staticmethod
+    def propagation_matrix():
+        runMRJob(PropagationMatrix, f_propagation_matrix, [df_hashtags_extractor], jobconf={'mapred.reduce.tasks':100})
     @staticmethod
     def run():
 #        #Generate main data
@@ -115,9 +118,11 @@ class MRAnalysis():
 #        MRAnalysis.performance_of_predicting_by_varying_parameter(
 #                                                        f_performance_of_predicting_by_varying_historical_time_interval
 #                                                    )
-        input_files_start_time, input_files_end_time = \
-                                datetime(2011, 2, 1), datetime(2012, 8, 31)
-        MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
+#        input_files_start_time, input_files_end_time = \
+#                                datetime(2011, 2, 1), datetime(2012, 8, 31)
+#        MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
+
+        MRAnalysis.propagation_matrix()
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
