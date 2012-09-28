@@ -28,6 +28,7 @@ import time
 TIME_UNIT_IN_SECONDS = 60*60
 
 dfs_data_folder = 'hdfs:///user/kykamath/geo/hashtags/'
+hdfs_input_folder = 'hdfs:///user/kykamath/geo/hashtags/%s/'
 analysis_folder = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/predict_hashtags_for_locations/%s'
 fld_google_drive_data_analysis = os.path.expanduser('~/Google Drive/Desktop/'\
                                                     'hashtags_and_geo/hashtags_for_locations/%s') 
@@ -59,8 +60,7 @@ class MRAnalysis():
     def get_input_files_with_tweets(startTime, endTime, folderType='world'):
         current=startTime
         while current<=endTime:
-            input_file = dfs_data_folder%folderType+'%s_%s'%(current.year,
-                                                               current.month)
+            input_file = hdfs_input_folder%folderType+'%s_%s'%(current.year, current.month)
             print input_file
             yield input_file
             current+=relativedelta(months=1)
