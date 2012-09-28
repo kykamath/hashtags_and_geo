@@ -188,7 +188,7 @@ class PredictHashtagsForLocationsPlots():
                 ltuo_prediction_time_interval_and_metric_value.sort(key=itemgetter(0))
                 prediction_time_intervals, metric_values = zip(*ltuo_prediction_time_interval_and_metric_value)
                 plt.plot(
-                     prediction_time_intervals,
+                     map(lambda w: w/(60*60), prediction_time_intervals),
                      metric_values,
                      label=PredictHashtagsForLocationsPlots.mf_prediction_method_to_properties_dict\
                                                                                         [prediction_method]['label'],
@@ -201,7 +201,7 @@ class PredictHashtagsForLocationsPlots():
             plt.ylabel(
                        PredictHashtagsForLocationsPlots.mf_evaluation_metric_to_properties_dict[metric]['label']
                        )
-            plt.xlabel('Length of prediction time window')
+            plt.xlabel('Length of prediction time window (Hours)')
             plt.legend(loc=4)
             plt.grid(True)
             savefig(output_file_format%metric)
