@@ -409,12 +409,11 @@ class PredictHashtagsForLocationsPlots():
                                                       lambda t: t-first_bucket_time+BUCKET_WIDTH,
                                                       majority_threshold_bucket_times
                                                   )
-            majority_threshold_bucket_times = [0] + majority_threshold_bucket_times
-            utm_id_counts = [0] + utm_id_counts
+            majority_threshold_bucket_times = [0] + list(majority_threshold_bucket_times)
+            utm_id_counts = [0] + list(utm_id_counts)
             plt.plot(majority_threshold_bucket_times, utm_id_counts)
             savefig(output_file_format%data['hashtag'])
             break;
-            
     @staticmethod
     def     run():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
