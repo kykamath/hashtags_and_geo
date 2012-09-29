@@ -388,6 +388,9 @@ class PredictHashtagsForLocationsPlots():
         plt.ylabel('CCDF')
         savefig(output_file)
     @staticmethod
+    def majority_distribution_for_hashtags():
+        pass
+    @staticmethod
     def run():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
