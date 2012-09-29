@@ -369,7 +369,7 @@ class PredictHashtagsForLocationsPlots():
                                       for val, items in 
                                         groupby(propagation_distribution)
                                     ]
-        ltuo_num_of_utms_and_count.sort(itemgetter(0))
+        ltuo_num_of_utms_and_count.sort(key=itemgetter(0))
         ax = plt.subplot(111)
 #        ax.set_xscale('log')
 #        plt.hist(propagation_distribution, 100)
