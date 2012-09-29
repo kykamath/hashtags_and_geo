@@ -375,6 +375,12 @@ class PredictHashtagsForLocationsPlots():
         ax.set_xscale('log')
 #        plt.hist(propagation_distribution, 100)
         num_of_utms, count_dist = zip(*ltuo_num_of_utms_and_count_dist)
+        count_dist2 = []
+        current_val = 0.0
+        for c in count_dist[::-1]:
+            current_val+=c
+            count_dist2.append(current_val)
+        count_dist = count_dist2[::-1]
         plt.plot(num_of_utms, count_dist)
         plt.grid(True)
         savefig(output_file)
