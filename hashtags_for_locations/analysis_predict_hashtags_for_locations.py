@@ -23,6 +23,7 @@ from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_HEDGING
 from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_LEARNING_TO_RANK
 from operator import itemgetter
 from pprint import pprint
+import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import os
 import time
@@ -320,22 +321,25 @@ class PredictHashtagsForLocationsPlots():
         for data in FileIO.iterateJsonFromFile(f_propagation_matrix):
             x_perct, y_perct = map(float, data['perct_pair'].split('_'))
 #            ltuo_x_perct_and_y_perct_and_time_difference.append([x_perct, y_perct, data['time_differences']])
-            mf_x_perct_to_mf_y_perct_to_time_difference[x_perct][y_perct] = data['time_differences']
+            mf_x_perct_to_mf_y_perct_to_time_difference[x_perct][y_perct] = data['time_differences']/(60)
         
         ltuo_x_perct_and_mf_y_perct_to_time_difference = mf_x_perct_to_mf_y_perct_to_time_difference.items()
-        ltuo_x_perct_and_mf_y_perct_to_time_difference.sort(key=itemgetter(0))
+        ltuo_x_perct_and_mf_y_perct_to_time_difference.sort(key=itemgetter(0), reverse=False)
         Z = []
         for x_perct, mf_y_perct_to_time_difference in ltuo_x_perct_and_mf_y_perct_to_time_difference:
             y_perct_and_time_difference = mf_y_perct_to_time_difference.items()
-            y_perct_and_time_difference.sort(key=itemgetter(0), reverse=True)
-            _, time_differences = zip(*y_perct_and_time_difference)
+            y_perct_and_time_difference.sort(key=itemgetter(0), reverse=False)
+            y_percts, time_differences = zip(*y_perct_and_time_difference)
+            print x_perct, y_percts
+            print time_differences
+            exit()
             Z.append(time_differences)
 #        ax = plt.subplot(111)
-        im = plt.imshow(Z)
-        plt.xlim(xmin=0, xmax=50)
-        plt.ylim(ymin=0, ymax=50)
-        yticks = plt.yticks()
-        plt.yticks([0, 1])
+        im = plt.imshow(Z, cmap=cm.binary)
+#        plt.xlim(xmin=0, xmax=50)
+#        plt.ylim(ymin=0, ymax=50)
+#        yticks = plt.yticks()
+#        plt.yticks([0, 1])
 #        plt.yticks()
 #        im.set_interpolation('nearest')
 #        im.set_interpolation('bicubic')
@@ -350,5 +354,5 @@ class PredictHashtagsForLocationsPlots():
         PredictHashtagsForLocationsPlots.propagation_matrix()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    PredictHashtagsForLocationsPlots.run()
+#    MRAnalysis.run()
+    PredictHashtagsForLocationsPlots.run()
