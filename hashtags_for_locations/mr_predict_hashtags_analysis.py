@@ -108,6 +108,7 @@ class PropagationMatrix(ModifiedMRJob):
         if False: yield # I'm a generator!
         MIN_OCCURRENCES = 250
         GAP_PERCT = 0.02
+        MIN_OCCURRENCES_PERE_UTM_ID = 25
         hashtag_object = cjson.decode(line)
         if 'num_of_occurrences' in hashtag_object and hashtag_object['num_of_occurrences'] >= MIN_OCCURRENCES:
             ltuo_occ_time_and_occ_utm_id = hashtag_object['ltuo_occ_time_and_occ_utm_id']
@@ -118,9 +119,9 @@ class PropagationMatrix(ModifiedMRJob):
                     groupby(ltuo_occ_time_and_occ_utm_id, key=itemgetter(1))
                 ]
             ltuo_occ_utm_id_and_occ_times = filter(
-                                                       lambda (_, occ_times): len(occ_times)>25,
-                                                       ltuo_occ_utm_id_and_occ_times
-                                                   )
+                                                   lambda (_, occ_times): len(occ_times)>MIN_OCCURRENCES_PERE_UTM_ID,
+                                                   ltuo_occ_utm_id_and_occ_times
+                                               )
             for occ_utm_id, occ_times in ltuo_occ_utm_id_and_occ_times:
                 occ_times.sort()
                 occ_times = filter_outliers(occ_times)
@@ -135,9 +136,6 @@ class PropagationMatrix(ModifiedMRJob):
                         for perct2, occ_time2 in ltuo_perct_and_occ_time:
                             perct_pair = '%s_%s'%(perct1, perct2)
                             if perct2>perct1:
-#                                self.mf_perct_pair_to_time_differences[perct_pair].append(
-#                                                                              max(occ_time2-occ_time1, 0.0)/lifespan
-#                                                                            )
                                 self.mf_perct_pair_to_time_differences[perct_pair].append(
                                                                               max(occ_time2-occ_time1, 0.0)
                                                                             )
@@ -149,6 +147,7 @@ class PropagationMatrix(ModifiedMRJob):
         time_differences = list(chain(*it_time_differences))
         time_differences = filter_outliers(time_differences)
         yield perct_pair, {'perct_pair': perct_pair, 'time_differences': np.mean(time_differences)}
+
 if __name__ == '__main__':
     pass
 #    HashtagsExtractor.run()

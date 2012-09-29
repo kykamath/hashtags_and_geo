@@ -334,6 +334,8 @@ class PredictHashtagsForLocationsPlots():
             y_perct_and_time_difference = mf_y_perct_to_time_difference.items()
             y_perct_and_time_difference.sort(key=itemgetter(0), reverse=False)
             y_percts, time_differences = zip(*y_perct_and_time_difference)
+            ax = plt.subplot(111)
+            ax.set_xscale('log')
             y_percts = map(lambda y: y/100, y_percts)
             plt.plot(time_differences, y_percts, c='k')
             plt.scatter(time_differences, y_percts, c='k')
