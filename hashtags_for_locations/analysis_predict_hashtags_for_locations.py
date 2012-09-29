@@ -392,14 +392,16 @@ class PredictHashtagsForLocationsPlots():
         savefig(output_file)
     @staticmethod
     def majority_distribution_for_hashtags():
-        pass
+        for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
+            print data['hashtag']
     @staticmethod
     def run():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-        PredictHashtagsForLocationsPlots.hashtag_evolution_in_every_utm_id()
-        PredictHashtagsForLocationsPlots.propagation_distribution()
+#        PredictHashtagsForLocationsPlots.hashtag_evolution_in_every_utm_id()
+#        PredictHashtagsForLocationsPlots.propagation_distribution()
+        PredictHashtagsForLocationsPlots.majority_distribution_for_hashtags()
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
