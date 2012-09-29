@@ -316,7 +316,7 @@ class PredictHashtagsForLocationsPlots():
             savefig(output_file_format%metric)
     @staticmethod
     def hastag_evolution_in_every_utm_id():
-        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         mf_x_perct_to_mf_y_perct_to_time_difference = defaultdict(dict)
         for data in FileIO.iterateJsonFromFile(f_propagation_matrix):
             x_perct, y_perct = map(float, data['perct_pair'].split('_'))
@@ -331,10 +331,11 @@ class PredictHashtagsForLocationsPlots():
             y_perct_and_time_difference.sort(key=itemgetter(0), reverse=False)
             y_percts, time_differences = zip(*y_perct_and_time_difference)
             y_percts = map(lambda y: y/100, y_percts)
-#            plt.plot()
+            plt.plot(time_differences, y_percts)
             print y_percts
             print time_differences
-            print output_file_format
+            print output_file
+            savefig(output_file)
             exit()
 #            Z.append(time_differences)
 ##        ax = plt.subplot(111)
