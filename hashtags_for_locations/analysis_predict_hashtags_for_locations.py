@@ -354,7 +354,7 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-        PredictHashtagsForLocationsPlots.propagation_matrix()
+        PredictHashtagsForLocationsPlots.hastag_evolution_in_every_utm_id()
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
