@@ -317,7 +317,7 @@ class PredictHashtagsForLocationsPlots():
     @staticmethod
     def hastag_evolution_in_every_utm_id():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
-        plt.figure(num=None, figsize=(4.3, 3))
+        plt.figure(num=None, figsize=(6,3))
         mf_x_perct_to_mf_y_perct_to_time_difference = defaultdict(dict)
         for data in FileIO.iterateJsonFromFile(f_propagation_matrix):
             x_perct, y_perct = map(float, data['perct_pair'].split('_'))
@@ -336,7 +336,7 @@ class PredictHashtagsForLocationsPlots():
             plt.scatter(time_differences, y_percts, c='k')
             plt.grid(True)
             plt.xlabel('Hashtag propagation time (m)')
-            plt.ylabel('Percentage of hastags occurrences')
+            plt.ylabel('\% of hastags occurrences')
             savefig(output_file)
             exit()
     @staticmethod
