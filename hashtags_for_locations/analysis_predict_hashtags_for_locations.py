@@ -354,7 +354,7 @@ class PredictHashtagsForLocationsPlots():
             plt.xlabel('Hashtag propagation time (minutes)')
             plt.ylabel('% of hashtag occurrences')
             savefig(output_file)
-            exit()
+            break
     @staticmethod
     def propagation_distribution():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
