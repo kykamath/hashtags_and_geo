@@ -365,14 +365,16 @@ class PredictHashtagsForLocationsPlots():
             if ltuo_majority_threshold_bucket_time_and_utm_ids:
                 propagation_distribution.append(len(zip(*data['ltuo_majority_threshold_bucket_time_and_utm_ids'])[1]))
         propagation_distribution.sort()
-        propagation_distribution = [(val, list(items))
-                                    for val, items in 
-                                        groupby(propagation_distribution)]
-        print propagation_distribution
-        exit()
+        ltuo_num_of_utms_and_count = [(val, len(list(items)))
+                                      for val, items in 
+                                        groupby(propagation_distribution)
+                                    ]
+        ltuo_num_of_utms_and_count.sort(itemgetter(0))
         ax = plt.subplot(111)
-        ax.set_xscale('log')
-        plt.hist(propagation_distribution, 100)
+#        ax.set_xscale('log')
+#        plt.hist(propagation_distribution, 100)
+        num_of_utms, counts = zip(*ltuo_num_of_utms_and_count)
+        plt.plot(num_of_utms, counts)
         plt.grid(True)
         savefig(output_file)
     @staticmethod
