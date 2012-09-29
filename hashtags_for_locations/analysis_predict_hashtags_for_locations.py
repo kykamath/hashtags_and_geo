@@ -345,7 +345,7 @@ class PredictHashtagsForLocationsPlots():
             y_perct_and_time_difference = mf_y_perct_to_time_difference.items()
             y_perct_and_time_difference.sort(key=itemgetter(0), reverse=False)
             y_percts, time_differences = zip(*y_perct_and_time_difference)
-            ax = plt.subplot(111)
+#            ax = plt.subplot(111)
 #            ax.set_xscale('log')
             y_percts = map(lambda y: y/100, y_percts)
             plt.plot(time_differences, y_percts, c='k')
@@ -359,11 +359,15 @@ class PredictHashtagsForLocationsPlots():
     def propagation_distribution():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         propagation_distribution = []
+        plt.figure(num=None, figsize=(6,3))
         for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
             ltuo_majority_threshold_bucket_time_and_utm_ids = data['ltuo_majority_threshold_bucket_time_and_utm_ids']
             if ltuo_majority_threshold_bucket_time_and_utm_ids:
                 propagation_distribution.append(len(zip(*data['ltuo_majority_threshold_bucket_time_and_utm_ids'])[1]))
+        ax = plt.subplot(111)
+        ax.set_xscale('log')
         plt.hist(propagation_distribution, 100)
+        plt.grid(True)
         savefig(output_file)
     @staticmethod
     def run():
