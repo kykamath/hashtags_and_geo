@@ -381,7 +381,7 @@ class PredictHashtagsForLocationsPlots():
             current_val+=c
             count_dist2.append(current_val)
         count_dist = count_dist2[::-1]
-        print zip(num_of_utms, count_dist)
+        print dict(zip(num_of_utms, count_dist))[10]
         plt.plot(num_of_utms, count_dist, c = 'k')
         plt.scatter(num_of_utms, count_dist, c = 'k')
         plt.grid(True)
