@@ -358,5 +358,5 @@ class PredictHashtagsForLocationsPlots():
         PredictHashtagsForLocationsPlots.hastag_evolution_in_every_utm_id()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
