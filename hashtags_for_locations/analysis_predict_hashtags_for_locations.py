@@ -336,7 +336,7 @@ class PredictHashtagsForLocationsPlots():
             plt.scatter(time_differences, y_percts, c='k')
             plt.grid(True)
             plt.xlabel('Hashtag propagation time (m)')
-            plt.ylabel('\% of hastags occurrences')
+            plt.ylabel('% of hashtag occurrences')
             savefig(output_file)
             exit()
     @staticmethod
