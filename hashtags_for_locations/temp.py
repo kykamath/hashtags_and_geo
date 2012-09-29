@@ -1,16 +1,16 @@
-#import matplotlib.pyplot as plt
-#import numpy as np
-#from scipy.stats import gaussian_kde
-##data = [1.5]*7 + [2.5]*2 + [3.5]*8 + [4.5]*3 + [5.5]*1 + [6.5]*8
-#data = [1.5]*7 + [5]*2 + [3.5]*8 + [7.5]*3
-#density = gaussian_kde(data)
-#xs = np.linspace(0,8,200)
-#density.covariance_factor = lambda : .25
-#density._compute_covariance()
-#plt.plot(xs,density(xs), c='y')
-#plt.fill_between(xs,density(xs),0,color='r')
-##plt.hist(data)
-#plt.show()
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import gaussian_kde
+#data = [1.5]*7 + [2.5]*2 + [3.5]*8 + [4.5]*3 + [5.5]*1 + [6.5]*8
+data = [1.5]*7 + [5]*2 + [3.5]*8 + [7.5]*3
+density = gaussian_kde(data)
+xs = np.linspace(0,8,200)
+density.covariance_factor = lambda : .25
+density._compute_covariance()
+plt.plot(xs,density(xs), c='y')
+plt.fill_between(xs,density(xs),0,color='r')
+#plt.hist(data)
+plt.show()
 
 
 l = range(130)

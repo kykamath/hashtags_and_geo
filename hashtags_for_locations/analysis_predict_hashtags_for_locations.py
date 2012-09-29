@@ -25,8 +25,10 @@ from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_HEDGING
 from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_LEARNING_TO_RANK
 from operator import itemgetter
 from pprint import pprint
+from scipy.stats import gaussian_kde
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 import time
 
@@ -412,7 +414,13 @@ class PredictHashtagsForLocationsPlots():
             last_bucket_time = majority_threshold_bucket_times[-1] + BUCKET_WIDTH
             majority_threshold_bucket_times = [0] + list(majority_threshold_bucket_times) + [last_bucket_time]
             utm_id_counts = [0] + list(utm_id_counts) + [0]
-            plt.plot(majority_threshold_bucket_times, utm_id_counts)
+            density = gaussian_kde(utm_id_counts)
+            xs = np.linspace(0,last_bucket_time,200)
+            density.covariance_factor = lambda : .25
+            density._compute_covariance()
+            plt.plot(xs,density(xs), c='y')
+            plt.fill_between(xs,density(xs),0,color='r')
+#            plt.plot(majority_threshold_bucket_times, utm_id_counts)
             savefig(output_file_format%data['hashtag'])
             break;
     @staticmethod
