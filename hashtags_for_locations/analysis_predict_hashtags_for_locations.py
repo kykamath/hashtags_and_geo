@@ -356,19 +356,22 @@ class PredictHashtagsForLocationsPlots():
             savefig(output_file)
             exit()
     @staticmethod
-    def temp():
-        
+    def propagation_distribution():
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        propagation_distribution = []
         for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
             ltuo_majority_threshold_bucket_time_and_utm_ids = data['ltuo_majority_threshold_bucket_time_and_utm_ids']
             if ltuo_majority_threshold_bucket_time_and_utm_ids:
-                print zip(*data['ltuo_majority_threshold_bucket_time_and_utm_ids'])[1]
+                propagation_distribution.append(len(zip(*data['ltuo_majority_threshold_bucket_time_and_utm_ids'])[1]))
+        plt.hist(propagation_distribution)
+        savefig(output_file)
     @staticmethod
     def run():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-#        PredictHashtagsForLocationsPlots.hashtag_evolution_in_every_utm_id()
-        PredictHashtagsForLocationsPlots.temp()
+        PredictHashtagsForLocationsPlots.hashtag_evolution_in_every_utm_id()
+        PredictHashtagsForLocationsPlots.propagation_distribution()
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
