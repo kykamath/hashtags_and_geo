@@ -107,7 +107,7 @@ class PropagationMatrix(ModifiedMRJob):
     def mapper(self, key, line):
         if False: yield # I'm a generator!
         MIN_OCCURRENCES = 250
-        GAP_PERCT = 0.02
+        GAP_PERCT = 0.01
         hashtag_object = cjson.decode(line)
         if 'num_of_occurrences' in hashtag_object and hashtag_object['num_of_occurrences'] >= MIN_OCCURRENCES:
             ltuo_occ_time_and_occ_utm_id = hashtag_object['ltuo_occ_time_and_occ_utm_id']

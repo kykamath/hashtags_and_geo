@@ -354,5 +354,5 @@ class PredictHashtagsForLocationsPlots():
         PredictHashtagsForLocationsPlots.propagation_matrix()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
