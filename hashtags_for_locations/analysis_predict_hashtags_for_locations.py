@@ -357,6 +357,8 @@ class PredictHashtagsForLocationsPlots():
             break
     @staticmethod
     def propagation_distribution():
+        ''' CCDF of locations that a hashtag propagates to.
+        '''
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         propagation_distribution = []
         plt.figure(num=None, figsize=(6,3))
@@ -381,7 +383,7 @@ class PredictHashtagsForLocationsPlots():
             current_val+=c
             count_dist2.append(current_val)
         count_dist = count_dist2[::-1]
-        print dict(zip(num_of_utms, count_dist))[10]
+        print 'Percentage of hashtags >10 locations', dict(zip(num_of_utms, count_dist))[10]
         plt.plot(num_of_utms, count_dist, c = 'k')
         plt.scatter(num_of_utms, count_dist, c = 'k')
         plt.grid(True)
