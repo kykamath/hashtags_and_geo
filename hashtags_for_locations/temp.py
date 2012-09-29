@@ -1,34 +1,49 @@
-#!/usr/bin/env python
-"""
-See pcolor_demo2 for a much faster way of generating pcolor plots
-"""
-from __future__ import division
-from pylab import *
-
-def func3(x,y):
-    return (1- x/2 + x**5 + y**3)*exp(-x**2-y**2)
-
-
-# make these smaller to increase the resolution
-dx, dy = 0.05, 0.05
-
-x = arange(-3.0, 3.0, dx)
-y = arange(-3.0, 3.0, dy)
-X,Y = meshgrid(x, y)
-
-#Z = func3(X, Y)
-
-Z = [[1,2,3],[1,2,3],[1,3,3]]
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import gaussian_kde
+#data = [1.5]*7 + [2.5]*2 + [3.5]*8 + [4.5]*3 + [5.5]*1 + [6.5]*8
+data = [1.5]*7 + [5]*2 + [3.5]*8 + [7.5]*3
+density = gaussian_kde(data)
+xs = np.linspace(0,8,200)
+density.covariance_factor = lambda : .25
+density._compute_covariance()
+plt.plot(xs,density(xs), c='y')
+plt.fill_between(xs,density(xs),0,color='r')
+#plt.hist(data)
+plt.show()
 
 
-ax = subplot(111)
-im = imshow(Z, cmap=cm.jet)
-#im.set_interpolation('nearest')
-#im.set_interpolation('bicubic')
-im.set_interpolation('bilinear')
-#ax.set_image_extent(-3, 3, -3, 3)
-
-show()
+##!/usr/bin/env python
+#"""
+#See pcolor_demo2 for a much faster way of generating pcolor plots
+#"""
+#from __future__ import division
+#from pylab import *
+#
+#def func3(x,y):
+#    return (1- x/2 + x**5 + y**3)*exp(-x**2-y**2)
+#
+#
+## make these smaller to increase the resolution
+#dx, dy = 0.05, 0.05
+#
+#x = arange(-3.0, 3.0, dx)
+#y = arange(-3.0, 3.0, dy)
+#X,Y = meshgrid(x, y)
+#
+##Z = func3(X, Y)
+#
+#Z = [[1,2,3],[1,2,3],[1,3,3]]
+#
+#
+#ax = subplot(111)
+#im = imshow(Z, cmap=cm.jet)
+##im.set_interpolation('nearest')
+##im.set_interpolation('bicubic')
+#im.set_interpolation('bilinear')
+##ax.set_image_extent(-3, 3, -3, 3)
+#
+#show()
 #gap_perct = 0.1
 #occ_times_at_gap_perct = range(10)
 #ltuo_perct_and_occ_time = [(int((gap_perct*i+gap_perct)*100), j)for i, j in enumerate(occ_times_at_gap_perct)]
