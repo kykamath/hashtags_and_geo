@@ -326,7 +326,7 @@ class PredictHashtagsForLocationsPlots():
             plt.grid(True)
             savefig(output_file_format%metric)
     @staticmethod
-    def hastag_evolution_in_every_utm_id():
+    def hashtag_evolution_in_every_utm_id():
         ''' For a given utm id and a hashtag, this measures the percentage of occurrences of the hashtag as a fuction
         of its age in the location.
         '''
@@ -356,12 +356,17 @@ class PredictHashtagsForLocationsPlots():
             savefig(output_file)
             exit()
     @staticmethod
+    def temp():
+        for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
+            print data.keys()
+    @staticmethod
     def run():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-        PredictHashtagsForLocationsPlots.hastag_evolution_in_every_utm_id()
+#        PredictHashtagsForLocationsPlots.hashtag_evolution_in_every_utm_id()
+        PredictHashtagsForLocationsPlots.temp()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    PredictHashtagsForLocationsPlots.run()
+#    MRAnalysis.run()
+    PredictHashtagsForLocationsPlots.run()
