@@ -359,8 +359,9 @@ class PredictHashtagsForLocationsPlots():
     def temp():
         
         for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
-            print data['ltuo_majority_threshold_bucket_time_and_utm_ids']
-            print zip(*data['ltuo_majority_threshold_bucket_time_and_utm_ids'])[1]
+            ltuo_majority_threshold_bucket_time_and_utm_ids = data['ltuo_majority_threshold_bucket_time_and_utm_ids']
+            if ltuo_majority_threshold_bucket_time_and_utm_ids:
+                print zip(*data['ltuo_majority_threshold_bucket_time_and_utm_ids'])[1]
     @staticmethod
     def run():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()

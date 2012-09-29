@@ -37,7 +37,7 @@ HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
 # Parameters for propagation analysis
 MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS = 250
 GAP_PERCT_FOR_PROPAGATION_ANALYSIS = 0.02
-MIN_OCCURRENCES_PERE_UTM_ID = 25
+MIN_OCCURRENCES_PER_UTM_ID = 25
 TIME_UNIT_IN_SECONDS = 60*10
 MAJORITY_THRESHOLD_FOR_PROPAGATION_ANALYSIS = 0.15
         
@@ -48,7 +48,7 @@ PARAMS_DICT = dict(
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW,
                    HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
                    MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS = MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS,
-                   MIN_OCCURRENCES_PERE_UTM_ID = MIN_OCCURRENCES_PERE_UTM_ID,
+                   MIN_OCCURRENCES_PER_UTM_ID = MIN_OCCURRENCES_PER_UTM_ID,
                    TIME_UNIT_IN_SECONDS = TIME_UNIT_IN_SECONDS,
                    )
 
@@ -129,7 +129,7 @@ class PropagationMatrix(ModifiedMRJob):
                     groupby(ltuo_occ_time_and_occ_utm_id, key=itemgetter(1))
                 ]
             ltuo_occ_utm_id_and_occ_times = filter(
-                                                   lambda (_, occ_times): len(occ_times)>MIN_OCCURRENCES_PERE_UTM_ID,
+                                                   lambda (_, occ_times): len(occ_times)>MIN_OCCURRENCES_PER_UTM_ID,
                                                    ltuo_occ_utm_id_and_occ_times
                                                )
             for occ_utm_id, occ_times in ltuo_occ_utm_id_and_occ_times:
@@ -183,7 +183,7 @@ class HashtagsWithMajorityInfo(ModifiedMRJob):
                 ]
             ltuo_utm_id_and_bucket_occ_times =\
                                             filter(
-                                                   lambda (_, occ_times): len(occ_times)>MIN_OCCURRENCES_PERE_UTM_ID,
+                                                   lambda (_, occ_times): len(occ_times)>10,
                                                    ltuo_utm_id_and_bucket_occ_times
                                                )
             ltuo_utm_id_and_majority_threshold_bucket_time = []
