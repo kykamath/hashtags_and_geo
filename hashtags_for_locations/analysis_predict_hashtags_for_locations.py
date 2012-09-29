@@ -346,7 +346,7 @@ class PredictHashtagsForLocationsPlots():
             y_perct_and_time_difference.sort(key=itemgetter(0), reverse=False)
             y_percts, time_differences = zip(*y_perct_and_time_difference)
             ax = plt.subplot(111)
-            ax.set_xscale('log')
+#            ax.set_xscale('log')
             y_percts = map(lambda y: y/100, y_percts)
             plt.plot(time_differences, y_percts, c='k')
             plt.scatter(time_differences, y_percts, c='k')
@@ -363,7 +363,7 @@ class PredictHashtagsForLocationsPlots():
             ltuo_majority_threshold_bucket_time_and_utm_ids = data['ltuo_majority_threshold_bucket_time_and_utm_ids']
             if ltuo_majority_threshold_bucket_time_and_utm_ids:
                 propagation_distribution.append(len(zip(*data['ltuo_majority_threshold_bucket_time_and_utm_ids'])[1]))
-        plt.hist(propagation_distribution)
+        plt.hist(propagation_distribution, 100)
         savefig(output_file)
     @staticmethod
     def run():
