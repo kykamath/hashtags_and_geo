@@ -5,9 +5,10 @@ Created on Sep 28, 2012
 '''
 from collections import defaultdict
 from datetime import datetime
+from library.classes import GeneralMethods
 from library.geo import UTMConverter
 from library.mrjobwrapper import ModifiedMRJob
-from library.r_helper import R_Helper
+#from library.r_helper import R_Helper
 from library.stats import filter_outliers
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from itertools import chain, groupby
@@ -32,12 +33,23 @@ START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
 # Parameters for the MR Job that will be logged.
 HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
+
+# Parameters for propagation analysis
+MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS = 250
+GAP_PERCT_FOR_PROPAGATION_ANALYSIS = 0.02
+MIN_OCCURRENCES_PERE_UTM_ID = 25
+TIME_UNIT_IN_SECONDS = 60*10
+MAJORITY_THRESHOLD_FOR_PROPAGATION_ANALYSIS = 0.15
+        
 PARAMS_DICT = dict(
                    PARAMS_DICT = True,
                    ACCURACY = ACCURACY,
                    MIN_HASHTAG_OCCURRENCES = MIN_HASHTAG_OCCURRENCES,
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW,
-                   HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW
+                   HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
+                   MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS = MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS,
+                   MIN_OCCURRENCES_PERE_UTM_ID = MIN_OCCURRENCES_PERE_UTM_ID,
+                   TIME_UNIT_IN_SECONDS = TIME_UNIT_IN_SECONDS,
                    )
 
 def iterateHashtagObjectInstances(line):
@@ -101,16 +113,14 @@ class HashtagsExtractor(ModifiedMRJob):
     
 class PropagationMatrix(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
-    def __init__(self,  min_hashtag_occurrences = MIN_HASHTAG_OCCURRENCES, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(PropagationMatrix, self).__init__(*args, **kwargs)
         self.mf_perct_pair_to_time_differences = defaultdict(list)
     def mapper(self, key, line):
         if False: yield # I'm a generator!
-        MIN_OCCURRENCES = 250
-        GAP_PERCT = 0.02
-        MIN_OCCURRENCES_PERE_UTM_ID = 25
         hashtag_object = cjson.decode(line)
-        if 'num_of_occurrences' in hashtag_object and hashtag_object['num_of_occurrences'] >= MIN_OCCURRENCES:
+        if 'num_of_occurrences' in hashtag_object and\
+                hashtag_object['num_of_occurrences'] >= MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS:
             ltuo_occ_time_and_occ_utm_id = hashtag_object['ltuo_occ_time_and_occ_utm_id']
             ltuo_occ_time_and_occ_utm_id.sort(key=itemgetter(1))
             ltuo_occ_utm_id_and_occ_times =\
@@ -127,9 +137,12 @@ class PropagationMatrix(ModifiedMRJob):
                 occ_times = filter_outliers(occ_times)
                 lifespan = occ_times[-1] - occ_times[0]
                 if lifespan > 0.0:
-                    occ_times_at_gap_perct = get_items_at_gap(occ_times, GAP_PERCT)
+                    occ_times_at_gap_perct = get_items_at_gap(occ_times, GAP_PERCT_FOR_PROPAGATION_ANALYSIS)
                     ltuo_perct_and_occ_time = [
-                                               (int((GAP_PERCT*i+GAP_PERCT)*100), j)
+                                               (int((
+                                                     GAP_PERCT_FOR_PROPAGATION_ANALYSIS*i+\
+                                                        GAP_PERCT_FOR_PROPAGATION_ANALYSIS)*100),
+                                                j)
                                                 for i, j in enumerate(occ_times_at_gap_perct)
                                             ]
                     for perct1, occ_time1 in ltuo_perct_and_occ_time:
@@ -148,7 +161,52 @@ class PropagationMatrix(ModifiedMRJob):
         time_differences = filter_outliers(time_differences)
         yield perct_pair, {'perct_pair': perct_pair, 'time_differences': np.mean(time_differences)}
 
+class HashtagsWithMajorityInfo(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(HashtagsWithMajorityInfo, self).__init__(*args, **kwargs)
+    def mapper(self, key, value):
+        hashtag_object = cjson.decode(value)
+        if 'num_of_occurrences' in hashtag_object and\
+                hashtag_object['num_of_occurrences'] >= MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS:
+            ltuo_bucket_occ_time_and_occ_utm_id =\
+                                        map(
+                                               lambda (t, utm_id):
+                                                    (GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS), utm_id),
+                                               hashtag_object['ltuo_occ_time_and_occ_utm_id']
+                                           )
+            ltuo_bucket_occ_time_and_occ_utm_id.sort(key=itemgetter(1))
+            ltuo_utm_id_and_bucket_occ_times =\
+                [ (occ_utm_id,map(itemgetter(0), it_bucket_occ_time_and_occ_utm_id))
+                 for occ_utm_id, it_bucket_occ_time_and_occ_utm_id in
+                    groupby(ltuo_bucket_occ_time_and_occ_utm_id, key=itemgetter(1))
+                ]
+            ltuo_utm_id_and_bucket_occ_times =\
+                                            filter(
+                                                   lambda (_, occ_times): len(occ_times)>MIN_OCCURRENCES_PERE_UTM_ID,
+                                                   ltuo_utm_id_and_bucket_occ_times
+                                               )
+            ltuo_utm_id_and_majority_threshold_bucket_time = []
+            for utm_id, bucket_occ_times in ltuo_utm_id_and_bucket_occ_times:
+                bucket_occ_times.sort()
+                ltuo_utm_id_and_majority_threshold_bucket_time.append([
+                               utm_id,
+                               bucket_occ_times[int(MAJORITY_THRESHOLD_FOR_PROPAGATION_ANALYSIS*len(bucket_occ_times))]
+                           ])
+            ltuo_majority_threshold_bucket_time_and_utm_ids =\
+                [ (majority_threshold_bucket_time, map(itemgetter(0), it_utm_id_and_majority_threshold_bucket_time))
+                 for majority_threshold_bucket_time, it_utm_id_and_majority_threshold_bucket_time in
+                    groupby(ltuo_utm_id_and_majority_threshold_bucket_time, itemgetter(1))
+                ]
+            ltuo_majority_threshold_bucket_time_and_utm_ids.sort(key=itemgetter(0))
+            yield hashtag_object['hashtag'], {
+                                              'hashtag': hashtag_object['hashtag'],
+                                              'ltuo_majority_threshold_bucket_time_and_utm_ids':
+                                                                        ltuo_majority_threshold_bucket_time_and_utm_ids
+                                              }
+            
 if __name__ == '__main__':
     pass
 #    HashtagsExtractor.run()
-    PropagationMatrix.run()
+#    PropagationMatrix.run()
+    HashtagsWithMajorityInfo.run()

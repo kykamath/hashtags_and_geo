@@ -13,6 +13,7 @@ from library.file_io import FileIO
 from library.mrjobwrapper import runMRJob
 from library.plotting import savefig
 from mr_predict_hashtags_analysis import HashtagsExtractor
+from mr_predict_hashtags_analysis import HashtagsWithMajorityInfo
 from mr_predict_hashtags_analysis import PropagationMatrix
 from mr_predict_hashtags_analysis import PARAMS_DICT
 from mr_predict_hashtags_for_locations import EvaluationMetric
@@ -47,6 +48,7 @@ f_performance_of_predicting_by_varying_historical_time_interval =\
 df_hashtags_extractor = 'hdfs:///user/kykamath/geo/hashtags/2011_2_to_2012_8/min_num_of_hashtags_250/hashtags'
 f_hashtags_extractor = analysis_folder%'hashtags_extractor/'+'hashtags'
 f_propagation_matrix = analysis_folder%'propagation_matrix/'+'propagation_matrix'
+f_hashtags_with_majority_info = analysis_folder%'hashtags_with_majority_info/'+'hashtags_with_majority_info'
 
 class MRAnalysis():
     @staticmethod
@@ -106,6 +108,14 @@ class MRAnalysis():
     def propagation_matrix():
         runMRJob(PropagationMatrix, f_propagation_matrix, [df_hashtags_extractor], jobconf={'mapred.reduce.tasks':100})
     @staticmethod
+    def hashtags_with_majority_info():
+        runMRJob(
+                     HashtagsWithMajorityInfo,
+                     f_hashtags_with_majority_info,
+                     [df_hashtags_extractor],
+                     jobconf={'mapred.reduce.tasks':100}
+                 )
+    @staticmethod
     def run():
 #        #Generate main data
 #        MRAnalysis.generate_data_for_experiments()
@@ -124,7 +134,8 @@ class MRAnalysis():
 #                                datetime(2011, 2, 1), datetime(2012, 8, 31)
 #        MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
 
-        MRAnalysis.propagation_matrix()
+#        MRAnalysis.propagation_matrix()
+        MRAnalysis.hashtags_with_majority_info()
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
@@ -352,5 +363,5 @@ class PredictHashtagsForLocationsPlots():
         PredictHashtagsForLocationsPlots.hastag_evolution_in_every_utm_id()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
