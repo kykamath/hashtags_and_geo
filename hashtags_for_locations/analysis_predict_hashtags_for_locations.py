@@ -415,7 +415,7 @@ class PredictHashtagsForLocationsPlots():
             majority_threshold_bucket_times = [0] + list(majority_threshold_bucket_times) + [last_bucket_time]
             utm_id_counts = [0] + list(utm_id_counts) + [0]
             density = gaussian_kde(utm_id_counts)
-            xs = np.linspace(0,last_bucket_time,200)
+            xs = np.linspace(0,last_bucket_time,last_bucket_time)
             density.covariance_factor = lambda : .25
             density._compute_covariance()
             plt.plot(xs,density(xs), c='y')
