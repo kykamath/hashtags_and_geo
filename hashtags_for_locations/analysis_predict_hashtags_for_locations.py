@@ -382,6 +382,7 @@ class PredictHashtagsForLocationsPlots():
             count_dist2.append(current_val)
         count_dist = count_dist2[::-1]
         plt.plot(num_of_utms, count_dist, c = 'k')
+        plt.scatter(num_of_utms, count_dist, c = 'k')
         plt.grid(True)
         plt.xlabel('Number of locations')
         plt.ylabel('CCDF')
