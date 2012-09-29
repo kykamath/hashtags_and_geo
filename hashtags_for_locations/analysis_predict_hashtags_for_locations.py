@@ -315,8 +315,8 @@ class PredictHashtagsForLocationsPlots():
             plt.grid(True)
             savefig(output_file_format%metric)
     @staticmethod
-    def propagation_matrix():
-#        ltuo_x_perct_and_y_perct_and_time_difference = []
+    def hastag_evolution_in_every_utm_id():
+        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         mf_x_perct_to_mf_y_perct_to_time_difference = defaultdict(dict)
         for data in FileIO.iterateJsonFromFile(f_propagation_matrix):
             x_perct, y_perct = map(float, data['perct_pair'].split('_'))
@@ -330,22 +330,25 @@ class PredictHashtagsForLocationsPlots():
             y_perct_and_time_difference = mf_y_perct_to_time_difference.items()
             y_perct_and_time_difference.sort(key=itemgetter(0), reverse=False)
             y_percts, time_differences = zip(*y_perct_and_time_difference)
-            print x_perct, y_percts
+            y_percts = map(lambda y: y/100, y_percts)
+#            plt.plot()
+            print y_percts
             print time_differences
+            print output_file_format
             exit()
-            Z.append(time_differences)
-#        ax = plt.subplot(111)
-        im = plt.imshow(Z, cmap=cm.binary)
-#        plt.xlim(xmin=0, xmax=50)
-#        plt.ylim(ymin=0, ymax=50)
-#        yticks = plt.yticks()
-#        plt.yticks([0, 1])
-#        plt.yticks()
-#        im.set_interpolation('nearest')
-#        im.set_interpolation('bicubic')
-        im.set_interpolation('bilinear')
-        plt.colorbar(im)
-        plt.show()
+#            Z.append(time_differences)
+##        ax = plt.subplot(111)
+#        im = plt.imshow(Z, cmap=cm.binary)
+##        plt.xlim(xmin=0, xmax=50)
+##        plt.ylim(ymin=0, ymax=50)
+##        yticks = plt.yticks()
+##        plt.yticks([0, 1])
+##        plt.yticks()
+##        im.set_interpolation('nearest')
+##        im.set_interpolation('bicubic')
+#        im.set_interpolation('bilinear')
+#        plt.colorbar(im)
+#        plt.show()
     @staticmethod
     def run():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
