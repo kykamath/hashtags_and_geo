@@ -316,6 +316,9 @@ class PredictHashtagsForLocationsPlots():
             savefig(output_file_format%metric)
     @staticmethod
     def hastag_evolution_in_every_utm_id():
+        ''' For a given utm id and a hashtag, this measures the percentage of occurrences of the hashtag as a fuction
+        of its age in the location.
+        '''
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         plt.figure(num=None, figsize=(6,3))
         mf_x_perct_to_mf_y_perct_to_time_difference = defaultdict(dict)
@@ -335,7 +338,7 @@ class PredictHashtagsForLocationsPlots():
             plt.plot(time_differences, y_percts, c='k')
             plt.scatter(time_differences, y_percts, c='k')
             plt.grid(True)
-            plt.xlabel('Hashtag propagation time (m)')
+            plt.xlabel('Hashtag propagation time (minutes)')
             plt.ylabel('% of hashtag occurrences')
             savefig(output_file)
             exit()
