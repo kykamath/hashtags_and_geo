@@ -373,7 +373,7 @@ class PredictHashtagsForLocationsPlots():
         ltuo_num_of_utms_and_count_dist.sort(key=itemgetter(0))
         ax = plt.subplot(111)
         ax.set_xscale('log')
-#        plt.hist(propagation_distribution, 100)
+        ax.set_yscale('log')
         num_of_utms, count_dist = zip(*ltuo_num_of_utms_and_count_dist)
         count_dist2 = []
         current_val = 0.0
@@ -381,8 +381,10 @@ class PredictHashtagsForLocationsPlots():
             current_val+=c
             count_dist2.append(current_val)
         count_dist = count_dist2[::-1]
-        plt.plot(num_of_utms, count_dist)
+        plt.plot(num_of_utms, count_dist, c = 'k')
         plt.grid(True)
+        plt.xlabel('Number of locations')
+        plt.ylabel('CCDF')
         savefig(output_file)
     @staticmethod
     def run():
