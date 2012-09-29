@@ -16,6 +16,7 @@ from mr_predict_hashtags_analysis import HashtagsExtractor
 from mr_predict_hashtags_analysis import HashtagsWithMajorityInfo
 from mr_predict_hashtags_analysis import PropagationMatrix
 from mr_predict_hashtags_analysis import PARAMS_DICT
+from mr_predict_hashtags_analysis import TIME_UNIT_IN_SECONDS as BUCKET_WIDTH
 from mr_predict_hashtags_for_locations import EvaluationMetric
 from mr_predict_hashtags_for_locations import PredictingHastagsForLocations
 from mr_predict_hashtags_for_locations import PerformanceOfPredictingMethodsByVaryingParameter
@@ -392,10 +393,30 @@ class PredictHashtagsForLocationsPlots():
         savefig(output_file)
     @staticmethod
     def majority_distribution_for_hashtags():
+        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
         for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
-            print data['hashtag']
+#            print data['hashtag']
+            ltuo_majority_threshold_bucket_time_and_utm_ids = data['ltuo_majority_threshold_bucket_time_and_utm_ids']
+            ltuo_majority_threshold_bucket_time_and_utm_id_counts =\
+                                                                    map(
+                                                                        lambda (t, utm_ids): (t, len(utm_ids)),
+                                                                        ltuo_majority_threshold_bucket_time_and_utm_ids
+                                                                        )
+            ltuo_majority_threshold_bucket_time_and_utm_id_counts.sort(key=itemgetter(0))
+            majority_threshold_bucket_times, utm_id_counts = zip(*ltuo_majority_threshold_bucket_time_and_utm_id_counts)
+            first_bucket_time = majority_threshold_bucket_times[0]
+            majority_threshold_bucket_times = map(
+                                                      lambda t: t-first_bucket_time+BUCKET_WIDTH,
+                                                      majority_threshold_bucket_times
+                                                  )
+            majority_threshold_bucket_times = [0] + majority_threshold_bucket_times
+            utm_id_counts = [0] + utm_id_counts
+            plt.plot(majority_threshold_bucket_times, utm_id_counts)
+            savefig(output_file_format%data['hashtag'])
+            break;
+            
     @staticmethod
-    def run():
+    def     run():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
