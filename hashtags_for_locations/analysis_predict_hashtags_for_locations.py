@@ -12,6 +12,7 @@ from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.mrjobwrapper import runMRJob
 from library.plotting import savefig
+from library.stats import filter_outliers
 from mr_predict_hashtags_analysis import HashtagsExtractor
 from mr_predict_hashtags_analysis import HashtagsWithMajorityInfo
 from mr_predict_hashtags_analysis import PropagationMatrix
@@ -417,6 +418,11 @@ class PredictHashtagsForLocationsPlots():
                                                       )
                 for majority_threshold_bucket_time, utm_id_count in zip(majority_threshold_bucket_times, utm_id_counts):
                     mf_majority_threshold_bucket_time_to_num_of_utm_ids[majority_threshold_bucket_time]+=utm_id_count
+        majority_threshold_bucket_times = mf_majority_threshold_bucket_time_to_num_of_utm_ids.keys()
+        majority_threshold_bucket_times = filter_outliers(majority_threshold_bucket_times)
+        for majority_threshold_bucket_time in mf_majority_threshold_bucket_time_to_num_of_utm_ids.keys()[:]:
+            if majority_threshold_bucket_time not in majority_threshold_bucket_times:
+                del mf_majority_threshold_bucket_time_to_num_of_utm_ids[majority_threshold_bucket_time]
         ltuo_majority_threshold_bucket_time_and_num_of_utm_ids =\
                                                          mf_majority_threshold_bucket_time_to_num_of_utm_ids.items()
         ltuo_majority_threshold_bucket_time_and_num_of_utm_ids.sort(key=itemgetter(0))
