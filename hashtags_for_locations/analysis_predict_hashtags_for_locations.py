@@ -169,7 +169,7 @@ class PredictHashtagsForLocationsPlots():
                                                }
     @staticmethod
     def performance_by_varying_num_of_hashtags():
-        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'_%s.png'
+        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
         performance_data = list(FileIO.iterateJsonFromFile(f_performance_of_predicting_by_varying_num_of_hashtags))
         performance_data.sort(key=itemgetter('metric'))
         ltuo_metric_and_ltuo_prediction_method_and_num_of_hashtags_and_metric_value =\
@@ -219,7 +219,7 @@ class PredictHashtagsForLocationsPlots():
             savefig(output_file_format%metric)
     @staticmethod
     def performance_by_varying_prediction_time_interval():
-        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'_%s.png'
+        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
         performance_data = list(FileIO.iterateJsonFromFile(
                                                        f_performance_of_predicting_by_varying_prediction_time_interval
                                                     ))
@@ -271,7 +271,7 @@ class PredictHashtagsForLocationsPlots():
             savefig(output_file_format%metric)
     @staticmethod
     def performance_by_varying_historical_time_interval():
-        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'_%s.png'
+        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
         performance_data = list(FileIO.iterateJsonFromFile(
                                                        f_performance_of_predicting_by_varying_historical_time_interval
                                                     ))
@@ -329,7 +329,7 @@ class PredictHashtagsForLocationsPlots():
             plt.grid(True)
             savefig(output_file_format%metric)
     @staticmethod
-    def hashtag_evolution_in_every_utm_id():
+    def perct_of_hashtag_occurrences_vs_time_of_propagation():
         ''' For a given utm id and a hashtag, this measures the percentage of occurrences of the hashtag as a fuction
         of its age in the location.
         '''
@@ -359,8 +359,8 @@ class PredictHashtagsForLocationsPlots():
             savefig(output_file)
             break
     @staticmethod
-    def propagation_distribution():
-        ''' CCDF of locations that a hashtag propagates to.
+    def ccdf_num_of_utmids_where_hashtag_propagates():
+        ''' CCDF of number of locations that a hashtag propagates to.
         '''
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         propagation_distribution = []
@@ -394,8 +394,9 @@ class PredictHashtagsForLocationsPlots():
         plt.ylabel('CCDF')
         savefig(output_file)
     @staticmethod
-    def majority_distribution_for_hashtags():
+    def temp_abc():
         output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
+        mf_majority_threshold_bucket_time_to_num_of_utm_ids = defaultdict(float)
         for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
 #            print data['hashtag']
             ltuo_majority_threshold_bucket_time_and_utm_ids = data['ltuo_majority_threshold_bucket_time_and_utm_ids']
@@ -411,26 +412,53 @@ class PredictHashtagsForLocationsPlots():
                                                       lambda t: t-first_bucket_time+BUCKET_WIDTH,
                                                       majority_threshold_bucket_times
                                                   )
-            last_bucket_time = majority_threshold_bucket_times[-1] + BUCKET_WIDTH
-            majority_threshold_bucket_times = [0] + list(majority_threshold_bucket_times) + [last_bucket_time]
-            utm_id_counts = [0] + list(utm_id_counts) + [0]
-            density = gaussian_kde(utm_id_counts)
-            xs = np.linspace(0,last_bucket_time,last_bucket_time)
-            density.covariance_factor = lambda : .25
-            density._compute_covariance()
-            plt.plot(xs,density(xs), c='y')
-            plt.fill_between(xs,density(xs),0,color='r')
-#            plt.plot(majority_threshold_bucket_times, utm_id_counts)
-            savefig(output_file_format%data['hashtag'])
-            break;
+            for majority_threshold_bucket_time, utm_id_count in zip(majority_threshold_bucket_times, utm_id_counts):
+                mf_majority_threshold_bucket_time_to_num_of_utm_ids[majority_threshold_bucket_time]+=utm_id_count
+        for majority_threshold_bucket_time, num_of_utm_ids in\
+                mf_majority_threshold_bucket_time_to_num_of_utm_ids.iteritems():
+            print majority_threshold_bucket_time, num_of_utm_ids
+#            total_utm_ids = sum(utm_id_counts)+0.0
+#            perct_of_utm_id_counts = map(lambda c: c/total_utm_ids, utm_id_counts)
+            
+#    @staticmethod
+#    def example_of_hashtag_propagation_patterns():
+#        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
+#        for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
+##            print data['hashtag']
+#            ltuo_majority_threshold_bucket_time_and_utm_ids = data['ltuo_majority_threshold_bucket_time_and_utm_ids']
+#            ltuo_majority_threshold_bucket_time_and_utm_id_counts =\
+#                                                                    map(
+#                                                                        lambda (t, utm_ids): (t, len(utm_ids)),
+#                                                                        ltuo_majority_threshold_bucket_time_and_utm_ids
+#                                                                        )
+#            ltuo_majority_threshold_bucket_time_and_utm_id_counts.sort(key=itemgetter(0))
+#            majority_threshold_bucket_times, utm_id_counts = zip(*ltuo_majority_threshold_bucket_time_and_utm_id_counts)
+#            first_bucket_time = majority_threshold_bucket_times[0]
+#            majority_threshold_bucket_times = map(
+#                                                      lambda t: t-first_bucket_time+BUCKET_WIDTH,
+#                                                      majority_threshold_bucket_times
+#                                                  )
+#            last_bucket_time = majority_threshold_bucket_times[-1] + BUCKET_WIDTH
+#            majority_threshold_bucket_times = [0] + list(majority_threshold_bucket_times) + [last_bucket_time]
+#            utm_id_counts = [0] + list(utm_id_counts) + [0]
+#            density = gaussian_kde(utm_id_counts)
+#            xs = np.linspace(0,last_bucket_time,last_bucket_time)
+#            density.covariance_factor = lambda : .25
+#            density._compute_covariance()
+#            plt.plot(xs,density(xs), c='y')
+#            plt.fill_between(xs,density(xs),0,color='r')
+##            plt.plot(majority_threshold_bucket_times, utm_id_counts)
+#            savefig(output_file_format%data['hashtag'])
+#            break;
     @staticmethod
-    def     run():
+    def run():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-#        PredictHashtagsForLocationsPlots.hashtag_evolution_in_every_utm_id()
-#        PredictHashtagsForLocationsPlots.propagation_distribution()
-        PredictHashtagsForLocationsPlots.majority_distribution_for_hashtags()
+#        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
+#        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
+        PredictHashtagsForLocationsPlots.temp_abc()
+#        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
