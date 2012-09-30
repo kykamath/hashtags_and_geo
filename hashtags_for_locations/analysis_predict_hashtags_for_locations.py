@@ -468,9 +468,9 @@ class PredictHashtagsForLocationsPlots():
                 for data in FileIO.iterateJsonFromFile(f_impact_of_using_locations_to_predict)]
         for min_common_hashtag, mean_propagation_statuses in\
                 ltuo_min_common_hashtag_and_mean_propagation_statuses:
-            print min_common_hashtag, mean_propagation_statuses
+            print min_common_hashtag
             density = gaussian_kde(mean_propagation_statuses)
-            xs = np.linspace(-1,1,100)
+            xs = np.linspace(-1,1,21)
             density.covariance_factor = lambda : .25
             density._compute_covariance()
             ys = density(xs)
