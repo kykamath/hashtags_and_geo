@@ -431,6 +431,12 @@ class PredictHashtagsForLocationsPlots():
         num_of_utm_ids = [0]+num_of_utm_ids
         total_num_of_utm_ids = sum(num_of_utm_ids)
         perct_of_utm_ids = [n/total_num_of_utm_ids for n in num_of_utm_ids]
+        perct_of_utm_ids1 = []
+        current_val=1.0
+        for perct_of_utm_id in perct_of_utm_ids:
+            perct_of_utm_ids1.append(current_val)
+            current_val-=perct_of_utm_id
+        perct_of_utm_ids = perct_of_utm_ids1
         ax = plt.subplot(111)
         ax.set_xscale('log')
         plt.plot(majority_threshold_bucket_time, perct_of_utm_ids)
