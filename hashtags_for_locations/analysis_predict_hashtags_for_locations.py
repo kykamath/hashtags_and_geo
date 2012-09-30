@@ -413,7 +413,7 @@ class PredictHashtagsForLocationsPlots():
                                                             zip(*ltuo_majority_threshold_bucket_time_and_utm_id_counts)
                 first_bucket_time = majority_threshold_bucket_times[0]
                 majority_threshold_bucket_times = map(
-                                                          lambda t: t-first_bucket_time+BUCKET_WIDTH,
+                                                          lambda t: (t-first_bucket_time+BUCKET_WIDTH)/60.,
                                                           majority_threshold_bucket_times
                                                       )
                 for majority_threshold_bucket_time, utm_id_count in zip(majority_threshold_bucket_times, utm_id_counts):
