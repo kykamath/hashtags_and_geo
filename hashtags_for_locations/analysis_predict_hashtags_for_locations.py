@@ -395,7 +395,7 @@ class PredictHashtagsForLocationsPlots():
         plt.ylabel('CCDF')
         savefig(output_file)
     @staticmethod
-    def temp_abc():
+    def ccdf_time_at_which_hashtag_propagates_to_a_location():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         mf_majority_threshold_bucket_time_to_num_of_utm_ids = defaultdict(float)
         plt.figure(num=None, figsize=(6,3))
@@ -485,7 +485,7 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
 #        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
-        PredictHashtagsForLocationsPlots.temp_abc()
+        PredictHashtagsForLocationsPlots.ccdf_time_at_which_hashtag_propagates_to_a_location()
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         
 if __name__ == '__main__':
