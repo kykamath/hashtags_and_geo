@@ -473,7 +473,10 @@ class PredictHashtagsForLocationsPlots():
             xs = np.linspace(-1,1,100)
             density.covariance_factor = lambda : .25
             density._compute_covariance()
-            plt.plot(xs,density(xs), c='y')
+            ys = density(xs)
+            total_ys = sum(ys)
+            ys = [y/total_ys for y in ys]
+            plt.plot(xs, ys, c='y')
             savefig(output_file_format%min_common_hashtag)
             break
 #    @staticmethod
