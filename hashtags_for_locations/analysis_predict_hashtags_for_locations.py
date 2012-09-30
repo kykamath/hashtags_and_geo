@@ -495,7 +495,7 @@ class PredictHashtagsForLocationsPlots():
                                  ys,
                                  0,
                                  color=mf_min_common_hashtag_to_properties[min_common_hashtag]['color'],
-                                 alpha=0.5
+                                 alpha=1.5
                             )
         plt.legend()
         plt.grid(True)
