@@ -11,7 +11,7 @@ from library.mrjobwrapper import ModifiedMRJob
 #from library.r_helper import R_Helper
 from library.stats import filter_outliers
 from library.twitter import getDateTimeObjectFromTweetTimestamp
-from itertools import chain, groupby
+from itertools import chain, combinations, groupby
 from operator import itemgetter
 import cjson
 import numpy as np
@@ -204,9 +204,79 @@ class HashtagsWithMajorityInfo(ModifiedMRJob):
                                               'ltuo_majority_threshold_bucket_time_and_utm_ids':
                                                                         ltuo_majority_threshold_bucket_time_and_utm_ids
                                               }
+
+def group_items_by(list_object, key):
+    list_object.sort(key=key)
+    return [(k,list(ito_items)) for k, ito_items in groupby(list_object, key=key)]
             
+class ImpactOfUsingLocationsToPredict(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    STATUS_TOGETHER = 0
+    STATUS_BEFORE = -1
+    STATUS_AFTER = 1
+#    MIN_COMMON_HASHTAGS = [1,2]
+    MIN_COMMON_HASHTAGS = range(5,101,5)
+    def __init__(self, *args, **kwargs):
+        super(ImpactOfUsingLocationsToPredict, self).__init__(*args, **kwargs)
+        self.mf_location_pair_to_propagation_statuses = defaultdict(list)
+    def mapper(self, key, value):
+        if False: yield # I'm a generator!
+        hashtag_object = cjson.decode(value)
+        if 'num_of_occurrences' in hashtag_object and\
+                hashtag_object['num_of_occurrences'] >= MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS:
+            ltuo_occ_time_and_occ_utm_id = hashtag_object['ltuo_occ_time_and_occ_utm_id']
+            ltuo_utm_id_and_ltuo_occ_time_and_occ_utm_id =\
+                                                        group_items_by(ltuo_occ_time_and_occ_utm_id, key=itemgetter(1))
+            ltuo_utm_id_and_occ_times = map(
+                                            lambda (u, l_o_u): (u, map(itemgetter(0), l_o_u)),
+                                            ltuo_utm_id_and_ltuo_occ_time_and_occ_utm_id
+                                        )
+            ltuo_utm_id_and_occ_times = filter(
+                                               lambda (u, l_o): len(l_o) >= MIN_OCCURRENCES_PER_UTM_ID,
+                                               ltuo_utm_id_and_occ_times
+                                               )
+            ltuo_utm_id_and_occ_times = map(lambda (u,o): (u,sorted(o)), ltuo_utm_id_and_occ_times)
+            ltuo_utm_id_and_majority_threshold_bucket_time =\
+                                map(
+                                     lambda (u, l_o):(
+                                            u,
+                                            GeneralMethods.approximateEpoch(
+                                                    l_o[int(MAJORITY_THRESHOLD_FOR_PROPAGATION_ANALYSIS*len(l_o))],
+                                                    TIME_UNIT_IN_SECONDS
+                                        )),
+                                     ltuo_utm_id_and_occ_times
+                                 )
+            for u_and_t1, u_and_t2 in combinations(ltuo_utm_id_and_majority_threshold_bucket_time, 2):
+                smaller_u_and_t, bigger_u_and_t = sorted([u_and_t1, u_and_t2], key=itemgetter(0))
+                location_pair = '%s::%s'%(smaller_u_and_t[0], bigger_u_and_t[0])
+                propagation_status = ImpactOfUsingLocationsToPredict.STATUS_TOGETHER
+                if smaller_u_and_t[1] < bigger_u_and_t[1]:
+                    propagation_status = ImpactOfUsingLocationsToPredict.STATUS_BEFORE
+                elif smaller_u_and_t[1] > bigger_u_and_t[1]:
+                    propagation_status = ImpactOfUsingLocationsToPredict.STATUS_AFTER
+                self.mf_location_pair_to_propagation_statuses[location_pair].append(propagation_status)
+    def mapper_final(self):
+        for location_pair, propagation_statuses in self.mf_location_pair_to_propagation_statuses.iteritems():
+            yield location_pair, propagation_statuses
+    def reducer(self, location_pair, it_propagation_statuses):
+        propagation_statuses = list(chain(*it_propagation_statuses))
+        for min_common_hashtag in ImpactOfUsingLocationsToPredict.MIN_COMMON_HASHTAGS:
+            if len(propagation_statuses) > min_common_hashtag:
+                yield min_common_hashtag, np.mean(propagation_statuses)
+            else: break
+    def reducer2(self, min_common_hashtag, it_mean_propagation_statuses):
+        yield min_common_hashtag, {
+                                   'min_common_hashtag':min_common_hashtag, 
+                                   'mean_propagation_statuses': list(it_mean_propagation_statuses)
+                                }
+    def steps(self):
+        return [
+                self.mr(self.mapper, self.reducer, self.mapper_final),
+                self.mr(reducer=self.reducer2)
+                ]
 if __name__ == '__main__':
     pass
 #    HashtagsExtractor.run()
 #    PropagationMatrix.run()
-    HashtagsWithMajorityInfo.run()
+#    HashtagsWithMajorityInfo.run()
+    ImpactOfUsingLocationsToPredict.run()

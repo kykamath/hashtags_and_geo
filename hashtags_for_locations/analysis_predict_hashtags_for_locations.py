@@ -15,6 +15,7 @@ from library.plotting import savefig
 from library.stats import filter_outliers
 from mr_predict_hashtags_analysis import HashtagsExtractor
 from mr_predict_hashtags_analysis import HashtagsWithMajorityInfo
+from mr_predict_hashtags_analysis import ImpactOfUsingLocationsToPredict
 from mr_predict_hashtags_analysis import PropagationMatrix
 from mr_predict_hashtags_analysis import PARAMS_DICT
 from mr_predict_hashtags_analysis import TIME_UNIT_IN_SECONDS as BUCKET_WIDTH
@@ -53,6 +54,8 @@ df_hashtags_extractor = 'hdfs:///user/kykamath/geo/hashtags/2011_2_to_2012_8/min
 f_hashtags_extractor = analysis_folder%'hashtags_extractor/'+'hashtags'
 f_propagation_matrix = analysis_folder%'propagation_matrix/'+'propagation_matrix'
 f_hashtags_with_majority_info = analysis_folder%'hashtags_with_majority_info/'+'hashtags_with_majority_info'
+f_impact_of_using_locations_to_predict = analysis_folder%'impact_of_using_locations_to_predict/'+\
+                                                                                'impact_of_using_locations_to_predict'
 
 class MRAnalysis():
     @staticmethod
@@ -120,6 +123,14 @@ class MRAnalysis():
                      jobconf={'mapred.reduce.tasks':100}
                  )
     @staticmethod
+    def impact_of_using_locations_to_predict():
+        runMRJob(
+                     ImpactOfUsingLocationsToPredict,
+                     f_impact_of_using_locations_to_predict,
+                     [df_hashtags_extractor],
+                     jobconf={'mapred.reduce.tasks':100}
+                 )
+    @staticmethod
     def run():
 #        #Generate main data
 #        MRAnalysis.generate_data_for_experiments()
@@ -139,7 +150,8 @@ class MRAnalysis():
 #        MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
 
 #        MRAnalysis.propagation_matrix()
-        MRAnalysis.hashtags_with_majority_info()
+#        MRAnalysis.hashtags_with_majority_info()
+        MRAnalysis.impact_of_using_locations_to_predict()
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
@@ -489,5 +501,5 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
