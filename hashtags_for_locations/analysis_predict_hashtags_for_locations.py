@@ -461,7 +461,7 @@ class PredictHashtagsForLocationsPlots():
         plt.ylabel('CCDF')
         savefig(output_file)
     @staticmethod
-    def temp():
+    def impact_of_using_location_to_predict_hashtag():
         mf_min_common_hashtag_to_properties = {
                                                25 : {'color': 'r', 'marker': 'o'},
                                                50 : {'color': 'g', 'marker': 's'},
@@ -489,18 +489,8 @@ class PredictHashtagsForLocationsPlots():
                          c=mf_min_common_hashtag_to_properties[min_common_hashtag]['color'],
                          label='%s'%min_common_hashtag,
                          lw=2,
-                         marker=mf_min_common_hashtag_to_properties[min_common_hashtag]['marker'],
+#                         marker=mf_min_common_hashtag_to_properties[min_common_hashtag]['marker'],
                         )
-#                points_for_scatter = range(0,100,21)
-#                xs1, ys1 = map(itemgetter(zip(*points_for_scatter)), [xs, ys])
-#                plt.scatter(xs1, ys1)
-#                plt.fill_between(
-#                                 xs,
-#                                 ys,
-#                                 0,
-#                                 color=mf_min_common_hashtag_to_properties[min_common_hashtag]['color'],
-#                                 alpha=1.5
-#                            )
         plt.legend()
         plt.grid(True)
         plt.xlabel('Impact of using a location to predict hashtags in another')
