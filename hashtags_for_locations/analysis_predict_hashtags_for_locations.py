@@ -403,6 +403,12 @@ class PredictHashtagsForLocationsPlots():
             if data['ltuo_majority_threshold_bucket_time_and_utm_ids']:
                 ltuo_majority_threshold_bucket_time_and_utm_ids =\
                                                                 data['ltuo_majority_threshold_bucket_time_and_utm_ids']
+                majority_threshold_bucket_time = zip(*ltuo_majority_threshold_bucket_time_and_utm_ids)[0]
+                majority_threshold_bucket_time = filter_outliers(majority_threshold_bucket_time)
+                ltuo_majority_threshold_bucket_time_and_utm_ids = filter(
+                                                                 lambda (t, _): t in majority_threshold_bucket_time,
+                                                                 ltuo_majority_threshold_bucket_time_and_utm_ids
+                                                             )
                 ltuo_majority_threshold_bucket_time_and_utm_id_counts =\
                                                                     map(
                                                                         lambda (t, utm_ids): (t, len(utm_ids)),
@@ -418,11 +424,11 @@ class PredictHashtagsForLocationsPlots():
                                                       )
                 for majority_threshold_bucket_time, utm_id_count in zip(majority_threshold_bucket_times, utm_id_counts):
                     mf_majority_threshold_bucket_time_to_num_of_utm_ids[majority_threshold_bucket_time]+=utm_id_count
-        majority_threshold_bucket_times = mf_majority_threshold_bucket_time_to_num_of_utm_ids.keys()
-        majority_threshold_bucket_times = filter_outliers(majority_threshold_bucket_times)
-        for majority_threshold_bucket_time in mf_majority_threshold_bucket_time_to_num_of_utm_ids.keys()[:]:
-            if majority_threshold_bucket_time not in majority_threshold_bucket_times:
-                del mf_majority_threshold_bucket_time_to_num_of_utm_ids[majority_threshold_bucket_time]
+#        majority_threshold_bucket_times = mf_majority_threshold_bucket_time_to_num_of_utm_ids.keys()
+#        majority_threshold_bucket_times = filter_outliers(majority_threshold_bucket_times)
+#        for majority_threshold_bucket_time in mf_majority_threshold_bucket_time_to_num_of_utm_ids.keys()[:]:
+#            if majority_threshold_bucket_time not in majority_threshold_bucket_times:
+#                del mf_majority_threshold_bucket_time_to_num_of_utm_ids[majority_threshold_bucket_time]
         ltuo_majority_threshold_bucket_time_and_num_of_utm_ids =\
                                                          mf_majority_threshold_bucket_time_to_num_of_utm_ids.items()
         ltuo_majority_threshold_bucket_time_and_num_of_utm_ids.sort(key=itemgetter(0))
