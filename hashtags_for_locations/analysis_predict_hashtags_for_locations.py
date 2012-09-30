@@ -488,15 +488,15 @@ class PredictHashtagsForLocationsPlots():
                          ys,
                          c=mf_min_common_hashtag_to_properties[min_common_hashtag]['color'],
                          label='%s'%min_common_hashtag,
-                         lw=2
+                         lw=1
                         )
-                plt.fill_between(
-                                 xs,
-                                 ys,
-                                 0,
-                                 color=mf_min_common_hashtag_to_properties[min_common_hashtag]['color'],
-                                 alpha=1.5
-                            )
+#                plt.fill_between(
+#                                 xs,
+#                                 ys,
+#                                 0,
+#                                 color=mf_min_common_hashtag_to_properties[min_common_hashtag]['color'],
+#                                 alpha=1.5
+#                            )
         plt.legend()
         plt.grid(True)
         plt.xlabel('Impact of using a location to predict hashtags in another')
