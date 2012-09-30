@@ -460,6 +460,10 @@ class PredictHashtagsForLocationsPlots():
         plt.xlabel('Time at which hashtag propagates to a location (minutes)')
         plt.ylabel('CCDF')
         savefig(output_file)
+    @staticmethod
+    def temp():
+        for data in FileIO.iterateJsonFromFile(f_impact_of_using_locations_to_predict):
+            print data.keys()
 #    @staticmethod
 #    def example_of_hashtag_propagation_patterns():
 #        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
@@ -492,14 +496,15 @@ class PredictHashtagsForLocationsPlots():
 #            break;
     @staticmethod
     def run():
-        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
-        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
-        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
-        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
-        PredictHashtagsForLocationsPlots.ccdf_time_at_which_hashtag_propagates_to_a_location()
+#        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
+#        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
+#        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
+#        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
+#        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
+#        PredictHashtagsForLocationsPlots.ccdf_time_at_which_hashtag_propagates_to_a_location()
+        PredictHashtagsForLocationsPlots.temp()
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    PredictHashtagsForLocationsPlots.run()
+#    MRAnalysis.run()
+    PredictHashtagsForLocationsPlots.run()
