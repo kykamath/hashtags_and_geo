@@ -439,8 +439,8 @@ class PredictHashtagsForLocationsPlots():
         perct_of_utm_ids = perct_of_utm_ids1
         ax = plt.subplot(111)
         ax.set_xscale('log')
-        print 'Percentage of locations propagated in first 6 hours',\
-                                                1.0 - dict(zip(majority_threshold_bucket_time, perct_of_utm_ids))[360]
+        temp_map = dict(zip(majority_threshold_bucket_time, perct_of_utm_ids))
+        print 'Percentage of locations between 1 and 6 hours: ', temp_map[60] - temp_map[360]
         plt.plot(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
         plt.scatter(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
         plt.grid(True)
