@@ -478,10 +478,10 @@ class PredictHashtagsForLocationsPlots():
                 total_ys = sum(ys)
                 ys = [y/total_ys for y in ys]
                 plt.plot(xs, ys, c='y')
-            plt.grid(True)
-            plt.xlabel('Impact of using a location to predict hashtags in another')
-            plt.ylabel('% of locations')
-            savefig(output_file)
+        plt.grid(True)
+        plt.xlabel('Impact of using a location to predict hashtags in another')
+        plt.ylabel('% of locations')
+        savefig(output_file)
 #            break
 #    @staticmethod
 #    def example_of_hashtag_propagation_patterns():
