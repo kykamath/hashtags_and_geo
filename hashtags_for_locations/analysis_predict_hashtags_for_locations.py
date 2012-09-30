@@ -462,10 +462,16 @@ class PredictHashtagsForLocationsPlots():
         savefig(output_file)
     @staticmethod
     def temp():
+        mf_min_common_hashtag_to_properties = {
+                                               25 : {'color': 'r'},
+                                               50 : {'color': 'r'},
+                                               100 : {'color': 'r'}
+                                               }
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         ltuo_min_common_hashtag_and_mean_propagation_statuses =\
             [(data['min_common_hashtag'], data['mean_propagation_statuses']) 
                 for data in FileIO.iterateJsonFromFile(f_impact_of_using_locations_to_predict)]
+        ltuo_min_common_hashtag_and_mean_propagation_statuses.sort(key=itemgetter(0))
         plt.figure(num=None, figsize=(6,3))
         for min_common_hashtag, mean_propagation_statuses in\
                 ltuo_min_common_hashtag_and_mean_propagation_statuses:
@@ -477,7 +483,12 @@ class PredictHashtagsForLocationsPlots():
                 ys = density(xs)
                 total_ys = sum(ys)
                 ys = [y/total_ys for y in ys]
-                plt.plot(xs, ys, c='y')
+                plt.plot(
+                         xs,
+                         ys,
+                         c=mf_min_common_hashtag_to_properties[min_common_hashtag]['color'],
+                         label='%s'%min_common_hashtag
+                        )
         plt.grid(True)
         plt.xlabel('Impact of using a location to predict hashtags in another')
         plt.ylabel('% of locations')
