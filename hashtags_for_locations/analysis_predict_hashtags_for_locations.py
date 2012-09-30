@@ -462,8 +462,13 @@ class PredictHashtagsForLocationsPlots():
         savefig(output_file)
     @staticmethod
     def temp():
-        for data in FileIO.iterateJsonFromFile(f_impact_of_using_locations_to_predict):
-            print data['min_common_hashtag'], len(data['mean_propagation_statuses'])
+        ltuo_min_common_hashtag_and_mean_propagation_statuses =\
+            [(data['min_common_hashtag'], data['mean_propagation_statuses']) 
+                for data in FileIO.iterateJsonFromFile(f_impact_of_using_locations_to_predict)]
+        for min_common_hashtag, mean_propagation_statuses in\
+                ltuo_min_common_hashtag_and_mean_propagation_statuses:
+            print min_common_hashtag, mean_propagation_statuses
+            break
 #    @staticmethod
 #    def example_of_hashtag_propagation_patterns():
 #        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
