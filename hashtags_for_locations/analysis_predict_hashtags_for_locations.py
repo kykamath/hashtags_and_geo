@@ -433,8 +433,8 @@ class PredictHashtagsForLocationsPlots():
                                                          mf_majority_threshold_bucket_time_to_num_of_utm_ids.items()
         ltuo_majority_threshold_bucket_time_and_num_of_utm_ids.sort(key=itemgetter(0))
         majority_threshold_bucket_time, num_of_utm_ids = zip(*ltuo_majority_threshold_bucket_time_and_num_of_utm_ids)
-        majority_threshold_bucket_time = [1] + list(majority_threshold_bucket_time)
-        num_of_utm_ids = [0] + list(num_of_utm_ids)
+#        majority_threshold_bucket_time = [1] + list(majority_threshold_bucket_time)
+#        num_of_utm_ids = [0] + list(num_of_utm_ids)
         total_num_of_utm_ids = sum(num_of_utm_ids)
         perct_of_utm_ids = [n/total_num_of_utm_ids for n in num_of_utm_ids]
         perct_of_utm_ids1 = []
