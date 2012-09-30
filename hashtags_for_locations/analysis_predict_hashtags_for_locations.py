@@ -471,7 +471,7 @@ class PredictHashtagsForLocationsPlots():
         ltuo_min_common_hashtag_and_mean_propagation_statuses =\
             [(data['min_common_hashtag'], data['mean_propagation_statuses']) 
                 for data in FileIO.iterateJsonFromFile(f_impact_of_using_locations_to_predict)]
-        ltuo_min_common_hashtag_and_mean_propagation_statuses.sort(key=itemgetter(0))
+        ltuo_min_common_hashtag_and_mean_propagation_statuses.sort(key=itemgetter(0), reverse=True)
         plt.figure(num=None, figsize=(6,3))
         for min_common_hashtag, mean_propagation_statuses in\
                 ltuo_min_common_hashtag_and_mean_propagation_statuses:
