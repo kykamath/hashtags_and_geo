@@ -417,12 +417,12 @@ class PredictHashtagsForLocationsPlots():
                                                       )
                 for majority_threshold_bucket_time, utm_id_count in zip(majority_threshold_bucket_times, utm_id_counts):
                     mf_majority_threshold_bucket_time_to_num_of_utm_ids[majority_threshold_bucket_time]+=utm_id_count
-            ltuo_majority_threshold_bucket_time_and_num_of_utm_ids =\
-                                                             mf_majority_threshold_bucket_time_to_num_of_utm_ids.items()
-            ltuo_majority_threshold_bucket_time_and_num_of_utm_ids.sort(key=itemgetter(0))
-            for majority_threshold_bucket_time, num_of_utm_ids in\
-                    ltuo_majority_threshold_bucket_time_and_num_of_utm_ids:
-                print majority_threshold_bucket_time, num_of_utm_ids
+        ltuo_majority_threshold_bucket_time_and_num_of_utm_ids =\
+                                                         mf_majority_threshold_bucket_time_to_num_of_utm_ids.items()
+        ltuo_majority_threshold_bucket_time_and_num_of_utm_ids.sort(key=itemgetter(0))
+        for majority_threshold_bucket_time, num_of_utm_ids in\
+                ltuo_majority_threshold_bucket_time_and_num_of_utm_ids:
+            print majority_threshold_bucket_time, num_of_utm_ids
 #            total_utm_ids = sum(utm_id_counts)+0.0
 #            perct_of_utm_id_counts = map(lambda c: c/total_utm_ids, utm_id_counts)
             
