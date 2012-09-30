@@ -464,8 +464,8 @@ class PredictHashtagsForLocationsPlots():
     def temp():
         mf_min_common_hashtag_to_properties = {
                                                25 : {'color': 'r'},
-                                               50 : {'color': 'r'},
-                                               100 : {'color': 'r'}
+                                               50 : {'color': 'g'},
+                                               100 : {'color': 'b'}
                                                }
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         ltuo_min_common_hashtag_and_mean_propagation_statuses =\
