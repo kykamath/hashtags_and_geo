@@ -466,6 +466,7 @@ class PredictHashtagsForLocationsPlots():
         ltuo_min_common_hashtag_and_mean_propagation_statuses =\
             [(data['min_common_hashtag'], data['mean_propagation_statuses']) 
                 for data in FileIO.iterateJsonFromFile(f_impact_of_using_locations_to_predict)]
+        plt.figure(num=None, figsize=(6,3))
         for min_common_hashtag, mean_propagation_statuses in\
                 ltuo_min_common_hashtag_and_mean_propagation_statuses:
             density = gaussian_kde(mean_propagation_statuses)
@@ -476,6 +477,7 @@ class PredictHashtagsForLocationsPlots():
             total_ys = sum(ys)
             ys = [y/total_ys for y in ys]
             plt.plot(xs, ys, c='y')
+            plt.grid(True)
             plt.xlabel('Impact of using a location to predict hashtags in another')
             plt.ylabel('% of locations')
             savefig(output_file_format%min_common_hashtag)
