@@ -463,9 +463,9 @@ class PredictHashtagsForLocationsPlots():
     @staticmethod
     def temp():
         mf_min_common_hashtag_to_properties = {
-                                               25 : {'color': 'r'},
-                                               50 : {'color': 'g'},
-                                               100 : {'color': 'b'}
+                                               25 : {'color': 'r', 'marker': 'o'},
+                                               50 : {'color': 'g', 'marker': 's'},
+                                               100 : {'color': 'b', 'marker': '*'}
                                                }
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         ltuo_min_common_hashtag_and_mean_propagation_statuses =\
@@ -488,11 +488,12 @@ class PredictHashtagsForLocationsPlots():
                          ys,
                          c=mf_min_common_hashtag_to_properties[min_common_hashtag]['color'],
                          label='%s'%min_common_hashtag,
-                         lw=2
+                         lw=2,
+                         m=mf_min_common_hashtag_to_properties[min_common_hashtag]['marker'],
                         )
-                points_for_scatter = range(0,100,21)
-                xs1, ys1 = map(itemgetter(zip(*points_for_scatter)), [xs, ys])
-                plt.scatter(xs1, ys1)
+#                points_for_scatter = range(0,100,21)
+#                xs1, ys1 = map(itemgetter(zip(*points_for_scatter)), [xs, ys])
+#                plt.scatter(xs1, ys1)
 #                plt.fill_between(
 #                                 xs,
 #                                 ys,
