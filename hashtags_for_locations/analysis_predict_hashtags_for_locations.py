@@ -489,7 +489,7 @@ class PredictHashtagsForLocationsPlots():
                          c=mf_min_common_hashtag_to_properties[min_common_hashtag]['color'],
                          label='%s'%min_common_hashtag,
                          lw=2,
-                         m=mf_min_common_hashtag_to_properties[min_common_hashtag]['marker'],
+                         marker=mf_min_common_hashtag_to_properties[min_common_hashtag]['marker'],
                         )
 #                points_for_scatter = range(0,100,21)
 #                xs1, ys1 = map(itemgetter(zip(*points_for_scatter)), [xs, ys])
