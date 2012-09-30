@@ -491,7 +491,7 @@ class PredictHashtagsForLocationsPlots():
                          lw=2
                         )
                 points_for_scatter = range(0,100,21)
-                xs1, ys1 = map(itemgetter(points_for_scatter), [xs, ys])
+                xs1, ys1 = map(itemgetter(zip(*points_for_scatter)), [xs, ys])
                 plt.scatter(xs1, ys1)
 #                plt.fill_between(
 #                                 xs,
