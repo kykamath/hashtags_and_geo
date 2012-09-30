@@ -395,7 +395,7 @@ class PredictHashtagsForLocationsPlots():
         savefig(output_file)
     @staticmethod
     def temp_abc():
-        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         mf_majority_threshold_bucket_time_to_num_of_utm_ids = defaultdict(float)
         for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
 #            print data['hashtag']
@@ -420,9 +420,17 @@ class PredictHashtagsForLocationsPlots():
         ltuo_majority_threshold_bucket_time_and_num_of_utm_ids =\
                                                          mf_majority_threshold_bucket_time_to_num_of_utm_ids.items()
         ltuo_majority_threshold_bucket_time_and_num_of_utm_ids.sort(key=itemgetter(0))
-        for majority_threshold_bucket_time, num_of_utm_ids in\
-                ltuo_majority_threshold_bucket_time_and_num_of_utm_ids:
-            print majority_threshold_bucket_time, num_of_utm_ids
+        total_num_of_utm_ids = sum(
+                                   ltuo_majority_threshold_bucket_time_and_num_of_utm_ids,
+                                   key=itemgetter(1)
+                                )
+        majority_threshold_bucket_time, num_of_utm_ids = zip(*ltuo_majority_threshold_bucket_time_and_num_of_utm_ids)
+        perct_of_utm_ids = [n/total_num_of_utm_ids for n in num_of_utm_ids]
+        plt.plot(majority_threshold_bucket_time, perct_of_utm_ids)
+        savefig(output_file)
+#        for majority_threshold_bucket_time, num_of_utm_ids in\
+#                ltuo_majority_threshold_bucket_time_and_num_of_utm_ids:
+#            print majority_threshold_bucket_time, num_of_utm_ids
 #            total_utm_ids = sum(utm_id_counts)+0.0
 #            perct_of_utm_id_counts = map(lambda c: c/total_utm_ids, utm_id_counts)
             
