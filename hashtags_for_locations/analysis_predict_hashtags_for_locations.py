@@ -535,7 +535,7 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
 #        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
 #        PredictHashtagsForLocationsPlots.ccdf_time_at_which_hashtag_propagates_to_a_location()
-        PredictHashtagsForLocationsPlots.temp()
+        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         
 if __name__ == '__main__':
