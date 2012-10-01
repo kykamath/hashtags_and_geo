@@ -12,9 +12,97 @@
 ##plt.hist(data)
 #plt.show()
 
-from itertools import combinations
+#from itertools import combinations
+#
+#print list(combinations(range(20),2))
 
-print list(combinations(range(20),2))
+import random
+import numpy as np
+#
+#observed_data = [-1,1,1,-1,-1,-1,-1,-1,-1]
+#
+#iteration_data = [random.sample([-1,1],1)[0] for i in range(len(observed_data))]
+#print actual_data
+#print observed_data, np.mean()
+
+#samples = [[54, 51, 58, 44, 55, 52, 42, 47, 58, 46], [54, 73, 53, 70, 73, 68, 52, 65, 65]]
+class MonteCarloSimulation(object):
+    '''
+    Part of this code was got from the implementation in the book "Statistics is Easy!" By Dennis Shasha and
+    Manda Wilson
+    '''
+    NUM_OF_SIMULATIONS = 10000
+    @staticmethod
+    def _shuffle(grps):
+        num_grps = len(grps)
+        pool = []
+        # pool all values
+        for i in range(num_grps):
+            pool.extend(grps[i])
+        # mix them up
+        random.shuffle(pool)
+        # reassign to groups of same size as original groups
+        new_grps = []
+        start_index = 0
+        end_index = 0
+        for i in range(num_grps):
+            end_index = start_index + len(grps[i])
+            new_grps.append(pool[start_index:end_index])
+            start_index = end_index
+        return new_grps
+    @staticmethod
+    # subtracts group a mean from group b mean and returns result
+    def _meandiff(grpA, grpB):
+        return sum(grpB) / float(len(grpB)) - sum(grpA) / float(len(grpA))
+
+    @staticmethod
+    def probability_of_data_extracted_from_same_sample(sample1, sample2):
+        ''' Difference between Two Means Significance Test
+        '''
+        samples = [sample1, sample2] 
+        a, b = 0, 1
+        observed_mean_diff = MonteCarloSimulation._meandiff(samples[a], samples[b])
+        count = 0
+        num_shuffles = MonteCarloSimulation.NUM_OF_SIMULATIONS
+        for i in range(num_shuffles):
+            new_samples = MonteCarloSimulation._shuffle(samples)
+            mean_diff = MonteCarloSimulation._meandiff(new_samples[a], new_samples[b])
+            # if the observed difference is negative, look for differences that are smaller
+            # if the observed difference is positive, look for differences that are greater
+            if observed_mean_diff < 0 and mean_diff <= observed_mean_diff: count = count + 1
+            elif observed_mean_diff >= 0 and mean_diff >= observed_mean_diff: count = count + 1
+        return (count / float(num_shuffles))
+
+observed_data = [54, 51, 58, 44, 55, 52, 42, 47, 58, 46]
+expected_data = [54, 73, 53, 70, 73, 68, 52, 65, 65]
+
+#observed_data = [0,0,0,0,0,0,0,0,0]
+###observed_data = [0,1,1,0,1,0,1,0,1]
+###observed_data = [random.sample([0,1],1)[0] for i in range(len(observed_data))]
+#expected_data = [random.sample([0,1],1)[0] for i in range(len(observed_data))]
+
+print observed_data, expected_data
+print MonteCarloSimulation.probability_of_data_extracted_from_same_sample(observed_data, expected_data)
+
+#######################################
+##
+## Output
+##
+#######################################
+#
+#print "Observed difference of two means: %.2f" % observed_mean_diff 
+#print count, "out of", num_shuffles, "experiments had a difference of two means",
+#if observed_mean_diff < 0:
+#    print "less than or equal to",
+#else:
+#    print "greater than or equal to",
+#print "%.2f" % observed_mean_diff, "."
+#print "The chance of getting a difference of two means",
+#if observed_mean_diff < 0:
+#    print "less than or equal to",
+#else:
+#    print "greater than or equal to",
+#print "%.2f" % observed_mean_diff, "is", (count / float(num_shuffles)), "."
 
 ##!/usr/bin/env python
 #"""

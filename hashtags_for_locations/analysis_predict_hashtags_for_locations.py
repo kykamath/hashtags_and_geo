@@ -56,6 +56,7 @@ f_propagation_matrix = analysis_folder%'propagation_matrix/'+'propagation_matrix
 f_hashtags_with_majority_info = analysis_folder%'hashtags_with_majority_info/'+'hashtags_with_majority_info'
 f_impact_of_using_locations_to_predict = analysis_folder%'impact_of_using_locations_to_predict/'+\
                                                                                 'impact_of_using_locations_to_predict'
+f_impact_using_mc_simulation = analysis_folder%'impact_using_mc_simulation/impact_using_mc_simulation'                                                                              
 
 class MRAnalysis():
     @staticmethod
@@ -127,6 +128,14 @@ class MRAnalysis():
         runMRJob(
                      ImpactOfUsingLocationsToPredict,
                      f_impact_of_using_locations_to_predict,
+                     [df_hashtags_extractor],
+                     jobconf={'mapred.reduce.tasks':100}
+                 )
+    @staticmethod
+    def impact_using_mc_simulation():
+        runMRJob(
+                     ImpactOfUsingLocationsToPredict,
+                     f_impact_using_mc_simulation,
                      [df_hashtags_extractor],
                      jobconf={'mapred.reduce.tasks':100}
                  )
@@ -529,12 +538,12 @@ class PredictHashtagsForLocationsPlots():
 #            break;
     @staticmethod
     def run():
-#        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
-#        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
-#        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-#        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
-#        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
-#        PredictHashtagsForLocationsPlots.ccdf_time_at_which_hashtag_propagates_to_a_location()
+        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
+        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
+        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
+        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
+        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
+        PredictHashtagsForLocationsPlots.ccdf_time_at_which_hashtag_propagates_to_a_location()
         PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         

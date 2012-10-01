@@ -9,12 +9,14 @@ from library.classes import GeneralMethods
 from library.geo import UTMConverter
 from library.mrjobwrapper import ModifiedMRJob
 #from library.r_helper import R_Helper
+from library.stats import MonteCarloSimulation
 from library.stats import filter_outliers
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from itertools import chain, combinations, groupby
 from operator import itemgetter
 import cjson
 import numpy as np
+import random
 import time
 
 ACCURACY = 10**4 # UTM boxes in sq.m
@@ -266,16 +268,39 @@ class ImpactOfUsingLocationsToPredict(ModifiedMRJob):
             if len(propagation_statuses) > min_common_hashtag:
                 yield min_common_hashtag, np.mean(propagation_statuses)
             else: break
+    def reducer_with_monte_carlo_simulation(self, location_pair, it_propagation_statuses):
+        propagation_statuses = list(chain(*it_propagation_statuses))
+        for min_common_hashtag in ImpactOfUsingLocationsToPredict.MIN_COMMON_HASHTAGS:
+            if len(propagation_statuses) > min_common_hashtag:
+                mean_probability = MonteCarloSimulation.mean_probability(
+                                                 MonteCarloSimulation.probability_of_data_extracted_from_same_sample,
+                                                 propagation_statuses,
+                                                 [random.sample([
+                                                                 ImpactOfUsingLocationsToPredict.STATUS_BEFORE,
+                                                                 ImpactOfUsingLocationsToPredict.STATUS_AFTER
+                                                                 ],
+                                                                1)[0] 
+                                                  for i in range(len(propagation_statuses))]
+                                             )
+                yield min_common_hashtag, mean_probability
+            else: break
     def reducer2(self, min_common_hashtag, it_mean_propagation_statuses):
         yield min_common_hashtag, {
                                    'min_common_hashtag':min_common_hashtag, 
                                    'mean_propagation_statuses': list(it_mean_propagation_statuses)
                                 }
-    def steps(self):
+    def jobs_for_mean_impact_values(self):
         return [
                 self.mr(self.mapper, self.reducer, self.mapper_final),
                 self.mr(reducer=self.reducer2)
                 ]
+    def jobs_for_analyzing_impact_using_mc_simulation(self):
+        return [
+                self.mr(self.mapper, self.reducer_with_monte_carlo_simulation, self.mapper_final),
+                self.mr(reducer=self.reducer2)
+                ]
+    def steps(self):
+        return self.jobs_for_analyzing_impact_using_mc_simulation()
 if __name__ == '__main__':
     pass
 #    HashtagsExtractor.run()
