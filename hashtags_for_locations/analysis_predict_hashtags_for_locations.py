@@ -137,7 +137,7 @@ class MRAnalysis():
                      ImpactOfUsingLocationsToPredict,
                      f_impact_using_mc_simulation,
                      [df_hashtags_extractor],
-                     jobconf={'mapred.reduce.tasks':100}
+                     jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
                  )
     @staticmethod
     def run():
