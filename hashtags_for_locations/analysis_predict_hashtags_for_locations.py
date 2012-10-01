@@ -160,7 +160,8 @@ class MRAnalysis():
 
 #        MRAnalysis.propagation_matrix()
 #        MRAnalysis.hashtags_with_majority_info()
-        MRAnalysis.impact_of_using_locations_to_predict()
+#        MRAnalysis.impact_of_using_locations_to_predict()
+        MRAnalysis.impact_using_mc_simulation()
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
