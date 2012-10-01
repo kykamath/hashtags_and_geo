@@ -592,13 +592,14 @@ class PredictHashtagsForLocationsPlots():
         ltuo_min_common_hashtag_and_mean_propagation_statuses =\
             [(data['min_common_hashtag'], data['mean_propagation_statuses']) 
                 for data in FileIO.iterateJsonFromFile(
-                                                   f_impact_of_using_location_to_predict_hashtag_with_mc_simulation
+#                                                   f_impact_of_using_location_to_predict_hashtag_with_mc_simulation
+                                                    '/mnt/chevron/kykamath/temp_data/impact_using_mc_simulation'
                                                    )]
         ltuo_min_common_hashtag_and_mean_propagation_statuses.sort(key=itemgetter(0), reverse=True)
         plt.figure(num=None, figsize=(6,3))
         for min_common_hashtag, mean_propagation_statuses in\
                 ltuo_min_common_hashtag_and_mean_propagation_statuses:
-            if min_common_hashtag in [100]:
+            if min_common_hashtag in [50]:
 #                mean_propagation_statuses = map(itemgetter('mean_probability'), mean_propagation_statuses)
                 mean_propagation_statuses = filter(lambda d: d['mean_probability']<0.05, mean_propagation_statuses)
                 mean_propagation_statuses.sort(key=itemgetter('mean_probability'))
@@ -735,5 +736,5 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    PredictHashtagsForLocationsPlots.run()
+#    MRAnalysis.run()
+    PredictHashtagsForLocationsPlots.run()

@@ -285,6 +285,7 @@ class ImpactOfUsingLocationsToPredict(ModifiedMRJob):
                 yield min_common_hashtag, {
                                            'location_pair': location_pair,
                                            'mean_probability': mean_probability,
+                                           'len_propagation_statuses': len(propagation_statuses),
                                            'propagation_statuses': np.mean(propagation_statuses)
                                            }
             else: break
