@@ -539,5 +539,5 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()

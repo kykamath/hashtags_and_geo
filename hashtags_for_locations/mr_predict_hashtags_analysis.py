@@ -211,7 +211,7 @@ def group_items_by(list_object, key):
             
 class ImpactOfUsingLocationsToPredict(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
-    STATUS_TOGETHER = 0
+#    STATUS_TOGETHER = 0
     STATUS_BEFORE = -1
     STATUS_AFTER = 1
 #    MIN_COMMON_HASHTAGS = [1,2]
@@ -249,12 +249,14 @@ class ImpactOfUsingLocationsToPredict(ModifiedMRJob):
             for u_and_t1, u_and_t2 in combinations(ltuo_utm_id_and_majority_threshold_bucket_time, 2):
                 smaller_u_and_t, bigger_u_and_t = sorted([u_and_t1, u_and_t2], key=itemgetter(0))
                 location_pair = '%s::%s'%(smaller_u_and_t[0], bigger_u_and_t[0])
-                propagation_status = ImpactOfUsingLocationsToPredict.STATUS_TOGETHER
+#                propagation_status = ImpactOfUsingLocationsToPredict.STATUS_TOGETHER
+                propagation_status = None
                 if smaller_u_and_t[1] < bigger_u_and_t[1]:
                     propagation_status = ImpactOfUsingLocationsToPredict.STATUS_BEFORE
                 elif smaller_u_and_t[1] > bigger_u_and_t[1]:
                     propagation_status = ImpactOfUsingLocationsToPredict.STATUS_AFTER
-                self.mf_location_pair_to_propagation_statuses[location_pair].append(propagation_status)
+                if propagation_status:
+                    self.mf_location_pair_to_propagation_statuses[location_pair].append(propagation_status)
     def mapper_final(self):
         for location_pair, propagation_statuses in self.mf_location_pair_to_propagation_statuses.iteritems():
             yield location_pair, propagation_statuses
