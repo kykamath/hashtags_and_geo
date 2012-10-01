@@ -282,7 +282,11 @@ class ImpactOfUsingLocationsToPredict(ModifiedMRJob):
                                                                 1)[0] 
                                                   for i in range(len(propagation_statuses))]
                                              )
-                yield min_common_hashtag, {'location_pair': location_pair, 'mean_probability': mean_probability}
+                yield min_common_hashtag, {
+                                           'location_pair': location_pair,
+                                           'mean_probability': mean_probability,
+                                           'propagation_statuses': np.mean(propagation_statuses)
+                                           }
             else: break
     def reducer2(self, min_common_hashtag, it_mean_propagation_statuses):
         yield min_common_hashtag, {

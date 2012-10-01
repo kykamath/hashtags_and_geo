@@ -10,6 +10,7 @@ from dateutil.relativedelta import relativedelta
 from itertools import groupby
 from library.classes import GeneralMethods
 from library.file_io import FileIO
+from library.geo import UTMConverter
 from library.mrjobwrapper import runMRJob
 from library.plotting import savefig
 from library.stats import filter_outliers
@@ -56,7 +57,8 @@ f_propagation_matrix = analysis_folder%'propagation_matrix/'+'propagation_matrix
 f_hashtags_with_majority_info = analysis_folder%'hashtags_with_majority_info/'+'hashtags_with_majority_info'
 f_impact_of_using_locations_to_predict = analysis_folder%'impact_of_using_locations_to_predict/'+\
                                                                                 'impact_of_using_locations_to_predict'
-f_impact_using_mc_simulation = analysis_folder%'impact_using_mc_simulation/impact_using_mc_simulation'                                                                              
+f_impact_of_using_location_to_predict_hashtag_with_mc_simulation = analysis_folder%\
+                                                                'impact_using_mc_simulation/impact_using_mc_simulation'                                                                              
 
 class MRAnalysis():
     @staticmethod
@@ -135,7 +137,7 @@ class MRAnalysis():
     def impact_using_mc_simulation():
         runMRJob(
                      ImpactOfUsingLocationsToPredict,
-                     f_impact_using_mc_simulation,
+                     f_impact_of_using_location_to_predict_hashtag_with_mc_simulation,
                      [df_hashtags_extractor],
                      jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
                  )
@@ -506,6 +508,184 @@ class PredictHashtagsForLocationsPlots():
         plt.xlabel('Impact of using a location to predict hashtags in another')
         plt.ylabel('% of locations')
         savefig(output_file)
+    @staticmethod
+    def impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde():
+        mf_min_common_hashtag_to_properties = {
+                                               25 : {'color': 'r', 'marker': 'o'},
+                                               50 : {'color': 'g', 'marker': 's'},
+                                               100 : {'color': 'b', 'marker': '*'}
+                                               }
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        ltuo_min_common_hashtag_and_mean_propagation_statuses =\
+            [(data['min_common_hashtag'], data['mean_propagation_statuses']) 
+                for data in FileIO.iterateJsonFromFile(
+                                                   f_impact_of_using_location_to_predict_hashtag_with_mc_simulation
+                                                   )]
+        ltuo_min_common_hashtag_and_mean_propagation_statuses.sort(key=itemgetter(0), reverse=True)
+        plt.figure(num=None, figsize=(6,3))
+        for min_common_hashtag, mean_propagation_statuses in\
+                ltuo_min_common_hashtag_and_mean_propagation_statuses:
+            if min_common_hashtag in [25,50,100]:
+                mean_propagation_statuses = map(itemgetter('mean_probability'), mean_propagation_statuses)
+                density = gaussian_kde(mean_propagation_statuses)
+                xs = np.linspace(0,1,100)
+                density.covariance_factor = lambda : .25
+                density._compute_covariance()
+                ys = density(xs)
+                total_ys = sum(ys)
+                ys = [y/total_ys for y in ys]
+                plt.plot(
+                         xs,
+                         ys,
+                         c=mf_min_common_hashtag_to_properties[min_common_hashtag]['color'],
+                         label='%s'%min_common_hashtag,
+                         lw=2,
+#                         marker=mf_min_common_hashtag_to_properties[min_common_hashtag]['marker'],
+                        )
+        y_values = np.linspace(-0.2,1.5,100)
+        plt.plot([0.05 for i in range(len(y_values))], y_values, '--', c='m', lw=2)
+        plt.ylim(ymax=0.035, ymin=0.000)
+        plt.legend()
+        plt.grid(True)
+        plt.xlabel('Impact of using a location to predict hashtags in another')
+        plt.ylabel('% of locations')
+        savefig(output_file)
+    @staticmethod
+    def impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf():
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        ltuo_min_common_hashtag_and_mean_propagation_statuses =\
+            [(data['min_common_hashtag'], data['mean_propagation_statuses']) 
+                for data in FileIO.iterateJsonFromFile(
+                                                   f_impact_of_using_location_to_predict_hashtag_with_mc_simulation
+                                                   )]
+        ltuo_min_common_hashtag_and_mean_propagation_statuses.sort(key=itemgetter(0), reverse=True)
+        plt.figure(num=None, figsize=(6,3))
+        for min_common_hashtag, mean_propagation_statuses in\
+                ltuo_min_common_hashtag_and_mean_propagation_statuses:
+            if min_common_hashtag in [100]:
+                mean_propagation_statuses = map(itemgetter('mean_probability'), mean_propagation_statuses)
+                mean_propagation_statuses.sort()
+                total_locations = len(mean_propagation_statuses)+0.0
+                ltuo_mean_probability_and_perct_of_locations = []
+                for i, mean_probability in enumerate(mean_propagation_statuses):
+                    ltuo_mean_probability_and_perct_of_locations.append([mean_probability, (i+1)/total_locations])
+                ltuo_mean_probability_and_perct_of_locations.sort(key=itemgetter(0))
+                p_perct_of_locations = None
+                for mean_probability, perct_of_locations in ltuo_mean_probability_and_perct_of_locations:
+                    if mean_probability>0.05:
+                        print 'Percentage of locations for which the probability is not random', p_perct_of_locations
+                        break
+                    p_perct_of_locations = perct_of_locations
+                mean_probability, perct_of_locations = zip(*ltuo_mean_probability_and_perct_of_locations)
+                plt.plot(mean_probability, perct_of_locations, c = 'k')
+                plt.scatter(mean_probability, perct_of_locations, c = 'k')
+        y_values = np.linspace(-0.2,1.5,100)
+        plt.plot([0.05 for i in range(len(y_values))], y_values, '--', c='r', lw=2)
+        plt.grid(True)
+        plt.ylim(ymax=1.1, ymin=-0.2)
+        plt.xlabel('Probability that hashtags propagation between location pairs is random')
+        plt.ylabel('% of locations')
+        savefig(output_file)
+    @staticmethod
+    def impact_of_using_location_to_predict_hashtag_with_mc_simulation_examples():
+#        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        ltuo_min_common_hashtag_and_mean_propagation_statuses =\
+            [(data['min_common_hashtag'], data['mean_propagation_statuses']) 
+                for data in FileIO.iterateJsonFromFile(
+                                                   f_impact_of_using_location_to_predict_hashtag_with_mc_simulation
+                                                   )]
+        ltuo_min_common_hashtag_and_mean_propagation_statuses.sort(key=itemgetter(0), reverse=True)
+        plt.figure(num=None, figsize=(6,3))
+        for min_common_hashtag, mean_propagation_statuses in\
+                ltuo_min_common_hashtag_and_mean_propagation_statuses:
+            if min_common_hashtag in [100]:
+#                mean_propagation_statuses = map(itemgetter('mean_probability'), mean_propagation_statuses)
+                mean_propagation_statuses = filter(lambda d: d['mean_probability']<0.05, mean_propagation_statuses)
+                mean_propagation_statuses.sort(key=itemgetter('mean_probability'))
+                ltuo_location_pair_and_mean_probability =\
+                                        map(itemgetter('location_pair', 'mean_probability'), mean_propagation_statuses) 
+                ltuo_location_pair_and_mean_probability =\
+                        map(
+                            lambda (lp,p): 
+                                            (
+                                                map(UTMConverter.getLatLongUTMIdInLatLongForm, lp.split('::')),
+                                                p
+                                            ),
+                            ltuo_location_pair_and_mean_probability
+                        )
+                for item in ltuo_location_pair_and_mean_probability:
+                    print item
+#                total_locations = len(mean_propagation_statuses)+0.0
+#                ltuo_mean_probability_and_perct_of_locations = []
+#                for i, mean_probability in enumerate(mean_propagation_statuses):
+#                    ltuo_mean_probability_and_perct_of_locations.append([mean_probability, (i+1)/total_locations])
+#                ltuo_mean_probability_and_perct_of_locations.sort(key=itemgetter(0))
+#                p_perct_of_locations = None
+#                for mean_probability, perct_of_locations in ltuo_mean_probability_and_perct_of_locations:
+#                    if mean_probability>0.05:
+#                        print 'Percentage of locations for which the probability is not random', p_perct_of_locations
+#                        break
+#                    p_perct_of_locations = perct_of_locations
+#                mean_probability, perct_of_locations = zip(*ltuo_mean_probability_and_perct_of_locations)
+#                plt.plot(mean_probability, perct_of_locations, c = 'k')
+#                plt.scatter(mean_probability, perct_of_locations, c = 'k')
+#        y_values = np.linspace(-0.2,1.5,100)
+#        plt.plot([0.05 for i in range(len(y_values))], y_values, '--', c='r', lw=2)
+#        plt.grid(True)
+#        plt.ylim(ymax=1.1, ymin=-0.2)
+#        plt.xlabel('Probability that hashtags propagation between location pairs is random')
+#        plt.ylabel('% of locations')
+#        savefig(output_file)
+    @staticmethod
+    def impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf_multi():
+        mf_min_common_hashtag_to_properties = {
+                                               25 : {'color': 'r', 'marker': 'o'},
+                                               50 : {'color': 'g', 'marker': 's'},
+                                               100 : {'color': 'b', 'marker': '*'}
+                                               }
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        ltuo_min_common_hashtag_and_mean_propagation_statuses =\
+            [(data['min_common_hashtag'], data['mean_propagation_statuses']) 
+                for data in FileIO.iterateJsonFromFile(
+                                                   f_impact_of_using_location_to_predict_hashtag_with_mc_simulation
+                                                   )]
+        ltuo_min_common_hashtag_and_mean_propagation_statuses.sort(key=itemgetter(0), reverse=True)
+        plt.figure(num=None, figsize=(6,3))
+        for min_common_hashtag, mean_propagation_statuses in\
+                ltuo_min_common_hashtag_and_mean_propagation_statuses:
+            if min_common_hashtag in [25,50,100]:
+#            if min_common_hashtag in [100]:
+                mean_propagation_statuses = map(itemgetter('mean_probability'), mean_propagation_statuses)
+                mean_propagation_statuses.sort()
+                total_locations = len(mean_propagation_statuses)+0.0
+                ltuo_mean_probability_and_perct_of_locations = []
+                for i, mean_probability in enumerate(mean_propagation_statuses):
+                    ltuo_mean_probability_and_perct_of_locations.append([mean_probability, (i+1)/total_locations])
+                ltuo_mean_probability_and_perct_of_locations.sort(key=itemgetter(0))
+                p_mean_probability, p_perct_of_locations = None, None
+                for mean_probability, perct_of_locations in ltuo_mean_probability_and_perct_of_locations:
+                    if mean_probability>0.05:
+                        print 'Percentage of locations for which the probability is not random', p_perct_of_locations
+                        break
+                    p_mean_probability, p_perct_of_locations = mean_probability, perct_of_locations
+                mean_probability, perct_of_locations = zip(*ltuo_mean_probability_and_perct_of_locations)
+                plt.plot(
+                         mean_probability,
+                         perct_of_locations,
+                         c=mf_min_common_hashtag_to_properties[min_common_hashtag]['color'],
+                         label='%s'%min_common_hashtag,
+                         lw=2,
+                        )
+        y_values = np.linspace(-0.2,1.5,100)
+        plt.plot([0.05 for i in range(len(y_values))], y_values, '--', c='m', lw=2)
+        print plt.xticks()[1]
+        plt.legend(loc=4)
+        plt.grid(True)
+        plt.ylim(ymax=1.1, ymin=-0.2)
+#        plt.ylim(xmax=1.2)
+        plt.xlabel('Probability that hashtags propagation between location pairs is random')
+        plt.ylabel('% of locations')
+        savefig(output_file)
 #            break
 #    @staticmethod
 #    def example_of_hashtag_propagation_patterns():
@@ -539,13 +719,19 @@ class PredictHashtagsForLocationsPlots():
 #            break;
     @staticmethod
     def run():
-        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
-        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
-        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
-        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
-        PredictHashtagsForLocationsPlots.ccdf_time_at_which_hashtag_propagates_to_a_location()
-        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
+#        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
+#        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
+#        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
+#        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
+#        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
+#        PredictHashtagsForLocationsPlots.ccdf_time_at_which_hashtag_propagates_to_a_location()
+#        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
+
+#        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde()
+#        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf()
+#        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf_multi()
+        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_examples()
+
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         
 if __name__ == '__main__':
