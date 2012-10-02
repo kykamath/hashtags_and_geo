@@ -624,6 +624,7 @@ class PredictHashtagsForLocationsPlots():
                                             ),
                             ltuo_location_pair_and_mean_probability
                         )
+                ltuo_location_pair_and_mean_probability.sort(key=itemgetter(3))
                 for item in ltuo_location_pair_and_mean_probability:
                     print item
 #                total_locations = len(mean_propagation_statuses)+0.0
