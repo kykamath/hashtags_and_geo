@@ -604,13 +604,23 @@ class PredictHashtagsForLocationsPlots():
                 mean_propagation_statuses = filter(lambda d: d['mean_probability']<0.05, mean_propagation_statuses)
                 mean_propagation_statuses.sort(key=itemgetter('mean_probability'))
                 ltuo_location_pair_and_mean_probability =\
-                                        map(itemgetter('location_pair', 'mean_probability'), mean_propagation_statuses) 
+                                        map(
+                                                itemgetter(
+                                                           'location_pair',
+                                                           'mean_probability',
+                                                           'len_propagation_statuses',
+                                                           'propagation_statuses'
+                                                           ),
+                                                mean_propagation_statuses
+                                            ) 
                 ltuo_location_pair_and_mean_probability =\
                         map(
-                            lambda (lp,p): 
+                            lambda (lp,p,c,d): 
                                             (
                                                 map(UTMConverter.getLatLongUTMIdInLatLongForm, lp.split('::')),
-                                                p
+                                                p,
+                                                c,
+                                                d
                                             ),
                             ltuo_location_pair_and_mean_probability
                         )
