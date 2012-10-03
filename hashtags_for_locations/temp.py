@@ -18,6 +18,11 @@ def ps2(A):
             unique_elements.remove(item)
         if not unique_elements: return index
 
+#A = range(5)
+#A[0] = 2;  A[1] = 2;  A[2] = 1
+#A[3] = 0;  A[4] = 1
+#print ps(A)
+
 from itertools import combinations    
 def number_of_disc_intersections ( A ):
     num_of_disc_intersections = 0
@@ -26,16 +31,100 @@ def number_of_disc_intersections ( A ):
         if num_of_disc_intersections>10000000: return -1
     return num_of_disc_intersections
         
-         
-#A = range(5)
-#A[0] = 2;  A[1] = 2;  A[2] = 1
-#A[3] = 0;  A[4] = 1
-#print ps(A)
+#A = [1, 5, 2, 1, 4, 0] 
+#print number_of_disc_intersections(A)
 
-A = [1, 5, 2, 1, 4, 0] 
+def stone_wall(H):
+    def block_can_be_used(block_len, target_wall_len_left):
+        if block_len <= target_wall_len_left: return True
+    blocks_used = 0
+    current_block_lens = []
+    for current_wall_len in H:
+        current_block_lens_used = []
+        current_wall_len_left = current_wall_len
+        for current_block_len in current_block_lens:
+            if block_can_be_used(current_block_len, current_wall_len_left):
+                current_wall_len_left-=current_block_len
+                current_block_lens_used.append(current_block_len)
+            else: break
+        if current_wall_len_left>0:
+            blocks_used+=1
+            current_block_lens_used.append(current_wall_len_left)
+        current_block_lens = current_block_lens_used
+    return blocks_used
 
-print number_of_disc_intersections(A)
+#H = range(9)
+#H[0] = 8;    H[1] = 8;    H[2] = 5       
+#H[3] = 7;    H[4] = 9;    H[5] = 8       
+#H[6] = 7;    H[7] = 4;    H[8] = 8
+#print stone_wall(H)
 
+
+
+#def equi ( A ):
+#    left_sum = 0
+#    right_sum = sum(A)
+#    for index, item in enumerate(A):
+#        left_sum+=A[index]
+#        right_sum-=A[index]
+#        if left_sum==right_sum: return index
+#    return -1
+#
+#A = [-7, 1, 5, 2, -4, 3, 0]
+#print equi(A)
+from pprint import pprint
+
+def countries_count ( A ):
+    country_id = []
+    num_of_countries = 0
+    M = len(A)
+    N = 0
+    for item in A:
+        N = len(item)
+        country_id.append([-1 for i in range(len(item))])
+    for i, items in enumerate(A):
+        for j, color in enumerate(items):
+            current_country_id = country_id[i][j]
+            if current_country_id==-1:
+                num_of_countries+=1 
+                current_country_id = num_of_countries
+                country_id[i][j] = current_country_id
+            valid_directions = filter(
+                                          lambda (i_,j_): i_<M and j_<N and i_>=0 and j_>=0,
+                                          [(i+1,j), (i-1,j), (i, j-1), (i,j+1)]
+                                      )
+            ltuo_neighbor_color_and_direction = [(A[i_][j_], (i_,j_)) for i_,j_ in valid_directions]
+            ltuo_neighbor_color_and_direction = filter(
+                                                       lambda (nc, d): nc==color,
+                                                       ltuo_neighbor_color_and_direction
+                                                       )
+            for _, (i_,j_) in ltuo_neighbor_color_and_direction:
+                country_id[i_][j_] = current_country_id
+    country_set = set()
+    for items in country_id:
+        for item in items: country_set.add(item)
+    return len(country_set)
+#            print i, j, ltuo_neighbor_color_and_direction
+
+
+A = [[5, 4, 4], [4, 3, 4], [3, 2, 4], [2, 2, 2], [3, 3, 4], [1, 4, 4], [4, 1, 1]]
+
+#print countries_count(A)
+
+def symmetryPoint ( S ):
+    for i in range(len(S)):
+        if S[:i] == S[i+1:][::-1]: return i
+    return -1
+
+def symmetryPoint1 ( S ):
+    reversed_S = S[::-1] 
+    N = len(S)
+    for i in range(N):
+        if S[:i] == reversed_S[:N-i-1]: return i
+    return -1
+
+S = 'racecar'
+print symmetryPoint(S)
 
 ##import matplotlib.pyplot as plt
 ##import numpy as np
