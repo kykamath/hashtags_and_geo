@@ -80,6 +80,7 @@ class HashtagsExtractor(ModifiedMRJob):
                               'ltuo_occ_time_and_occ_location': ltuo_occ_time_and_occ_location,
                               'ltuo_occ_time_and_word': self.mf_hastag_to_ltuo_occ_time_and_word[hashtag]
                               }
+            print hashtag, hashtag_object
             yield hashtag, hashtag_object
 #    def _get_combined_hashtag_object(self, hashtag, hashtag_objects):
 #        combined_hashtag_object = {'hashtag': hashtag, 'ltuo_occ_time_and_occ_location': [], 'words': []}
