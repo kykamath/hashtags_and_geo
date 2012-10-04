@@ -98,14 +98,14 @@ class HashtagsExtractor(ModifiedMRJob):
         combined_hashtag_object = self._get_combined_hashtag_object(hashtag, hashtag_objects)
         e = min(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=lambda t: t[0])
         l = max(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=lambda t: t[0])
-#        if combined_hashtag_object['num_of_occurrences'] >= \
-#                self.min_hashtag_occurrences and \
-#                e[0]>=HASHTAG_STARTING_WINDOW and l[0]<=HASHTAG_ENDING_WINDOW:
-        combined_hashtag_object['ltuo_occ_time_and_occ_location'] = \
-            sorted(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=itemgetter(0))
-        combined_hashtag_object['ltuo_occ_time_and_word'] = \
-            sorted(combined_hashtag_object['ltuo_occ_time_and_word'], key=itemgetter(0))
-        yield hashtag, combined_hashtag_object
+        if combined_hashtag_object['num_of_occurrences'] >= \
+                self.min_hashtag_occurrences and \
+                e[0]>=HASHTAG_STARTING_WINDOW and l[0]<=HASHTAG_ENDING_WINDOW:
+            combined_hashtag_object['ltuo_occ_time_and_occ_location'] = \
+                sorted(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=itemgetter(0))
+            combined_hashtag_object['ltuo_occ_time_and_word'] = \
+                sorted(combined_hashtag_object['ltuo_occ_time_and_word'], key=itemgetter(0))
+            yield hashtag, combined_hashtag_object
 
 #class HashtagsExtractor(ModifiedMRJob):
 #    '''
