@@ -59,6 +59,7 @@ class HashtagsExtractor(ModifiedMRJob):
                       'ltuo_occ_time_and_word': ltuo_occ_time_and_word
                       'ltuo_occ_time_and_occ_location': [],
                       'num_of_occurrences' : 0
+                      'num_of_words' : 0
                     }
     '''
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -81,23 +82,26 @@ class HashtagsExtractor(ModifiedMRJob):
                               'ltuo_occ_time_and_word': self.mf_hastag_to_ltuo_occ_time_and_word[hashtag]
                               }
             yield hashtag, hashtag_object
-#    def _get_combined_hashtag_object(self, hashtag, hashtag_objects):
-#        combined_hashtag_object = {'hashtag': hashtag, 'ltuo_occ_time_and_occ_location': [], 'words': []}
-#        for hashtag_object in hashtag_objects:
-#            combined_hashtag_object['ltuo_occ_time_and_occ_location']+=hashtag_object['ltuo_occ_time_and_occ_location']
-#            combined_hashtag_object['words']+=hashtag_object['words']
-#        combined_hashtag_object['num_of_occurrences'] = len(combined_hashtag_object['ltuo_occ_time_and_occ_location']) 
-#        return combined_hashtag_object
-#    def reducer(self, hashtag, hashtag_objects):
-#        combined_hashtag_object = self._get_combined_hashtag_object(hashtag, hashtag_objects)
-#        e = min(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=lambda t: t[0])
-#        l = max(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=lambda t: t[0])
+    def _get_combined_hashtag_object(self, hashtag, hashtag_objects):
+        combined_hashtag_object = {'hashtag': hashtag, 'ltuo_occ_time_and_occ_location': [], 'words': []}
+        for hashtag_object in hashtag_objects:
+            combined_hashtag_object['ltuo_occ_time_and_occ_location']+=hashtag_object['ltuo_occ_time_and_occ_location']
+            combined_hashtag_object['ltuo_occ_time_and_word']+=hashtag_object['ltuo_occ_time_and_word']
+        combined_hashtag_object['num_of_occurrences'] = len(combined_hashtag_object['ltuo_occ_time_and_occ_location']) 
+        combined_hashtag_object['num_of_words'] = len(combined_hashtag_object['ltuo_occ_time_and_word']) 
+        return combined_hashtag_object
+    def reducer(self, hashtag, hashtag_objects):
+        combined_hashtag_object = self._get_combined_hashtag_object(hashtag, hashtag_objects)
+        e = min(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=lambda t: t[0])
+        l = max(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=lambda t: t[0])
 #        if combined_hashtag_object['num_of_occurrences'] >= \
 #                self.min_hashtag_occurrences and \
 #                e[0]>=HASHTAG_STARTING_WINDOW and l[0]<=HASHTAG_ENDING_WINDOW:
-#            combined_hashtag_object['ltuo_occ_time_and_occ_location'] = \
-#                sorted(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=itemgetter(0))
-#            yield hashtag, combined_hashtag_object
+        combined_hashtag_object['ltuo_occ_time_and_occ_location'] = \
+            sorted(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=itemgetter(0))
+        combined_hashtag_object['ltuo_occ_time_and_word'] = \
+            sorted(combined_hashtag_object['ltuo_occ_time_and_word'], key=itemgetter(0))
+        yield hashtag, combined_hashtag_object
 
 #class HashtagsExtractor(ModifiedMRJob):
 #    '''
