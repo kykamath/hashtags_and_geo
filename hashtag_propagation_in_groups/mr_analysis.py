@@ -83,7 +83,11 @@ class HashtagsExtractor(ModifiedMRJob):
                               }
             yield hashtag, hashtag_object
     def _get_combined_hashtag_object(self, hashtag, hashtag_objects):
-        combined_hashtag_object = {'hashtag': hashtag, 'ltuo_occ_time_and_occ_location': [], 'words': []}
+        combined_hashtag_object = {
+                                       'hashtag': hashtag,
+                                       'ltuo_occ_time_and_occ_location': [],
+                                       'ltuo_occ_time_and_word': []
+                                   }
         for hashtag_object in hashtag_objects:
             combined_hashtag_object['ltuo_occ_time_and_occ_location']+=hashtag_object['ltuo_occ_time_and_occ_location']
             combined_hashtag_object['ltuo_occ_time_and_word']+=hashtag_object['ltuo_occ_time_and_word']
