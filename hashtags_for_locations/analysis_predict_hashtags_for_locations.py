@@ -723,7 +723,7 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-#        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
+        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
         PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
         PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
