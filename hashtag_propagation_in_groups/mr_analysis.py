@@ -128,9 +128,10 @@ class WordObjectExtractor(ModifiedMRJob):
         for (occ_time, occ_location),(_, words) in zip(ltuo_occ_time_and_occ_location, ltuo_occ_time_and_words):
             for word in words:
                 if hashtag not in self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word]:
-                    self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word][hashtag].append(
-                                                                                               [occ_time, occ_location]
-                                                                                           )
+                    self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word][hashtag] = []
+                self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word][hashtag].append(
+                                                                                           [occ_time, occ_location]
+                                                                                       )
     def mapper_final(self):
         for word, mf_hashtag_to_ltuo_occ_time_and_occ_location in\
                 self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location.iteritems():
