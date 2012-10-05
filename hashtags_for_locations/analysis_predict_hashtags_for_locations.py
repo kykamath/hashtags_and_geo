@@ -375,8 +375,10 @@ class PredictHashtagsForLocationsPlots():
             valid_bucket_ids = filter_outliers(bucket_ids)
             ltuo_bucket_id_and_num_of_items =\
                                         filter(lambda (b, n): b in valid_bucket_ids, ltuo_bucket_id_and_num_of_items)
+            _, num_of_items = zip(*ltuo_bucket_id_and_num_of_items)
+            total_num_of_items = sum(num_of_items)
             for bucket_id, num_of_items in ltuo_bucket_id_and_num_of_items:
-                mf_bucket_id_to_num_of_items[bucket_id]+=num_of_items
+                mf_bucket_id_to_num_of_items[bucket_id]+=(num_of_items/total_num_of_items)
         bucket_ids, num_of_items = zip(*sorted(mf_bucket_id_to_num_of_items.items(), key=itemgetter(0)))
         total_num_of_items = sum(num_of_items)
         perct_of_occs = [n/total_num_of_items for n in num_of_items]
@@ -395,8 +397,6 @@ class PredictHashtagsForLocationsPlots():
         plt.xlabel('Hashtag propagation time (minutes)')
         plt.ylabel('CDF of hashtag occurrences')
         savefig(output_file)
-        
-        
     @staticmethod
     def something_with_propagation_matrix():
         ''' For a given utm id and a hashtag, this measures the percentage of occurrences of the hashtag as a fuction
