@@ -35,7 +35,7 @@ PARAMS_DICT = dict(
                    HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
                    )
 
-def iterate_word_hashtag_pairs(line):
+def iterate_hashtag_with_words(line):
     data = cjson.decode(line)
     if data['h']:
         l = None
@@ -49,17 +49,15 @@ def iterate_word_hashtag_pairs(line):
         words = map(itemgetter(0), words)
         
         t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
-        for w in words:
-            for h in data['h']: yield w, h.lower(), l, t
+        for h in data['h']: yield h.lower(), words, l, t
             
 class HashtagsExtractor(ModifiedMRJob):
     '''
     hashtag_object = {
                       'hashtag' : hashtag,
-                      'ltuo_occ_time_and_word': ltuo_occ_time_and_word
+                      'ltuo_occ_time_and_words': ltuo_occ_time_and_words
                       'ltuo_occ_time_and_occ_location': [],
                       'num_of_occurrences' : 0
-                      'num_of_words' : 0
                     }
     '''
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -67,32 +65,31 @@ class HashtagsExtractor(ModifiedMRJob):
         super(HashtagsExtractor, self).__init__(*args, **kwargs)
         self.min_hashtag_occurrences = min_hashtag_occurrences
         self.mf_hastag_to_ltuo_occ_time_and_occ_location = defaultdict(list)
-        self.mf_hastag_to_ltuo_occ_time_and_word = defaultdict(list)
+        self.mf_hastag_to_ltuo_occ_time_and_words = defaultdict(list)
     def mapper(self, key, line):
         if False: yield # I'm a generator!
-        for word, hashtag, location, occ_time in iterate_word_hashtag_pairs(line):
+        for hashtag, words, location, occ_time in iterate_hashtag_with_words(line):
 #            location = UTMConverter.getUTMIdInLatLongFormFromLatLong( location[0], location[1], accuracy=ACCURACY)
             self.mf_hastag_to_ltuo_occ_time_and_occ_location[hashtag].append((occ_time, location))
-            self.mf_hastag_to_ltuo_occ_time_and_word[hashtag].append((occ_time, word))
+            self.mf_hastag_to_ltuo_occ_time_and_words[hashtag].append((occ_time, words))
     def mapper_final(self):
         for hashtag, ltuo_occ_time_and_occ_location in self.mf_hastag_to_ltuo_occ_time_and_occ_location.iteritems():
             hashtag_object = {
                               'hashtag': hashtag,
                               'ltuo_occ_time_and_occ_location': ltuo_occ_time_and_occ_location,
-                              'ltuo_occ_time_and_word': self.mf_hastag_to_ltuo_occ_time_and_word[hashtag]
+                              'ltuo_occ_time_and_words': self.mf_hastag_to_ltuo_occ_time_and_words[hashtag]
                               }
             yield hashtag, hashtag_object
     def _get_combined_hashtag_object(self, hashtag, hashtag_objects):
         combined_hashtag_object = {
                                        'hashtag': hashtag,
                                        'ltuo_occ_time_and_occ_location': [],
-                                       'ltuo_occ_time_and_word': []
+                                       'ltuo_occ_time_and_words': []
                                    }
         for hashtag_object in hashtag_objects:
             combined_hashtag_object['ltuo_occ_time_and_occ_location']+=hashtag_object['ltuo_occ_time_and_occ_location']
-            combined_hashtag_object['ltuo_occ_time_and_word']+=hashtag_object['ltuo_occ_time_and_word']
+            combined_hashtag_object['ltuo_occ_time_and_words']+=hashtag_object['ltuo_occ_time_and_words']
         combined_hashtag_object['num_of_occurrences'] = len(combined_hashtag_object['ltuo_occ_time_and_occ_location']) 
-        combined_hashtag_object['num_of_words'] = len(combined_hashtag_object['ltuo_occ_time_and_word']) 
         return combined_hashtag_object
     def reducer(self, hashtag, hashtag_objects):
         combined_hashtag_object = self._get_combined_hashtag_object(hashtag, hashtag_objects)
@@ -103,10 +100,22 @@ class HashtagsExtractor(ModifiedMRJob):
                 e[0]>=HASHTAG_STARTING_WINDOW and l[0]<=HASHTAG_ENDING_WINDOW:
             combined_hashtag_object['ltuo_occ_time_and_occ_location'] = \
                 sorted(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=itemgetter(0))
-            combined_hashtag_object['ltuo_occ_time_and_word'] = \
-                sorted(combined_hashtag_object['ltuo_occ_time_and_word'], key=itemgetter(0))
+            combined_hashtag_object['ltuo_occ_time_and_words'] = \
+                sorted(combined_hashtag_object['ltuo_occ_time_and_words'], key=itemgetter(0))
             yield hashtag, combined_hashtag_object
 
+class HashtagGroupsExtractor(ModifiedMRJob):
+    '''
+    hashtag_group_object = {
+                    }
+    '''
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(HashtagGroupsExtractor, self).__init__(*args, **kwargs)
+    def mapper(self, key, line):
+        data = cjson.decode(line)
+        yield '', data.keys()
+    
 #class HashtagsExtractor(ModifiedMRJob):
 #    '''
 #    word_object = {
@@ -152,3 +161,4 @@ class HashtagsExtractor(ModifiedMRJob):
 
 if __name__ == '__main__':
     HashtagsExtractor.run()
+#    HashtagGroupsExtractor.run()
