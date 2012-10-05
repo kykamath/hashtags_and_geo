@@ -358,7 +358,7 @@ class PredictHashtagsForLocationsPlots():
         for data in FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True):
             ltuo_occ_time_and_occ_utm_id = data['ltuo_occ_time_and_occ_utm_id']
             bucket_times = map(
-                               lambda (t,_): GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS),
+                               lambda (t,_): GeneralMethods.approximateEpoch(t, BUCKET_WIDTH),
                                ltuo_occ_time_and_occ_utm_id
                             )
             bucket_times.sort()
