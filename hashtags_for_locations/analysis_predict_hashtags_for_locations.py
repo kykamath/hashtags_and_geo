@@ -355,6 +355,10 @@ class PredictHashtagsForLocationsPlots():
             savefig(output_file_format%metric)
     @staticmethod
     def perct_of_hashtag_occurrences_vs_time_of_propagation():
+        for data in FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True):
+            print data.keys()
+    @staticmethod
+    def something_with_propagation_matrix():
         ''' For a given utm id and a hashtag, this measures the percentage of occurrences of the hashtag as a fuction
         of its age in the location.
         '''
@@ -723,9 +727,9 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
+#        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
         PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
-        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
-        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
+#        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
 
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde()
