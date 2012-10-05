@@ -5,6 +5,7 @@ Created on Oct 3, 2012
 '''
 from collections import defaultdict
 from datetime import datetime
+from itertools import chain
 from library.geo import UTMConverter
 from library.mrjobwrapper import ModifiedMRJob
 from library.nlp import getWordsFromRawEnglishMessage
@@ -26,6 +27,9 @@ START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
 # Parameters for the MR Job that will be logged.
 HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
+
+## Temporal Width of a hashtag group
+#TEMPORAL_WIDTH_OF_HASHTAG_GROUP_IN_SECONDS = 24*60*10
 
 PARAMS_DICT = dict(
                    PARAMS_DICT = True,
@@ -104,61 +108,41 @@ class HashtagsExtractor(ModifiedMRJob):
                 sorted(combined_hashtag_object['ltuo_occ_time_and_words'], key=itemgetter(0))
             yield hashtag, combined_hashtag_object
 
-class HashtagGroupsExtractor(ModifiedMRJob):
+class WordObjectExtractor(ModifiedMRJob):
     '''
-    hashtag_group_object = {
-                    }
+    word_object = {
+                    'word': word,
+                    'hashtag_and_ltuo_occ_time_and_occ_location': hashtag_and_ltuo_occ_time_and_occ_location
+                }
     '''
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
-        super(HashtagGroupsExtractor, self).__init__(*args, **kwargs)
+        super(WordObjectExtractor, self).__init__(*args, **kwargs)
+        self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location = defaultdict(dict)
     def mapper(self, key, line):
+        if False: yield # I'm a generator!
         data = cjson.decode(line)
-        yield '', data.keys()
-    
-#class HashtagsExtractor(ModifiedMRJob):
-#    '''
-#    word_object = {
-#                      'word': word,
-#                      'mf_hastag_to_ltuo_occ_time_and_occ_location' : mf_hastag_to_ltuo_occ_time_and_occ_location
-#                    }
-#    '''
-#    DEFAULT_INPUT_PROTOCOL='raw_value'
-#    def __init__(self,  min_hashtag_occurrences = MIN_HASHTAG_OCCURRENCES, *args, **kwargs):
-#        super(HashtagsExtractor, self).__init__(*args, **kwargs)
-#        self.mf_word_to_mf_hastag_to_ltuo_occ_time_and_occ_location = {}
-#    def mapper(self, key, line):
-#        if False: yield # I'm a generator!
-#        for word, hashtag, (location, occ_time) in iterate_word_hashtag_pairs(line):
-#            if word not in self.mf_word_to_mf_hastag_to_ltuo_occ_time_and_occ_location:
-#                self.mf_word_to_mf_hastag_to_ltuo_occ_time_and_occ_location[word] = defaultdict(list)
-#            location = UTMConverter.getUTMIdInLatLongFormFromLatLong( location[0], location[1], accuracy=ACCURACY)
-#            self.mf_word_to_mf_hastag_to_ltuo_occ_time_and_occ_location[word][hashtag].append((occ_time, location))
-#    def mapper_final(self):
-#        for word, mf_hastag_to_ltuo_occ_time_and_occ_location in\
-#                    self.mf_word_to_mf_hastag_to_ltuo_occ_time_and_occ_location.iteritems():
-#            word_object = {
-#                           'word': word,
-#                           'mf_hastag_to_ltuo_occ_time_and_occ_location': mf_hastag_to_ltuo_occ_time_and_occ_location
-#                        }
-#            yield word, word_object
-#    def _get_combined_hashtag_object(self, hashtag, hashtag_objects):
-#        combined_hashtag_object = {'hashtag': hashtag, 'ltuo_occ_time_and_occ_location': []}
-#        for hashtag_object in hashtag_objects:
-#            combined_hashtag_object['ltuo_occ_time_and_occ_location']+=hashtag_object['ltuo_occ_time_and_occ_location']
-#        combined_hashtag_object['num_of_occurrences'] = len(combined_hashtag_object['ltuo_occ_time_and_occ_location']) 
-#        return combined_hashtag_object
-#    def reducer(self, hashtag, hashtag_objects):
-#        combined_hashtag_object = self._get_combined_hashtag_object(hashtag, hashtag_objects)
-#        e = min(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=lambda t: t[0])
-#        l = max(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=lambda t: t[0])
-#        if combined_hashtag_object['num_of_occurrences'] >= \
-#                self.min_hashtag_occurrences and \
-#                e[0]>=HASHTAG_STARTING_WINDOW and l[0]<=HASHTAG_ENDING_WINDOW:
-#            combined_hashtag_object['ltuo_occ_time_and_occ_location'] = \
-#                sorted(combined_hashtag_object['ltuo_occ_time_and_occ_location'], key=itemgetter(0))
-#            yield hashtag, combined_hashtag_object
-
+        hashtag = data['hashtag']
+        ltuo_occ_time_and_occ_location = data['ltuo_occ_time_and_occ_location']
+        ltuo_occ_time_and_words = data['ltuo_occ_time_and_words']
+        for (occ_time, occ_location),(_, words) in zip(ltuo_occ_time_and_occ_location, ltuo_occ_time_and_words):
+            for word in words:
+                if hashtag not in self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word]:
+                    self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word][hashtag].append(
+                                                                                               [occ_time, occ_location]
+                                                                                           )
+    def mapper_final(self):
+        for word, mf_hashtag_to_ltuo_occ_time_and_occ_location in\
+                self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location.iteritems():
+            hashtag_and_ltuo_occ_time_and_occ_location = mf_hashtag_to_ltuo_occ_time_and_occ_location.items()
+            yield word, hashtag_and_ltuo_occ_time_and_occ_location
+    def reducer(self, word, it_hashtag_and_ltuo_occ_time_and_occ_location):
+        ltuo_hashtag_and_ltuo_occ_time_and_occ_location = list(chain(*it_hashtag_and_ltuo_occ_time_and_occ_location))
+        yield {
+               'word': word,
+               'ltuo_hashtag_and_ltuo_occ_time_and_occ_location': ltuo_hashtag_and_ltuo_occ_time_and_occ_location
+           }
+        
 if __name__ == '__main__':
     HashtagsExtractor.run()
-#    HashtagGroupsExtractor.run()
+#    WordObjectExtractor.run()
