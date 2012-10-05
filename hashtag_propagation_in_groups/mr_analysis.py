@@ -112,7 +112,7 @@ class WordObjectExtractor(ModifiedMRJob):
     '''
     word_object = {
                     'word': word,
-                    'hashtag_and_ltuo_occ_time_and_occ_location': hashtag_and_ltuo_occ_time_and_occ_location
+                    'ltuo_hashtag_and_ltuo_occ_time_and_occ_location': ltuo_hashtag_and_ltuo_occ_time_and_occ_location
                 }
     '''
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -134,11 +134,12 @@ class WordObjectExtractor(ModifiedMRJob):
     def mapper_final(self):
         for word, mf_hashtag_to_ltuo_occ_time_and_occ_location in\
                 self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location.iteritems():
-            hashtag_and_ltuo_occ_time_and_occ_location = mf_hashtag_to_ltuo_occ_time_and_occ_location.items()
-            yield word, hashtag_and_ltuo_occ_time_and_occ_location
-    def reducer(self, word, it_hashtag_and_ltuo_occ_time_and_occ_location):
-        ltuo_hashtag_and_ltuo_occ_time_and_occ_location = list(chain(*it_hashtag_and_ltuo_occ_time_and_occ_location))
-        yield {
+            ltuo_hashtag_and_ltuo_occ_time_and_occ_location = mf_hashtag_to_ltuo_occ_time_and_occ_location.items()
+            yield word, ltuo_hashtag_and_ltuo_occ_time_and_occ_location
+    def reducer(self, word, it_ltuo_hashtag_and_ltuo_occ_time_and_occ_location):
+        ltuo_hashtag_and_ltuo_occ_time_and_occ_location =\
+                                                        list(chain(*it_ltuo_hashtag_and_ltuo_occ_time_and_occ_location))
+        yield word, {
                'word': word,
                'ltuo_hashtag_and_ltuo_occ_time_and_occ_location': ltuo_hashtag_and_ltuo_occ_time_and_occ_location
            }
