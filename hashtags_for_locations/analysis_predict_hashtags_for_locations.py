@@ -355,6 +355,8 @@ class PredictHashtagsForLocationsPlots():
             savefig(output_file_format%metric)
     @staticmethod
     def perct_of_hashtag_occurrences_vs_time_of_propagation():
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        plt.figure(num=None, figsize=(6,3))
         mf_bucket_id_to_num_of_items = defaultdict(float)
         for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
             ltuo_occ_time_and_occ_utm_id = data['ltuo_occ_time_and_occ_utm_id']
@@ -372,9 +374,18 @@ class PredictHashtagsForLocationsPlots():
             valid_bucket_ids = filter_outliers(bucket_ids)
             ltuo_bucket_id_and_num_of_items =\
                                         filter(lambda (b, n): b in valid_bucket_ids, ltuo_bucket_id_and_num_of_items)
-            print i
             for bucket_id, num_of_items in ltuo_bucket_id_and_num_of_items:
                 mf_bucket_id_to_num_of_items[bucket_id]+=num_of_items
+        bucket_ids, num_of_items = zip(*sorted(mf_bucket_id_to_num_of_items.items(), key=itemgetter(0)))
+        total_num_of_items = sum(num_of_items)
+        perct_of_occs = [n/total_num_of_items for n in num_of_items]
+        plt.plot(bucket_ids, perct_of_occs, c='k')
+        plt.scatter(bucket_ids, perct_of_occs, c='k')
+        plt.grid(True)
+        plt.xlabel('Hashtag propagation time (minutes)')
+        plt.ylabel('% of hashtag occurrences')
+        savefig(output_file)
+        
         
     @staticmethod
     def something_with_propagation_matrix():
