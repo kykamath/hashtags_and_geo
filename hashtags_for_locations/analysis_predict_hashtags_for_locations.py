@@ -419,7 +419,7 @@ class PredictHashtagsForLocationsPlots():
         plt.ylabel('CCDF')
         savefig(output_file)
     @staticmethod
-    def cdf_of_locations_vs_hashtag_propaagation_time():
+    def perct_of_locations_vs_hashtag_propaagation_time():
         '''
         Percentage of locations propagated in first 6 hours:  0.658433622539
         Percentage of locations between 1 and 6 hours:  0.319961439189
@@ -476,7 +476,7 @@ class PredictHashtagsForLocationsPlots():
         plt.scatter(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
         plt.grid(True)
         plt.xlabel('Hashtag propagation time (minutes)')
-        plt.ylabel('CDF of locations')
+        plt.ylabel('% of locations')
         savefig(output_file)
     @staticmethod
     def impact_of_using_location_to_predict_hashtag():
@@ -720,12 +720,12 @@ class PredictHashtagsForLocationsPlots():
 #            break;
     @staticmethod
     def run():
-        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
-        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
-        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
+#        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
+#        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
+#        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
         PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
-#        PredictHashtagsForLocationsPlots.cdf_of_locations_vs_hashtag_propaagation_time()
+        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
 
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde()
