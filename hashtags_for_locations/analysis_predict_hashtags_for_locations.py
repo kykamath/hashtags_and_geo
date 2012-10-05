@@ -364,7 +364,10 @@ class PredictHashtagsForLocationsPlots():
             bucket_times.sort()
             ltuo_bucket_time_and_num_of_items =\
                             [(bucket_id     ,len(list(ito_items))) for bucket_id, ito_items in groupby(bucket_times)]
-            print ltuo_bucket_time_and_num_of_items
+            first_bucket_time = ltuo_bucket_time_and_num_of_items[0][0]
+            ltuo_bucket_id_and_num_of_items =\
+                                        map(lambda (t, n): (t-first_bucket_time, n), ltuo_bucket_time_and_num_of_items)
+            print ltuo_bucket_id_and_num_of_items
             break
     @staticmethod
     def something_with_propagation_matrix():
