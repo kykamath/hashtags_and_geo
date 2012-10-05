@@ -379,9 +379,9 @@ class PredictHashtagsForLocationsPlots():
             total_num_of_items = sum(num_of_items)+0.0
             for bucket_id, num_of_items in ltuo_bucket_id_and_num_of_items:
                 mf_bucket_id_to_num_of_items[bucket_id]+=100*(num_of_items/total_num_of_items)
-            print mf_bucket_id_to_num_of_items
-            print sum(mf_bucket_id_to_num_of_items.values())
-            exit()
+#            print mf_bucket_id_to_num_of_items
+#            print sum(mf_bucket_id_to_num_of_items.values())
+#            exit()
         bucket_ids, num_of_items = zip(*sorted(mf_bucket_id_to_num_of_items.items(), key=itemgetter(0)))
         total_num_of_items = sum(num_of_items)
         perct_of_occs = [n/total_num_of_items for n in num_of_items]
