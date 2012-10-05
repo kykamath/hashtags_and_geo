@@ -419,7 +419,7 @@ class PredictHashtagsForLocationsPlots():
         plt.ylabel('CCDF')
         savefig(output_file)
     @staticmethod
-    def ccdf_time_at_which_hashtag_propagates_to_a_location():
+    def cdf_of_locations_vs_hashtag_propaagation_time():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         mf_majority_threshold_bucket_time_to_num_of_utm_ids = defaultdict(float)
         plt.figure(num=None, figsize=(6,3))
@@ -471,8 +471,8 @@ class PredictHashtagsForLocationsPlots():
         plt.plot(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
         plt.scatter(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
         plt.grid(True)
-        plt.xlabel('Time at which hashtag propagates to a location (minutes)')
-        plt.ylabel('CCDF')
+        plt.xlabel('Hashtag propagation time (minutes)')
+        plt.ylabel('CDF of locations')
         savefig(output_file)
     @staticmethod
     def impact_of_using_location_to_predict_hashtag():
@@ -721,7 +721,7 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
 #        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
-        PredictHashtagsForLocationsPlots.ccdf_time_at_which_hashtag_propagates_to_a_location()
+        PredictHashtagsForLocationsPlots.cdf_of_locations_vs_hashtag_propaagation_time()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
 
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde()
