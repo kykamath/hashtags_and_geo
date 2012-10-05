@@ -720,9 +720,9 @@ class PredictHashtagsForLocationsPlots():
 #            break;
     @staticmethod
     def run():
-#        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
-#        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
-#        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
+        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
+        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
+        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
         PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
 #        PredictHashtagsForLocationsPlots.cdf_of_locations_vs_hashtag_propaagation_time()
