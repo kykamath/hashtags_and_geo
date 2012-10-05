@@ -355,6 +355,55 @@ class PredictHashtagsForLocationsPlots():
             savefig(output_file_format%metric)
     @staticmethod
     def perct_of_hashtag_occurrences_vs_time_of_propagation():
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        plt.figure(num=None, figsize=(6,3))
+        mf_bucket_id_to_items = defaultdict(list)
+        for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
+            print i
+            ltuo_occ_time_and_occ_utm_id = data['ltuo_occ_time_and_occ_utm_id']
+            bucket_times = map(
+                               lambda (t,_): GeneralMethods.approximateEpoch(t, BUCKET_WIDTH),
+                               ltuo_occ_time_and_occ_utm_id
+                            )
+            bucket_times.sort()
+            ltuo_bucket_time_and_num_of_items =\
+                            [(bucket_id     ,len(list(ito_items))) for bucket_id, ito_items in groupby(bucket_times)]
+            first_bucket_time = ltuo_bucket_time_and_num_of_items[0][0]
+            ltuo_bucket_id_and_num_of_items =\
+                                        map(lambda (t, n): (t-first_bucket_time, n), ltuo_bucket_time_and_num_of_items)
+            bucket_ids, _ = zip(*ltuo_bucket_id_and_num_of_items)
+            valid_bucket_ids = filter_outliers(bucket_ids)
+            ltuo_bucket_id_and_num_of_items =\
+                                        filter(lambda (b, n): b in valid_bucket_ids, ltuo_bucket_id_and_num_of_items)
+            _, num_of_items = zip(*ltuo_bucket_id_and_num_of_items)
+            total_num_of_items = sum(num_of_items)+0.0
+            for bucket_id, num_of_items in ltuo_bucket_id_and_num_of_items:
+                mf_bucket_id_to_items[bucket_id].append(100*(num_of_items/total_num_of_items))
+        mf_bucket_id_to_num_of_items = defaultdict(float)
+        for bucket_id, items in mf_bucket_id_to_items.iteritems():
+            mf_bucket_id_to_num_of_items[bucket_id] = sum(filter_outliers(items))
+        bucket_ids, num_of_items = zip(*sorted(mf_bucket_id_to_num_of_items.items(), key=itemgetter(0)))
+        total_num_of_items = sum(num_of_items)
+        perct_of_occs = [n/total_num_of_items for n in num_of_items]
+        perct_of_occs1 = []
+        current_val = 0.0
+        for p in perct_of_occs:
+            current_val+=p
+            perct_of_occs1.append(current_val)
+        perct_of_occs = perct_of_occs1
+        bucket_ids = [b/60. for b in bucket_ids]
+        bucket_ids = [1]+bucket_ids
+        perct_of_occs = [0.0]+perct_of_occs
+        plt.plot(bucket_ids, perct_of_occs, c='k')
+        plt.scatter(bucket_ids, perct_of_occs, c='k')
+        plt.grid(True)
+        ax = plt.subplot(111)
+        ax.set_xscale('log')
+        plt.xlabel('Hashtag propagation time (minutes)')
+        plt.ylabel('CDF of hashtag occurrences')
+        savefig(output_file)
+    @staticmethod
+    def something_with_propagation_matrix():
         ''' For a given utm id and a hashtag, this measures the percentage of occurrences of the hashtag as a fuction
         of its age in the location.
         '''
@@ -419,7 +468,11 @@ class PredictHashtagsForLocationsPlots():
         plt.ylabel('CCDF')
         savefig(output_file)
     @staticmethod
-    def ccdf_time_at_which_hashtag_propagates_to_a_location():
+    def perct_of_locations_vs_hashtag_propaagation_time():
+        '''
+        Percentage of locations propagated in first 6 hours:  0.658433622539
+        Percentage of locations between 1 and 6 hours:  0.319961439189
+        '''
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         mf_majority_threshold_bucket_time_to_num_of_utm_ids = defaultdict(float)
         plt.figure(num=None, figsize=(6,3))
@@ -456,21 +509,23 @@ class PredictHashtagsForLocationsPlots():
         total_num_of_utm_ids = sum(num_of_utm_ids)
         perct_of_utm_ids = [n/total_num_of_utm_ids for n in num_of_utm_ids]
         perct_of_utm_ids1 = []
-        current_val=1.0
+        current_val=0.0
         for perct_of_utm_id in perct_of_utm_ids:
             perct_of_utm_ids1.append(current_val)
-            current_val-=perct_of_utm_id
+            current_val+=perct_of_utm_id
         perct_of_utm_ids = perct_of_utm_ids1
         ax = plt.subplot(111)
         ax.set_xscale('log')
         temp_map = dict(zip(majority_threshold_bucket_time, perct_of_utm_ids))
-        print 'Percentage of locations propagated in first 6 hours: ', 1 - temp_map[360]
-        print 'Percentage of locations between 1 and 6 hours: ', temp_map[60] - temp_map[360]
+        print 'Percentage of locations propagated in first 6 hours: ', temp_map[360]
+        print 'Percentage of locations between 1 and 6 hours: ', temp_map[360] - temp_map[60]
+        majority_threshold_bucket_time = [0.0]+list(majority_threshold_bucket_time)
+        perct_of_utm_ids = list(perct_of_utm_ids)+[1.0]
         plt.plot(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
         plt.scatter(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
         plt.grid(True)
-        plt.xlabel('Time at which hashtag propagates to a location (minutes)')
-        plt.ylabel('CCDF')
+        plt.xlabel('Hashtag propagation time (minutes)')
+        plt.ylabel('CDF of locations')
         savefig(output_file)
     @staticmethod
     def impact_of_using_location_to_predict_hashtag():
@@ -717,15 +772,15 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-#        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
 #        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
-#        PredictHashtagsForLocationsPlots.ccdf_time_at_which_hashtag_propagates_to_a_location()
+#        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
+#        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
 
-#        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde()
-#        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf()
-#        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf_multi()
-        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_examples()
+        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde()
+        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf()
+        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf_multi()
+#        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_examples()
 
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         
