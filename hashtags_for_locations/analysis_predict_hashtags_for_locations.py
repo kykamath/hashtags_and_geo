@@ -359,6 +359,7 @@ class PredictHashtagsForLocationsPlots():
         plt.figure(num=None, figsize=(6,3))
         mf_bucket_id_to_num_of_items = defaultdict(float)
         for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
+            print i
             ltuo_occ_time_and_occ_utm_id = data['ltuo_occ_time_and_occ_utm_id']
             bucket_times = map(
                                lambda (t,_): GeneralMethods.approximateEpoch(t, BUCKET_WIDTH),
@@ -379,11 +380,19 @@ class PredictHashtagsForLocationsPlots():
         bucket_ids, num_of_items = zip(*sorted(mf_bucket_id_to_num_of_items.items(), key=itemgetter(0)))
         total_num_of_items = sum(num_of_items)
         perct_of_occs = [n/total_num_of_items for n in num_of_items]
+        perct_of_occs1 = []
+        current_val = 0.0
+        for p in perct_of_occs:
+            current_val+=p
+            perct_of_occs1.append(current_val)
+        perct_of_occs = perct_of_occs1
         plt.plot(bucket_ids, perct_of_occs, c='k')
         plt.scatter(bucket_ids, perct_of_occs, c='k')
         plt.grid(True)
+        ax = plt.subplot(111)
+        ax.set_xscale('log')
         plt.xlabel('Hashtag propagation time (minutes)')
-        plt.ylabel('% of hashtag occurrences')
+        plt.ylabel('% hashtag occurrences in <= x minutes')
         savefig(output_file)
         
         
