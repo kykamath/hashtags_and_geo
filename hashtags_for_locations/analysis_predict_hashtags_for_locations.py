@@ -386,13 +386,14 @@ class PredictHashtagsForLocationsPlots():
             current_val+=p
             perct_of_occs1.append(current_val)
         perct_of_occs = perct_of_occs1
+        bucket_ids = [b/60. for b in bucket_ids]
         plt.plot(bucket_ids, perct_of_occs, c='k')
         plt.scatter(bucket_ids, perct_of_occs, c='k')
         plt.grid(True)
         ax = plt.subplot(111)
         ax.set_xscale('log')
         plt.xlabel('Hashtag propagation time (minutes)')
-        plt.ylabel('% hashtag occurrences in <= x minutes')
+        plt.ylabel('CDF of hashtag occurrences')
         savefig(output_file)
         
         
@@ -519,7 +520,7 @@ class PredictHashtagsForLocationsPlots():
         plt.scatter(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
         plt.grid(True)
         plt.xlabel('Hashtag propagation time (minutes)')
-        plt.ylabel('% of locations')
+        plt.ylabel('CDF of locations')
         savefig(output_file)
     @staticmethod
     def impact_of_using_location_to_predict_hashtag():
@@ -768,7 +769,7 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
 #        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
         PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
-#        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
+        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
 
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde()
