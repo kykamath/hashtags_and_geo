@@ -355,7 +355,8 @@ class PredictHashtagsForLocationsPlots():
             savefig(output_file_format%metric)
     @staticmethod
     def perct_of_hashtag_occurrences_vs_time_of_propagation():
-        for data in FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True):
+        mf_bucket_id_to_num_of_items = defaultdict(float)
+        for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
             ltuo_occ_time_and_occ_utm_id = data['ltuo_occ_time_and_occ_utm_id']
             bucket_times = map(
                                lambda (t,_): GeneralMethods.approximateEpoch(t, BUCKET_WIDTH),
@@ -371,8 +372,10 @@ class PredictHashtagsForLocationsPlots():
             valid_bucket_ids = filter_outliers(bucket_ids)
             ltuo_bucket_id_and_num_of_items =\
                                         filter(lambda (b, n): b in valid_bucket_ids, ltuo_bucket_id_and_num_of_items)
-            print ltuo_bucket_id_and_num_of_items
-            break
+            print i
+            for bucket_id, num_of_items in ltuo_bucket_id_and_num_of_items:
+                mf_bucket_id_to_num_of_items[bucket_id]+=num_of_items
+        
     @staticmethod
     def something_with_propagation_matrix():
         ''' For a given utm id and a hashtag, this measures the percentage of occurrences of the hashtag as a fuction
