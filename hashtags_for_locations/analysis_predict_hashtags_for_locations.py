@@ -368,10 +368,10 @@ class PredictHashtagsForLocationsPlots():
             ltuo_bucket_id_and_num_of_items =\
                                         map(lambda (t, n): (t-first_bucket_time, n), ltuo_bucket_time_and_num_of_items)
             bucket_ids, _ = zip(*ltuo_bucket_id_and_num_of_items)
-            print bucket_ids
             valid_bucket_ids = filter_outliers(bucket_ids)
-            print valid_bucket_ids
-#            print ltuo_bucket_id_and_num_of_items
+            ltuo_bucket_id_and_num_of_items =\
+                                        filter(lambda (b, n): b in valid_bucket_ids, ltuo_bucket_id_and_num_of_items)
+            print ltuo_bucket_id_and_num_of_items
             break
     @staticmethod
     def something_with_propagation_matrix():
