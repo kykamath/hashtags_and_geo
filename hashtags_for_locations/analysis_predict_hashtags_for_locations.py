@@ -456,10 +456,10 @@ class PredictHashtagsForLocationsPlots():
         total_num_of_utm_ids = sum(num_of_utm_ids)
         perct_of_utm_ids = [n/total_num_of_utm_ids for n in num_of_utm_ids]
         perct_of_utm_ids1 = []
-        current_val=1.0
+        current_val=0.0
         for perct_of_utm_id in perct_of_utm_ids:
             perct_of_utm_ids1.append(current_val)
-            current_val-=perct_of_utm_id
+            current_val+=perct_of_utm_id
         perct_of_utm_ids = perct_of_utm_ids1
         ax = plt.subplot(111)
         ax.set_xscale('log')
@@ -719,13 +719,13 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
 #        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
-#        PredictHashtagsForLocationsPlots.ccdf_time_at_which_hashtag_propagates_to_a_location()
+        PredictHashtagsForLocationsPlots.ccdf_time_at_which_hashtag_propagates_to_a_location()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
 
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf_multi()
-        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_examples()
+#        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_examples()
 
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         
