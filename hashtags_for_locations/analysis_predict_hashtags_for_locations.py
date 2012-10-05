@@ -357,7 +357,7 @@ class PredictHashtagsForLocationsPlots():
     def perct_of_hashtag_occurrences_vs_time_of_propagation():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         plt.figure(num=None, figsize=(6,3))
-        mf_bucket_id_to_num_of_items = defaultdict(float)
+        mf_bucket_id_to_items = defaultdict(list)
         for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
             print i
             ltuo_occ_time_and_occ_utm_id = data['ltuo_occ_time_and_occ_utm_id']
@@ -378,10 +378,13 @@ class PredictHashtagsForLocationsPlots():
             _, num_of_items = zip(*ltuo_bucket_id_and_num_of_items)
             total_num_of_items = sum(num_of_items)+0.0
             for bucket_id, num_of_items in ltuo_bucket_id_and_num_of_items:
-                mf_bucket_id_to_num_of_items[bucket_id]+=100*(num_of_items/total_num_of_items)
+                mf_bucket_id_to_items[bucket_id].append(100*(num_of_items/total_num_of_items))
 #            print mf_bucket_id_to_num_of_items
 #            print sum(mf_bucket_id_to_num_of_items.values())
 #            exit()
+        mf_bucket_id_to_num_of_items = defaultdict(float)
+        for bucket_id, items in mf_bucket_id_to_items.iteritems():
+            mf_bucket_id_to_num_of_items = sum(filter_outliers(items))
         bucket_ids, num_of_items = zip(*sorted(mf_bucket_id_to_num_of_items.items(), key=itemgetter(0)))
         total_num_of_items = sum(num_of_items)
         perct_of_occs = [n/total_num_of_items for n in num_of_items]
