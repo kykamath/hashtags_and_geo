@@ -145,5 +145,5 @@ class WordObjectExtractor(ModifiedMRJob):
            }
         
 if __name__ == '__main__':
-    HashtagsExtractor.run()
-#    WordObjectExtractor.run()
+#    HashtagsExtractor.run()
+    WordObjectExtractor.run()
