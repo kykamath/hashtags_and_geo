@@ -379,9 +379,6 @@ class PredictHashtagsForLocationsPlots():
             total_num_of_items = sum(num_of_items)+0.0
             for bucket_id, num_of_items in ltuo_bucket_id_and_num_of_items:
                 mf_bucket_id_to_items[bucket_id].append(100*(num_of_items/total_num_of_items))
-#            print mf_bucket_id_to_num_of_items
-#            print sum(mf_bucket_id_to_num_of_items.values())
-#            exit()
         mf_bucket_id_to_num_of_items = defaultdict(float)
         for bucket_id, items in mf_bucket_id_to_items.iteritems():
             mf_bucket_id_to_num_of_items[bucket_id] = sum(filter_outliers(items))
@@ -395,6 +392,8 @@ class PredictHashtagsForLocationsPlots():
             perct_of_occs1.append(current_val)
         perct_of_occs = perct_of_occs1
         bucket_ids = [b/60. for b in bucket_ids]
+        bucket_ids = [1]+bucket_ids
+        perct_of_occs = [0.0]+perct_of_occs
         plt.plot(bucket_ids, perct_of_occs, c='k')
         plt.scatter(bucket_ids, perct_of_occs, c='k')
         plt.grid(True)
