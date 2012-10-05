@@ -384,7 +384,7 @@ class PredictHashtagsForLocationsPlots():
 #            exit()
         mf_bucket_id_to_num_of_items = defaultdict(float)
         for bucket_id, items in mf_bucket_id_to_items.iteritems():
-            mf_bucket_id_to_num_of_items = sum(filter_outliers(items))
+            mf_bucket_id_to_num_of_items[bucket_id] = sum(filter_outliers(items))
         bucket_ids, num_of_items = zip(*sorted(mf_bucket_id_to_num_of_items.items(), key=itemgetter(0)))
         total_num_of_items = sum(num_of_items)
         perct_of_occs = [n/total_num_of_items for n in num_of_items]
