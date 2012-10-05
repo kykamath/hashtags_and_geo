@@ -392,9 +392,8 @@ class PredictHashtagsForLocationsPlots():
             perct_of_occs1.append(current_val)
         perct_of_occs = perct_of_occs1
         bucket_ids = [b/60. for b in bucket_ids]
-#        bucket_ids = [1]+bucket_ids
-#        perct_of_occs = [0.0]+perct_of_occs
-        plt.xlim(xmin=1)
+        bucket_ids = [1]+bucket_ids
+        perct_of_occs = [0.0]+perct_of_occs
         plt.plot(bucket_ids, perct_of_occs, c='k')
         plt.scatter(bucket_ids, perct_of_occs, c='k')
         plt.grid(True)
