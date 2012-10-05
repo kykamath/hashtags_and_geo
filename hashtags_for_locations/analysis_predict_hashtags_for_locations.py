@@ -376,7 +376,7 @@ class PredictHashtagsForLocationsPlots():
             ltuo_bucket_id_and_num_of_items =\
                                         filter(lambda (b, n): b in valid_bucket_ids, ltuo_bucket_id_and_num_of_items)
             _, num_of_items = zip(*ltuo_bucket_id_and_num_of_items)
-            total_num_of_items = sum(num_of_items)
+            total_num_of_items = sum(num_of_items)+0.0
             for bucket_id, num_of_items in ltuo_bucket_id_and_num_of_items:
                 mf_bucket_id_to_num_of_items[bucket_id]+=int(100*(num_of_items/total_num_of_items))
             print mf_bucket_id_to_num_of_items
