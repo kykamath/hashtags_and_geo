@@ -140,12 +140,12 @@ class WordObjectExtractor(ModifiedMRJob):
     def reducer(self, word, it_ltuo_hashtag_and_ltuo_occ_time_and_occ_location):
         ltuo_hashtag_and_ltuo_occ_time_and_occ_location =\
                                                         list(chain(*it_ltuo_hashtag_and_ltuo_occ_time_and_occ_location))
-        hashtags = zip(*ltuo_hashtag_and_ltuo_occ_time_and_occ_location)[0]
-        yield word, hashtags
-#        yield word, {
-#               'word': word,
-#               'ltuo_hashtag_and_ltuo_occ_time_and_occ_location': hashtags
-#           }
+#        hashtags = zip(*ltuo_hashtag_and_ltuo_occ_time_and_occ_location)[0]
+#        yield word, hashtags
+        yield word, {
+               'word': word,
+               'ltuo_hashtag_and_ltuo_occ_time_and_occ_location': ltuo_hashtag_and_ltuo_occ_time_and_occ_location
+           }
         
 if __name__ == '__main__':
 #    HashtagsExtractor.run()
