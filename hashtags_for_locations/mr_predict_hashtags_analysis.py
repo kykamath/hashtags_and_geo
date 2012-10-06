@@ -240,12 +240,6 @@ class HashtagsWithMajorityInfoAtVaryingGaps(ModifiedMRJob):
                                                    lambda (_, occ_times): len(occ_times)>10,
                                                    ltuo_utm_id_and_bucket_occ_times
                                                )
-#            for gap in\
-#                    np.arange(
-#                                  0.05,
-#                                  1,
-#                                  0.05
-#                              ):
             for gap in [0.15, 0.25, 0.50, 0.75]:
                 ltuo_utm_id_and_majority_threshold_bucket_time = []
                 for utm_id, bucket_occ_times in ltuo_utm_id_and_bucket_occ_times:

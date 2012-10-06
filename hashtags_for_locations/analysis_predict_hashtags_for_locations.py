@@ -600,11 +600,12 @@ class PredictHashtagsForLocationsPlots():
         #        print 'Percentage of locations between 1 and 6 hours: ', temp_map[360] - temp_map[60]
                 majority_threshold_bucket_time = [0.0]+list(majority_threshold_bucket_time)
                 perct_of_utm_ids = list(perct_of_utm_ids)+[1.0]
-                plt.plot(majority_threshold_bucket_time, perct_of_utm_ids, label='%0.2f'%gap_id)
+                plt.plot(majority_threshold_bucket_time, perct_of_utm_ids, lw=2, label='%0.2f'%gap_id)
+#                plt.scatter(majority_threshold_bucket_time, perct_of_utm_ids)
 #                plt.plot(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
 #                plt.scatter(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
         ax.set_xscale('log')
-        plt.legend()
+        plt.legend(loc=4)
         plt.grid(True)
         plt.xlabel('Hashtag propagation time (minutes)')
         plt.ylabel('CDF of locations')
@@ -868,5 +869,5 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    PredictHashtagsForLocationsPlots.run()
+#    MRAnalysis.run()
+    PredictHashtagsForLocationsPlots.run()
