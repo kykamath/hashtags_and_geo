@@ -243,14 +243,12 @@ class HashtagsWithMajorityInfoAtVaryingGaps(ModifiedMRJob):
             for gap in\
                     np.arange(
                                   GAP_PERCT_FOR_PROPAGATION_ANALYSIS,
-                                  1+GAP_PERCT_FOR_PROPAGATION_ANALYSIS,
+                                  1,
                                   GAP_PERCT_FOR_PROPAGATION_ANALYSIS
                               ):
                 ltuo_utm_id_and_majority_threshold_bucket_time = []
                 for utm_id, bucket_occ_times in ltuo_utm_id_and_bucket_occ_times:
                     bucket_occ_times.sort()
-                    print hashtag_object['hashtag']
-                    print bucket_occ_times, len(bucket_occ_times), gap, int(gap*len(bucket_occ_times))
                     ltuo_utm_id_and_majority_threshold_bucket_time.append([
                                    utm_id,
                                    bucket_occ_times[int(gap*len(bucket_occ_times))]

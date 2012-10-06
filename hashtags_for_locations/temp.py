@@ -14,7 +14,7 @@
 
 import numpy as np
 gap_perct = 0.02
-print np.arange(gap_perct,1+gap_perct,gap_perct)
+print np.arange(gap_perct,1,gap_perct)
 
 #from library.file_io import FileIO
 #import sys
