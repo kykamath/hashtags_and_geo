@@ -542,59 +542,70 @@ class PredictHashtagsForLocationsPlots():
     @staticmethod
     def perct_of_locations_vs_hashtag_propaagation_time_at_varying_gaps():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
-        mf_majority_threshold_bucket_time_to_num_of_utm_ids = defaultdict(float)
         plt.figure(num=None, figsize=(6,3))
         ax = plt.subplot(111)
-        for d in\
-                                            FileIO.iterateJsonFromFile(f_hashtags_with_majority_info_at_varying_gaps):
+        ltuo_gap_id_and_hashtag_with_majority_info_objects = []
+        for d in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info_at_varying_gaps):
             gap_id = d['gap_id']
             print gap_id
-            hashtag_with_majority_info_objects = d['hashtag_with_majority_info_objects']
-            for data in hashtag_with_majority_info_objects:
-                if data['ltuo_majority_threshold_bucket_time_and_utm_ids']:
-                    ltuo_majority_threshold_bucket_time_and_utm_ids =\
-                                                                    data['ltuo_majority_threshold_bucket_time_and_utm_ids']
-                    majority_threshold_bucket_time = zip(*ltuo_majority_threshold_bucket_time_and_utm_ids)[0]
-                    majority_threshold_bucket_time = filter_outliers(majority_threshold_bucket_time)
-                    ltuo_majority_threshold_bucket_time_and_utm_ids = filter(
-                                                                     lambda (t, _): t in majority_threshold_bucket_time,
-                                                                     ltuo_majority_threshold_bucket_time_and_utm_ids
-                                                                 )
-                    ltuo_majority_threshold_bucket_time_and_utm_id_counts =\
-                                                                        map(
-                                                                            lambda (t, utm_ids): (t, len(utm_ids)),
-                                                                            ltuo_majority_threshold_bucket_time_and_utm_ids
-                                                                            )
-                    ltuo_majority_threshold_bucket_time_and_utm_id_counts.sort(key=itemgetter(0))
-                    majority_threshold_bucket_times, utm_id_counts =\
-                                                                zip(*ltuo_majority_threshold_bucket_time_and_utm_id_counts)
-                    first_bucket_time = majority_threshold_bucket_times[0]
-                    majority_threshold_bucket_times = map(
-                                                              lambda t: (t-first_bucket_time+BUCKET_WIDTH)/60.,
-                                                              majority_threshold_bucket_times
-                                                          )
-                    for majority_threshold_bucket_time, utm_id_count in zip(majority_threshold_bucket_times, utm_id_counts):
-                        mf_majority_threshold_bucket_time_to_num_of_utm_ids[majority_threshold_bucket_time]+=utm_id_count
-            ltuo_majority_threshold_bucket_time_and_num_of_utm_ids =\
-                                                             mf_majority_threshold_bucket_time_to_num_of_utm_ids.items()
-            ltuo_majority_threshold_bucket_time_and_num_of_utm_ids.sort(key=itemgetter(0))
-            majority_threshold_bucket_time, num_of_utm_ids = zip(*ltuo_majority_threshold_bucket_time_and_num_of_utm_ids)
-            total_num_of_utm_ids = sum(num_of_utm_ids)
-            perct_of_utm_ids = [n/total_num_of_utm_ids for n in num_of_utm_ids]
-            perct_of_utm_ids1 = []
-            current_val=0.0
-            for perct_of_utm_id in perct_of_utm_ids:
-                perct_of_utm_ids1.append(current_val)
-                current_val+=perct_of_utm_id
-            perct_of_utm_ids = perct_of_utm_ids1
-    #        temp_map = dict(zip(majority_threshold_bucket_time, perct_of_utm_ids))
-    #        print 'Percentage of locations propagated in first 6 hours: ', temp_map[360]
-    #        print 'Percentage of locations between 1 and 6 hours: ', temp_map[360] - temp_map[60]
-            majority_threshold_bucket_time = [0.0]+list(majority_threshold_bucket_time)
-            perct_of_utm_ids = list(perct_of_utm_ids)+[1.0]
-            plt.plot(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
-            plt.scatter(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
+            ltuo_gap_id_and_hashtag_with_majority_info_objects.append([
+                                                                       float(d['gap_id']),
+                                                                       d['hashtag_with_majority_info_objects']
+                                                                       ])
+        ltuo_gap_id_and_hashtag_with_majority_info_objects.sort(key=itemgetter(0))
+        for gap_id, hashtag_with_majority_info_objects in ltuo_gap_id_and_hashtag_with_majority_info_objects:
+#            if gap_id in ['0.16', '0.50', '0.98']:
+            if True:
+                print gap_id
+                mf_majority_threshold_bucket_time_to_num_of_utm_ids = defaultdict(float)
+#                hashtag_with_majority_info_objects = d['hashtag_with_majority_info_objects']
+                for data in hashtag_with_majority_info_objects:
+                    if data['ltuo_majority_threshold_bucket_time_and_utm_ids']:
+                        ltuo_majority_threshold_bucket_time_and_utm_ids =\
+                                                                        data['ltuo_majority_threshold_bucket_time_and_utm_ids']
+                        majority_threshold_bucket_time = zip(*ltuo_majority_threshold_bucket_time_and_utm_ids)[0]
+                        majority_threshold_bucket_time = filter_outliers(majority_threshold_bucket_time)
+                        ltuo_majority_threshold_bucket_time_and_utm_ids = filter(
+                                                                         lambda (t, _): t in majority_threshold_bucket_time,
+                                                                         ltuo_majority_threshold_bucket_time_and_utm_ids
+                                                                     )
+                        ltuo_majority_threshold_bucket_time_and_utm_id_counts =\
+                                                                            map(
+                                                                                lambda (t, utm_ids): (t, len(utm_ids)),
+                                                                                ltuo_majority_threshold_bucket_time_and_utm_ids
+                                                                                )
+                        ltuo_majority_threshold_bucket_time_and_utm_id_counts.sort(key=itemgetter(0))
+                        majority_threshold_bucket_times, utm_id_counts =\
+                                                                    zip(*ltuo_majority_threshold_bucket_time_and_utm_id_counts)
+                        first_bucket_time = majority_threshold_bucket_times[0]
+                        majority_threshold_bucket_times = map(
+                                                                  lambda t: (t-first_bucket_time+BUCKET_WIDTH)/60.,
+                                                                  majority_threshold_bucket_times
+                                                              )
+                        for majority_threshold_bucket_time, utm_id_count in zip(majority_threshold_bucket_times, utm_id_counts):
+                            mf_majority_threshold_bucket_time_to_num_of_utm_ids[majority_threshold_bucket_time]+=utm_id_count
+                ltuo_majority_threshold_bucket_time_and_num_of_utm_ids =\
+                                                                 mf_majority_threshold_bucket_time_to_num_of_utm_ids.items()
+                ltuo_majority_threshold_bucket_time_and_num_of_utm_ids.sort(key=itemgetter(0))
+                majority_threshold_bucket_time, num_of_utm_ids = zip(*ltuo_majority_threshold_bucket_time_and_num_of_utm_ids)
+                total_num_of_utm_ids = sum(num_of_utm_ids)
+                perct_of_utm_ids = [n/total_num_of_utm_ids for n in num_of_utm_ids]
+                perct_of_utm_ids1 = []
+                current_val=0.0
+                for perct_of_utm_id in perct_of_utm_ids:
+                    perct_of_utm_ids1.append(current_val)
+                    current_val+=perct_of_utm_id
+                perct_of_utm_ids = perct_of_utm_ids1
+        #        temp_map = dict(zip(majority_threshold_bucket_time, perct_of_utm_ids))
+        #        print 'Percentage of locations propagated in first 6 hours: ', temp_map[360]
+        #        print 'Percentage of locations between 1 and 6 hours: ', temp_map[360] - temp_map[60]
+                majority_threshold_bucket_time = [0.0]+list(majority_threshold_bucket_time)
+                perct_of_utm_ids = list(perct_of_utm_ids)+[1.0]
+                plt.plot(majority_threshold_bucket_time, perct_of_utm_ids, label='%0.2f'%gap_id)
+#                plt.plot(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
+#                plt.scatter(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
         ax.set_xscale('log')
+        plt.legend()
         plt.grid(True)
         plt.xlabel('Hashtag propagation time (minutes)')
         plt.ylabel('CDF of locations')
