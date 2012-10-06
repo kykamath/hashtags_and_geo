@@ -52,6 +52,7 @@ PARAMS_DICT = dict(
                    MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS = MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS,
                    MIN_OCCURRENCES_PER_UTM_ID = MIN_OCCURRENCES_PER_UTM_ID,
                    TIME_UNIT_IN_SECONDS = TIME_UNIT_IN_SECONDS,
+                   GAP_PERCT_FOR_PROPAGATION_ANALYSIS = GAP_PERCT_FOR_PROPAGATION_ANALYSIS
                    )
 
 def iterateHashtagObjectInstances(line):
@@ -207,6 +208,70 @@ class HashtagsWithMajorityInfo(ModifiedMRJob):
                                                                         ltuo_majority_threshold_bucket_time_and_utm_ids
                                               }
 
+class HashtagsWithMajorityInfoAtVaryingGaps(ModifiedMRJob):
+    '''
+    hashtag_with_majority_info_object = {
+                                'hashtag': hashtag,
+                                'ltuo_majority_threshold_bucket_time_and_utm_ids':
+                                                                        ltuo_majority_threshold_bucket_time_and_utm_ids
+                            }
+    '''
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(HashtagsWithMajorityInfoAtVaryingGaps, self).__init__(*args, **kwargs)
+    def mapper(self, key, value):
+        hashtag_object = cjson.decode(value)
+        if 'num_of_occurrences' in hashtag_object and\
+                hashtag_object['num_of_occurrences'] >= MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS:
+            ltuo_bucket_occ_time_and_occ_utm_id =\
+                                        map(
+                                               lambda (t, utm_id):
+                                                    (GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS), utm_id),
+                                               hashtag_object['ltuo_occ_time_and_occ_utm_id']
+                                           )
+            ltuo_bucket_occ_time_and_occ_utm_id.sort(key=itemgetter(1))
+            ltuo_utm_id_and_bucket_occ_times =\
+                [ (occ_utm_id,map(itemgetter(0), it_bucket_occ_time_and_occ_utm_id))
+                 for occ_utm_id, it_bucket_occ_time_and_occ_utm_id in
+                    groupby(ltuo_bucket_occ_time_and_occ_utm_id, key=itemgetter(1))
+                ]
+            ltuo_utm_id_and_bucket_occ_times =\
+                                            filter(
+                                                   lambda (_, occ_times): len(occ_times)>10,
+                                                   ltuo_utm_id_and_bucket_occ_times
+                                               )
+            for gap in\
+                    np.arange(
+                                  GAP_PERCT_FOR_PROPAGATION_ANALYSIS,
+                                  1+GAP_PERCT_FOR_PROPAGATION_ANALYSIS,
+                                  GAP_PERCT_FOR_PROPAGATION_ANALYSIS
+                              ):
+                ltuo_utm_id_and_majority_threshold_bucket_time = []
+                for utm_id, bucket_occ_times in ltuo_utm_id_and_bucket_occ_times:
+                    bucket_occ_times.sort()
+                    ltuo_utm_id_and_majority_threshold_bucket_time.append([
+                                   utm_id,
+                                   bucket_occ_times[int(gap*len(bucket_occ_times))]
+                               ])
+                ltuo_majority_threshold_bucket_time_and_utm_ids =\
+                    [ (majority_threshold_bucket_time, map(itemgetter(0), it_utm_id_and_majority_threshold_bucket_time))
+                     for majority_threshold_bucket_time, it_utm_id_and_majority_threshold_bucket_time in
+                        groupby(ltuo_utm_id_and_majority_threshold_bucket_time, itemgetter(1))
+                    ]
+                ltuo_majority_threshold_bucket_time_and_utm_ids.sort(key=itemgetter(0))
+                yield '%0.2f'%gap, {
+                                      'hashtag': hashtag_object['hashtag'],
+                                      'ltuo_majority_threshold_bucket_time_and_utm_ids':
+                                                            ltuo_majority_threshold_bucket_time_and_utm_ids
+                                  }
+    def reducer(self, gap_id, ito_hashtag_with_majority_info_object):
+        hashtag_with_majority_info_objects = list(chain(*ito_hashtag_with_majority_info_object))
+        yield gap_id, {
+                           'gap_id': gap_id,
+                           'hashtag_with_majority_info_objects': hashtag_with_majority_info_objects
+                       }
+        
+
 def group_items_by(list_object, key):
     list_object.sort(key=key)
     return [(k,list(ito_items)) for k, ito_items in groupby(list_object, key=key)]
@@ -243,9 +308,10 @@ class ImpactOfUsingLocationsToPredict(ModifiedMRJob):
                                      lambda (u, l_o):(
                                             u,
                                             GeneralMethods.approximateEpoch(
-                                                    l_o[int(MAJORITY_THRESHOLD_FOR_PROPAGATION_ANALYSIS*len(l_o))],
-                                                    TIME_UNIT_IN_SECONDS
-                                        )),
+                                                        l_o[int(MAJORITY_THRESHOLD_FOR_PROPAGATION_ANALYSIS*len(l_o))],
+                                                        TIME_UNIT_IN_SECONDS
+                                            )
+                                     ),
                                      ltuo_utm_id_and_occ_times
                                  )
             for u_and_t1, u_and_t2 in combinations(ltuo_utm_id_and_majority_threshold_bucket_time, 2):
@@ -311,4 +377,5 @@ if __name__ == '__main__':
 #    HashtagsExtractor.run()
 #    PropagationMatrix.run()
 #    HashtagsWithMajorityInfo.run()
-    ImpactOfUsingLocationsToPredict.run()
+    HashtagsWithMajorityInfoAtVaryingGaps.run()
+#    ImpactOfUsingLocationsToPredict.run()
