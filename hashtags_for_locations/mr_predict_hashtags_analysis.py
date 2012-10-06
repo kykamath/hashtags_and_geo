@@ -249,7 +249,7 @@ class HashtagsWithMajorityInfoAtVaryingGaps(ModifiedMRJob):
                 ltuo_utm_id_and_majority_threshold_bucket_time = []
                 for utm_id, bucket_occ_times in ltuo_utm_id_and_bucket_occ_times:
                     bucket_occ_times.sort()
-                    print bucket_occ_times, int(gap*len(bucket_occ_times))
+                    print bucket_occ_times, len(bucket_occ_times), int(gap*len(bucket_occ_times))
                     ltuo_utm_id_and_majority_threshold_bucket_time.append([
                                    utm_id,
                                    bucket_occ_times[int(gap*len(bucket_occ_times))]
