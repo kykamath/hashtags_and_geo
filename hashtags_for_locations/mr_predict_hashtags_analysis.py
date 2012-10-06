@@ -265,7 +265,10 @@ class HashtagsWithMajorityInfoAtVaryingGaps(ModifiedMRJob):
                                                             ltuo_majority_threshold_bucket_time_and_utm_ids
                                   }
     def reducer(self, gap_id, ito_hashtag_with_majority_info_object):
-        hashtag_with_majority_info_objects = list(chain(*ito_hashtag_with_majority_info_object))
+        hashtag_with_majority_info_objects = []
+#        hashtag_with_majority_info_objects = list(chain(*ito_hashtag_with_majority_info_object))
+        for hashtag_with_majority_info_object in ito_hashtag_with_majority_info_object:
+            hashtag_with_majority_info_objects.append(hashtag_with_majority_info_object)
         yield gap_id, {
                            'gap_id': gap_id,
                            'hashtag_with_majority_info_objects': hashtag_with_majority_info_objects

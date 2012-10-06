@@ -540,6 +540,66 @@ class PredictHashtagsForLocationsPlots():
         plt.ylabel('CDF of locations')
         savefig(output_file)
     @staticmethod
+    def perct_of_locations_vs_hashtag_propaagation_time_at_varying_gaps():
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        mf_majority_threshold_bucket_time_to_num_of_utm_ids = defaultdict(float)
+        plt.figure(num=None, figsize=(6,3))
+        ax = plt.subplot(111)
+        for d in\
+                                            FileIO.iterateJsonFromFile(f_hashtags_with_majority_info_at_varying_gaps):
+            gap_id = d['gap_id']
+            print gap_id
+            hashtag_with_majority_info_objects = d['hashtag_with_majority_info_objects']
+            for data in hashtag_with_majority_info_objects:
+                if data['ltuo_majority_threshold_bucket_time_and_utm_ids']:
+                    ltuo_majority_threshold_bucket_time_and_utm_ids =\
+                                                                    data['ltuo_majority_threshold_bucket_time_and_utm_ids']
+                    majority_threshold_bucket_time = zip(*ltuo_majority_threshold_bucket_time_and_utm_ids)[0]
+                    majority_threshold_bucket_time = filter_outliers(majority_threshold_bucket_time)
+                    ltuo_majority_threshold_bucket_time_and_utm_ids = filter(
+                                                                     lambda (t, _): t in majority_threshold_bucket_time,
+                                                                     ltuo_majority_threshold_bucket_time_and_utm_ids
+                                                                 )
+                    ltuo_majority_threshold_bucket_time_and_utm_id_counts =\
+                                                                        map(
+                                                                            lambda (t, utm_ids): (t, len(utm_ids)),
+                                                                            ltuo_majority_threshold_bucket_time_and_utm_ids
+                                                                            )
+                    ltuo_majority_threshold_bucket_time_and_utm_id_counts.sort(key=itemgetter(0))
+                    majority_threshold_bucket_times, utm_id_counts =\
+                                                                zip(*ltuo_majority_threshold_bucket_time_and_utm_id_counts)
+                    first_bucket_time = majority_threshold_bucket_times[0]
+                    majority_threshold_bucket_times = map(
+                                                              lambda t: (t-first_bucket_time+BUCKET_WIDTH)/60.,
+                                                              majority_threshold_bucket_times
+                                                          )
+                    for majority_threshold_bucket_time, utm_id_count in zip(majority_threshold_bucket_times, utm_id_counts):
+                        mf_majority_threshold_bucket_time_to_num_of_utm_ids[majority_threshold_bucket_time]+=utm_id_count
+            ltuo_majority_threshold_bucket_time_and_num_of_utm_ids =\
+                                                             mf_majority_threshold_bucket_time_to_num_of_utm_ids.items()
+            ltuo_majority_threshold_bucket_time_and_num_of_utm_ids.sort(key=itemgetter(0))
+            majority_threshold_bucket_time, num_of_utm_ids = zip(*ltuo_majority_threshold_bucket_time_and_num_of_utm_ids)
+            total_num_of_utm_ids = sum(num_of_utm_ids)
+            perct_of_utm_ids = [n/total_num_of_utm_ids for n in num_of_utm_ids]
+            perct_of_utm_ids1 = []
+            current_val=0.0
+            for perct_of_utm_id in perct_of_utm_ids:
+                perct_of_utm_ids1.append(current_val)
+                current_val+=perct_of_utm_id
+            perct_of_utm_ids = perct_of_utm_ids1
+    #        temp_map = dict(zip(majority_threshold_bucket_time, perct_of_utm_ids))
+    #        print 'Percentage of locations propagated in first 6 hours: ', temp_map[360]
+    #        print 'Percentage of locations between 1 and 6 hours: ', temp_map[360] - temp_map[60]
+            majority_threshold_bucket_time = [0.0]+list(majority_threshold_bucket_time)
+            perct_of_utm_ids = list(perct_of_utm_ids)+[1.0]
+            plt.plot(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
+            plt.scatter(majority_threshold_bucket_time, perct_of_utm_ids, c='k')
+        ax.set_xscale('log')
+        plt.grid(True)
+        plt.xlabel('Hashtag propagation time (minutes)')
+        plt.ylabel('CDF of locations')
+        savefig(output_file)
+    @staticmethod
     def impact_of_using_location_to_predict_hashtag():
         mf_min_common_hashtag_to_properties = {
                                                25 : {'color': 'r', 'marker': 'o'},
@@ -784,9 +844,10 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
+#        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
 #        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
+        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time_at_varying_gaps()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
 
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde()
