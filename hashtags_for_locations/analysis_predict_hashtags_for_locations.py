@@ -547,7 +547,6 @@ class PredictHashtagsForLocationsPlots():
         ltuo_gap_id_and_hashtag_with_majority_info_objects = []
         for d in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info_at_varying_gaps):
             gap_id = d['gap_id']
-            print gap_id
             ltuo_gap_id_and_hashtag_with_majority_info_objects.append([
                                                                        float(d['gap_id']),
                                                                        d['hashtag_with_majority_info_objects']
