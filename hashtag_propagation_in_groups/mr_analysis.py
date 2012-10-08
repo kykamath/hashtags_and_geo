@@ -5,7 +5,7 @@ Created on Oct 3, 2012
 '''
 from collections import defaultdict
 from datetime import datetime
-from itertools import chain
+from itertools import chain, groupby
 from library.geo import UTMConverter
 from library.mrjobwrapper import ModifiedMRJob
 from library.nlp import getWordsFromRawEnglishMessage
@@ -28,6 +28,9 @@ START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
 HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
 
+# Minimum number of word occurrences expected for each hashtag to be considered a valid word
+MIN_WORD_OCCURRENCES_PER_HASHTAG = 10
+
 ## Temporal Width of a hashtag group
 #TEMPORAL_WIDTH_OF_HASHTAG_GROUP_IN_SECONDS = 24*60*10
 
@@ -37,6 +40,7 @@ PARAMS_DICT = dict(
                    MIN_HASHTAG_OCCURRENCES = MIN_HASHTAG_OCCURRENCES,
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW,
                    HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
+                   MIN_WORD_OCCURRENCES_PER_HASHTAG = MIN_WORD_OCCURRENCES_PER_HASHTAG
                    )
 
 def iterate_hashtag_with_words(line):
@@ -119,6 +123,16 @@ class WordObjectExtractor(ModifiedMRJob):
     def __init__(self, *args, **kwargs):
         super(WordObjectExtractor, self).__init__(*args, **kwargs)
         self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location = defaultdict(dict)
+    def _get_words_above_min_threshold(self, ltuo_occ_time_and_words):
+        l_words = map(itemgetter(1), ltuo_occ_time_and_words)
+        words = sorted(list(chain(*l_words)))
+        ltuo_word_and_count = [(word, len(list(it_word))) for word, it_word in groupby(words)]
+        ltuo_word_and_count = filter(
+                                     lambda (w,c): c>MIN_WORD_OCCURRENCES_PER_HASHTAG,
+                                     ltuo_word_and_count
+                                 )
+        return map(itemgetter(0), ltuo_word_and_count)
+        
     def mapper(self, key, line):
         if False: yield # I'm a generator!
         data = cjson.decode(line)
@@ -126,8 +140,9 @@ class WordObjectExtractor(ModifiedMRJob):
             hashtag = data['hashtag']
             ltuo_occ_time_and_occ_location = data['ltuo_occ_time_and_occ_location']
             ltuo_occ_time_and_words = data['ltuo_occ_time_and_words']
+            valid_words = self._get_words_above_min_threshold(ltuo_occ_time_and_words)
             for (occ_time, occ_location),(_, words) in zip(ltuo_occ_time_and_occ_location, ltuo_occ_time_and_words):
-                for word in words:
+                for word in filter(lambda w: w in valid_words, words):
                     if hashtag not in self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word]:
                         self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word][hashtag] = []
                     self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word][hashtag].append(
