@@ -458,7 +458,8 @@ class GapOccurrenceTimeDuringHashtagLifetime(ModifiedMRJob):
                 life_time = bucket_occ_times[-1] - start_time
                 if life_time>0:
                     for bucket_occ_time in bucket_occ_times:
-                        self.mf_perct_life_time_to_count['%0.1f'%((bucket_occ_time-start_time)/life_time)]+=1
+                        prect_life_time = (bucket_occ_time-start_time)/life_time
+                        self.mf_perct_life_time_to_count['%0.02f'%prect_life_time]+=1
 #                if life_time>0:
 #                    norm_num_of_occurrences =\
 #                                            map(lambda t: int(((t-start_time)/life_time)*100), bucket_occ_times_at_gaps)

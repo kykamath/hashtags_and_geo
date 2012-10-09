@@ -847,6 +847,14 @@ class PredictHashtagsForLocationsPlots():
         plt.xlabel('perct_of_lifespan')
         plt.ylabel('perct_of_occurrences')
         plt.show()
+    @staticmethod
+    def temp1():
+        ltuo_perct_life_time_and_perct_of_occurrences = []    
+        for data in FileIO.iterateJsonFromFile(f_gap_occurrence_time_during_hashtag_lifetime, remove_params_dict=True):
+            ltuo_perct_life_time_and_perct_of_occurrences = data
+        perct_life_time, perct_of_occurrences = zip(*ltuo_perct_life_time_and_perct_of_occurrences)
+        plt.plot(perct_life_time, perct_of_occurrences)
+        plt.show()
 #            break
 #    @staticmethod
 #    def example_of_hashtag_propagation_patterns():
@@ -896,8 +904,8 @@ class PredictHashtagsForLocationsPlots():
 
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
             
-        PredictHashtagsForLocationsPlots.temp()
+        PredictHashtagsForLocationsPlots.temp1()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    PredictHashtagsForLocationsPlots.run()
+#    MRAnalysis.run()
+    PredictHashtagsForLocationsPlots.run()
