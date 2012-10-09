@@ -172,12 +172,12 @@ class WordObjectExtractor(ModifiedMRJob):
                                 'n00': Number of occurrences of word and hashtag,
                                 'n01': Number of occurrences of word without hashtag,
                                 'n10': Number of occurrences of hashtag without word,
-                                'n11': Number of occurrences of without hashtag and without word,
+                                'n11': Number of occurrences without hashtag and without word,
                                 }
     word_object = {
                     'word': word,
-                    'ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location': 
-                                                                ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location
+                    'total_word_occurrences': total_word_occurrences,
+                    'contingency_table_objects': contingency_table_objects
                 }
     '''
     DEFAULT_INPUT_PROTOCOL='raw_value'
@@ -232,25 +232,43 @@ class WordObjectExtractor(ModifiedMRJob):
                         total_word_occurrences+=1
                         mf_hashtag_to_n00[hashtag]+=1
                     else: mf_hashtag_to_n10[hashtag]+=1
+        contingency_table_objects = []
         for hashtag in so_hashtag:
             contingency_table_object = { 'word': word, 'hashtag': hashtag}
             contingency_table_object['n00'] = mf_hashtag_to_n00.get(hashtag, 0.0)
             contingency_table_object['n10'] = mf_hashtag_to_n10.get(hashtag, 0.0)
             contingency_table_object['n01'] = total_word_occurrences - contingency_table_object['n00']
-            yield '', contingency_table_object
-#                mf_hashtag_to_n00[hashtag] = len(ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location)
-#                filter(lambda (w, t, l): w!=
-#                       ltuo_word_and_occ_time_and_occ_location)
-#                contingency_table_object = {'word': word, 'hashtag': hashtag}
-#                for word, ltuo_word_and_occ_time_and_occ_location
-#                yield word, (hashtag, len(ltuo_word_and_occ_time_and_occ_location))
-#        ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location =\
-#                                            list(chain(*it_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location))
-#        yield word, {
-#               'word': word,
-#               'ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location':
-#                                                                ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location
-#           }
+            contingency_table_objects.append(contingency_table_object)
+        word_object = {
+                    'word': word,
+                    'total_word_occurrences': total_word_occurrences,
+                    'contingency_table_objects': contingency_table_objects
+                }
+        yield word, word_object
+
+class Filln11InContingencyTableObject(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(Filln11InContingencyTableObject, self).__init__(*args, **kwargs) 
+        self.word_object_extractor = WordObjectExtractor()
+    def mapper(self, key, word_object): 
+        print word_object
+        yield '', [word_object]
+    def reducer(self, empty_key, it_word_objects):
+        word_objects = list(chain(*it_word_objects))
+        total_words = sum(map(itemgetter('total_word_occurrences'), word_objects))
+        for word_object in word_objects:
+            for contingency_table_object in word_object['contingency_table_objects']:
+                total_occurrences_of_either_word_or_hashtag =\
+                        contingency_table_object['n00']+contingency_table_object['n01']+contingency_table_object['n10']
+                contingency_table_object['n11'] = total_words - total_occurrences_of_either_word_or_hashtag 
+                yield (
+                           '%s_%s'%(contingency_table_object['word'], contingency_table_object['hashtag']),
+                           contingency_table_object
+                       )
+    def steps(self):
+        return self.word_object_extractor.steps() +\
+            [self.mr(mapper=self.mapper, reducer=self.reducer)]
         
 #class WordObjectExtractor(ModifiedMRJob):
 #    '''
@@ -303,4 +321,5 @@ class WordObjectExtractor(ModifiedMRJob):
         
 if __name__ == '__main__':
 #    HashtagsExtractor.run()
-    WordObjectExtractor.run()
+#    WordObjectExtractor.run()
+    Filln11InContingencyTableObject.run()
