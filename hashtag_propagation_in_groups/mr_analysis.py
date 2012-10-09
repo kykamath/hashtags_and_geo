@@ -265,8 +265,7 @@ class WordHashtagContingencyTableObjectExtractor(ModifiedMRJob):
                            contingency_table_object
                        )
     def steps(self):
-        return self.word_object_extractor.steps() +\
-            [self.mr(mapper=self.mapper, reducer=self.reducer)]
+        return self.word_object_extractor.steps() + [self.mr(mapper=self.mapper, reducer=self.reducer)]
         
 #class WordObjectExtractor(ModifiedMRJob):
 #    '''
