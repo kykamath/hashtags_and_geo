@@ -427,6 +427,7 @@ class GapOccurrenceTimeDuringHashtagLifetime(ModifiedMRJob):
     def __init__(self, *args, **kwargs):
         super(GapOccurrenceTimeDuringHashtagLifetime, self).__init__(*args, **kwargs)
         self.mf_perct_life_time_to_count = defaultdict(float)
+        self.mf_perct_life_time_to_perct_of_occurrences = defaultdict(list)
     def mapper(self, key, value):
         if False: yield # I'm a generator!
         hashtag_object = cjson.decode(value)
@@ -450,32 +451,50 @@ class GapOccurrenceTimeDuringHashtagLifetime(ModifiedMRJob):
                                                    ltuo_utm_id_and_bucket_occ_times
                                                )
             for _, bucket_occ_times in ltuo_utm_id_and_bucket_occ_times:
-                gap_perct = 0.05
-                gaps = np.arange(gap_perct,1+gap_perct,gap_perct)
+                gap_perct = 0.01
 #                bucket_occ_times = filter_outliers(bucket_occ_times)
 #                bucket_occ_times_at_gaps = get_items_at_gap(bucket_occ_times, gap_perct)
+                valid_perct_of_life_times = ['%0.2f'%v for v in np.arange(gap_perct,1+gap_perct,gap_perct)]
+                mf_perct_life_time_to_perct_of_occurrences = {}
                 start_time = float(bucket_occ_times[0])
                 life_time = bucket_occ_times[-1] - start_time
                 if life_time>0:
-                    for bucket_occ_time in bucket_occ_times:
-                        prect_life_time = (bucket_occ_time-start_time)/life_time
-                        self.mf_perct_life_time_to_count['%0.02f'%prect_life_time]+=1
-#                if life_time>0:
-#                    norm_num_of_occurrences =\
-#                                            map(lambda t: int(((t-start_time)/life_time)*100), bucket_occ_times_at_gaps)
-#                    for gap, norm_num_of_occurrence in zip(gaps, norm_num_of_occurrences):
-#                        self.mf_gap_to_norm_num_of_occurrences['%0.2f'%gap]+=norm_num_of_occurrence
-    def mapper_final(self): yield '', self.mf_perct_life_time_to_count.items()
-    def reducer(self, empty_key, it_ltuo_perct_life_time_and_count):
-        mf_perct_life_time_to_count = defaultdict(float)
-        for ltuo_perct_life_time_and_count in it_ltuo_perct_life_time_and_count:
-            for perct_life_time, count in ltuo_perct_life_time_and_count:
-                mf_perct_life_time_to_count[perct_life_time]+=count
-        total_count = sum(mf_perct_life_time_to_count.values())
-        ltuo_perct_life_time_and_perct_of_occurrences =\
-                map(lambda (g, n): (float(g), n/total_count), mf_perct_life_time_to_count.items())
-        ltuo_perct_life_time_and_perct_of_occurrences.sort(key=itemgetter(0))
-        yield '', ltuo_perct_life_time_and_perct_of_occurrences
+                    total_occurrences = len(bucket_occ_times)+0.0
+                    for occurrence_count, bucket_occ_time in enumerate(bucket_occ_times):
+                        perct_life_time = (bucket_occ_time-start_time)/life_time
+                        self.mf_perct_life_time_to_count['%0.02f'%perct_life_time]+=1
+                        if '%0.02f'%perct_life_time in valid_perct_of_life_times:
+                            mf_perct_life_time_to_perct_of_occurrences['%0.02f'%perct_life_time]=\
+                                                                    int(((occurrence_count+1)/total_occurrences)*100)
+#                                                                                (occurrence_count+1)/total_occurrences
+                for perct_life_time, perct_of_occurrences in mf_perct_life_time_to_perct_of_occurrences.iteritems():
+                    self.mf_perct_life_time_to_perct_of_occurrences[perct_life_time].append(perct_of_occurrences)
+    def mapper_final(self): 
+        yield 'perct_life_time_to_occurrences_distribution', self.mf_perct_life_time_to_count.items()
+        yield 'ltuo_perct_life_time_and_perct_of_occurrences', self.mf_perct_life_time_to_perct_of_occurrences.items()
+    def reducer(self, key, it_values):
+        if key=='perct_life_time_to_occurrences_distribution':
+            mf_perct_life_time_to_count = defaultdict(float)
+            for ltuo_perct_life_time_and_count in it_values:
+                for perct_life_time, count in ltuo_perct_life_time_and_count:
+                    mf_perct_life_time_to_count[perct_life_time]+=count
+            total_count = sum(mf_perct_life_time_to_count.values())
+            ltuo_perct_life_time_and_perct_of_occurrences =\
+                    map(lambda (g, n): (float(g), n/total_count), mf_perct_life_time_to_count.items())
+            ltuo_perct_life_time_and_perct_of_occurrences.sort(key=itemgetter(0))
+            yield '', {'key':key, 'value': ltuo_perct_life_time_and_perct_of_occurrences}
+        else:
+            ltuo_perct_life_time_and_perct_of_occurrences = list(chain(*it_values))
+            mf_ltuo_perct_life_time_to_perct_of_occurrences = defaultdict(list)
+            for perct_life_time, perct_of_occurrences in ltuo_perct_life_time_and_perct_of_occurrences:
+                mf_ltuo_perct_life_time_to_perct_of_occurrences[perct_life_time]+=perct_of_occurrences
+            ltuo_perct_life_time_and_num_of_occurrences =\
+                                                    map(
+                                                            lambda (p, po): (float(p), sum(po)),
+                                                            mf_ltuo_perct_life_time_to_perct_of_occurrences.iteritems()
+                                                    )
+            ltuo_perct_life_time_and_num_of_occurrences.sort(key=itemgetter(0))
+            yield '', {'key':key, 'value': ltuo_perct_life_time_and_num_of_occurrences}
 if __name__ == '__main__':
     pass
 #    HashtagsExtractor.run()

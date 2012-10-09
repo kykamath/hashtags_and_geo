@@ -12,7 +12,7 @@ from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.geo import UTMConverter
 from library.mrjobwrapper import runMRJob
-from library.plotting import savefig, getCumulativeDistribution
+from library.plotting import getCumulativeDistribution, savefig, splineSmooth
 from library.stats import filter_outliers
 from mr_predict_hashtags_analysis import GapOccurrenceTimeDuringHashtagLifetime
 from mr_predict_hashtags_analysis import HashtagsExtractor
@@ -65,6 +65,12 @@ f_impact_of_using_locations_to_predict = analysis_folder%'impact_of_using_locati
                                                                                 'impact_of_using_locations_to_predict'
 f_impact_of_using_location_to_predict_hashtag_with_mc_simulation = analysis_folder%\
                                                                 'impact_using_mc_simulation/impact_using_mc_simulation'                                                                              
+def with_gaussian_kde(y_values, x_range = (-1,1,100)):
+    density = gaussian_kde(y_values)
+    xs = np.linspace(*x_range)
+    density.covariance_factor = lambda : .25
+    density._compute_covariance()
+    return xs, density(xs)
 
 class MRAnalysis():
     @staticmethod
@@ -849,11 +855,19 @@ class PredictHashtagsForLocationsPlots():
         plt.show()
     @staticmethod
     def temp1():
-        ltuo_perct_life_time_and_perct_of_occurrences = []    
+        ltuo_perct_life_time_and_perct_of_occurrences = []
+        ax = plt.subplot(111)
         for data in FileIO.iterateJsonFromFile(f_gap_occurrence_time_during_hashtag_lifetime, remove_params_dict=True):
             ltuo_perct_life_time_and_perct_of_occurrences = data
         perct_life_time, perct_of_occurrences = zip(*ltuo_perct_life_time_and_perct_of_occurrences)
+        
+#        perct_life_time, perct_of_occurrences = with_gaussian_kde(perct_of_occurrences,x_range=(0,1,100))
+        perct_life_time = list(perct_life_time)
+        for i in range(len(perct_life_time)):
+            if i+1<len(perct_life_time):
+                perct_life_time[i]=perct_life_time[i+1]
         plt.plot(perct_life_time, perct_of_occurrences)
+        ax.set_xscale('log')
         plt.show()
 #            break
 #    @staticmethod
