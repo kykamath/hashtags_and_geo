@@ -251,9 +251,7 @@ class WordHashtagContingencyTableObjectExtractor(ModifiedMRJob):
     def __init__(self, *args, **kwargs):
         super(WordHashtagContingencyTableObjectExtractor, self).__init__(*args, **kwargs) 
         self.word_object_extractor = WordObjectExtractor()
-    def mapper(self, key, word_object): 
-        print word_object
-        yield '', [word_object]
+    def mapper(self, key, word_object): yield '', [word_object]
     def reducer(self, empty_key, it_word_objects):
         word_objects = list(chain(*it_word_objects))
         total_words = sum(map(itemgetter('total_word_occurrences'), word_objects))
