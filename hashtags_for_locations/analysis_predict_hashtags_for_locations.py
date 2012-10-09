@@ -12,7 +12,7 @@ from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.geo import UTMConverter
 from library.mrjobwrapper import runMRJob
-from library.plotting import savefig
+from library.plotting import savefig, getCumulativeDistribution
 from library.stats import filter_outliers
 from mr_predict_hashtags_analysis import GapOccurrenceTimeDuringHashtagLifetime
 from mr_predict_hashtags_analysis import HashtagsExtractor
@@ -831,6 +831,22 @@ class PredictHashtagsForLocationsPlots():
         plt.xlabel('Probability that hashtags propagation between location pairs is random')
         plt.ylabel('% of locations')
         savefig(output_file)
+    @staticmethod
+    def temp():
+        ltuo_perct_of_occurrences_and_perct_of_lifespan = None
+        for data in FileIO.iterateJsonFromFile(f_gap_occurrence_time_during_hashtag_lifetime, remove_params_dict=True):
+            ltuo_perct_of_occurrences_and_perct_of_lifespan = data
+        perct_of_occurrences, perct_of_lifespan = zip(*ltuo_perct_of_occurrences_and_perct_of_lifespan)
+#        perct_of_lifespan = getCumulativeDistribution(perct_of_lifespan)
+        mf_perct_of_lifespan_to_perct_of_occurrences = dict(zip(perct_of_lifespan, perct_of_occurrences))
+        plt.plot(perct_of_occurrences, perct_of_lifespan)
+        plt.xlabel('perct_of_occurrences')
+        plt.ylabel('perct_of_lifespan')
+        plt.figure()
+        plt.plot(perct_of_lifespan, perct_of_occurrences)
+        plt.xlabel('perct_of_lifespan')
+        plt.ylabel('perct_of_occurrences')
+        plt.show()
 #            break
 #    @staticmethod
 #    def example_of_hashtag_propagation_patterns():
@@ -870,7 +886,7 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
 #        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
-        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time_at_varying_gaps()
+#        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time_at_varying_gaps()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag()
 
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde()
@@ -879,6 +895,8 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_examples()
 
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
+            
+        PredictHashtagsForLocationsPlots.temp()
         
 if __name__ == '__main__':
     MRAnalysis.run()
