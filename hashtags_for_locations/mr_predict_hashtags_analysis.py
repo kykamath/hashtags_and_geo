@@ -452,7 +452,7 @@ class GapOccurrenceTimeDuringHashtagLifetime(ModifiedMRJob):
             for _, bucket_occ_times in ltuo_utm_id_and_bucket_occ_times:
                 gap_perct = 0.05
                 gaps = np.arange(gap_perct,1+gap_perct,gap_perct)
-                bucket_occ_times = filter_outliers(bucket_occ_times)
+#                bucket_occ_times = filter_outliers(bucket_occ_times)
 #                bucket_occ_times_at_gaps = get_items_at_gap(bucket_occ_times, gap_perct)
                 start_time = float(bucket_occ_times[0])
                 life_time = bucket_occ_times[-1] - start_time
