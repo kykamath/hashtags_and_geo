@@ -51,7 +51,7 @@ class MRAnalysis():
                      mr_class,
                      output_file,
                      [f_hdfs_hashtags],
-                     jobconf={'mapred.reduce.tasks':500}
+                     jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
                  )
     @staticmethod
     def run():
