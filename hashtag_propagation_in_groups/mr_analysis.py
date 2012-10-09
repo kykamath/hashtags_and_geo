@@ -29,7 +29,7 @@ HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
 
 # Minimum number of word occurrences expected for each hashtag to be considered a valid word
-MIN_WORD_OCCURRENCES_PER_HASHTAG = 50
+MIN_WORD_OCCURRENCES_PER_HASHTAG = 25
 
 ## Temporal Width of a hashtag group
 #TEMPORAL_WIDTH_OF_HASHTAG_GROUP_IN_SECONDS = 24*60*10
