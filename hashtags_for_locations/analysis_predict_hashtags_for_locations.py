@@ -907,5 +907,5 @@ class PredictHashtagsForLocationsPlots():
         PredictHashtagsForLocationsPlots.temp1()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
