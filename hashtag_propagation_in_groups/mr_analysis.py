@@ -19,7 +19,7 @@ ACCURACY = 10**4 # UTM boxes in sq.m
 
 # Minimum number of hashtag occurrences
 # Used by HashtagsExtractor
-MIN_HASHTAG_OCCURRENCES = 50
+MIN_HASHTAG_OCCURRENCES = 10
 
 # Start time for data analysis
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
@@ -166,6 +166,14 @@ class HashtagsExtractor(ModifiedMRJob):
 
 class WordObjectExtractor(ModifiedMRJob):
     '''
+    contingency_table_object = {
+                                'word': word,
+                                'hashtag': hashtag,
+                                'n00': Number of occurrences of word and hashtag,
+                                'n01': Number of occurrences of word without hashtag,
+                                'n10': Number of occurrences of hashtag without word,
+                                'n11': Number of occurrences of without hashtag and without word,
+                                }
     word_object = {
                     'word': word,
                     'ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location': 
@@ -210,14 +218,40 @@ class WordObjectExtractor(ModifiedMRJob):
                                                         mf_hashtag_to_ltuo_word_and_occ_time_and_occ_location.items()
             yield word, ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location
     def reducer(self, word, it_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location):
-        ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location =\
-                                            list(chain(*it_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location))
-        yield word, {
-               'word': word,
-               'ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location':
-                                                                ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location
-           }
-
+        so_hashtag = set()
+        mf_hashtag_to_n00 = defaultdict(float)
+        mf_hashtag_to_n10 = defaultdict(float)
+        total_word_occurrences = 0.0
+        for ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location in\
+                it_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location:
+            for hashtag, ltuo_word_and_occ_time_and_occ_location in\
+                    ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location:
+                so_hashtag.add(hashtag)
+                for neigbhor_word, occ_time, occ_location in ltuo_word_and_occ_time_and_occ_location:
+                    if neigbhor_word==word: 
+                        total_word_occurrences+=1
+                        mf_hashtag_to_n00[hashtag]+=1
+                    else: mf_hashtag_to_n10[hashtag]+=1
+        for hashtag in so_hashtag:
+            contingency_table_object = { 'word': word, 'hashtag': hashtag}
+            contingency_table_object['n00'] = mf_hashtag_to_n00.get(hashtag, 0.0)
+            contingency_table_object['n10'] = mf_hashtag_to_n10.get(hashtag, 0.0)
+            contingency_table_object['n01'] = total_word_occurrences - contingency_table_object['n00']
+            yield '', contingency_table_object
+#                mf_hashtag_to_n00[hashtag] = len(ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location)
+#                filter(lambda (w, t, l): w!=
+#                       ltuo_word_and_occ_time_and_occ_location)
+#                contingency_table_object = {'word': word, 'hashtag': hashtag}
+#                for word, ltuo_word_and_occ_time_and_occ_location
+#                yield word, (hashtag, len(ltuo_word_and_occ_time_and_occ_location))
+#        ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location =\
+#                                            list(chain(*it_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location))
+#        yield word, {
+#               'word': word,
+#               'ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location':
+#                                                                ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location
+#           }
+        
 #class WordObjectExtractor(ModifiedMRJob):
 #    '''
 #    word_object = {
