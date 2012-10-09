@@ -246,10 +246,10 @@ class WordObjectExtractor(ModifiedMRJob):
                 }
         yield word, word_object
 
-class Filln11InContingencyTableObject(ModifiedMRJob):
+class WordHashtagContingencyTableObjectExtractor(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
-        super(Filln11InContingencyTableObject, self).__init__(*args, **kwargs) 
+        super(WordHashtagContingencyTableObjectExtractor, self).__init__(*args, **kwargs) 
         self.word_object_extractor = WordObjectExtractor()
     def mapper(self, key, word_object): 
         print word_object
@@ -322,4 +322,4 @@ class Filln11InContingencyTableObject(ModifiedMRJob):
 if __name__ == '__main__':
 #    HashtagsExtractor.run()
 #    WordObjectExtractor.run()
-    Filln11InContingencyTableObject.run()
+    WordHashtagContingencyTableObjectExtractor.run()

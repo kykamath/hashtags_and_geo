@@ -10,10 +10,12 @@ from library.mrjobwrapper import runMRJob
 from mr_analysis import HashtagsExtractor
 from mr_analysis import PARAMS_DICT
 from mr_analysis import WordObjectExtractor
+from mr_analysis import WordHashtagContingencyTableObjectExtractor
 from pprint import pprint
 from settings import f_hashtags_extractor
 from settings import f_hdfs_hashtags
 from settings import f_word_objects_extractor
+from settings import f_word_hashtag_contigency_table_objects
 from settings import hdfs_input_folder
 import time
 
@@ -54,11 +56,22 @@ class MRAnalysis():
                      jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
                  )
     @staticmethod
+    def word_object_contingency_table_extractor():
+        mr_class = WordHashtagContingencyTableObjectExtractor
+        output_file = f_word_hashtag_contigency_table_objects
+        runMRJob(
+                     mr_class,
+                     output_file,
+                     [f_hdfs_hashtags],
+                     jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
+                 )
+    @staticmethod
     def run():
         input_files_start_time, input_files_end_time = \
                                 datetime(2011, 2, 1), datetime(2012, 8, 31)
 #        MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
-        MRAnalysis.word_object_extractor()
+#        MRAnalysis.word_object_extractor()
+        MRAnalysis.word_object_contingency_table_extractor()
 
 if __name__ == '__main__':
     MRAnalysis.run()

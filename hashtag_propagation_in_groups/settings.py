@@ -11,4 +11,6 @@ f_hdfs_hashtags = hdfs_input_folder%'2011_2_to_2012_8'+'/min_num_of_hashtags_50_
 
 f_hashtags_extractor = fld_data_analysis%'hashtags_extractor'+'hashtags'
 f_word_objects_extractor = fld_data_analysis%'word_objects_extractor'+ 'word_objects'
+f_word_hashtag_contigency_table_objects = fld_data_analysis%'word_hashtag_contigency_table_objects_extractor'+\
+                                                                                'word_hashtag_contigency_table_objects'
     
