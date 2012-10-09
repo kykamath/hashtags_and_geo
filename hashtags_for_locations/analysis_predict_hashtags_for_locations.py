@@ -855,19 +855,34 @@ class PredictHashtagsForLocationsPlots():
         plt.show()
     @staticmethod
     def temp1():
-        ltuo_perct_life_time_and_perct_of_occurrences = []
+        ltuo_perct_life_time_to_occurrences_distribution = []
+        ltuo_perct_life_time_and_num_of_occurrences = []
         ax = plt.subplot(111)
         for data in FileIO.iterateJsonFromFile(f_gap_occurrence_time_during_hashtag_lifetime, remove_params_dict=True):
-            ltuo_perct_life_time_and_perct_of_occurrences = data
-        perct_life_time, perct_of_occurrences = zip(*ltuo_perct_life_time_and_perct_of_occurrences)
+            if 'perct_life_time_to_occurrences_distribution'==data['key']:
+                ltuo_perct_life_time_to_occurrences_distribution = data['value']
+            elif 'ltuo_perct_life_time_and_perct_of_occurrences'==data['key']:
+                ltuo_perct_life_time_and_num_of_occurrences = data['value']
+        print len(ltuo_perct_life_time_to_occurrences_distribution)
+        print len(ltuo_perct_life_time_and_num_of_occurrences)
         
-#        perct_life_time, perct_of_occurrences = with_gaussian_kde(perct_of_occurrences,x_range=(0,1,100))
+        perct_life_time, occurrences_distribution = zip(*ltuo_perct_life_time_to_occurrences_distribution)
+        
         perct_life_time = list(perct_life_time)
         for i in range(len(perct_life_time)):
             if i+1<len(perct_life_time):
                 perct_life_time[i]=perct_life_time[i+1]
+        plt.plot(perct_life_time, occurrences_distribution)
+#        ax.set_xscale('log')
+        
+        perct_life_time, num_of_occurrences = zip(*ltuo_perct_life_time_and_num_of_occurrences)
+        total_num_of_occurrences = sum(num_of_occurrences)+0.0
+        num_of_occurrences = getCumulativeDistribution(num_of_occurrences)
+        perct_of_occurrences = [c/total_num_of_occurrences for c in num_of_occurrences]
+        plt.figure()
+        ax = plt.subplot(111)
         plt.plot(perct_life_time, perct_of_occurrences)
-        ax.set_xscale('log')
+#        ax.set_xscale('log')
         plt.show()
 #            break
 #    @staticmethod
