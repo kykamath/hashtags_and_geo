@@ -370,10 +370,63 @@ class ImpactOfUsingLocationsToPredict(ModifiedMRJob):
                 ]
     def steps(self):
         return self.jobs_for_analyzing_impact_using_mc_simulation()
+    
+class GapOccurrenceTimeDuringHashtagLifetime(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(GapOccurrenceTimeDuringHashtagLifetime, self).__init__(*args, **kwargs)
+        self.mf_gap_to_norm_num_of_occurrences = defaultdict(float)
+    def mapper(self, key, value):
+        if False: yield # I'm a generator!
+        hashtag_object = cjson.decode(value)
+        if 'num_of_occurrences' in hashtag_object and\
+                hashtag_object['num_of_occurrences'] >= MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS:
+            ltuo_bucket_occ_time_and_occ_utm_id =\
+                                        map(
+                                               lambda (t, utm_id):
+                                                    (GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS), utm_id),
+                                               hashtag_object['ltuo_occ_time_and_occ_utm_id']
+                                           )
+            ltuo_bucket_occ_time_and_occ_utm_id.sort(key=itemgetter(1))
+            ltuo_utm_id_and_bucket_occ_times =\
+                [ (occ_utm_id,map(itemgetter(0), it_bucket_occ_time_and_occ_utm_id))
+                 for occ_utm_id, it_bucket_occ_time_and_occ_utm_id in
+                    groupby(ltuo_bucket_occ_time_and_occ_utm_id, key=itemgetter(1))
+                ]
+            ltuo_utm_id_and_bucket_occ_times =\
+                                            filter(
+                                                   lambda (_, occ_times): len(occ_times)>10,
+                                                   ltuo_utm_id_and_bucket_occ_times
+                                               )
+            for _, bucket_occ_times in ltuo_utm_id_and_bucket_occ_times:
+                gap_perct = 0.05
+                gaps = np.arange(gap_perct,1+gap_perct,gap_perct)
+                bucket_occ_times = filter_outliers(bucket_occ_times)
+                bucket_occ_times_at_gaps = get_items_at_gap(bucket_occ_times, gap_perct)
+                start_time = float(bucket_occ_times_at_gaps[0])
+                life_time = bucket_occ_times_at_gaps[-1] - start_time
+                if life_time>0:
+                    norm_num_of_occurrences =\
+                                            map(lambda t: int(((t-start_time)/life_time)*100), bucket_occ_times_at_gaps)
+                    for gap, norm_num_of_occurrence in zip(gaps, norm_num_of_occurrences):
+                        self.mf_gap_to_norm_num_of_occurrences['%0.2f'%gap]+=norm_num_of_occurrence
+    def mapper_final(self): yield '', self.mf_gap_to_norm_num_of_occurrences.items()
+    def reducer(self, empty_key, it_ltuo_gap_and_norm_num_of_occurrences):
+        mf_gap_to_norm_num_of_occurrences = defaultdict(float)
+        for ltuo_gap_and_norm_num_of_occurrences in it_ltuo_gap_and_norm_num_of_occurrences:
+            for gap, norm_num_of_occurrences in ltuo_gap_and_norm_num_of_occurrences:
+                mf_gap_to_norm_num_of_occurrences[gap]+=norm_num_of_occurrences
+        total_num_of_occurrences = sum(mf_gap_to_norm_num_of_occurrences.values())
+        ltuo_gap_and_perct_of_occurrences =\
+                map(lambda (g, n): (float(g), n/total_num_of_occurrences), mf_gap_to_norm_num_of_occurrences.items())
+        ltuo_gap_and_perct_of_occurrences.sort(key=itemgetter(0))
+        yield '', ltuo_gap_and_perct_of_occurrences
 if __name__ == '__main__':
     pass
 #    HashtagsExtractor.run()
 #    PropagationMatrix.run()
 #    HashtagsWithMajorityInfo.run()
-    HashtagsWithMajorityInfoAtVaryingGaps.run()
+#    HashtagsWithMajorityInfoAtVaryingGaps.run()
 #    ImpactOfUsingLocationsToPredict.run()
+    GapOccurrenceTimeDuringHashtagLifetime.run()
+    

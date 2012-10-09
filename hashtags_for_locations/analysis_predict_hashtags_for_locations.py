@@ -14,6 +14,7 @@ from library.geo import UTMConverter
 from library.mrjobwrapper import runMRJob
 from library.plotting import savefig
 from library.stats import filter_outliers
+from mr_predict_hashtags_analysis import GapOccurrenceTimeDuringHashtagLifetime
 from mr_predict_hashtags_analysis import HashtagsExtractor
 from mr_predict_hashtags_analysis import HashtagsWithMajorityInfo
 from mr_predict_hashtags_analysis import HashtagsWithMajorityInfoAtVaryingGaps
@@ -58,6 +59,8 @@ f_propagation_matrix = analysis_folder%'propagation_matrix/'+'propagation_matrix
 f_hashtags_with_majority_info = analysis_folder%'hashtags_with_majority_info/'+'hashtags_with_majority_info'
 f_hashtags_with_majority_info_at_varying_gaps = analysis_folder%'hashtags_with_majority_info_at_varying_gaps/'+\
                                                                         'hashtags_with_majority_info_at_varying_gaps'
+f_gap_occurrence_time_during_hashtag_lifetime = analysis_folder%'gap_occurrence_time_during_hashtag_lifetime/'+\
+                                                                        'gap_occurrence_time_during_hashtag_lifetime'
 f_impact_of_using_locations_to_predict = analysis_folder%'impact_of_using_locations_to_predict/'+\
                                                                                 'impact_of_using_locations_to_predict'
 f_impact_of_using_location_to_predict_hashtag_with_mc_simulation = analysis_folder%\
@@ -137,6 +140,14 @@ class MRAnalysis():
                      jobconf={'mapred.reduce.tasks':100}
                  )
     @staticmethod
+    def gap_occurrence_time_during_hashtag_lifetime():
+        runMRJob(
+                     GapOccurrenceTimeDuringHashtagLifetime,
+                     f_gap_occurrence_time_during_hashtag_lifetime,
+                     [df_hashtags_extractor],
+                     jobconf={'mapred.reduce.tasks':100}
+                 )
+    @staticmethod
     def impact_of_using_locations_to_predict():
         runMRJob(
                      ImpactOfUsingLocationsToPredict,
@@ -173,9 +184,10 @@ class MRAnalysis():
 
 #        MRAnalysis.propagation_matrix()
 #        MRAnalysis.hashtags_with_majority_info()
-        MRAnalysis.hashtags_with_majority_info_at_varying_gaps()
+#        MRAnalysis.hashtags_with_majority_info_at_varying_gaps()
 #        MRAnalysis.impact_of_using_locations_to_predict()
 #        MRAnalysis.impact_using_mc_simulation()
+        MRAnalysis.gap_occurrence_time_during_hashtag_lifetime()
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
@@ -869,5 +881,5 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
