@@ -446,7 +446,7 @@ class GapOccurrenceTimeDuringHashtagLifetime(ModifiedMRJob):
                 ]
             ltuo_utm_id_and_bucket_occ_times =\
                                             filter(
-                                                   lambda (_, occ_times): len(occ_times)>25,
+                                                   lambda (_, occ_times): len(occ_times)>100,
                                                    ltuo_utm_id_and_bucket_occ_times
                                                )
             for _, bucket_occ_times in ltuo_utm_id_and_bucket_occ_times:
