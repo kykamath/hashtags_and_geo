@@ -838,21 +838,23 @@ class PredictHashtagsForLocationsPlots():
         plt.ylabel('% of locations')
         savefig(output_file)
     @staticmethod
-    def temp():
+    def perct_of_hashtag_lifespan_vs_perct_of_hashtag_occurrences():
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        plt.figure(num=None, figsize=(6,3))
         ltuo_perct_of_occurrences_and_perct_of_lifespan = None
         for data in FileIO.iterateJsonFromFile(f_gap_occurrence_time_during_hashtag_lifetime, remove_params_dict=True):
             ltuo_perct_of_occurrences_and_perct_of_lifespan = data
         perct_of_occurrences, perct_of_lifespan = zip(*ltuo_perct_of_occurrences_and_perct_of_lifespan)
-#        perct_of_lifespan = getCumulativeDistribution(perct_of_lifespan)
-        mf_perct_of_lifespan_to_perct_of_occurrences = dict(zip(perct_of_lifespan, perct_of_occurrences))
-        plt.plot(perct_of_occurrences, perct_of_lifespan)
-        plt.xlabel('perct_of_occurrences')
-        plt.ylabel('perct_of_lifespan')
-        plt.figure()
-        plt.plot(perct_of_lifespan, perct_of_occurrences)
-        plt.xlabel('perct_of_lifespan')
-        plt.ylabel('perct_of_occurrences')
-        plt.show()
+        perct_of_lifespan = getCumulativeDistribution(perct_of_lifespan)
+        plt.plot(perct_of_occurrences, perct_of_lifespan, lw=2, c='k')
+        plt.scatter(perct_of_occurrences, perct_of_lifespan, c='k')
+        plt.plot([0.15, 0.15], [-0.1, 1.1], '--', c='m', lw=2)
+        plt.grid(True)
+        plt.ylim(ymax=1.1, ymin=-0.1)
+        plt.xlim(xmax=1.1)
+        plt.xlabel('% of hashtag occurrences')
+        plt.ylabel('% of hashtag lifespan')
+        savefig(output_file)
     @staticmethod
     def temp1():
         ltuo_perct_life_time_to_occurrences_distribution = []
@@ -933,8 +935,8 @@ class PredictHashtagsForLocationsPlots():
 
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
             
-        PredictHashtagsForLocationsPlots.temp1()
+        PredictHashtagsForLocationsPlots.perct_of_hashtag_lifespan_vs_perct_of_hashtag_occurrences()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    PredictHashtagsForLocationsPlots.run()
+#    MRAnalysis.run()
+    PredictHashtagsForLocationsPlots.run()

@@ -12,15 +12,51 @@
 ##print s[:4]=='<row'
 #exit()
 
-import networkx as nx
+#from library.classes import GeneralMethods
+#def copy_file(input_file, output_file):
+#    command = 'cp %s %s'%(input_file, output_file)
+#    GeneralMethods.runCommand(command)
 
-g = nx.Graph()
-g.add_edge('a', 'b', {'a':1})
-g.add_edge('a', 'c', {'b':1})
-g.add_edge('c', 'b', {'a':3})
+#s = ''' Text="
+#- [TextMate][1]&#xD;&#xA; - [Caffeine][2]&#xD;&#xA; - [MacPorts][3]&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;  [1]: http://macromates.com/&#xD;&#xA;  [2]: http://lightheadsw.com/caffeine/&#xD;&#xA;  [3]: http://www.macports.org/"'''
+#s = s.replace('\n', '')
+#print s
+#
+#key, value = s.split('="')
+#
+#print key
+##print value
+#import re
+#
+#row = 'http://code.google.com/p/mobileterminal/downloads/detail?name=Terminal-426-unstable.zip&amp;can=2&amp;q="'
+#if row[-2]=='=': row = row[:-2]+'= "'
+#print row
+row = re.sub('Text="( )*', 'Text="', row)
+row = re.sub('Comment="( )*', 'Comment="', row)
+row = re.sub('UserDisplayName="( )*', 'UserDisplayName="', row)
+AboutMe
 
-for node in g.edges_iter(data=True):
-    print node
+for tag in ['Text', 'Comment', 'UserDisplayName', 'AboutMe']:
+    row = re.sub('%s="( )*'%tag, '%s="'%tag, row)
+
+
+#def is_xml(file_name): return file_name[-3:]=='xml'
+#
+#s = 'abc.xml'
+#s2 = 'abc'
+#s3 = 'as.txt'
+#
+#print s[:-3]+'json'
+
+#import networkx as nx
+#
+#g = nx.Graph()
+#g.add_edge('a', 'b', {'a':1})
+#g.add_edge('a', 'c', {'b':1})
+#g.add_edge('c', 'b', {'a':3})
+#
+#for node in g.edges_iter(data=True):
+#    print node
 
 #import numpy as np
 #gap_perct = 0.02
