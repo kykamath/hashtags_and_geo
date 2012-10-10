@@ -12,9 +12,19 @@
 ##print s[:4]=='<row'
 #exit()
 
-import numpy as np
-gap_perct = 0.02
-print np.arange(gap_perct,1,gap_perct)
+import networkx as nx
+
+g = nx.Graph()
+g.add_edge('a', 'b', {'a':1})
+g.add_edge('a', 'c', {'b':1})
+g.add_edge('c', 'b', {'a':3})
+
+for node in g.edges_iter(data=True):
+    print node
+
+#import numpy as np
+#gap_perct = 0.02
+#print np.arange(gap_perct,1,gap_perct)
 
 #from library.file_io import FileIO
 #import sys

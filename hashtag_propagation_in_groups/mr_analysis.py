@@ -12,6 +12,7 @@ from library.nlp import getWordsFromRawEnglishMessage
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from operator import itemgetter
 import cjson
+import networkx as nx
 import nltk
 import time
 
@@ -31,6 +32,9 @@ HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
 # Minimum number of word occurrences expected for each hashtag to be considered a valid word
 MIN_WORD_OCCURRENCES_PER_HASHTAG = 50
 
+# Significance threshold for p-value of association measure tests
+SIGNIFICANCE_THRESHOLD = 0.05
+
 ## Temporal Width of a hashtag group
 #TEMPORAL_WIDTH_OF_HASHTAG_GROUP_IN_SECONDS = 24*60*10
 
@@ -40,7 +44,8 @@ PARAMS_DICT = dict(
                    MIN_HASHTAG_OCCURRENCES = MIN_HASHTAG_OCCURRENCES,
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW,
                    HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
-                   MIN_WORD_OCCURRENCES_PER_HASHTAG = MIN_WORD_OCCURRENCES_PER_HASHTAG
+                   MIN_WORD_OCCURRENCES_PER_HASHTAG = MIN_WORD_OCCURRENCES_PER_HASHTAG,
+                   SIGNIFICANCE_THRESHOLD = SIGNIFICANCE_THRESHOLD
                    )
 
 def iterate_hashtag_with_words(line):
@@ -213,8 +218,43 @@ class WordHashtagContingencyTableObjectExtractor(ModifiedMRJob):
                        )
     def steps(self):
         return self.word_object_extractor.steps() + [self.mr(mapper=self.mapper, reducer=self.reducer)]
-        
+
+class AbstractAssociatioMeasure(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(AbstractAssociatioMeasure, self).__init__(*args, **kwargs)
+        self.word_hashtag_contingency_table_object_extractor = WordHashtagContingencyTableObjectExtractor()
+    def association_measure_p_value(self, contingency_table_object):
+        raise NotImplementedError
+    def mapper(self, key, contingency_table_object):
+        if self.association_measure_p_value(contingency_table_object)>=SIGNIFICANCE_THRESHOLD:
+            yield '', {'word': contingency_table_object['word'], 'hashtag': '#'+contingency_table_object['hashtag']}
+    def reducer(self, empty_key, values):
+        graph = nx.Graph()
+        for value in values: graph.add_edge(value['word'], value['hashtag'])
+        connected_components = nx.connected_components(graph)
+        ltuo_num_of_hashtags_and_connected_component = map(
+                                                               lambda c: (
+                                                                              len(filter(lambda w: w[0]=='#', c)),
+                                                                              sorted(c)
+                                                                          ),
+                                                               connected_components
+                                                           )
+        ltuo_num_of_hashtags_and_connected_component.sort(key=itemgetter(0), reverse=True)
+        for num_of_hashtags, connected_component in ltuo_num_of_hashtags_and_connected_component:
+            yield num_of_hashtags, [num_of_hashtags, connected_component]
+    def steps(self):
+        return self.word_hashtag_contingency_table_object_extractor.steps() +\
+                [self.mr(mapper=self.mapper, reducer=self.reducer)]
+    
+class DemoAssociatioMeasure(AbstractAssociatioMeasure):
+    def __init__(self, *args, **kwargs):
+        super(DemoAssociatioMeasure, self).__init__(*args, **kwargs)
+    def association_measure_p_value(self, contingency_table_object):
+        return SIGNIFICANCE_THRESHOLD
+      
 if __name__ == '__main__':
 #    HashtagsExtractor.run()
 #    WordObjectExtractor.run()
-    WordHashtagContingencyTableObjectExtractor.run()
+#    WordHashtagContingencyTableObjectExtractor.run()
+    DemoAssociatioMeasure.run()
