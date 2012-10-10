@@ -29,7 +29,7 @@ HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
 
 # Minimum number of word occurrences expected for each hashtag to be considered a valid word
-MIN_WORD_OCCURRENCES_PER_HASHTAG = 10
+MIN_WORD_OCCURRENCES_PER_HASHTAG = 50
 
 ## Temporal Width of a hashtag group
 #TEMPORAL_WIDTH_OF_HASHTAG_GROUP_IN_SECONDS = 24*60*10
@@ -113,57 +113,6 @@ class HashtagsExtractor(ModifiedMRJob):
                 sorted(combined_hashtag_object['ltuo_occ_time_and_words'], key=itemgetter(0))
             yield hashtag, combined_hashtag_object
 
-#class WordObjectExtractor(ModifiedMRJob):
-#    '''
-#    word_object = {
-#                    'word': word,
-#                    'hashtag_objects': hashtag_objects
-#                }
-#    '''
-#    DEFAULT_INPUT_PROTOCOL='raw_value'
-#    def __init__(self, *args, **kwargs):
-#        super(WordObjectExtractor, self).__init__(*args, **kwargs)
-#        self.mf_word_to_hashtag_objects = defaultdict(list)
-#    def _get_words_above_min_threshold(self, ltuo_occ_time_and_words):
-#        l_words = map(itemgetter(1), ltuo_occ_time_and_words)
-#        words = sorted(list(chain(*l_words)))
-#        ltuo_word_and_count = [(word, len(list(it_word))) for word, it_word in groupby(words)]
-#        ltuo_word_and_count = filter(
-#                                     lambda (w,c): c>MIN_WORD_OCCURRENCES_PER_HASHTAG,
-#                                     ltuo_word_and_count
-#                                 )
-#        return map(itemgetter(0), ltuo_word_and_count)
-#        
-#    def mapper(self, key, line):
-#        if False: yield # I'm a generator!
-#        hashtag_object = cjson.decode(line)
-#        if 'hashtag' in hashtag_object:
-#            ltuo_occ_time_and_occ_location = hashtag_object['ltuo_occ_time_and_occ_location']
-#            ltuo_occ_time_and_words = hashtag_object['ltuo_occ_time_and_words']
-#            valid_words = self._get_words_above_min_threshold(ltuo_occ_time_and_words)
-#            hashtag_object['valid_words'] = valid_words
-#            for valid_word in valid_words: self.mf_word_to_hashtag_objects[valid_word].append(hashtag_object)
-##            for (occ_time, occ_location),(_, words) in zip(ltuo_occ_time_and_occ_location, ltuo_occ_time_and_words):
-##                for valid_word in filter(lambda w: w in valid_words, words):
-##                    self.mf_word_to_hashtag_objects[valid_word].append(hashtag_object)
-##                    if hashtag not in self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word]:
-##                        self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word][hashtag] = []
-##                    self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word][hashtag].append(
-##                                                                                               [occ_time, occ_location]
-##                                                                                           )
-#    def mapper_final(self):
-#        for word, hashtag_objects in\
-#                self.mf_word_to_hashtag_objects.iteritems():
-##            ltuo_hashtag_and_ltuo_occ_time_and_occ_location = mf_hashtag_to_ltuo_occ_time_and_occ_location.items()
-#            yield word, hashtag_objects
-#    def reducer(self, word, it_hashtag_objects):
-#        hashtag_objects = list(chain(*it_hashtag_objects))
-#        yield word, {
-#               'word': word,
-#               'hashtag_objects': hashtag_objects
-#           }
-
-
 class WordObjectExtractor(ModifiedMRJob):
     '''
     contingency_table_object = {
@@ -205,8 +154,6 @@ class WordObjectExtractor(ModifiedMRJob):
             ltuo_word_and_occ_time_and_occ_location = []
             for (occ_time, occ_location),(_, words) in zip(ltuo_occ_time_and_occ_location, ltuo_occ_time_and_words):
                 for word in filter(lambda w: w in valid_words, words):
-#                    if hashtag not in self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word]:
-#                        self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word][hashtag] = []
                     ltuo_word_and_occ_time_and_occ_location.append([word, occ_time, occ_location])
             for word in valid_words:
                 self.mf_word_to_mf_hashtag_to_ltuo_word_and_occ_time_and_occ_location[word][hashtag]=\
@@ -266,55 +213,6 @@ class WordHashtagContingencyTableObjectExtractor(ModifiedMRJob):
                        )
     def steps(self):
         return self.word_object_extractor.steps() + [self.mr(mapper=self.mapper, reducer=self.reducer)]
-        
-#class WordObjectExtractor(ModifiedMRJob):
-#    '''
-#    word_object = {
-#                    'word': word,
-#                    'ltuo_hashtag_and_ltuo_occ_time_and_occ_location': ltuo_hashtag_and_ltuo_occ_time_and_occ_location
-#                }
-#    '''
-#    DEFAULT_INPUT_PROTOCOL='raw_value'
-#    def __init__(self, *args, **kwargs):
-#        super(WordObjectExtractor, self).__init__(*args, **kwargs)
-#        self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location = defaultdict(dict)
-#    def _get_words_above_min_threshold(self, ltuo_occ_time_and_words):
-#        l_words = map(itemgetter(1), ltuo_occ_time_and_words)
-#        words = sorted(list(chain(*l_words)))
-#        ltuo_word_and_count = [(word, len(list(it_word))) for word, it_word in groupby(words)]
-#        ltuo_word_and_count = filter(
-#                                     lambda (w,c): c>MIN_WORD_OCCURRENCES_PER_HASHTAG,
-#                                     ltuo_word_and_count
-#                                 )
-#        return map(itemgetter(0), ltuo_word_and_count)
-#        
-#    def mapper(self, key, line):
-#        if False: yield # I'm a generator!
-#        data = cjson.decode(line)
-#        if 'hashtag' in data:
-#            hashtag = data['hashtag']
-#            ltuo_occ_time_and_occ_location = data['ltuo_occ_time_and_occ_location']
-#            ltuo_occ_time_and_words = data['ltuo_occ_time_and_words']
-#            valid_words = self._get_words_above_min_threshold(ltuo_occ_time_and_words)
-#            for (occ_time, occ_location),(_, words) in zip(ltuo_occ_time_and_occ_location, ltuo_occ_time_and_words):
-#                for word in filter(lambda w: w in valid_words, words):
-#                    if hashtag not in self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word]:
-#                        self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word][hashtag] = []
-#                    self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location[word][hashtag].append(
-#                                                                                               [occ_time, occ_location]
-#                                                                                           )
-#    def mapper_final(self):
-#        for word, mf_hashtag_to_ltuo_occ_time_and_occ_location in\
-#                self.mf_word_to_mf_hashtag_to_ltuo_occ_time_and_occ_location.iteritems():
-#            ltuo_hashtag_and_ltuo_occ_time_and_occ_location = mf_hashtag_to_ltuo_occ_time_and_occ_location.items()
-#            yield word, ltuo_hashtag_and_ltuo_occ_time_and_occ_location
-#    def reducer(self, word, it_ltuo_hashtag_and_ltuo_occ_time_and_occ_location):
-#        ltuo_hashtag_and_ltuo_occ_time_and_occ_location =\
-#                                                        list(chain(*it_ltuo_hashtag_and_ltuo_occ_time_and_occ_location))
-#        yield word, {
-#               'word': word,
-#               'ltuo_hashtag_and_ltuo_occ_time_and_occ_location': ltuo_hashtag_and_ltuo_occ_time_and_occ_location
-#           }
         
 if __name__ == '__main__':
 #    HashtagsExtractor.run()
