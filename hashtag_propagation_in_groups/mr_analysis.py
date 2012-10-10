@@ -11,6 +11,7 @@ from library.mrjobwrapper import ModifiedMRJob
 from library.nlp import getWordsFromRawEnglishMessage
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from operator import itemgetter
+from scipy import stats
 import cjson
 import networkx as nx
 import nltk
@@ -226,8 +227,14 @@ class AbstractAssociatioMeasure(ModifiedMRJob):
         self.word_hashtag_contingency_table_object_extractor = WordHashtagContingencyTableObjectExtractor()
     def association_measure_p_value(self, contingency_table_object):
         raise NotImplementedError
+    def get_contingency_array(self, contingency_table_object):
+        return [
+                    [contingency_table_object['n00'], contingency_table_object['n01']],
+                    [contingency_table_object['n10'], contingency_table_object['n11']]
+                ]
     def mapper(self, key, contingency_table_object):
-        if self.association_measure_p_value(contingency_table_object)>=SIGNIFICANCE_THRESHOLD:
+        measure_score, pvalue = self.association_measure_stats(contingency_table_object)
+        if pvalue<SIGNIFICANCE_THRESHOLD:
             yield '', {'word': contingency_table_object['word'], 'hashtag': '#'+contingency_table_object['hashtag']}
     def reducer(self, empty_key, values):
         graph = nx.Graph()
@@ -246,15 +253,25 @@ class AbstractAssociatioMeasure(ModifiedMRJob):
     def steps(self):
         return self.word_hashtag_contingency_table_object_extractor.steps() +\
                 [self.mr(mapper=self.mapper, reducer=self.reducer)]
+#    def steps(self):
+#        return self.word_hashtag_contingency_table_object_extractor.steps() +\
+#                [self.mr(mapper=self.mapper)]
     
 class DemoAssociatioMeasure(AbstractAssociatioMeasure):
     def __init__(self, *args, **kwargs):
         super(DemoAssociatioMeasure, self).__init__(*args, **kwargs)
-    def association_measure_p_value(self, contingency_table_object):
-        return SIGNIFICANCE_THRESHOLD
+    def association_measure_stats(self, contingency_table_object):
+        return (1.0, 0.0)
+
+class FisherExactTest(AbstractAssociatioMeasure):
+    def __init__(self, *args, **kwargs):
+        super(FisherExactTest, self).__init__(*args, **kwargs)
+    def association_measure_stats(self, contingency_table_object):
+        return stats.fisher_exact(self.get_contingency_array(contingency_table_object))
       
 if __name__ == '__main__':
 #    HashtagsExtractor.run()
 #    WordObjectExtractor.run()
 #    WordHashtagContingencyTableObjectExtractor.run()
-    DemoAssociatioMeasure.run()
+#    DemoAssociatioMeasure.run()
+    FisherExactTest.run()
