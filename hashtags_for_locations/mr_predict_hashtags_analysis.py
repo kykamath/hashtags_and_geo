@@ -204,6 +204,7 @@ class HashtagsWithMajorityInfo(ModifiedMRJob):
             ltuo_majority_threshold_bucket_time_and_utm_ids.sort(key=itemgetter(0))
             yield hashtag_object['hashtag'], {
                                               'hashtag': hashtag_object['hashtag'],
+                                              'num_of_occurrences': hashtag_object['num_of_occurrences'],
                                               'ltuo_majority_threshold_bucket_time_and_utm_ids':
                                                                         ltuo_majority_threshold_bucket_time_and_utm_ids
                                               }
@@ -499,8 +500,8 @@ if __name__ == '__main__':
     pass
 #    HashtagsExtractor.run()
 #    PropagationMatrix.run()
-#    HashtagsWithMajorityInfo.run()
+    HashtagsWithMajorityInfo.run()
 #    HashtagsWithMajorityInfoAtVaryingGaps.run()
 #    ImpactOfUsingLocationsToPredict.run()
-    GapOccurrenceTimeDuringHashtagLifetime.run()
+#    GapOccurrenceTimeDuringHashtagLifetime.run()
     

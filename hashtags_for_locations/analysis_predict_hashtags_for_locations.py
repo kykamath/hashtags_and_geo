@@ -7,7 +7,7 @@ from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
-from itertools import groupby
+from itertools import chain, groupby
 from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.geo import UTMConverter
@@ -189,11 +189,11 @@ class MRAnalysis():
 #        MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
 
 #        MRAnalysis.propagation_matrix()
-#        MRAnalysis.hashtags_with_majority_info()
+        MRAnalysis.hashtags_with_majority_info()
 #        MRAnalysis.hashtags_with_majority_info_at_varying_gaps()
 #        MRAnalysis.impact_of_using_locations_to_predict()
 #        MRAnalysis.impact_using_mc_simulation()
-        MRAnalysis.gap_occurrence_time_during_hashtag_lifetime()
+#        MRAnalysis.gap_occurrence_time_during_hashtag_lifetime()
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
@@ -465,6 +465,7 @@ class PredictHashtagsForLocationsPlots():
     @staticmethod
     def ccdf_num_of_utmids_where_hashtag_propagates():
         ''' CCDF of number of locations that a hashtag propagates to.
+            Percentage of hashtags >5 locations 0.60316060272
         '''
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         propagation_distribution = []
@@ -472,7 +473,10 @@ class PredictHashtagsForLocationsPlots():
         for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
             ltuo_majority_threshold_bucket_time_and_utm_ids = data['ltuo_majority_threshold_bucket_time_and_utm_ids']
             if ltuo_majority_threshold_bucket_time_and_utm_ids:
-                propagation_distribution.append(len(zip(*data['ltuo_majority_threshold_bucket_time_and_utm_ids'])[1]))
+#                propagation_distribution.append(len(zip(*data['ltuo_majority_threshold_bucket_time_and_utm_ids'])[1]))
+                propagation_distribution.append(
+                            len(set(list(chain(*zip(*data['ltuo_majority_threshold_bucket_time_and_utm_ids'])[1]))))
+                        )
         propagation_distribution.sort()
         total_values = len(propagation_distribution)+0.0
         ltuo_num_of_utms_and_count_dist = [(val, len(list(items))/total_values)
@@ -490,13 +494,20 @@ class PredictHashtagsForLocationsPlots():
             current_val+=c
             count_dist2.append(current_val)
         count_dist = count_dist2[::-1]
-        print 'Percentage of hashtags >10 locations', dict(zip(num_of_utms, count_dist))[10]
+        print 'Percentage of hashtags >5 locations', dict(zip(num_of_utms, count_dist))[5]
         plt.plot(num_of_utms, count_dist, c = 'k')
         plt.scatter(num_of_utms, count_dist, c = 'k')
         plt.grid(True)
         plt.xlabel('Number of locations')
         plt.ylabel('CCDF of locations')
         savefig(output_file)
+    @staticmethod
+    def temp1():
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        propagation_distribution = []
+        plt.figure(num=None, figsize=(6,3))
+        for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
+            data
     @staticmethod
     def perct_of_locations_vs_hashtag_propaagation_time():
         '''
@@ -856,7 +867,7 @@ class PredictHashtagsForLocationsPlots():
         plt.ylabel('% of hashtag lifespan')
         savefig(output_file)
     @staticmethod
-    def temp1():
+    def temp2():
         ltuo_perct_life_time_to_occurrences_distribution = []
         ltuo_perct_life_time_and_num_of_occurrences = []
         ax = plt.subplot(111)
@@ -922,7 +933,7 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-#        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
+        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
 #        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
 #        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time_at_varying_gaps()
@@ -935,8 +946,10 @@ class PredictHashtagsForLocationsPlots():
 
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
             
-        PredictHashtagsForLocationsPlots.perct_of_hashtag_lifespan_vs_perct_of_hashtag_occurrences()
+#        PredictHashtagsForLocationsPlots.perct_of_hashtag_lifespan_vs_perct_of_hashtag_occurrences()
+
+#        PredictHashtagsForLocationsPlots.temp1()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
