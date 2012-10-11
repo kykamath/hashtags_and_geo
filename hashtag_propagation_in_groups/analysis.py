@@ -39,8 +39,10 @@ class MRAnalysis():
     @staticmethod
     def run_job_on_hashtags_in_dfs(mr_class, output_file):
         job_conf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
-        print 'Running map reduce with the following params:', pprint(PARAMS_DICT)
-        print 'Hadoop job conf:', pprint(job_conf)
+        print 'Running map reduce with the following params:'
+        pprint(PARAMS_DICT)
+        print 'Hadoop job conf:'
+        pprint(job_conf)
         runMRJob(mr_class, output_file, [f_hdfs_hashtags], jobconf=job_conf)
         FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
     @staticmethod
