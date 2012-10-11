@@ -31,14 +31,47 @@
 #row = 'http://code.google.com/p/mobileterminal/downloads/detail?name=Terminal-426-unstable.zip&amp;can=2&amp;q="'
 #if row[-2]=='=': row = row[:-2]+'= "'
 #print row
-row = re.sub('Text="( )*', 'Text="', row)
-row = re.sub('Comment="( )*', 'Comment="', row)
-row = re.sub('UserDisplayName="( )*', 'UserDisplayName="', row)
-AboutMe
+#row = re.sub('Text="( )*', 'Text="', row)
+#row = re.sub('Comment="( )*', 'Comment="', row)
+#row = re.sub('UserDisplayName="( )*', 'UserDisplayName="', row)
+#AboutMe
+#
+#for tag in ['Text', 'Comment', 'UserDisplayName', 'AboutMe']:
+#    row = re.sub('%s="( )*'%tag, '%s="'%tag, row)
 
-for tag in ['Text', 'Comment', 'UserDisplayName', 'AboutMe']:
-    row = re.sub('%s="( )*'%tag, '%s="'%tag, row)
 
+#from BeautifulSoup import BeautifulSoup
+#text = s = '''
+#&lt;p&gt;Hi, I'm not really a person.&lt;/p&gt;&#xD;&#xA;&lt;p&gt;I'm a background process that helps keep this site clean!&lt;/p&gt;&#xD;&#xA;&lt;p&gt;I do things like&lt;/p&gt;&#xD;&#xA;&lt;ul&gt;&#xD;&#xA;&lt;li&gt;Randomly poke old unanswered questions every hour so they get some attention&lt;/li&gt;&#xD;&#xA;&lt;li&gt;Own community questions and answers so nobody gets unnecessary reputation from them&lt;/li&gt;&#xD;&#xA;&lt;li&gt;Own downvotes on spam/evil posts that get permanently deleted&#xD;&#xA;&lt;/ul&gt;
+#'''
+#print ''.join(BeautifulSoup(s).findAll(text=True))
+#
+#import re
+#print text
+#text = re.sub(
+#       r"&#([Xx]?)(\d+);", 
+#       lambda m: unichr(int(m.group(2), 16 if len(m.group(1)) > 0 else 10)), 
+#       text
+#       )  
+#
+#print text
+
+
+from xml.etree import ElementTree
+import json
+
+rows = ElementTree.iterparse('/mnt/chevron/kykamath/hackathon/server_fault/posthistory.xml')
+
+for event,row in rows:
+    if row.tag=='row':
+        d = dict(row.items())
+        print json.dumps(d)
+
+#re.sub(
+#       r"&(\w+);", 
+#       lambda m: unichr(name2codepoint[m.group(1)]) if m.group(1) in name2codepoint else m.group(0),
+#       text
+#    )
 
 #def is_xml(file_name): return file_name[-3:]=='xml'
 #

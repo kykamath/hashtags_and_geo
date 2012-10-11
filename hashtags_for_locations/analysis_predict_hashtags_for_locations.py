@@ -12,7 +12,7 @@ from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.geo import UTMConverter
 from library.mrjobwrapper import runMRJob
-from library.plotting import getCumulativeDistribution, savefig, splineSmooth
+from library.plotting import getCumulativeDistribution, getInverseCumulativeDistribution, savefig, splineSmooth
 from library.stats import filter_outliers
 from mr_predict_hashtags_analysis import GapOccurrenceTimeDuringHashtagLifetime
 from mr_predict_hashtags_analysis import HashtagsExtractor
@@ -800,6 +800,11 @@ class PredictHashtagsForLocationsPlots():
                 for item in ltuo_location_pair_and_mean_probability: print item
     @staticmethod
     def impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf_multi():
+        '''
+        Percentage of locations for which are random 100 is:  0.773913043478
+        Percentage of locations for which are random 50 is:  0.827586206897
+        Percentage of locations for which are random 25 is:  0.86862745098
+        '''
         mf_min_common_hashtag_to_properties = {
                                                25 : {'color': 'r', 'marker': 'o'},
                                                50 : {'color': 'g', 'marker': 's'},
@@ -822,12 +827,16 @@ class PredictHashtagsForLocationsPlots():
                 total_locations = len(mean_propagation_statuses)+0.0
                 ltuo_mean_probability_and_perct_of_locations = []
                 for i, mean_probability in enumerate(mean_propagation_statuses):
-                    ltuo_mean_probability_and_perct_of_locations.append([mean_probability, (i+1)/total_locations])
+                    ltuo_mean_probability_and_perct_of_locations.append([
+                                                                         mean_probability,
+                                                                         (1.0 - (i+1)/total_locations)
+                                                                        ])
                 ltuo_mean_probability_and_perct_of_locations.sort(key=itemgetter(0))
                 p_mean_probability, p_perct_of_locations = None, None
                 for mean_probability, perct_of_locations in ltuo_mean_probability_and_perct_of_locations:
                     if mean_probability>0.05:
-                        print 'Percentage of locations for which the probability is not random', p_perct_of_locations
+                        print 'Percentage of locations for which are random'+\
+                                ' %s is: '%min_common_hashtag, p_perct_of_locations
                         break
                     p_mean_probability, p_perct_of_locations = mean_probability, perct_of_locations
                 mean_probability, perct_of_locations = zip(*ltuo_mean_probability_and_perct_of_locations)
@@ -840,13 +849,13 @@ class PredictHashtagsForLocationsPlots():
                         )
         y_values = np.linspace(-0.2,1.5,100)
         plt.plot([0.05 for i in range(len(y_values))], y_values, '--', c='m', lw=2)
-        print plt.xticks()[1]
-        plt.legend(loc=4)
+        plt.legend(loc=1)
         plt.grid(True)
         plt.ylim(ymax=1.1, ymin=-0.2)
 #        plt.ylim(xmax=1.2)
         plt.xlabel('Probability that hashtags propagation between location pairs is random')
-        plt.ylabel('% of locations')
+        plt.ylabel('CCDF of location pairs')
+#        plt.show()
         savefig(output_file)
     @staticmethod
     def perct_of_hashtag_lifespan_vs_perct_of_hashtag_occurrences():
@@ -933,7 +942,7 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
-        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
+#        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
 #        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
 #        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time_at_varying_gaps()
@@ -941,7 +950,7 @@ class PredictHashtagsForLocationsPlots():
 
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf()
-#        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf_multi()
+        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf_multi()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_examples()
 
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
@@ -951,5 +960,5 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.temp1()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    PredictHashtagsForLocationsPlots.run()
+#    MRAnalysis.run()
+    PredictHashtagsForLocationsPlots.run()
