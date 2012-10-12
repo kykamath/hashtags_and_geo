@@ -237,7 +237,11 @@ class AbstractAssociatioMeasure(ModifiedMRJob):
     def mapper(self, key, contingency_table_object):
         measure_score, pvalue = self.association_measure_stats(contingency_table_object)
         if pvalue<SIGNIFICANCE_THRESHOLD:
-            yield '', {'word': contingency_table_object['word'], 'hashtag': '#'+contingency_table_object['hashtag']}
+            yield '', {
+                           'word': contingency_table_object['word'],
+                           'hashtag': '#'+contingency_table_object['hashtag'],
+                           'data': {'pvalue': pvalue},
+                       }
     def get_components_by_clustering(self, graph):
         _, ltuo_node_and_cluster_id = clusterUsingAffinityPropagation(graph)
         ltuo_cluster_id_and_ltuo_node_id_and_cluster_id =\
@@ -249,7 +253,7 @@ class AbstractAssociatioMeasure(ModifiedMRJob):
         return zip(*ltuo_cluster_id_and_nodes)[1]
     def reducer(self, empty_key, values):
         graph = nx.Graph()
-        for value in values: graph.add_edge(value['word'], value['hashtag'])
+        for value in values: graph.add_edge(value['word'], value['hashtag'], attr_dict=value['data'])
         components = nx.connected_components(graph)
 #        components = self.get_components_by_clustering(graph)
         ltuo_num_of_hashtags_and_component_and_subgraph = map(
