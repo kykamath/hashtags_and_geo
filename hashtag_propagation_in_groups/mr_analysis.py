@@ -38,6 +38,9 @@ MIN_WORD_OCCURRENCES_PER_HASHTAG = 50
 # Significance threshold for p-value of association measure tests
 SIGNIFICANCE_THRESHOLD = 0.01
 
+# Maximum hashtags a word is associated with
+MAX_HASHTAGS_PER_WORD = 100
+
 ## Temporal Width of a hashtag group
 #TEMPORAL_WIDTH_OF_HASHTAG_GROUP_IN_SECONDS = 24*60*10
 
@@ -48,7 +51,8 @@ PARAMS_DICT = dict(
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW,
                    HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
                    MIN_WORD_OCCURRENCES_PER_HASHTAG = MIN_WORD_OCCURRENCES_PER_HASHTAG,
-                   SIGNIFICANCE_THRESHOLD = SIGNIFICANCE_THRESHOLD
+                   SIGNIFICANCE_THRESHOLD = SIGNIFICANCE_THRESHOLD,
+                   MAX_HASHTAGS_PER_WORD = MAX_HASHTAGS_PER_WORD
                    )
 
 def iterate_hashtag_with_words(line):
@@ -177,29 +181,32 @@ class WordObjectExtractor(ModifiedMRJob):
         mf_hashtag_to_n00 = defaultdict(float)
         mf_hashtag_to_n10 = defaultdict(float)
         total_word_occurrences = 0.0
-        for ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location in\
-                it_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location:
-            for hashtag, ltuo_word_and_occ_time_and_occ_location in\
-                    ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location:
-                so_hashtag.add(hashtag)
-                for neigbhor_word, occ_time, occ_location in ltuo_word_and_occ_time_and_occ_location:
-                    if neigbhor_word==word: 
-                        total_word_occurrences+=1
-                        mf_hashtag_to_n00[hashtag]+=1
-                    else: mf_hashtag_to_n10[hashtag]+=1
-        contingency_table_objects = []
-        for hashtag in so_hashtag:
-            contingency_table_object = { 'word': word, 'hashtag': hashtag}
-            contingency_table_object['n00'] = mf_hashtag_to_n00.get(hashtag, 0.0)
-            contingency_table_object['n10'] = mf_hashtag_to_n10.get(hashtag, 0.0)
-            contingency_table_object['n01'] = total_word_occurrences - contingency_table_object['n00']
-            contingency_table_objects.append(contingency_table_object)
-        word_object = {
-                    'word': word,
-                    'total_word_occurrences': total_word_occurrences,
-                    'contingency_table_objects': contingency_table_objects
-                }
-        yield word, word_object
+        l_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location =\
+                                                    list(it_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location)
+        if len(l_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location) <= MAX_HASHTAGS_PER_WORD:
+            for ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location in\
+                    l_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location:
+                for hashtag, ltuo_word_and_occ_time_and_occ_location in\
+                        ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location:
+                    so_hashtag.add(hashtag)
+                    for neigbhor_word, occ_time, occ_location in ltuo_word_and_occ_time_and_occ_location:
+                        if neigbhor_word==word: 
+                            total_word_occurrences+=1
+                            mf_hashtag_to_n00[hashtag]+=1
+                        else: mf_hashtag_to_n10[hashtag]+=1
+            contingency_table_objects = []
+            for hashtag in so_hashtag:
+                contingency_table_object = { 'word': word, 'hashtag': hashtag}
+                contingency_table_object['n00'] = mf_hashtag_to_n00.get(hashtag, 0.0)
+                contingency_table_object['n10'] = mf_hashtag_to_n10.get(hashtag, 0.0)
+                contingency_table_object['n01'] = total_word_occurrences - contingency_table_object['n00']
+                contingency_table_objects.append(contingency_table_object)
+            word_object = {
+                        'word': word,
+                        'total_word_occurrences': total_word_occurrences,
+                        'contingency_table_objects': contingency_table_objects
+                    }
+            yield word, word_object
 
 class WordHashtagContingencyTableObjectExtractor(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
