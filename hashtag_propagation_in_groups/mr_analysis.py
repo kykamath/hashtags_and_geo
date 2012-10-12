@@ -262,7 +262,7 @@ class AbstractAssociatioMeasure(ModifiedMRJob):
                                                            )
         ltuo_num_of_hashtags_and_component_and_subgraph.sort(key=itemgetter(0), reverse=True)
         for num_of_hashtags, component, subgraph in ltuo_num_of_hashtags_and_component_and_subgraph:
-            yield num_of_hashtags, [num_of_hashtags, component, subgraph]
+            if num_of_hashtags>0: yield num_of_hashtags, [num_of_hashtags, component, subgraph]
     def steps(self):
         return self.word_hashtag_contingency_table_object_extractor.steps() +\
                 [self.mr(mapper=self.mapper, reducer=self.reducer)]
