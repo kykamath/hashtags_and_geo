@@ -7,6 +7,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from library.file_io import FileIO
 from library.mrjobwrapper import runMRJob
+from mr_analysis import ChiSquareTest
 from mr_analysis import DemoAssociatioMeasure
 from mr_analysis import FisherExactTest
 from mr_analysis import HashtagsExtractor
@@ -14,6 +15,7 @@ from mr_analysis import PARAMS_DICT
 from mr_analysis import WordObjectExtractor
 from mr_analysis import WordHashtagContingencyTableObjectExtractor
 from pprint import pprint
+from settings import f_chi_square_association_measure
 from settings import f_demo_association_measure
 from settings import f_fisher_exact_association_measure
 from settings import f_hashtags_extractor
@@ -85,6 +87,9 @@ class MRAnalysis():
     def fisher_exact_association_measure():
         MRAnalysis.run_job_on_hashtags_in_dfs(FisherExactTest, f_fisher_exact_association_measure)
     @staticmethod
+    def chi_square_association_measure():
+        MRAnalysis.run_job_on_hashtags_in_dfs(ChiSquareTest, f_chi_square_association_measure)
+    @staticmethod
     def run():
         input_files_start_time, input_files_end_time = \
                                 datetime(2011, 2, 1), datetime(2012, 8, 31)
@@ -92,7 +97,8 @@ class MRAnalysis():
 #        MRAnalysis.word_object_extractor()
 #        MRAnalysis.word_object_contingency_table_extractor()
 #        MRAnalysis.demo_association_measure()
-        MRAnalysis.fisher_exact_association_measure()
+#        MRAnalysis.fisher_exact_association_measure()
+        MRAnalysis.chi_square_association_measure()
 
 if __name__ == '__main__':
     MRAnalysis.run()

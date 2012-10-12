@@ -16,3 +16,4 @@ f_word_hashtag_contigency_table_objects = fld_data_analysis%'word_hashtag_contig
 f_demo_association_measure = fld_data_analysis%'demo_association_measure'+'demo_association_measure'
 f_fisher_exact_association_measure = fld_data_analysis%'fisher_exact_association_measure'+\
                                                                                     'fisher_exact_association_measure'
+f_chi_square_association_measure = fld_data_analysis%'chi_square_association_measure'+'chi_square_association_measure'

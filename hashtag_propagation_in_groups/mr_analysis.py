@@ -292,10 +292,17 @@ class FisherExactTest(AbstractAssociatioMeasure):
         super(FisherExactTest, self).__init__(*args, **kwargs)
     def association_measure_stats(self, contingency_table_object):
         return stats.fisher_exact(self.get_contingency_array(contingency_table_object))
+
+class ChiSquareTest(AbstractAssociatioMeasure):
+    def __init__(self, *args, **kwargs):
+        super(ChiSquareTest, self).__init__(*args, **kwargs)
+    def association_measure_stats(self, contingency_table_object):
+        return stats.chi2_contingency(self.get_contingency_array(contingency_table_object))
       
 if __name__ == '__main__':
 #    HashtagsExtractor.run()
 #    WordObjectExtractor.run()
 #    WordHashtagContingencyTableObjectExtractor.run()
 #    DemoAssociatioMeasure.run()
-    FisherExactTest.run()
+#    FisherExactTest.run()
+    ChiSquareTest.run()
