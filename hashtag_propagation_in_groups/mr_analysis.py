@@ -297,8 +297,9 @@ class ChiSquareTest(AbstractAssociatioMeasure):
     def __init__(self, *args, **kwargs):
         super(ChiSquareTest, self).__init__(*args, **kwargs)
     def association_measure_stats(self, contingency_table_object):
-        return stats.chi2_contingency(self.get_contingency_array(contingency_table_object))
-      
+        chi2, p, dof, ex = stats.chi2_contingency(self.get_contingency_array(contingency_table_object))
+        return chi2, p
+        
 if __name__ == '__main__':
 #    HashtagsExtractor.run()
 #    WordObjectExtractor.run()
