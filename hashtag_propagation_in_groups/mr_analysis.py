@@ -36,7 +36,7 @@ HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
 MIN_WORD_OCCURRENCES_PER_HASHTAG = 50
 
 # Significance threshold for p-value of association measure tests
-SIGNIFICANCE_THRESHOLD = 0.05
+SIGNIFICANCE_THRESHOLD = 0.01
 
 ## Temporal Width of a hashtag group
 #TEMPORAL_WIDTH_OF_HASHTAG_GROUP_IN_SECONDS = 24*60*10
