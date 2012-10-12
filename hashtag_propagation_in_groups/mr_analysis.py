@@ -183,8 +183,6 @@ class WordObjectExtractor(ModifiedMRJob):
         total_word_occurrences = 0.0
         l_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location =\
                                                     list(it_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location)
-        print MAX_HASHTAGS_PER_WORD
-        exit()
         if len(l_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location) <= MAX_HASHTAGS_PER_WORD:
             for ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location in\
                     l_ltuo_hashtag_and_ltuo_word_and_occ_time_and_occ_location:
