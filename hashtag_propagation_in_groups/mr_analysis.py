@@ -250,8 +250,8 @@ class AbstractAssociatioMeasure(ModifiedMRJob):
     def reducer(self, empty_key, values):
         graph = nx.Graph()
         for value in values: graph.add_edge(value['word'], value['hashtag'])
-#        components = nx.connected_components(graph)
-        components = self.get_components_by_clustering(graph)
+        components = nx.connected_components(graph)
+#        components = self.get_components_by_clustering(graph)
         ltuo_num_of_hashtags_and_component_and_subgraph = map(
                                                                lambda c: (
                                                                               len(filter(lambda w: w[0]=='#', c)),
