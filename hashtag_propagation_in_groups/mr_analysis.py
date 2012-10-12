@@ -6,9 +6,11 @@ Created on Oct 3, 2012
 from collections import defaultdict
 from datetime import datetime
 from itertools import chain, groupby
-from library.geo import UTMConverter
+from library.classes import GeneralMethods
 from library.mrjobwrapper import ModifiedMRJob
 from library.nlp import getWordsFromRawEnglishMessage
+from library.geo import UTMConverter
+from library.graphs import clusterUsingAffinityPropagation
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from operator import itemgetter
 from scipy import stats
@@ -31,7 +33,7 @@ HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
 
 # Minimum number of word occurrences expected for each hashtag to be considered a valid word
-MIN_WORD_OCCURRENCES_PER_HASHTAG = 10
+MIN_WORD_OCCURRENCES_PER_HASHTAG = 50
 
 # Significance threshold for p-value of association measure tests
 SIGNIFICANCE_THRESHOLD = 0.05
@@ -236,20 +238,31 @@ class AbstractAssociatioMeasure(ModifiedMRJob):
         measure_score, pvalue = self.association_measure_stats(contingency_table_object)
         if pvalue<SIGNIFICANCE_THRESHOLD:
             yield '', {'word': contingency_table_object['word'], 'hashtag': '#'+contingency_table_object['hashtag']}
+    def get_components_by_clustering(self, graph):
+        _, ltuo_node_and_cluster_id = clusterUsingAffinityPropagation(graph)
+        ltuo_cluster_id_and_ltuo_node_id_and_cluster_id =\
+                                                 GeneralMethods.group_items_by(ltuo_node_and_cluster_id, itemgetter(1))
+        ltuo_cluster_id_and_nodes = map(
+                                        lambda (c_i, l_n_c): (c_i, zip(*l_n_c)[0]),
+                                        ltuo_cluster_id_and_ltuo_node_id_and_cluster_id
+                                        )
+        return zip(*ltuo_cluster_id_and_nodes)[1]
     def reducer(self, empty_key, values):
         graph = nx.Graph()
         for value in values: graph.add_edge(value['word'], value['hashtag'])
-        connected_components = nx.connected_components(graph)
-        ltuo_num_of_hashtags_and_connected_component = map(
+#        components = nx.connected_components(graph)
+        components = self.get_components_by_clustering(graph)
+        ltuo_num_of_hashtags_and_component_and_subgraph = map(
                                                                lambda c: (
                                                                               len(filter(lambda w: w[0]=='#', c)),
-                                                                              sorted(c)
+                                                                              sorted(c),
+                                                                              graph.subgraph(c).edges(data=True)
                                                                           ),
-                                                               connected_components
+                                                               components
                                                            )
-        ltuo_num_of_hashtags_and_connected_component.sort(key=itemgetter(0), reverse=True)
-        for num_of_hashtags, connected_component in ltuo_num_of_hashtags_and_connected_component:
-            yield num_of_hashtags, [num_of_hashtags, connected_component]
+        ltuo_num_of_hashtags_and_component_and_subgraph.sort(key=itemgetter(0), reverse=True)
+        for num_of_hashtags, component, subgraph in ltuo_num_of_hashtags_and_component_and_subgraph:
+            yield num_of_hashtags, [num_of_hashtags, component, subgraph]
     def steps(self):
         return self.word_hashtag_contingency_table_object_extractor.steps() +\
                 [self.mr(mapper=self.mapper, reducer=self.reducer)]
