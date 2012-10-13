@@ -265,9 +265,9 @@ class AbstractAssociatioMeasure(ModifiedMRJob):
     def get_components_by_clustering1(self, main_graph):
         def get_components(graph):
             if graph.number_of_nodes()>5:
-                try:
-                    for cluster in clusterUsingMCLClustering(graph): yield cluster
-                except: yield graph.nodes()
+#                try:
+                for cluster in clusterUsingMCLClustering(graph): yield cluster
+#                except: yield graph.nodes()
             else: yield graph.nodes()
         components = []
         for sub_graph in nx.connected_component_subgraphs(main_graph):

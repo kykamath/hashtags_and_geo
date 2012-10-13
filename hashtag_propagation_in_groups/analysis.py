@@ -100,8 +100,8 @@ class MRAnalysis():
 #        MRAnalysis.word_object_extractor()
 #        MRAnalysis.word_object_contingency_table_extractor()
 #        MRAnalysis.demo_association_measure()
-#        MRAnalysis.fisher_exact_association_measure()
-        MRAnalysis.chi_square_association_measure()
+        MRAnalysis.fisher_exact_association_measure()
+#        MRAnalysis.chi_square_association_measure()
 
 def start_end(hashtag):
     return hashtag[:6], hashtag[-7:]
