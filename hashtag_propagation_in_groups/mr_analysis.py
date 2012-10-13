@@ -276,7 +276,11 @@ class AbstractAssociatioMeasure(ModifiedMRJob):
 #        if graph.num
     def reducer(self, empty_key, values):
         graph = nx.Graph()
-        for value in values: graph.add_edge(value['word'], value['hashtag'], attr_dict=value['data'])
+        for value in values: graph.add_edge(
+                                            unicode(value['word']).encode('utf-8'),
+                                            unicode(value['hashtag']).encode('utf-8'),
+                                            attr_dict=value['data']
+                                        )
 #        components = nx.connected_components(graph)
 #        components = self.get_components_by_clustering(graph)
         components = self.get_components_by_clustering1(graph)
