@@ -23,7 +23,7 @@ ACCURACY = 10**4 # UTM boxes in sq.m
 
 # Minimum number of hashtag occurrences
 # Used by HashtagsExtractor
-MIN_HASHTAG_OCCURRENCES = 10
+MIN_HASHTAG_OCCURRENCES = 50
 
 # Start time for data analysis
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
@@ -33,7 +33,7 @@ HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())
 HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
 
 # Minimum number of word occurrences expected for each hashtag to be considered a valid word
-MIN_WORD_OCCURRENCES_PER_HASHTAG = 50
+MIN_WORD_OCCURRENCES_PER_HASHTAG = 10
 
 # Significance threshold for p-value of association measure tests
 SIGNIFICANCE_THRESHOLD = 0.01

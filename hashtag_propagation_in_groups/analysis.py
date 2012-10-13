@@ -5,6 +5,7 @@ Created on Sep 26, 2012
 '''
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.graphs import clusterUsingMCLClustering
 from library.mrjobwrapper import runMRJob
@@ -24,6 +25,7 @@ from settings import f_hashtags_extractor
 from settings import f_hdfs_hashtags
 from settings import f_word_objects_extractor
 from settings import f_word_hashtag_contigency_table_objects
+from settings import fld_google_drive_data_analysis
 from settings import hdfs_input_folder
 import networkx as nx
 import time
@@ -115,9 +117,11 @@ def get_components(graph):
 
 class HashtagGroupAnalysis(object):
     @staticmethod
-    def temp():
+    def hashtag_groups_dot_files(association_measure_file=f_fisher_exact_association_measure):
+        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+\
+                                                            '/'+association_measure_file.split('/')[-1]+'/%s.dot'
         for line_no, data in\
-                enumerate(FileIO.iterateJsonFromFile(f_chi_square_association_measure, remove_params_dict=True)):
+                enumerate(FileIO.iterateJsonFromFile(association_measure_file, remove_params_dict=True)):
             _, _, edges = data
             graph = nx.Graph()
 #            try:
@@ -136,7 +140,7 @@ class HashtagGroupAnalysis(object):
 #            except: pass
 #            ltuo_node_id_and_degree = graph.degree().items()
 #            ltuo_node_id_and_degree.sort(key=itemgetter(1), reverse=True)
-            print list(get_components(graph))
+#            print list(get_components(graph))
 #            try:
 #                print graph.number_of_nodes()
 #                clusters = clusterUsingMCLClustering(graph)
@@ -145,12 +149,15 @@ class HashtagGroupAnalysis(object):
 #            ltuo_cluster_len_and_cluster = [(len(c), sorted(c)) for c in clusters]
 #            ltuo_cluster_len_and_cluster.sort(key=itemgetter(0), reverse=True)
 #            print zip(*ltuo_cluster_len_and_cluster)[0]
-#            nx.write_dot(graph, 'graph.dot')
+            output_file = output_file_format%line_no
+            print 'Writing file: ', output_file
+            FileIO.createDirectoryForFile(output_file)
+            nx.write_dot(graph, output_file)
 #            print len(edges), graph.number_of_edges()
 #            exit()
     @staticmethod
     def run():
-        HashtagGroupAnalysis.temp()
+        HashtagGroupAnalysis.hashtag_groups_dot_files()
 
 if __name__ == '__main__':
     MRAnalysis.run()
