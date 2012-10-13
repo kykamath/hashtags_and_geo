@@ -10,7 +10,7 @@ from library.classes import GeneralMethods
 from library.mrjobwrapper import ModifiedMRJob
 #from library.nlp import getWordsFromRawEnglishMessage
 from library.geo import UTMConverter
-from library.graphs import clusterUsingAffinityPropagation
+from library.graphs import clusterUsingAffinityPropagation, clusterUsingMCLClustering
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from operator import itemgetter
 from scipy import stats
@@ -262,11 +262,24 @@ class AbstractAssociatioMeasure(ModifiedMRJob):
                                         ltuo_cluster_id_and_ltuo_node_id_and_cluster_id
                                         )
         return zip(*ltuo_cluster_id_and_nodes)[1]
+    def get_components_by_clustering1(self, main_graph):
+        def get_components(graph):
+            if graph.number_of_nodes()>5:
+                try:
+                    for cluster in clusterUsingMCLClustering(graph): yield cluster
+                except: yield graph.nodes()
+            else: yield graph.nodes()
+        components = []
+        for sub_graph in nx.connected_component_subgraphs(main_graph):
+            components+=list(get_components(sub_graph))
+        return components
+#        if graph.num
     def reducer(self, empty_key, values):
         graph = nx.Graph()
         for value in values: graph.add_edge(value['word'], value['hashtag'], attr_dict=value['data'])
-        components = nx.connected_components(graph)
+#        components = nx.connected_components(graph)
 #        components = self.get_components_by_clustering(graph)
+        components = self.get_components_by_clustering1(graph)
         ltuo_num_of_hashtags_and_component_and_subgraph = map(
                                                                lambda c: (
                                                                               len(filter(lambda w: w[0]=='#', c)),
@@ -309,5 +322,5 @@ if __name__ == '__main__':
 #    WordObjectExtractor.run()
 #    WordHashtagContingencyTableObjectExtractor.run()
 #    DemoAssociatioMeasure.run()
-#    FisherExactTest.run()
-    ChiSquareTest.run()
+    FisherExactTest.run()
+#    ChiSquareTest.run()

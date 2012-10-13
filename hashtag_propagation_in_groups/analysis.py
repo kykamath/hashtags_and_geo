@@ -6,6 +6,7 @@ Created on Sep 26, 2012
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from library.file_io import FileIO
+from library.graphs import clusterUsingMCLClustering
 from library.mrjobwrapper import runMRJob
 from mr_analysis import ChiSquareTest
 from mr_analysis import DemoAssociatioMeasure
@@ -105,10 +106,18 @@ class MRAnalysis():
 def start_end(hashtag):
     return hashtag[:6], hashtag[-7:]
 
+def get_components(graph):
+    if graph.number_of_nodes()>5:
+        try:
+            for cluster in clusterUsingMCLClustering(graph): yield cluster
+        except: yield graph.nodes()
+    else: yield graph.nodes()
+
 class HashtagGroupAnalysis(object):
     @staticmethod
     def temp():
-        for data in FileIO.iterateJsonFromFile(f_chi_square_association_measure, remove_params_dict=True):
+        for line_no, data in\
+                enumerate(FileIO.iterateJsonFromFile(f_chi_square_association_measure, remove_params_dict=True)):
             _, _, edges = data
             graph = nx.Graph()
 #            try:
@@ -122,18 +131,27 @@ class HashtagGroupAnalysis(object):
     #                a.encode
                 u = unicode(u).encode('utf-8')
                 v = unicode(v).encode('utf-8')
-                print u, v
+#                print u, v
                 graph.add_edge(u,v, attr_dict)
 #            except: pass
 #            ltuo_node_id_and_degree = graph.degree().items()
 #            ltuo_node_id_and_degree.sort(key=itemgetter(1), reverse=True)
-            nx.write_dot(graph, 'graph.dot')
+            print list(get_components(graph))
+#            try:
+#                print graph.number_of_nodes()
+#                clusters = clusterUsingMCLClustering(graph)
+#                print line_no, len(clusters)
+#            except: print 'Exception'
+#            ltuo_cluster_len_and_cluster = [(len(c), sorted(c)) for c in clusters]
+#            ltuo_cluster_len_and_cluster.sort(key=itemgetter(0), reverse=True)
+#            print zip(*ltuo_cluster_len_and_cluster)[0]
+#            nx.write_dot(graph, 'graph.dot')
 #            print len(edges), graph.number_of_edges()
-            exit()
+#            exit()
     @staticmethod
     def run():
         HashtagGroupAnalysis.temp()
 
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    HashtagGroupAnalysis.run()
+#    MRAnalysis.run()
+    HashtagGroupAnalysis.run()
