@@ -153,5 +153,5 @@ class HashtagGroupAnalysis(object):
         HashtagGroupAnalysis.temp()
 
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    HashtagGroupAnalysis.run()
+    MRAnalysis.run()
+#    HashtagGroupAnalysis.run()
