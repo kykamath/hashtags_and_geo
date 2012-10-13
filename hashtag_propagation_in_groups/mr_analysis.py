@@ -8,7 +8,7 @@ from datetime import datetime
 from itertools import chain, groupby
 from library.classes import GeneralMethods
 from library.mrjobwrapper import ModifiedMRJob
-from library.nlp import getWordsFromRawEnglishMessage
+#from library.nlp import getWordsFromRawEnglishMessage
 from library.geo import UTMConverter
 from library.graphs import clusterUsingAffinityPropagation
 from library.twitter import getDateTimeObjectFromTweetTimestamp
@@ -40,6 +40,8 @@ SIGNIFICANCE_THRESHOLD = 0.01
 
 # Maximum hashtags a word is associated with
 MAX_HASHTAGS_PER_WORD = 10
+#Minimum words per hashtag
+MAX_WORDS_PER_HASHTAG = 75
 
 ## Temporal Width of a hashtag group
 #TEMPORAL_WIDTH_OF_HASHTAG_GROUP_IN_SECONDS = 24*60*10
@@ -52,7 +54,8 @@ PARAMS_DICT = dict(
                    HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
                    MIN_WORD_OCCURRENCES_PER_HASHTAG = MIN_WORD_OCCURRENCES_PER_HASHTAG,
                    SIGNIFICANCE_THRESHOLD = SIGNIFICANCE_THRESHOLD,
-                   MAX_HASHTAGS_PER_WORD = MAX_HASHTAGS_PER_WORD
+                   MAX_HASHTAGS_PER_WORD = MAX_HASHTAGS_PER_WORD,
+                   MAX_WORDS_PER_HASHTAG = MAX_WORDS_PER_HASHTAG,
                    )
 
 def iterate_hashtag_with_words(line):
@@ -163,12 +166,13 @@ class WordObjectExtractor(ModifiedMRJob):
             ltuo_occ_time_and_occ_location = data['ltuo_occ_time_and_occ_location']
             ltuo_occ_time_and_words = data['ltuo_occ_time_and_words']
             valid_words = self._get_words_above_min_threshold(ltuo_occ_time_and_words)
-            ltuo_word_and_occ_time_and_occ_location = []
-            for (occ_time, occ_location),(_, words) in zip(ltuo_occ_time_and_occ_location, ltuo_occ_time_and_words):
-                for word in filter(lambda w: w in valid_words, words):
-                    ltuo_word_and_occ_time_and_occ_location.append([word, occ_time, occ_location])
-            for word in valid_words:
-                self.mf_word_to_mf_hashtag_to_ltuo_word_and_occ_time_and_occ_location[word][hashtag]=\
+            if len(valid_words) < MAX_WORDS_PER_HASHTAG:
+                ltuo_word_and_occ_time_and_occ_location = []
+                for (occ_time, occ_location),(_, words) in zip(ltuo_occ_time_and_occ_location, ltuo_occ_time_and_words):
+                    for word in filter(lambda w: w in valid_words, words):
+                        ltuo_word_and_occ_time_and_occ_location.append([word, occ_time, occ_location])
+                for word in valid_words:
+                    self.mf_word_to_mf_hashtag_to_ltuo_word_and_occ_time_and_occ_location[word][hashtag]=\
                                                                                 ltuo_word_and_occ_time_and_occ_location
     def mapper_final(self):
         for word, mf_hashtag_to_ltuo_word_and_occ_time_and_occ_location in\

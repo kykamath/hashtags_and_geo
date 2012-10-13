@@ -14,6 +14,7 @@ from mr_analysis import HashtagsExtractor
 from mr_analysis import PARAMS_DICT
 from mr_analysis import WordObjectExtractor
 from mr_analysis import WordHashtagContingencyTableObjectExtractor
+from operator import itemgetter
 from pprint import pprint
 from settings import f_chi_square_association_measure
 from settings import f_demo_association_measure
@@ -23,6 +24,7 @@ from settings import f_hdfs_hashtags
 from settings import f_word_objects_extractor
 from settings import f_word_hashtag_contigency_table_objects
 from settings import hdfs_input_folder
+import networkx as nx
 import time
 
 class MRAnalysis():
@@ -100,5 +102,38 @@ class MRAnalysis():
 #        MRAnalysis.fisher_exact_association_measure()
         MRAnalysis.chi_square_association_measure()
 
+def start_end(hashtag):
+    return hashtag[:6], hashtag[-7:]
+
+class HashtagGroupAnalysis(object):
+    @staticmethod
+    def temp():
+        for data in FileIO.iterateJsonFromFile(f_chi_square_association_measure, remove_params_dict=True):
+            _, _, edges = data
+            graph = nx.Graph()
+#            try:
+            for edge in edges: 
+                u,v,attr_dict = edge
+#                u, v = unicode(u).encode('utf-8'), unicode(v).encode('utf-8')
+#                if start_end(u)!=('#promo', 'rubinho') and start_end(v)!=('#promo', 'rubinho') : 
+#                    print unicode(u).encode('utf-8'), u
+#                    print unicode(v).encode('utf-8'), v
+    #                a = ''
+    #                a.encode
+                u = unicode(u).encode('utf-8')
+                v = unicode(v).encode('utf-8')
+                print u, v
+                graph.add_edge(u,v, attr_dict)
+#            except: pass
+#            ltuo_node_id_and_degree = graph.degree().items()
+#            ltuo_node_id_and_degree.sort(key=itemgetter(1), reverse=True)
+            nx.write_dot(graph, 'graph.dot')
+#            print len(edges), graph.number_of_edges()
+            exit()
+    @staticmethod
+    def run():
+        HashtagGroupAnalysis.temp()
+
 if __name__ == '__main__':
     MRAnalysis.run()
+#    HashtagGroupAnalysis.run()
