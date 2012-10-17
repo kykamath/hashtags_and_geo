@@ -471,7 +471,7 @@ class LocationClusters(ModifiedMRJob):
             for neighbor_utm_id, neighbor_hashtags in ltuo_neighbor_utm_id_and_neighbor_hashtags:
                 num_common_hashtags = len(hashtags.intersection(neighbor_hashtags))+0.0
                 total_hashtags = len(hashtags.union(neighbor_hashtags))
-                if num_common_hashtags/total_hashtags >= 0.25:
+                if num_common_hashtags/total_hashtags >= 0.10:
                     observed_hashtag_pattern = [1 for i in range(num_common_hashtags)] +\
                                                                     [0 for i in range(total_hashtags - num_common_hashtags)]
                     mean_probability = np.mean([
