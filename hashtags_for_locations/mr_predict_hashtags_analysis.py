@@ -469,17 +469,27 @@ class LocationClusters(ModifiedMRJob):
                 ltuo_neighbor_utm_id_and_neighbor_hashtags.append([neighbor_utm_id, set(neighbor_hashtags)])
         if hashtags:
             for neighbor_utm_id, neighbor_hashtags in ltuo_neighbor_utm_id_and_neighbor_hashtags:
-                num_common_hashtags = len(hashtags.intersection(neighbor_hashtags))
+                num_common_hashtags = len(hashtags.intersection(neighbor_hashtags))+0.0
                 total_hashtags = len(hashtags.union(neighbor_hashtags))
-                observed_hashtag_pattern = [1 for i in range(num_common_hashtags)] +\
-                                                                [0 for i in range(total_hashtags - num_common_hashtags)]
-                mean_probability = MonteCarloSimulation.mean_probability(
-                                                     MonteCarloSimulation.probability_of_data_extracted_from_same_sample,
-                                                     observed_hashtag_pattern,
-                                                     [random.sample([0,1], 1)[0] for i in range(total_hashtags)]
-                                                 )
-                if mean_probability <= 0.05: yield '%s::%s'%(utm_id, neighbor_utm_id), mean_probability
-#        yield utm_id, list(hashtags)
+                if num_common_hashtags/total_hashtags >= 0.25:
+                    observed_hashtag_pattern = [1 for i in range(num_common_hashtags)] +\
+                                                                    [0 for i in range(total_hashtags - num_common_hashtags)]
+                    mean_probability = np.mean([
+                                                MonteCarloSimulation.mean_probability(
+                                                         MonteCarloSimulation.probability_of_data_extracted_from_same_sample,
+                                                         observed_hashtag_pattern,
+                                                         [random.sample([0,1], 1)[0] for i in range(total_hashtags)]
+                                                     )
+                                               for i in range(3)])
+#                    print utm_id, neighbor_utm_id
+#                    print observed_hashtag_pattern, mean_probability
+#                    print [random.sample([0,1], 1)[0] for i in range(total_hashtags)]
+                    if mean_probability <= 0.05: yield '', {
+                                                            'utm_id': utm_id,
+                                                            'neighbor_utm_id': neighbor_utm_id,
+                                                            'mean_probability':mean_probability,
+                                                            'num_common_hashtags': num_common_hashtags
+                                                        }
     def steps(self):
         return [
                     self.mr(mapper=self.mapper, reducer=self.reducer, mapper_final=self.mapper_final),
