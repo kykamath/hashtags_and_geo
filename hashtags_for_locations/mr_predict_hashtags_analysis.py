@@ -457,7 +457,7 @@ class LocationClusters(ModifiedMRJob):
         hashtags, neighbor_utm_ids = zip(*ltuo_hashtag_and_neighbor_utm_ids)
         neighbor_utm_ids = list(set(chain(*neighbor_utm_ids)))
         utm_id_and_hashtags = [utm_id, hashtags]
-        if len(hashtags) > 5:
+        if len(hashtags) >= 25:
             for neighbor_utm_id in neighbor_utm_ids: yield neighbor_utm_id, utm_id_and_hashtags
             yield utm_id, utm_id_and_hashtags
     def reducer2(self, utm_id, it_utm_id_and_hashtags):
