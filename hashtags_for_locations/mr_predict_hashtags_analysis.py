@@ -423,85 +423,75 @@ class GapOccurrenceTimeDuringHashtagLifetime(ModifiedMRJob):
         ltuo_gap_and_perct_of_occurrences.sort(key=itemgetter(0))
         yield '', ltuo_gap_and_perct_of_occurrences
 
-#class GapOccurrenceTimeDuringHashtagLifetime(ModifiedMRJob):
-#    DEFAULT_INPUT_PROTOCOL='raw_value'
-#    def __init__(self, *args, **kwargs):
-#        super(GapOccurrenceTimeDuringHashtagLifetime, self).__init__(*args, **kwargs)
-#        self.mf_perct_life_time_to_count = defaultdict(float)
-#        self.mf_perct_life_time_to_perct_of_occurrences = defaultdict(list)
-#    def mapper(self, key, value):
-#        if False: yield # I'm a generator!
-#        hashtag_object = cjson.decode(value)
-#        if 'num_of_occurrences' in hashtag_object and\
-#                hashtag_object['num_of_occurrences'] >= MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS:
-#            ltuo_bucket_occ_time_and_occ_utm_id =\
-#                                        map(
-#                                               lambda (t, utm_id):
-#                                                    (GeneralMethods.approximateEpoch(t, TIME_UNIT_IN_SECONDS), utm_id),
-#                                               hashtag_object['ltuo_occ_time_and_occ_utm_id']
-#                                           )
-#            ltuo_bucket_occ_time_and_occ_utm_id.sort(key=itemgetter(1))
-#            ltuo_utm_id_and_bucket_occ_times =\
-#                [ (occ_utm_id,map(itemgetter(0), it_bucket_occ_time_and_occ_utm_id))
-#                 for occ_utm_id, it_bucket_occ_time_and_occ_utm_id in
-#                    groupby(ltuo_bucket_occ_time_and_occ_utm_id, key=itemgetter(1))
-#                ]
-#            ltuo_utm_id_and_bucket_occ_times =\
-#                                            filter(
-#                                                   lambda (_, occ_times): len(occ_times)>100,
-#                                                   ltuo_utm_id_and_bucket_occ_times
-#                                               )
-#            for _, bucket_occ_times in ltuo_utm_id_and_bucket_occ_times:
-#                gap_perct = 0.01
-##                bucket_occ_times = filter_outliers(bucket_occ_times)
-##                bucket_occ_times_at_gaps = get_items_at_gap(bucket_occ_times, gap_perct)
-#                valid_perct_of_life_times = ['%0.2f'%v for v in np.arange(gap_perct,1+gap_perct,gap_perct)]
-#                mf_perct_life_time_to_perct_of_occurrences = {}
-#                start_time = float(bucket_occ_times[0])
-#                life_time = bucket_occ_times[-1] - start_time
-#                if life_time>0:
-#                    total_occurrences = len(bucket_occ_times)+0.0
-#                    for occurrence_count, bucket_occ_time in enumerate(bucket_occ_times):
-#                        perct_life_time = (bucket_occ_time-start_time)/life_time
-#                        self.mf_perct_life_time_to_count['%0.02f'%perct_life_time]+=1
-#                        if '%0.02f'%perct_life_time in valid_perct_of_life_times:
-#                            mf_perct_life_time_to_perct_of_occurrences['%0.02f'%perct_life_time]=\
-#                                                                    int(((occurrence_count+1)/total_occurrences)*100)
-##                                                                                (occurrence_count+1)/total_occurrences
-#                for perct_life_time, perct_of_occurrences in mf_perct_life_time_to_perct_of_occurrences.iteritems():
-#                    self.mf_perct_life_time_to_perct_of_occurrences[perct_life_time].append(perct_of_occurrences)
-#    def mapper_final(self): 
-#        yield 'perct_life_time_to_occurrences_distribution', self.mf_perct_life_time_to_count.items()
-#        yield 'ltuo_perct_life_time_and_perct_of_occurrences', self.mf_perct_life_time_to_perct_of_occurrences.items()
-#    def reducer(self, key, it_values):
-#        if key=='perct_life_time_to_occurrences_distribution':
-#            mf_perct_life_time_to_count = defaultdict(float)
-#            for ltuo_perct_life_time_and_count in it_values:
-#                for perct_life_time, count in ltuo_perct_life_time_and_count:
-#                    mf_perct_life_time_to_count[perct_life_time]+=count
-#            total_count = sum(mf_perct_life_time_to_count.values())
-#            ltuo_perct_life_time_and_perct_of_occurrences =\
-#                    map(lambda (g, n): (float(g), n/total_count), mf_perct_life_time_to_count.items())
-#            ltuo_perct_life_time_and_perct_of_occurrences.sort(key=itemgetter(0))
-#            yield '', {'key':key, 'value': ltuo_perct_life_time_and_perct_of_occurrences}
-#        else:
-#            ltuo_perct_life_time_and_perct_of_occurrences = list(chain(*it_values))
-#            mf_ltuo_perct_life_time_to_perct_of_occurrences = defaultdict(list)
-#            for perct_life_time, perct_of_occurrences in ltuo_perct_life_time_and_perct_of_occurrences:
-#                mf_ltuo_perct_life_time_to_perct_of_occurrences[perct_life_time]+=perct_of_occurrences
-#            ltuo_perct_life_time_and_num_of_occurrences =\
-#                                                    map(
-#                                                            lambda (p, po): (float(p), sum(po)),
-#                                                            mf_ltuo_perct_life_time_to_perct_of_occurrences.iteritems()
-#                                                    )
-#            ltuo_perct_life_time_and_num_of_occurrences.sort(key=itemgetter(0))
-#            yield '', {'key':key, 'value': ltuo_perct_life_time_and_num_of_occurrences}
+class LocationClusters(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(LocationClusters, self).__init__(*args, **kwargs)
+        self.mf_utm_id_to_ltuo_hashtag_and_neighbor_utm_ids = defaultdict(list)
+    def mapper(self, key, value):
+        if False: yield # I'm a generator!
+        hashtag_object = cjson.decode(value)
+        if 'num_of_occurrences' in hashtag_object and\
+                hashtag_object['num_of_occurrences'] >= MIN_HASHTAG_OCCURRENCES_FOR_PROPAGATION_ANALYSIS:
+            ltuo_occ_time_and_occ_utm_id = hashtag_object['ltuo_occ_time_and_occ_utm_id']
+            total_hashtag_occurrences = len(ltuo_occ_time_and_occ_utm_id)
+            ltuo_occ_utm_id_and_occ_counts = map(
+                                                     lambda (u, occ): (u, len(occ)), 
+                                                     group_items_by(ltuo_occ_time_and_occ_utm_id, key=itemgetter(1))
+                                                 )
+            ltuo_occ_utm_id_and_occ_counts = filter(
+                                                        lambda (u, c): c>=(0.03*total_hashtag_occurrences),
+                                                        ltuo_occ_utm_id_and_occ_counts
+                                                    )
+            if ltuo_occ_utm_id_and_occ_counts:
+                utm_ids = zip(*ltuo_occ_utm_id_and_occ_counts)[0]
+                for utm_id in utm_ids:
+                    self.mf_utm_id_to_ltuo_hashtag_and_neighbor_utm_ids[utm_id]\
+                                                                        .append([hashtag_object['hashtag'], utm_ids])
+    def mapper_final(self):
+        for utm_id, ltuo_hashtag_and_neighbor_utm_ids in\
+                self.mf_utm_id_to_ltuo_hashtag_and_neighbor_utm_ids.iteritems():
+            yield utm_id, ltuo_hashtag_and_neighbor_utm_ids
+    def reducer(self, utm_id, it_ltuo_hashtag_and_neighbor_utm_ids):
+        ltuo_hashtag_and_neighbor_utm_ids = list(chain(*it_ltuo_hashtag_and_neighbor_utm_ids))
+        hashtags, neighbor_utm_ids = zip(*ltuo_hashtag_and_neighbor_utm_ids)
+        neighbor_utm_ids = list(set(chain(*neighbor_utm_ids)))
+        utm_id_and_hashtags = [utm_id, hashtags]
+        if len(hashtags) > 5:
+            for neighbor_utm_id in neighbor_utm_ids: yield neighbor_utm_id, utm_id_and_hashtags
+            yield utm_id, utm_id_and_hashtags
+    def reducer2(self, utm_id, it_utm_id_and_hashtags):
+        ltuo_neighbor_utm_id_and_neighbor_hashtags = []
+        hashtags = None
+        for neighbor_utm_id, neighbor_hashtags in it_utm_id_and_hashtags:
+            if neighbor_utm_id == utm_id: hashtags = set(neighbor_hashtags)
+            elif utm_id<neighbor_utm_id:
+                ltuo_neighbor_utm_id_and_neighbor_hashtags.append([neighbor_utm_id, set(neighbor_hashtags)])
+        if hashtags:
+            for neighbor_utm_id, neighbor_hashtags in ltuo_neighbor_utm_id_and_neighbor_hashtags:
+                num_common_hashtags = len(hashtags.intersection(neighbor_hashtags))
+                total_hashtags = len(hashtags.union(neighbor_hashtags))
+                observed_hashtag_pattern = [1 for i in range(num_common_hashtags)] +\
+                                                                [0 for i in range(total_hashtags - num_common_hashtags)]
+                mean_probability = MonteCarloSimulation.mean_probability(
+                                                     MonteCarloSimulation.probability_of_data_extracted_from_same_sample,
+                                                     observed_hashtag_pattern,
+                                                     [random.sample([0,1], 1)[0] for i in range(total_hashtags)]
+                                                 )
+                if mean_probability <= 0.05: yield '%s::%s'%(utm_id, neighbor_utm_id), mean_probability
+#        yield utm_id, list(hashtags)
+    def steps(self):
+        return [
+                    self.mr(mapper=self.mapper, reducer=self.reducer, mapper_final=self.mapper_final),
+                    self.mr(reducer=self.reducer2)
+                ]
 if __name__ == '__main__':
     pass
 #    HashtagsExtractor.run()
 #    PropagationMatrix.run()
-    HashtagsWithMajorityInfo.run()
+#    HashtagsWithMajorityInfo.run()
 #    HashtagsWithMajorityInfoAtVaryingGaps.run()
 #    ImpactOfUsingLocationsToPredict.run()
 #    GapOccurrenceTimeDuringHashtagLifetime.run()
+    LocationClusters.run()
     
