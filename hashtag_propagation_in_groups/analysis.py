@@ -124,41 +124,19 @@ class HashtagGroupAnalysis(object):
                 enumerate(FileIO.iterateJsonFromFile(association_measure_file, remove_params_dict=True)):
             _, _, edges = data
             graph = nx.Graph()
-#            try:
             for edge in edges: 
                 u,v,attr_dict = edge
-#                u, v = unicode(u).encode('utf-8'), unicode(v).encode('utf-8')
-#                if start_end(u)!=('#promo', 'rubinho') and start_end(v)!=('#promo', 'rubinho') : 
-#                    print unicode(u).encode('utf-8'), u
-#                    print unicode(v).encode('utf-8'), v
-    #                a = ''
-    #                a.encode
                 u = unicode(u).encode('utf-8')
                 v = unicode(v).encode('utf-8')
-#                print u, v
                 graph.add_edge(u,v, attr_dict)
-#            except: pass
-#            ltuo_node_id_and_degree = graph.degree().items()
-#            ltuo_node_id_and_degree.sort(key=itemgetter(1), reverse=True)
-#            print list(get_components(graph))
-#            try:
-#                print graph.number_of_nodes()
-#                clusters = clusterUsingMCLClustering(graph)
-#                print line_no, len(clusters)
-#            except: print 'Exception'
-#            ltuo_cluster_len_and_cluster = [(len(c), sorted(c)) for c in clusters]
-#            ltuo_cluster_len_and_cluster.sort(key=itemgetter(0), reverse=True)
-#            print zip(*ltuo_cluster_len_and_cluster)[0]
             output_file = output_file_format%line_no
             print 'Writing file: ', output_file
             FileIO.createDirectoryForFile(output_file)
             nx.write_dot(graph, output_file)
-#            print len(edges), graph.number_of_edges()
-#            exit()
     @staticmethod
     def run():
         HashtagGroupAnalysis.hashtag_groups_dot_files()
 
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    HashtagGroupAnalysis.run()
+#    MRAnalysis.run()
+    HashtagGroupAnalysis.run()
