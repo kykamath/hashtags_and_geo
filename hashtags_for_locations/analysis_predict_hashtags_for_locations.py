@@ -19,6 +19,7 @@ from mr_predict_hashtags_analysis import HashtagsExtractor
 from mr_predict_hashtags_analysis import HashtagsWithMajorityInfo
 from mr_predict_hashtags_analysis import HashtagsWithMajorityInfoAtVaryingGaps
 from mr_predict_hashtags_analysis import ImpactOfUsingLocationsToPredict
+from mr_predict_hashtags_analysis import LocationClusters
 from mr_predict_hashtags_analysis import PropagationMatrix
 from mr_predict_hashtags_analysis import PARAMS_DICT
 from mr_predict_hashtags_analysis import TIME_UNIT_IN_SECONDS as BUCKET_WIDTH
@@ -64,7 +65,8 @@ f_gap_occurrence_time_during_hashtag_lifetime = analysis_folder%'gap_occurrence_
 f_impact_of_using_locations_to_predict = analysis_folder%'impact_of_using_locations_to_predict/'+\
                                                                                 'impact_of_using_locations_to_predict'
 f_impact_of_using_location_to_predict_hashtag_with_mc_simulation = analysis_folder%\
-                                                                'impact_using_mc_simulation/impact_using_mc_simulation'                                                                              
+                                                                'impact_using_mc_simulation/impact_using_mc_simulation' 
+f_location_clusters = analysis_folder%'location_clusters/location_clusters'                                                                              
 def with_gaussian_kde(y_values, x_range = (-1,1,100)):
     density = gaussian_kde(y_values)
     xs = np.linspace(*x_range)
@@ -170,6 +172,14 @@ class MRAnalysis():
                      jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
                  )
     @staticmethod
+    def location_clusters():
+        runMRJob(
+                     LocationClusters,
+                     f_location_clusters,
+                     [df_hashtags_extractor],
+                     jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
+                 )
+    @staticmethod
     def run():
 #        #Generate main data
 #        MRAnalysis.generate_data_for_experiments()
@@ -189,11 +199,13 @@ class MRAnalysis():
 #        MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
 
 #        MRAnalysis.propagation_matrix()
-        MRAnalysis.hashtags_with_majority_info()
+#        MRAnalysis.hashtags_with_majority_info()
 #        MRAnalysis.hashtags_with_majority_info_at_varying_gaps()
 #        MRAnalysis.impact_of_using_locations_to_predict()
 #        MRAnalysis.impact_using_mc_simulation()
 #        MRAnalysis.gap_occurrence_time_during_hashtag_lifetime()
+
+        MRAnalysis.location_clusters()
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
@@ -960,5 +972,5 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.temp1()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
