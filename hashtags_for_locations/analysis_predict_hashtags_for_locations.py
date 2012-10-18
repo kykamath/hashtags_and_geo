@@ -67,6 +67,7 @@ f_impact_of_using_locations_to_predict = analysis_folder%'impact_of_using_locati
 f_impact_of_using_location_to_predict_hashtag_with_mc_simulation = analysis_folder%\
                                                                 'impact_using_mc_simulation/impact_using_mc_simulation' 
 f_location_clusters = analysis_folder%'location_clusters/location_clusters'                                                                              
+
 def with_gaussian_kde(y_values, x_range = (-1,1,100)):
     density = gaussian_kde(y_values)
     xs = np.linspace(*x_range)
@@ -950,6 +951,10 @@ class PredictHashtagsForLocationsPlots():
 #            savefig(output_file_format%data['hashtag'])
 #            break;
     @staticmethod
+    def location_clusters():
+        for data in FileIO.iterateJsonFromFile(f_location_clusters, remove_params_dict=True):
+            print data
+    @staticmethod
     def run():
 #        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
 #        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
@@ -962,7 +967,7 @@ class PredictHashtagsForLocationsPlots():
 
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_gaussian_kde()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf()
-        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf_multi()
+#        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_cdf_multi()
 #        PredictHashtagsForLocationsPlots.impact_of_using_location_to_predict_hashtag_with_mc_simulation_examples()
 
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
@@ -970,7 +975,9 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_lifespan_vs_perct_of_hashtag_occurrences()
 
 #        PredictHashtagsForLocationsPlots.temp1()
+
+        PredictHashtagsForLocationsPlots.location_clusters()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    PredictHashtagsForLocationsPlots.run()
+#    MRAnalysis.run()
+    PredictHashtagsForLocationsPlots.run()
