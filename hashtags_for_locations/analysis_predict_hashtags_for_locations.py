@@ -11,7 +11,7 @@ from itertools import chain, groupby
 from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.geo import UTMConverter, plot_graph_clusters_on_world_map, plotPointsOnWorldMap
-from library.graphs import clusterUsingAffinityPropagation
+from library.graphs import clusterUsingAffinityPropagation, clusterUsingMCLClustering
 from library.mrjobwrapper import runMRJob
 from library.plotting import getCumulativeDistribution, getInverseCumulativeDistribution, savefig, splineSmooth
 from library.stats import filter_outliers
@@ -954,40 +954,70 @@ class PredictHashtagsForLocationsPlots():
 #            break;
     @staticmethod
     def location_clusters():
-        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/location_clusters/%s.dot'
+        mf_utm_id_to_place_name = dict([
+                                        ("-30.0559924674_-51.1556120628_10000", 'Porto Alegre'),
+                                        ("-12.8897687915_-38.4930422609_10000", 'Salvador'),
+                                        ("-25.531963034_-49.2583718586_10000", 'Curitiba'),
+                                        ("-5.83096584727_-35.2125855218_10000", 'Natal'),
+                                        ("-8.00174157684_-34.9506560849_10000", 'Recife'),
+                                        ("-22.9158446201_-43.4885906927_10000", 'Rio de Janeiro'),
+                                        ("-15.7661922583_-47.7531371886_10000", 'Brasilia'),
+                                        ("-23.7275399881_-46.6187056015_10000", 'Sao Paulo'),
+                                        ("-19.93859689_-43.9966541911_10000", 'Belo Horizonte'),
+                                        ("39.4051816666_-0.386807374139_10000", 'Valencia'),
+                                        ("41.6675457034_-0.897885246668_10000", 'Zaragoza'),
+                                        ("40.5138994175_-3.64922300725_10000", 'Madrid'),
+                                        ("36.8081626337_-4.73760992497_10000", 'Malaga'),
+                                        ("37.4167203193_-5.88142121144_10000", 'Sevilla'),
+                                        ("40.4238144982_-3.64835608078_10000", 'Madrid'),
+                                        ('41.4130525526_2.10259967743_10000', 'Barcelona'),
+                                        ('41.4139235542_2.22224165917_10000', 'Barcelona'),
+                                        ('37.4139133643_-5.99427966323_10000', 'Sevilla'),
+                                        ('39.4951942073_-0.383438157077_10000', 'Valencia'),
+                                        ])
         graph = nx.Graph()
         for data in FileIO.iterateJsonFromFile(f_location_clusters, remove_params_dict=True):
-            graph.add_edge(data['utm_id'], data['neighbor_utm_id'], {'w': data['num_common_hashtags']})
-#        plot_graph_clusters_on_world_map(graph)
-#        plt.show()
-        print graph.number_of_nodes()
-        no_of_clusters, ltuo_node_and_cluster_id = clusterUsingAffinityPropagation(graph)
+            u = mf_utm_id_to_place_name.get(data['utm_id'], data['utm_id'])
+            v = mf_utm_id_to_place_name.get(data['neighbor_utm_id'], data['neighbor_utm_id'])
+            if not graph.has_node(u): 
+                graph.add_node(u, {'co-ordinates': UTMConverter.getLatLongUTMIdInLatLongForm(data['utm_id'])})
+            if not graph.has_node(v): 
+                graph.add_node(v    , {'co-ordinates': UTMConverter.getLatLongUTMIdInLatLongForm(data['neighbor_utm_id'])})
+            graph.add_edge(u, v, {'w': data['num_common_hashtags']})
+        _, ltuo_node_and_cluster_id = clusterUsingAffinityPropagation(graph)
         ltuo_cluster_id_and_cluster =  [(c_id, zip(*nodes)[0]) 
                         for c_id, nodes in GeneralMethods.group_items_by(ltuo_node_and_cluster_id, key=itemgetter(1))]
+#        ltuo_cluster_id_and_cluster = list(enumerate(clusterUsingMCLClustering(graph)))
         ltuo_cluster_id_and_cluster.sort(key=lambda (c, cl): len(cl), reverse=True)
+        points, edges, colors, pointLabels = [], [], [], []
         for cluster_id, cluster in ltuo_cluster_id_and_cluster:
+            cluster = filter(lambda c: '_' not in c, cluster)
             sub_graph = graph.subgraph(cluster)
-            output_file = output_file_format%cluster_id
-            print 'Writing file: ', output_file
-            FileIO.createDirectoryForFile(output_file)
-            nx.write_dot(graph, output_file)
-#        mf_location_to_cluster_id = dict(ltuo_node_and_cluster_id)
-#        mf_cluster_id_to_cluster_color = dict([(i, GeneralMethods.getRandomColor()) for i in range(no_of_clusters)])
-#        points, colors = zip(
-#                             *map(lambda  location: (UTMConverter.getLatLongUTMIdInLatLongForm(location),
-#                             mf_cluster_id_to_cluster_color[mf_location_to_cluster_id[location]]), graph.nodes())
-#                        )
-#        _, m = plotPointsOnWorldMap(points, c=colors, s=0, lw=0, returnBaseMapObject=True)
-#        for u, v, data in graph.edges(data=True):
-#            if mf_location_to_cluster_id[u]==mf_location_to_cluster_id[v]:
-#                color = mf_cluster_id_to_cluster_color[mf_location_to_cluster_id[u]],
-#                u = UTMConverter.getLatLongUTMIdInLatLongForm(u),
-#                v = UTMConverter.getLatLongUTMIdInLatLongForm(v),
-#                w = data['w']
-##                print color[0]
-##                print u, v, len(u[0]), len(v), u[0][1], u[0][0], v[1], v[0]
-#                m.drawgreatcircle(u[0][1], u[0][0], v[0][1], v[0][0], color=color[0], alpha=0.6)
-#        savefig('fig/fig.png')
+            cluster_color = '#FFB5ED'
+            labels = sub_graph.nodes()
+            if 'Natal' in labels or 'Sevilla' in labels or 'Rio de Janeiro' in labels:
+                print 'Ploting: ', labels
+                points+=map(itemgetter('co-ordinates'), zip(*sub_graph.nodes_iter(data=True))[1])
+                colors+=[cluster_color for i in range(sub_graph.number_of_nodes())]
+                pointLabels+=labels
+                for u, v in sub_graph.edges_iter(): edges.append((u, v))
+        _, m = plotPointsOnWorldMap(
+                                        points,
+                                        c=colors,
+                                        bkcolor = '#ffffff',
+                                        resolution = 'h',
+                                        s=80,
+                                        lw=0,
+                                        returnBaseMapObject=True,
+                                        pointLabels=pointLabels,
+                                        pointLabelColor = 'k',
+                                        pointLabelSize=30
+                                    )
+        for u, v in edges:
+            u = graph.node[u]['co-ordinates']
+            v = graph.node[v]['co-ordinates']
+            m.drawgreatcircle(u[1], u[0], v[1], v[0], color=cluster_color, alpha=1.0, lw=2)
+        plt.show()
         
     @staticmethod
     def run():
