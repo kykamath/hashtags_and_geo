@@ -1086,8 +1086,8 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
             
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_lifespan_vs_perct_of_hashtag_occurrences()
-        PredictHashtagsForLocationsPlots.cdf_of_hastag_lifespans()
-#        PredictHashtagsForLocationsPlots.temp()
+#        PredictHashtagsForLocationsPlots.cdf_of_hastag_lifespans()
+        PredictHashtagsForLocationsPlots.temp()
 
 #        PredictHashtagsForLocationsPlots.temp1()
 
