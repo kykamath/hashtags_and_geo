@@ -414,7 +414,7 @@ class PredictHashtagsForLocationsPlots():
             occ_times.sort()
             lifespan = occ_times[-1]-occ_times[0]+0.0
             for occ_time in occ_times: 
-                bucket_id = '%0.01f'%((occ_time-occ_times[0])/lifespan)
+                bucket_id = '%0.02f'%((occ_time-occ_times[0])/lifespan)
                 mf_bucket_id_to_occurrences_count[bucket_id]+=1
             total_occurrences = len(occ_times)+0.0
             for bucket_id, occurrences_count in mf_bucket_id_to_occurrences_count.iteritems():
