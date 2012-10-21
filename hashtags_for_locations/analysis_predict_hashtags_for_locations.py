@@ -609,7 +609,7 @@ class PredictHashtagsForLocationsPlots():
                 ltuo_majority_threshold_bucket_time_and_utm_id_counts.sort(key=itemgetter(0))
                 majority_threshold_bucket_times, utm_id_counts =\
                                                             zip(*ltuo_majority_threshold_bucket_time_and_utm_id_counts)
-                total_utm_ids = sum(utm_id_counts)
+                total_utm_ids = sum(utm_id_counts)+0.0
                 lifespan = majority_threshold_bucket_times[-1] - majority_threshold_bucket_times[0] + 0.0
                 if lifespan>0:
                     for majority_threshold_bucket_time, utm_id_count in\
