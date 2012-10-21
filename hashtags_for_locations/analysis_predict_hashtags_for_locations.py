@@ -402,8 +402,10 @@ class PredictHashtagsForLocationsPlots():
     def temp():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         plt.figure(num=None, figsize=(4.3,3))
+        mf_bucket_id_to_perct_occurrences = defaultdict(float)
         for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
             print i
+            if i==10: break;
             mf_bucket_id_to_occurrences_count = defaultdict(float)
             ltuo_occ_time_and_occ_utm_id = data['ltuo_occ_time_and_occ_utm_id']
             occ_times = zip(*ltuo_occ_time_and_occ_utm_id)[0]
@@ -412,7 +414,17 @@ class PredictHashtagsForLocationsPlots():
             occ_times.sort()
             lifespan = occ_times[-1]-occ_times[0]+0.0
             for occ_time in occ_times: 
-                print '%0.015f'%((occ_time-occ_times[0])/lifespan),
+                bucket_id = '%0.01f'%((occ_time-occ_times[0])/lifespan)
+                mf_bucket_id_to_occurrences_count[bucket_id]+=1
+            total_occurrences = len(occ_times)+0.0
+            for bucket_id, occurrences_count in mf_bucket_id_to_occurrences_count.iteritems():
+                mf_bucket_id_to_perct_occurrences[bucket_id]+=occurrences_count/total_occurrences
+        total_perct_value = sum(mf_bucket_id_to_perct_occurrences.values())
+        ltuo_bucket_id_and_perct_occurrences = map(
+                                                   lambda (b, p): (b,p/total_perct_value),
+                                                   mf_bucket_id_to_perct_occurrences.iteritems()
+                                                )
+        print sum(zip(*ltuo_bucket_id_and_perct_occurrences)[1])
 #            exit()
 #                mf_bucket_id_to_occurrences_count[]
 #            mf_bucket_id_to_count[time_diff/(60)]+=1
