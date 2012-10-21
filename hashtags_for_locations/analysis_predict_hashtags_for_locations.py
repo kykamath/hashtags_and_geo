@@ -399,7 +399,7 @@ class PredictHashtagsForLocationsPlots():
             plt.grid(True)
             savefig(output_file_format%metric)
     @staticmethod
-    def temp():
+    def perct_of_hashtag_occurrences_vs_hashtag_lifespan():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         plt.figure(num=None, figsize=(4.3,3))
         mf_bucket_id_to_perct_occurrences = defaultdict(float)
@@ -421,13 +421,20 @@ class PredictHashtagsForLocationsPlots():
                 mf_bucket_id_to_perct_occurrences[bucket_id]+=occurrences_count/total_occurrences
         total_perct_value = sum(mf_bucket_id_to_perct_occurrences.values())
         ltuo_bucket_id_and_perct_occurrences = map(
-                                                   lambda (b, p): (b,p/total_perct_value),
+                                                   lambda (b, p): (float(b), p/total_perct_value),
                                                    mf_bucket_id_to_perct_occurrences.iteritems()
                                                 )
-        print sum(zip(*ltuo_bucket_id_and_perct_occurrences)[1])
-#            exit()
-#                mf_bucket_id_to_occurrences_count[]
-#            mf_bucket_id_to_count[time_diff/(60)]+=1
+        ltuo_bucket_id_and_perct_occurrences.sort(key=itemgetter(0))
+        bucket_ids, perct_occurrences = zip(*ltuo_bucket_id_and_perct_occurrences)
+        perct_occurrences = getCumulativeDistribution(perct_occurrences)
+        plt.grid(True)
+        ax = plt.subplot(111)
+#        ax.set_xscale('log')
+        plt.xlabel('Hashtag lifespan')
+        plt.ylabel('CDF of hashtag occurrences')
+        plt.plot(bucket_ids, perct_occurrences, c='k')
+        plt.scatter(bucket_ids, perct_occurrences, c='k')
+        savefig(output_file)
     @staticmethod
     def cdf_of_hastag_lifespans():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
@@ -1085,6 +1092,7 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
 
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
+        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_hashtag_lifespan()
 
 #        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
 #        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time_at_varying_gaps()
@@ -1099,7 +1107,6 @@ class PredictHashtagsForLocationsPlots():
             
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_lifespan_vs_perct_of_hashtag_occurrences()
 #        PredictHashtagsForLocationsPlots.cdf_of_hastag_lifespans()
-        PredictHashtagsForLocationsPlots.temp()
 
 #        PredictHashtagsForLocationsPlots.temp1()
 
