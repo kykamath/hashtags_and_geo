@@ -410,7 +410,7 @@ class PredictHashtagsForLocationsPlots():
             occ_times = map(lambda t: GeneralMethods.approximateEpoch(t, BUCKET_WIDTH), occ_times)
             occ_times = filter_outliers(occ_times)
             occ_times.sort()
-            lifespan = occ_times[-1]-occ_times[0]
+            lifespan = occ_times[-1]-occ_times[0]+0.0
             for occ_time in occ_times: 
                 print '%0.01f'%((occ_time-occ_times[0])/lifespan),
 #            exit()
