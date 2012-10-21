@@ -405,7 +405,6 @@ class PredictHashtagsForLocationsPlots():
         mf_bucket_id_to_perct_occurrences = defaultdict(float)
         for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
             print i
-            if i==10: break;
             mf_bucket_id_to_occurrences_count = defaultdict(float)
             ltuo_occ_time_and_occ_utm_id = data['ltuo_occ_time_and_occ_utm_id']
             occ_times = zip(*ltuo_occ_time_and_occ_utm_id)[0]
