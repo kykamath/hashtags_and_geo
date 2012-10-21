@@ -421,7 +421,7 @@ class PredictHashtagsForLocationsPlots():
         plt.grid(True)
         ax = plt.subplot(111)
         ax.set_xscale('log')
-        plt.xlabel('Hashtag life spans (minutes)')
+        plt.xlabel('Hashtag lifespans (minutes)')
         plt.ylabel('CDF')
         plt.plot(bucket_ids, perct_of_hashtags, c='k')
         plt.scatter(bucket_ids, perct_of_hashtags, c='k')
