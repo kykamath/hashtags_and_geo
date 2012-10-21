@@ -399,6 +399,24 @@ class PredictHashtagsForLocationsPlots():
             plt.grid(True)
             savefig(output_file_format%metric)
     @staticmethod
+    def temp():
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        plt.figure(num=None, figsize=(4.3,3))
+        for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
+            print i
+            mf_bucket_id_to_occurrences_count = defaultdict(float)
+            ltuo_occ_time_and_occ_utm_id = data['ltuo_occ_time_and_occ_utm_id']
+            occ_times = zip(*ltuo_occ_time_and_occ_utm_id)[0]
+            occ_times = map(lambda t: GeneralMethods.approximateEpoch(t, BUCKET_WIDTH), occ_times)
+            occ_times = filter_outliers(occ_times)
+            occ_times.sort()
+            lifespan = occ_times[-1]-occ_times[0]
+            for occ_time in occ_times: 
+                print '%0.05f'(occ_time-occ_times[0])/lifespan
+            exit()
+#                mf_bucket_id_to_occurrences_count[]
+#            mf_bucket_id_to_count[time_diff/(60)]+=1
+    @staticmethod
     def cdf_of_hastag_lifespans():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         plt.figure(num=None, figsize=(4.3,3))
