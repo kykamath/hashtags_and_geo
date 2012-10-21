@@ -412,12 +412,13 @@ class PredictHashtagsForLocationsPlots():
             occ_times = filter_outliers(occ_times)
             occ_times.sort()
             lifespan = occ_times[-1]-occ_times[0]+0.0
-            for occ_time in occ_times: 
-                bucket_id = '%0.02f'%((occ_time-occ_times[0])/lifespan)
-                mf_bucket_id_to_occurrences_count[bucket_id]+=1
-            total_occurrences = len(occ_times)+0.0
-            for bucket_id, occurrences_count in mf_bucket_id_to_occurrences_count.iteritems():
-                mf_bucket_id_to_perct_occurrences[bucket_id]+=occurrences_count/total_occurrences
+            if lifespan>0:
+                for occ_time in occ_times: 
+                    bucket_id = '%0.02f'%((occ_time-occ_times[0])/lifespan)
+                    mf_bucket_id_to_occurrences_count[bucket_id]+=1
+                total_occurrences = len(occ_times)+0.0
+                for bucket_id, occurrences_count in mf_bucket_id_to_occurrences_count.iteritems():
+                    mf_bucket_id_to_perct_occurrences[bucket_id]+=occurrences_count/total_occurrences
         total_perct_value = sum(mf_bucket_id_to_perct_occurrences.values())
         ltuo_bucket_id_and_perct_occurrences = map(
                                                    lambda (b, p): (float(b), p/total_perct_value),
