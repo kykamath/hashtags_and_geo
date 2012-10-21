@@ -464,55 +464,55 @@ class PredictHashtagsForLocationsPlots():
         plt.plot(bucket_ids, perct_of_hashtags, c='k')
         plt.scatter(bucket_ids, perct_of_hashtags, c='k')
         savefig(output_file)
-#    @staticmethod
-#    def perct_of_hashtag_occurrences_vs_time_of_propagation():
-#        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
-#        plt.figure(num=None, figsize=(4.3,3))
-#        mf_bucket_id_to_items = defaultdict(list)
-#        for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
-#            print i
-#            ltuo_occ_time_and_occ_utm_id = data['ltuo_occ_time_and_occ_utm_id']
-#            bucket_times = map(
-#                               lambda (t,_): GeneralMethods.approximateEpoch(t, BUCKET_WIDTH),
-#                               ltuo_occ_time_and_occ_utm_id
-#                            )
-#            bucket_times.sort()
-#            ltuo_bucket_time_and_num_of_items =\
-#                            [(bucket_id     ,len(list(ito_items))) for bucket_id, ito_items in groupby(bucket_times)]
-#            first_bucket_time = ltuo_bucket_time_and_num_of_items[0][0]
-#            ltuo_bucket_id_and_num_of_items =\
-#                                        map(lambda (t, n): (t-first_bucket_time, n), ltuo_bucket_time_and_num_of_items)
-#            bucket_ids, _ = zip(*ltuo_bucket_id_and_num_of_items)
-#            valid_bucket_ids = filter_outliers(bucket_ids)
-#            ltuo_bucket_id_and_num_of_items =\
-#                                        filter(lambda (b, n): b in valid_bucket_ids, ltuo_bucket_id_and_num_of_items)
-#            _, num_of_items = zip(*ltuo_bucket_id_and_num_of_items)
-#            total_num_of_items = sum(num_of_items)+0.0
-#            for bucket_id, num_of_items in ltuo_bucket_id_and_num_of_items:
-#                mf_bucket_id_to_items[bucket_id].append(100*(num_of_items/total_num_of_items))
-#        mf_bucket_id_to_num_of_items = defaultdict(float)
-#        for bucket_id, items in mf_bucket_id_to_items.iteritems():
-#            mf_bucket_id_to_num_of_items[bucket_id] = sum(filter_outliers(items))
-#        bucket_ids, num_of_items = zip(*sorted(mf_bucket_id_to_num_of_items.items(), key=itemgetter(0)))
-#        total_num_of_items = sum(num_of_items)
-#        perct_of_occs = [n/total_num_of_items for n in num_of_items]
-#        perct_of_occs1 = []
-#        current_val = 0.0
-#        for p in perct_of_occs:
-#            current_val+=p
-#            perct_of_occs1.append(current_val)
-#        perct_of_occs = perct_of_occs1
-#        bucket_ids = [b/60. for b in bucket_ids]
-#        bucket_ids = [1]+bucket_ids
-#        perct_of_occs = [0.0]+perct_of_occs
-#        plt.plot(bucket_ids, perct_of_occs, c='k')
-#        plt.scatter(bucket_ids, perct_of_occs, c='k')
-#        plt.grid(True)
-#        ax = plt.subplot(111)
-#        ax.set_xscale('log')
-#        plt.xlabel('Hashtag propagation time (minutes)')
-#        plt.ylabel('CDF of hashtag occurrences')
-#        savefig(output_file)
+    @staticmethod
+    def perct_of_hashtag_occurrences_vs_time_of_propagation():
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        plt.figure(num=None, figsize=(4.3,3))
+        mf_bucket_id_to_items = defaultdict(list)
+        for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
+            print i
+            ltuo_occ_time_and_occ_utm_id = data['ltuo_occ_time_and_occ_utm_id']
+            bucket_times = map(
+                               lambda (t,_): GeneralMethods.approximateEpoch(t, BUCKET_WIDTH),
+                               ltuo_occ_time_and_occ_utm_id
+                            )
+            bucket_times.sort()
+            ltuo_bucket_time_and_num_of_items =\
+                            [(bucket_id     ,len(list(ito_items))) for bucket_id, ito_items in groupby(bucket_times)]
+            first_bucket_time = ltuo_bucket_time_and_num_of_items[0][0]
+            ltuo_bucket_id_and_num_of_items =\
+                                        map(lambda (t, n): (t-first_bucket_time, n), ltuo_bucket_time_and_num_of_items)
+            bucket_ids, _ = zip(*ltuo_bucket_id_and_num_of_items)
+            valid_bucket_ids = filter_outliers(bucket_ids)
+            ltuo_bucket_id_and_num_of_items =\
+                                        filter(lambda (b, n): b in valid_bucket_ids, ltuo_bucket_id_and_num_of_items)
+            _, num_of_items = zip(*ltuo_bucket_id_and_num_of_items)
+            total_num_of_items = sum(num_of_items)+0.0
+            for bucket_id, num_of_items in ltuo_bucket_id_and_num_of_items:
+                mf_bucket_id_to_items[bucket_id].append(100*(num_of_items/total_num_of_items))
+        mf_bucket_id_to_num_of_items = defaultdict(float)
+        for bucket_id, items in mf_bucket_id_to_items.iteritems():
+            mf_bucket_id_to_num_of_items[bucket_id] = sum(filter_outliers(items))
+        bucket_ids, num_of_items = zip(*sorted(mf_bucket_id_to_num_of_items.items(), key=itemgetter(0)))
+        total_num_of_items = sum(num_of_items)
+        perct_of_occs = [n/total_num_of_items for n in num_of_items]
+        perct_of_occs1 = []
+        current_val = 0.0
+        for p in perct_of_occs:
+            current_val+=p
+            perct_of_occs1.append(current_val)
+        perct_of_occs = perct_of_occs1
+        bucket_ids = [b/60. for b in bucket_ids]
+        bucket_ids = [1]+bucket_ids
+        perct_of_occs = [0.0]+perct_of_occs
+        plt.plot(bucket_ids, perct_of_occs, c='k')
+        plt.scatter(bucket_ids, perct_of_occs, c='k')
+        plt.grid(True)
+        ax = plt.subplot(111)
+        ax.set_xscale('log')
+        plt.xlabel('Hashtag propagation time (minutes)')
+        plt.ylabel('CDF of hashtag occurrences')
+        savefig(output_file)
     @staticmethod
     def something_with_propagation_matrix():
         ''' For a given utm id and a hashtag, this measures the percentage of occurrences of the hashtag as a fuction
@@ -596,12 +596,12 @@ class PredictHashtagsForLocationsPlots():
             if data['ltuo_majority_threshold_bucket_time_and_utm_ids']:
                 ltuo_majority_threshold_bucket_time_and_utm_ids =\
                                                                 data['ltuo_majority_threshold_bucket_time_and_utm_ids']
-                majority_threshold_bucket_time = zip(*ltuo_majority_threshold_bucket_time_and_utm_ids)[0]
-                majority_threshold_bucket_time = filter_outliers(majority_threshold_bucket_time)
-                ltuo_majority_threshold_bucket_time_and_utm_ids = filter(
-                                                                 lambda (t, _): t in majority_threshold_bucket_time,
-                                                                 ltuo_majority_threshold_bucket_time_and_utm_ids
-                                                             )
+#                majority_threshold_bucket_time = zip(*ltuo_majority_threshold_bucket_time_and_utm_ids)[0]
+#                majority_threshold_bucket_time = filter_outliers(majority_threshold_bucket_time)
+#                ltuo_majority_threshold_bucket_time_and_utm_ids = filter(
+#                                                                 lambda (t, _): t in majority_threshold_bucket_time,
+#                                                                 ltuo_majority_threshold_bucket_time_and_utm_ids
+#                                                             )
                 ltuo_majority_threshold_bucket_time_and_utm_id_counts =\
                                                                     map(
                                                                         lambda (t, utm_ids): (t, len(utm_ids)),
@@ -1140,7 +1140,7 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
 
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
-        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_hashtag_lifespan()
+#        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_hashtag_lifespan()
 
 #        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
         PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_lifespan()
