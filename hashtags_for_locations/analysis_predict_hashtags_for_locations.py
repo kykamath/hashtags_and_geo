@@ -430,6 +430,7 @@ class PredictHashtagsForLocationsPlots():
         plt.grid(True)
         ax = plt.subplot(111)
 #        ax.set_xscale('log')
+        plt.ylim(ymax=1.1, ymin=-0.2)
         plt.xlabel('Hashtag lifespan')
         plt.ylabel('CDF of hashtag occurrences')
         plt.plot(bucket_ids, perct_occurrences, c='k')
@@ -628,7 +629,7 @@ class PredictHashtagsForLocationsPlots():
         perct_utm_ids = getCumulativeDistribution(perct_utm_ids)
         plt.grid(True)
         ax = plt.subplot(111)
-#        ax.set_xscale('log')
+        plt.ylim(ymax=1.1, ymin=-0.2)
         plt.xlabel('Hashtag lifespan')
         plt.ylabel('CDF of hashtag locations')
         plt.plot(bucket_ids, perct_utm_ids, c='k')
@@ -1139,7 +1140,7 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
 
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_time_of_propagation()
-#        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_hashtag_lifespan()
+        PredictHashtagsForLocationsPlots.perct_of_hashtag_occurrences_vs_hashtag_lifespan()
 
 #        PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_propaagation_time()
         PredictHashtagsForLocationsPlots.perct_of_locations_vs_hashtag_lifespan()
