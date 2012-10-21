@@ -399,9 +399,37 @@ class PredictHashtagsForLocationsPlots():
             plt.grid(True)
             savefig(output_file_format%metric)
     @staticmethod
+    def cdf_of_hastag_lifespans():
+        output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        plt.figure(num=None, figsize=(4.3,3))
+        mf_bucket_id_to_count = defaultdict(float)
+        for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
+            print i
+            ltuo_occ_time_and_occ_utm_id = data['ltuo_occ_time_and_occ_utm_id']
+            occ_times = zip(*ltuo_occ_time_and_occ_utm_id)[0]
+            occ_times = map(lambda t: GeneralMethods.approximateEpoch(t, BUCKET_WIDTH), occ_times)
+            occ_times = list(set(occ_times))
+            occ_times = filter_outliers(occ_times)
+            occ_times.sort()
+            time_diff = occ_times[-1]-occ_times[0]
+            mf_bucket_id_to_count[time_diff/(60)]+=1
+        total_occurrences = sum(mf_bucket_id_to_count.values())
+        ltuo_bucket_id_and_prect_of_hashtags = [(i, j/total_occurrences) for (i,j) in mf_bucket_id_to_count.iteritems()]
+        ltuo_bucket_id_and_prect_of_hashtags.sort(key=itemgetter(0))
+        bucket_ids, perct_of_hashtags = zip(*ltuo_bucket_id_and_prect_of_hashtags)
+        perct_of_hashtags = getCumulativeDistribution(perct_of_hashtags)
+        plt.grid(True)
+        ax = plt.subplot(111)
+        ax.set_xscale('log')
+        plt.xlabel('Hashtag life spans (minutes)')
+        plt.ylabel('CDF')
+        plt.plot(bucket_ids, perct_of_hashtags, c='k')
+        plt.scatter(bucket_ids, perct_of_hashtags, c='k')
+        savefig(output_file)
+    @staticmethod
     def perct_of_hashtag_occurrences_vs_time_of_propagation():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.3,3))
         mf_bucket_id_to_items = defaultdict(list)
         for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
             print i
@@ -484,7 +512,7 @@ class PredictHashtagsForLocationsPlots():
         '''
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         propagation_distribution = []
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.3,3))
         for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
             ltuo_majority_threshold_bucket_time_and_utm_ids = data['ltuo_majority_threshold_bucket_time_and_utm_ids']
             if ltuo_majority_threshold_bucket_time_and_utm_ids:
@@ -531,7 +559,7 @@ class PredictHashtagsForLocationsPlots():
         '''
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
         mf_majority_threshold_bucket_time_to_num_of_utm_ids = defaultdict(float)
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.3,3))
         for data in FileIO.iterateJsonFromFile(f_hashtags_with_majority_info):
 #            print data['hashtag']
             if data['ltuo_majority_threshold_bucket_time_and_utm_ids']:
@@ -875,7 +903,7 @@ class PredictHashtagsForLocationsPlots():
     @staticmethod
     def perct_of_hashtag_lifespan_vs_perct_of_hashtag_occurrences():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.3,3))
         ltuo_perct_of_occurrences_and_perct_of_lifespan = None
         for data in FileIO.iterateJsonFromFile(f_gap_occurrence_time_during_hashtag_lifetime, remove_params_dict=True):
             ltuo_perct_of_occurrences_and_perct_of_lifespan = data
@@ -1038,10 +1066,11 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.example_of_hashtag_propagation_patterns()
             
 #        PredictHashtagsForLocationsPlots.perct_of_hashtag_lifespan_vs_perct_of_hashtag_occurrences()
+        PredictHashtagsForLocationsPlots.cdf_of_hastag_lifespans()
 
 #        PredictHashtagsForLocationsPlots.temp1()
 
-        PredictHashtagsForLocationsPlots.location_clusters()
+#        PredictHashtagsForLocationsPlots.location_clusters()
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
