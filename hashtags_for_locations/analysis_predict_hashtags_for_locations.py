@@ -401,7 +401,7 @@ class PredictHashtagsForLocationsPlots():
     @staticmethod
     def perct_of_hashtag_occurrences_vs_hashtag_lifespan():
         output_file = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
-        plt.figure(num=None, figsize=(4.3,3))
+        plt.figure(num=None, figsize=(6,3))
         mf_bucket_id_to_perct_occurrences = defaultdict(float)
         for i, data in enumerate(FileIO.iterateJsonFromFile(f_hashtags_extractor, remove_params_dict=True)):
             print i
