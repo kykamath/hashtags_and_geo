@@ -51,11 +51,11 @@ class DataStats(ModifiedMRJob):
         yield 'num_of_hashtags', self.num_of_hashtags
         yield 'unique_hashtags', list(self.unique_hashtags)
     def reducer(self, key, values):
-        if key == 'num_of_tweets': yield 'num_of_tweets', sum(values)
-        elif key == 'num_of_hashtags': yield 'num_of_hashtags', sum(values)
+        if key == 'num_of_tweets': yield 'num_of_tweets', {'num_of_tweets': sum(values)}
+        elif key == 'num_of_hashtags': yield 'num_of_hashtags', {'num_of_hashtags': sum(values)}
         elif key == 'unique_hashtags':
             hashtags = list(chain(*values))
-            yield 'num_of_unique_hashtags', len(set(hashtags))
+            yield 'num_of_unique_hashtags', {'num_of_unique_hashtags': len(set(hashtags))}
         
 if __name__ == '__main__':
     DataStats.run()
