@@ -3,22 +3,25 @@ Created on Nov 9, 2012
 
 @author: krishnakamath
 '''
-'''
-Created on May 7, 2012
-
-@author: krishnakamath
-'''
+from datetime import datetime
 from itertools import chain
-import cjson, time
 from library.mrjobwrapper import ModifiedMRJob
 from library.twitter import getDateTimeObjectFromTweetTimestamp
-#from library.geo import getLatticeLid, getLocationFromLid, getRadiusOfGyration
-#from library.classes import GeneralMethods
-#from collections import defaultdict
-#from datetime import datetime
-#from library.stats import entropy, focus
-#from operator import itemgetter
-#import numpy as np
+import cjson
+import time
+
+# Start time for data analysis
+START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
+
+# Parameters for the MR Job that will be logged.
+HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())
+HASHTAG_ENDING_WINDOW = time.mktime(END_TIME.timetuple())
+
+PARAMS_DICT = dict(
+                   PARAMS_DICT = True,
+                   HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW,
+                   HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
+                )
 
 
 def iterateHashtagObjectInstances(line):

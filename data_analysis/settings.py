@@ -33,4 +33,7 @@ f_tuo_no_of_peak_lids_and_count = fld_data_analysis + '/tuo_no_of_peak_lids_and_
 f_tuo_valid_focus_lid_pair_and_common_hashtag_affinity_score = fld_data_analysis + '/tuo_valid_focus_lid_pair_and_common_hashtag_affinity_score'
 f_tuo_valid_focus_lid_pair_and_temporal_affinity_score = fld_data_analysis + '/tuo_valid_focus_lid_pair_and_temporal_affinity_score'
 #f_tuo_lid_and_ltuo_other_lid_and_no_o = fld_data_analysis+'/tuo_iid_and_perct_change_of_occurrences'
-    
+
+# Nov 12 analysis
+fld_data_analysis = '/mnt/chevron/kykamath/data/geo/hashtags/data_analysis/'
+f_data_stats = fld_data_analysis+'/data_stats'

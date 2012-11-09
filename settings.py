@@ -49,10 +49,8 @@ hashtagsImagesGraphAnalysisFolder = hashtagsImagesFolder + 'graph_analysis/'
 hashtagsImagesHastagEvolutionFolder = hashtagsImagesFolder + 'hashtag_evolution/'
 hashtagsImagesHastagSharingVsTransmittingProbabilityFolder = hashtagsImagesFolder + 'sharing_vs_transmitting/'
 
-
-
 # Classifiers
 hashtagsClassifiersFolder = hashtagsAnalysisFolder+'/classifiers/%s/%s/'
 targetSelectionRegressionClassifiersFolder  = hashtagsAnalysisFolder+'/ts_classifiers/%s/%s/%s/'
-#Models
+# Models
 hashtagsModelsFolder = hashtagsAnalysisFolder+'/models/%s/%s/%s/'
