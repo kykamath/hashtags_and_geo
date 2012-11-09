@@ -808,5 +808,54 @@ class MRAnalysis(ModifiedMRJob):
 #        return self.job_write_tuo_lid_and_ltuo_other_lid_and_no_of_co_occurrences()
 #        return self.job_write_tuo_no_of_peak_lids_and_count()
 #        return self.job_write_tuo_lid_and_hashtags()
+def iterateHashtagObjectInstances(line):
+    data = cjson.decode(line)
+    l = None
+    if 'geo' in data: l = data['geo']
+    else: l = data['bb']
+    t = time.mktime(getDateTimeObjectFromTweetTimestamp(data['t']).timetuple())
+    for h in data['h']: yield h.lower(), [l, t]
+class DataStats(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(DataStats, self).__init__(*args, **kwargs)
+    def mapper(self, key, line):
+        if False: yield # I'm a generator!
+        for hashtag, (location, occ_time) in iterateHashtagObjectInstances(line):
+            pass
+#        self.mf_hastag_to_ltuo_occ_time_and_occ_utm_id = defaultdict(list)
+#    def map_tweet_to_hashtag_object(self, key, line):
+#        if False: yield # I'm a generator!
+#        for hashtag, (location, occ_time) in iterateHashtagObjectInstances(line):
+#            utm_id = UTMConverter.getUTMIdInLatLongFormFromLatLong( location[0], location[1], accuracy=ACCURACY)
+#            self.mf_hastag_to_ltuo_occ_time_and_occ_utm_id[hashtag].append((occ_time, utm_id))
+#    def map_final_tweet_to_hashtag_object(self):
+#        for hashtag, ltuo_occ_time_and_occ_utm_id in self.mf_hastag_to_ltuo_occ_time_and_occ_utm_id.iteritems():
+#            hashtag_object = {'hashtag': hashtag, 'ltuo_occ_time_and_occ_utm_id': ltuo_occ_time_and_occ_utm_id}
+#            yield hashtag, hashtag_object
+#    def _get_combined_hashtag_object(self, hashtag, hashtag_objects):
+#        combined_hashtag_object = {'hashtag': hashtag, 'ltuo_occ_time_and_occ_utm_id': []}
+#        for hashtag_object in hashtag_objects:
+#            combined_hashtag_object['ltuo_occ_time_and_occ_utm_id']+=hashtag_object['ltuo_occ_time_and_occ_utm_id']
+#        combined_hashtag_object['num_of_occurrences'] = len(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id']) 
+#        return combined_hashtag_object
+#    def red_tuo_hashtag_and_hashtag_objects_to_combined_hashtag_object(self, hashtag, hashtag_objects):
+#        combined_hashtag_object = self._get_combined_hashtag_object(hashtag, hashtag_objects)
+#        e = min(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'], key=lambda t: t[0])
+#        l = max(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'], key=lambda t: t[0])
+#        if combined_hashtag_object['num_of_occurrences'] >= \
+#                self.min_hashtag_occurrences and \
+#                e[0]>=HASHTAG_STARTING_WINDOW and l[0]<=HASHTAG_ENDING_WINDOW:
+#            combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'] = \
+#                sorted(combined_hashtag_object['ltuo_occ_time_and_occ_utm_id'], key=itemgetter(0))
+#            yield hashtag, combined_hashtag_object
+#    def jobs_to_extract_hashtags(self):
+#        return [self.mr(
+#                    mapper = self.map_tweet_to_hashtag_object,
+#                    mapper_final = self.map_final_tweet_to_hashtag_object,
+#                    reducer = self.red_tuo_hashtag_and_hashtag_objects_to_combined_hashtag_object
+#                )]
+#    def steps(self): return self.jobs_to_extract_hashtags()
+
 if __name__ == '__main__':
     MRAnalysis.run()
