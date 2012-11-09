@@ -432,7 +432,7 @@ class PredictHashtagsForLocationsPlots():
 #        ax.set_xscale('log')
         plt.ylim(ymax=1.1, ymin=-0.2)
         plt.xlabel('Hashtag lifespan')
-        plt.ylabel('CDF of hashtag occurrences')
+        plt.ylabel('% of hashtag occurrences')
         plt.plot(bucket_ids, perct_occurrences, c='k')
         plt.scatter(bucket_ids, perct_occurrences, c='k')
         savefig(output_file)
