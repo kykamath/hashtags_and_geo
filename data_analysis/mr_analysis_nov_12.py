@@ -11,7 +11,7 @@ import cjson
 import time
 
 # Start time for data analysis
-START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 7, 31)
+START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 9, 30)
 
 # Parameters for the MR Job that will be logged.
 HASHTAG_STARTING_WINDOW = time.mktime(START_TIME.timetuple())

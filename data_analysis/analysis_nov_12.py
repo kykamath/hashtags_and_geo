@@ -40,7 +40,7 @@ class MRAnalysis():
         MRAnalysis.run_job(mr_class, output_file, input_files_start_time, input_files_end_time)
     @staticmethod
     def run():
-        input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2012, 8, 31)
+        input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2012, 10, 31)
         MRAnalysis.data_stats(input_files_start_time, input_files_end_time)
             
 if __name__ == '__main__':
