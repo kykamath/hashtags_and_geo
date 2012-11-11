@@ -37,3 +37,4 @@ f_tuo_valid_focus_lid_pair_and_temporal_affinity_score = fld_data_analysis + '/t
 # Nov 12 analysis
 fld_data_analysis = '/mnt/chevron/kykamath/data/geo/hashtags/data_analysis/'
 f_data_stats = fld_data_analysis+'/data_stats'
+f_hashtag_objects = fld_data_analysis+'/hashtag_objects'
