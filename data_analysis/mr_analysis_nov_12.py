@@ -41,6 +41,11 @@ def iterateHashtagObjectInstances(line):
     for h in data['h']: yield h.lower(), [l, t]
 
 class DataStats(ModifiedMRJob):
+    '''
+        {"num_of_unique_hashtags": 27,720,408}
+        {"num_of_tweets": 2,020,620,405}
+        {"num_of_hashtags": 343,053,584}
+    '''
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
         super(DataStats, self).__init__(*args, **kwargs)
@@ -105,13 +110,35 @@ class HashtagAndLocationDistribution(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
         super(HashtagAndLocationDistribution, self).__init__(*args, **kwargs)
-        self.mf_hashtag_to_
+        self.mf_hashtag_to_occurrence_count = defaultdict(float)
+        self.mf_location_to_occurrence_count = defaultdict(float)
     def mapper(self, key, line):
         if False: yield # I'm a generator!
         for hashtag, (location, occ_time) in iterateHashtagObjectInstances(line):
-            self.num_of_hashtags+=1
-            self.unique_hashtags.add(hashtag)
+            location = UTMConverter.getUTMIdInLatLongFormFromLatLong(
+                                                                 location[0], location[1], accuracy=LOCATION_ACCURACY
+                                                             )
+            self.mf_hashtag_to_occurrence_count[hashtag]+=1
+            self.mf_location_to_occurrence_count[location]+=1
+    def mapper_final(self):
+        for hashtag, occurrence_count in self.mf_hashtag_to_occurrence_count.iteritems():
+            yield hashtag, {'count': occurrence_count, 'type': 'hashtag'}
+        for location, occurrence_count in self.mf_location_to_occurrence_count.iteritems():
+            yield location, {'count': occurrence_count, 'type': 'location'}
+    def reducer(self, key, it_object):
+        objects = list(it_object)
+        count = sum(map(lambda o: o['count'], objects))
+        yield '%s_%s'%(objects[0]['type'], count), 1
+    def reducer2(self, key, values):
+        key_split = key.split('_')
+        yield key, [key_split[0], float(key_split[1]), sum(values)]
+    def steps(self):
+        return [
+                self.mr(self.mapper, self.reducer, self.mapper_final),
+                self.mr(reducer = self.reducer2),
+                ]
 
 if __name__ == '__main__':
 #    DataStats.run()
-    HashtagObjects.run()
+#    HashtagObjects.run()
+    HashtagAndLocationDistribution.run()
