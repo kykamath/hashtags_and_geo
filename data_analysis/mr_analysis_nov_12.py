@@ -147,16 +147,17 @@ class GetDenseHashtags(ModifiedMRJob):
     def __init__(self, *args, **kwargs):
         super(GetDenseHashtags, self).__init__(*args, **kwargs)
     def mapper(self, key, hashtag_object):
-        hashtag_object = cjson.decode(hashtag_object)
-        ltuo_occ_time_and_occ_location = hashtag_object.get('ltuo_occ_time_and_occ_location', [])
-        ltuo_location_and_items = GeneralMethods.group_items_by(ltuo_occ_time_and_occ_location, key=itemgetter(1))
-        ltuo_location_and_items = filter(
-                                         lambda (location, items): len(items)>=MIN_HASHTAG_OCCURRENCES_PER_LOCATION,
-                                         ltuo_location_and_items
-                                         )
-        hashtag_object['ltuo_occ_time_and_occ_location'] =\
-                                                    list(chain(*map(lambda (_, items): items, ltuo_location_and_items)))
-        yield hashtag_object['hashtag'], hashtag_object
+        if 'hashtag' in hashtag_object:
+            hashtag_object = cjson.decode(hashtag_object)
+            ltuo_occ_time_and_occ_location = hashtag_object.get('ltuo_occ_time_and_occ_location', [])
+            ltuo_location_and_items = GeneralMethods.group_items_by(ltuo_occ_time_and_occ_location, key=itemgetter(1))
+            ltuo_location_and_items = filter(
+                                             lambda (location, items): len(items)>=MIN_HASHTAG_OCCURRENCES_PER_LOCATION,
+                                             ltuo_location_and_items
+                                             )
+            hashtag_object['ltuo_occ_time_and_occ_location'] =\
+                                                        list(chain(*map(lambda (_, items): items, ltuo_location_and_items)))
+            yield hashtag_object['hashtag'], hashtag_object
     def get_jobs(self): return self.steps()
 
 class DenseHashtagStats(ModifiedMRJob):
