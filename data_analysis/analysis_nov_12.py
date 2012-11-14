@@ -18,6 +18,7 @@ from settings import f_data_stats
 from settings import f_dense_data_stats
 from settings import f_hashtag_and_location_distribution
 from settings import f_hashtag_objects
+from settings import f_hashtag_objects_on_dfs
 import time
 
 class MRAnalysis():
@@ -40,6 +41,11 @@ class MRAnalysis():
                  jobconf={'mapred.reduce.tasks':500})
         FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
     @staticmethod
+    def run_job_with_input_files(mr_class, output_file, input_files):
+        print 'Running map reduce with the following params:', pprint(PARAMS_DICT)
+        runMRJob(mr_class, output_file, input_files, jobconf={'mapred.reduce.tasks':500})
+        FileIO.writeToFileAsJson(PARAMS_DICT, output_file)
+    @staticmethod
     def data_stats(input_files_start_time, input_files_end_time):
         mr_class = DataStats
         output_file = f_data_stats
@@ -58,7 +64,7 @@ class MRAnalysis():
     def dense_data_stats(input_files_start_time, input_files_end_time):
         mr_class = DenseHashtagStats
         output_file = f_dense_data_stats
-        MRAnalysis.run_job(mr_class, output_file, input_files_start_time, input_files_end_time)
+        MRAnalysis.run_job_with_input_files(mr_class, output_file, [f_hashtag_objects_on_dfs])
     @staticmethod
     def run():
         input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2012, 10, 31)
