@@ -15,7 +15,7 @@ from mr_analysis_nov_12 import PARAMS_DICT
 from pprint import pprint
 from settings import hdfs_input_folder
 from settings import f_data_stats
-from setting import f_dense_data_stats
+from settings import f_dense_data_stats
 from settings import f_hashtag_and_location_distribution
 from settings import f_hashtag_objects
 import time
