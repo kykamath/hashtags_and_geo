@@ -6,6 +6,7 @@ Created on Nov 9, 2012
 from collections import defaultdict
 from datetime import datetime
 from itertools import chain
+from library.classes import GeneralMethods
 from library.mrjobwrapper import ModifiedMRJob
 from library.geo import UTMConverter
 from library.twitter import getDateTimeObjectFromTweetTimestamp
@@ -15,6 +16,8 @@ import time
 
 LOCATION_ACCURACY = 10**4 # UTM boxes in sq.m
 MIN_HASHTAG_OCCURRENCES = 50
+
+MIN_HASHTAG_OCCURRENCES_PER_LOCATION = 5
 
 # Start time for data analysis
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 9, 30)
@@ -29,6 +32,7 @@ PARAMS_DICT = dict(
                    MIN_HASHTAG_OCCURRENCES = MIN_HASHTAG_OCCURRENCES,
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW,
                    HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
+                   MIN_HASHTAG_OCCURRENCES_PER_LOCATION = MIN_HASHTAG_OCCURRENCES_PER_LOCATION
                 )
 
 
@@ -138,7 +142,37 @@ class HashtagAndLocationDistribution(ModifiedMRJob):
                 self.mr(reducer = self.reducer2),
                 ]
 
+class GetDenseHashtags(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(GetDenseHashtags, self).__init__(*args, **kwargs)
+    def mapper(self, key, hashtag_object):
+        hashtag_object = cjson.decode(hashtag_object)
+        ltuo_occ_time_and_occ_location = hashtag_object['ltuo_occ_time_and_occ_location']
+        ltuo_location_and_items = GeneralMethods.group_items_by(ltuo_occ_time_and_occ_location, key=itemgetter(1))
+        ltuo_location_and_items = filter(
+                                         lambda (location, items): len(items)>=MIN_HASHTAG_OCCURRENCES_PER_LOCATION,
+                                         ltuo_location_and_items
+                                         )
+        hashtag_object['ltuo_occ_time_and_occ_location'] =\
+                                                    list(chain(*map(lambda (_, items): items, ltuo_location_and_items)))
+        yield hashtag_object['hashtag'], hashtag_object
+    def get_jobs(self): return self.steps()
+
+class DenseHashtagStats(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(DenseHashtagStats, self).__init__(*args, **kwargs)
+        self.get_dense_hashtags = GetDenseHashtags()
+    def mapper(self, key, hashtag_object):
+        yield 'unique_hashtags', 1
+        yield 'total_hashtag_tuples', len(hashtag_object['ltuo_occ_time_and_occ_location'])
+    def reducer(self, key, values): yield key, sum(values)
+    def steps(self): return self.get_dense_hashtags.get_jobs() + [self.mr(mapper=self.mapper, reducer=self.reducer)]
+        
 if __name__ == '__main__':
 #    DataStats.run()
 #    HashtagObjects.run()
-    HashtagAndLocationDistribution.run()
+#    HashtagAndLocationDistribution.run()
+#    GetDenseHashtags.run()
+    DenseHashtagStats.run()
