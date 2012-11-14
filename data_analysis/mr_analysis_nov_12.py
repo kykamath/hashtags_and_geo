@@ -148,7 +148,7 @@ class GetDenseHashtags(ModifiedMRJob):
         super(GetDenseHashtags, self).__init__(*args, **kwargs)
     def mapper(self, key, hashtag_object):
         hashtag_object = cjson.decode(hashtag_object)
-        ltuo_occ_time_and_occ_location = hashtag_object['ltuo_occ_time_and_occ_location']
+        ltuo_occ_time_and_occ_location = hashtag_object.get('ltuo_occ_time_and_occ_location', [])
         ltuo_location_and_items = GeneralMethods.group_items_by(ltuo_occ_time_and_occ_location, key=itemgetter(1))
         ltuo_location_and_items = filter(
                                          lambda (location, items): len(items)>=MIN_HASHTAG_OCCURRENCES_PER_LOCATION,
