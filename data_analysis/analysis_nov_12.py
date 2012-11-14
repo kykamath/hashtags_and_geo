@@ -8,12 +8,14 @@ from dateutil.relativedelta import relativedelta
 from library.file_io import FileIO
 from library.mrjobwrapper import runMRJob
 from mr_analysis_nov_12 import DataStats
+from mr_analysis_nov_12 import DenseHashtagStats
 from mr_analysis_nov_12 import HashtagAndLocationDistribution
 from mr_analysis_nov_12 import HashtagObjects
 from mr_analysis_nov_12 import PARAMS_DICT
 from pprint import pprint
 from settings import hdfs_input_folder
 from settings import f_data_stats
+from setting import f_dense_data_stats
 from settings import f_hashtag_and_location_distribution
 from settings import f_hashtag_objects
 import time
@@ -53,11 +55,17 @@ class MRAnalysis():
         output_file = f_hashtag_and_location_distribution
         MRAnalysis.run_job(mr_class, output_file, input_files_start_time, input_files_end_time)
     @staticmethod
+    def dense_data_stats(input_files_start_time, input_files_end_time):
+        mr_class = DenseHashtagStats
+        output_file = f_dense_data_stats
+        MRAnalysis.run_job(mr_class, output_file, input_files_start_time, input_files_end_time)
+    @staticmethod
     def run():
         input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2012, 10, 31)
 #        MRAnalysis.data_stats(input_files_start_time, input_files_end_time)
 #        MRAnalysis.hashtag_objects(input_files_start_time, input_files_end_time)
-        MRAnalysis.hashtag_and_location_distribution(input_files_start_time, input_files_end_time)
+#        MRAnalysis.hashtag_and_location_distribution(input_files_start_time, input_files_end_time)
+        MRAnalysis.dense_data_stats(input_files_start_time, input_files_end_time)
             
 if __name__ == '__main__':
     MRAnalysis.run()
