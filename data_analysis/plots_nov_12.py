@@ -59,7 +59,7 @@ class DataAnalysis():
         output_file = fld_data_analysis_results%GeneralMethods.get_method_id() + '.png'
         ltuo_location_and_occurrence_count = []
         for location_object in\
-                FileIO.iterateJsonFromFile(f_dense_hashtag_distribution_in_locationsremove_params_dict=True):
+                FileIO.iterateJsonFromFile(f_dense_hashtag_distribution_in_locations, remove_params_dict=True):
             ltuo_location_and_occurrence_count.append([
                                                       location_object['location'],
                                                       location_object['occurrences_count']
