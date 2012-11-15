@@ -170,10 +170,39 @@ class DenseHashtagStats(ModifiedMRJob):
         yield 'total_hashtag_tuples', len(hashtag_object['ltuo_occ_time_and_occ_location'])
     def reducer(self, key, values): yield key, {key: sum(values)}
     def steps(self): return self.get_dense_hashtags.get_jobs() + [self.mr(mapper=self.mapper, reducer=self.reducer)]
+    
+class DenseHashtagsDistributionInLocations(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(DenseHashtagsDistributionInLocations, self).__init__(*args, **kwargs)
+        self.get_dense_hashtags = GetDenseHashtags()
+        self.mf_location_to_unique_hashtags = defaultdict(set)
+        self.mf_location_to_occurrences_count = defaultdict(float)
+    def mapper(self, key, hashtag_object):
+        if False: yield
+        hashtag = hashtag_object['hashtag']
+        ltuo_occ_time_and_occ_location = hashtag_object['ltuo_occ_time_and_occ_location']
+        ltuo_location_and_items = GeneralMethods.group_items_by(ltuo_occ_time_and_occ_location, key=itemgetter(1))
+        for location, items in ltuo_location_and_items:
+            self.mf_location_to_unique_hashtags[location].add(hashtag)
+            self.mf_location_to_occurrences_count[location]+=1
+    def mapper_final(self):
+        for location, unique_hashtags in self.mf_location_to_unique_hashtags.iteritems():
+            location_object = {
+                                'location': location,
+                                'unique_hashtags': unique_hashtags,
+                                'occurrences_count': self.mf_location_to_occurrences_count[location]
+                            }
+            yield location, location_object
+#    def reducer(self, key, values): yield key, {key: sum(values)}
+    def steps(self): 
+        return self.get_dense_hashtags.get_jobs() +\
+                [self.mr(mapper=self.mapper, mapper_final=self.mapper_final)]
         
 if __name__ == '__main__':
 #    DataStats.run()
 #    HashtagObjects.run()
 #    HashtagAndLocationDistribution.run()
 #    GetDenseHashtags.run()
-    DenseHashtagStats.run()
+#    DenseHashtagStats.run()
+    DenseHashtagsDistributionInLocations.run()
