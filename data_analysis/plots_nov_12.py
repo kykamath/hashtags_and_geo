@@ -3,17 +3,20 @@ Created on Nov 14, 2012
 
 @author: krishnakamath
 '''
-
+from collections import defaultdict
 from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.geo import UTMConverter
 from library.geo import plotPointsOnWorldMap
 from library.plotting import savefig
+from library.plotting import splineSmooth
 from operator import itemgetter
 from settings import f_dense_hashtag_distribution_in_locations
 from settings import f_hashtag_and_location_distribution
+from settings import f_dense_hashtags_similarity_and_lag
 from settings import fld_data_analysis_results
 import matplotlib.pyplot as plt
+import numpy as np
 
 class DataAnalysis():
     @staticmethod
@@ -112,26 +115,41 @@ class DataAnalysis():
         points = map(UTMConverter.getLatLongUTMIdInLatLongForm, lids)
         plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='m',  lw = 0, alpha=1.)
         savefig(output_file)
-#    @staticmethod
-#    def write_top_locations():
-#        '''
-#        datetime(2011, 2, 1), datetime(2012, 4, 30), 50
-#            [['-23.2000_-46.4000', 'Sao, Paulo', 7357670.0], ['50.7500_0.0000', 'London', 6548390.0], 
-#                ['-5.8000_105.8500', 'Jakarata', 4536084.0], ['33.3500_-117.4500', 'Los Angeles', 3940885.0], 
-#                ['40.6000_-73.9500', 'New York', 3747348.0]]
-#        [('-23.2000_-46.4000', 0.033948282514978313), ('50.7500_0.0000', 0.030214265350071261), 
-#        ('-5.8000_105.8500', 0.020929487343639069), ('33.3500_-117.4500', 0.018183239712985265), 
-#        ('40.6000_-73.9500', 0.017290260175563586)]
-#        '''
-##        input_file = f_tuo_lid_and_distribution_value%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), no_of_hashtags)
-#        ltuo_lid_and_occurrene_count = []
-#        total_distribution_value = 0.0
-#        for lid_count, (lid, distribution_value) in enumerate(iterateJsonFromFile(input_file)):
-#            print lid_count
-#            tot_distribution_value+=distribution_value
-#            ltuo_lid_and_occurrene_count.append([lid, distribution_value])
-#        ltuo_lid_and_occurrene_count = [(lid, occurrene_count/total_distribution_value)for lid, occurrene_count in ltuo_lid_and_occurrene_count]
-#        print sorted(ltuo_lid_and_occurrene_count, key=itemgetter(1), reverse=True)[:5]
+    @staticmethod
+    def _plot_affinities(type):
+        TIME_UNIT_IN_SECONDS = 60*10
+        mf_distance_to_affinity_scores = defaultdict(list)
+        for similarity_and_lag_object in\
+                FileIO.iterateJsonFromFile(f_dense_hashtags_similarity_and_lag, remove_params_dict=True):
+            distance=int(similarity_and_lag_object['haversine_distance']/100)*100+100
+            mf_distance_to_affinity_scores[distance].append(similarity_and_lag_object[type])
+        ltuo_distance_and_affinity_score = [(distance, np.mean(affinity_scores)) 
+                                            for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()
+                                                if len(affinity_scores)>100]
+        x_distances, y_affinity_scores = zip(*sorted(ltuo_distance_and_affinity_score, key=itemgetter(0)))
+        if type=='adoption_lag': y_affinity_scores = [y*TIME_UNIT_IN_SECONDS/(60.*60.) for y in y_affinity_scores]
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
+        x_distances, y_affinity_scores = splineSmooth(x_distances, y_affinity_scores)
+        plt.semilogx(x_distances, y_affinity_scores, c='k', lw=2)
+        plt.xlim(xmin=95, xmax=15000)
+        plt.grid(True)
+    @staticmethod
+    def content_affinity_vs_distance():
+        output_file = fld_data_analysis_results%GeneralMethods.get_method_id() + '.png'
+        DataAnalysis._plot_affinities('similarity')
+        plt.xlabel('Distance (miles)')
+        plt.ylabel('Hashtags sharing similarity')
+#        plt.show()
+        savefig(output_file)
+    @staticmethod
+    def temporal_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+        output_file = fld_data_analysis_results%GeneralMethods.get_method_id() + '.png'
+        DataAnalysis._plot_affinities('adoption_lag')
+        plt.xlabel('Distance (miles)')
+        plt.ylabel('Hashtag adoption lag (hours)')
+#        plt.show()
+        savefig(output_file)
     @staticmethod
     def run():
 #        DataAnalysis.hashtag_distribution_loglog()
