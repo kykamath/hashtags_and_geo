@@ -143,7 +143,7 @@ class DataAnalysis():
 #        plt.show()
         savefig(output_file)
     @staticmethod
-    def temporal_affinity_vs_distance(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+    def temporal_affinity_vs_distance():
         output_file = fld_data_analysis_results%GeneralMethods.get_method_id() + '.png'
         DataAnalysis._plot_affinities('adoption_lag')
         plt.xlabel('Distance (miles)')
