@@ -64,12 +64,12 @@ class DataAnalysis():
                                                       location_object['location'],
                                                       location_object['occurrences_count']
                                                     ])
-        ltuo_location_and_occurrence_count.sort(key=itemgetter(1))
-        for location, occurrence_count in ltuo_location_and_occurrence_count:
-            print location, occurrence_count
-        exit()
-        total_occurrences = sum(zip(*ltuo_lid_and_occurrene_count)[1]) + 0.0
-        ltuo_lid_and_r_occurrence_count = sorted(ltuo_lid_and_occurrene_count, key=itemgetter(1), reverse=True)
+#        ltuo_location_and_occurrence_count.sort(key=itemgetter(1))
+#        for location, occurrence_count in ltuo_location_and_occurrence_count:
+#            print location, occurrence_count
+#        exit()
+        total_occurrences = sum(zip(*ltuo_location_and_occurrence_count)[1]) + 0.0
+        ltuo_lid_and_r_occurrence_count = sorted(ltuo_location_and_occurrence_count, key=itemgetter(1), reverse=True)
         y_fraction_of_occurrences = [r_occurrence_count/total_occurrences for _, r_occurrence_count in ltuo_lid_and_r_occurrence_count]
 #        total_locations = len(y_fraction_of_occurrences)+0.
 #        x_percentage_of_locations = [x/total_locations for x in range(1,len(y_fraction_of_occurrences)+1)]
@@ -81,17 +81,17 @@ class DataAnalysis():
         plt.xlabel('Locations ordered by their ranks')
         plt.grid(True)
         
-        a = plt.axes([.55, .5, .3, .3])
-#        plt.plot(range(10))
-        plt.semilogy(x_percentage_of_locations, y_fraction_of_occurrences, lw=0, marker='o', c='k')   
-#        plt.title('Probability')
-        plt.grid(True)
-        yticks = plt.yticks()
-        plt.yticks([yticks[0][-1], yticks[0][0]])
-#        plt.ylim(ymin=0.000001, ymax=0.15)
-#        plt.ylim(ymin=-0.01, ymax=0.04)
-        plt.xlim(xmin=-4, xmax=200)
-        plt.setp(a)
+#        a = plt.axes([.55, .5, .3, .3])
+##        plt.plot(range(10))
+#        plt.semilogy(x_percentage_of_locations, y_fraction_of_occurrences, lw=0, marker='o', c='k')   
+##        plt.title('Probability')
+#        plt.grid(True)
+#        yticks = plt.yticks()
+#        plt.yticks([yticks[0][-1], yticks[0][0]])
+##        plt.ylim(ymin=0.000001, ymax=0.15)
+##        plt.ylim(ymin=-0.01, ymax=0.04)
+#        plt.xlim(xmin=-4, xmax=200)
+#        plt.setp(a)
         
 #        plt.show()
         savefig(output_file)
