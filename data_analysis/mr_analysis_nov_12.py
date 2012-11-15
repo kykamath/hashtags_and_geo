@@ -185,7 +185,7 @@ class DenseHashtagsDistributionInLocations(ModifiedMRJob):
         ltuo_location_and_items = GeneralMethods.group_items_by(ltuo_occ_time_and_occ_location, key=itemgetter(1))
         for location, items in ltuo_location_and_items:
             self.mf_location_to_unique_hashtags[location].add(hashtag)
-            self.mf_location_to_occurrences_count[location]+=1
+            self.mf_location_to_occurrences_count[location]+=len(items)
     def mapper_final(self):
         for location, unique_hashtags in self.mf_location_to_unique_hashtags.iteritems():
             location_object = {
