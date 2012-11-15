@@ -269,13 +269,17 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
         for neighbor_location, neighbor_ltuo_hashtag_and_min_occ_time in\
                 mf_neighbor_location_to_ltuo_hashtag_and_min_occ_time.iteritems():
             if location!=neighbor_location:
-                similarity_and_lag_object = {'location': location, 'neighbor_location': neighbor_location}
-                similarity_and_lag_object['haversine_distance'] = self._haversine_distance(location, neighbor_location)
-                similarity_and_lag_object['similarity'] =\
-                                self._similarity(ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time)
-                similarity_and_lag_object['adoption_lag'] =\
-                            self._adoption_lag(ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time)
-                yield '', similarity_and_lag_object
+                hashtags = set(zip(*ltuo_hashtag_and_min_occ_time)[0])
+                neighbor_hashtags = set(zip(*neighbor_ltuo_hashtag_and_min_occ_time)[0])
+                num_common_hashtags = len(hashtags.intersection(neighbor_hashtags)) + 0.0
+                if num_common_hashtags>50:
+                    similarity_and_lag_object = {'location': location, 'neighbor_location': neighbor_location}
+                    similarity_and_lag_object['haversine_distance'] = self._haversine_distance(location, neighbor_location)
+                    similarity_and_lag_object['similarity'] =\
+                                    self._similarity(ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time)
+                    similarity_and_lag_object['adoption_lag'] =\
+                                self._adoption_lag(ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time)
+                    yield '', similarity_and_lag_object
                                          
     def steps(self): 
         return self.get_dense_hashtags.get_jobs() +\

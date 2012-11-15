@@ -123,6 +123,10 @@ class DataAnalysis():
                 FileIO.iterateJsonFromFile(f_dense_hashtags_similarity_and_lag, remove_params_dict=True):
             distance=int(similarity_and_lag_object['haversine_distance']/100)*100+100
             mf_distance_to_affinity_scores[distance].append(similarity_and_lag_object[type])
+        ltuo_distance_and_num_samples = [(distance, len(affinity_scores)) for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()]
+        for distance, num_samples in ltuo_distance_and_num_samples:
+            print distance, num_samples
+        exit()
         ltuo_distance_and_affinity_score = [(distance, np.mean(affinity_scores)) 
                                             for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()
                                                 if len(affinity_scores)>100]
@@ -156,8 +160,8 @@ class DataAnalysis():
 #        DataAnalysis.hashtag_locations_distribution_loglog()
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location()
 #        DataAnalysis.top_k_locations_on_world_map()
-#        DataAnalysis.content_affinity_vs_distance()
-        DataAnalysis.temporal_affinity_vs_distance()
+        DataAnalysis.content_affinity_vs_distance()
+#        DataAnalysis.temporal_affinity_vs_distance()
 
 if __name__ == '__main__':
     DataAnalysis.run()
