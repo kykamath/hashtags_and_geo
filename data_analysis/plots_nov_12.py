@@ -6,6 +6,8 @@ Created on Nov 14, 2012
 
 from library.classes import GeneralMethods
 from library.file_io import FileIO
+from library.geo import UTMConverter
+from library.geo import plotPointsOnWorldMap
 from library.plotting import savefig
 from operator import itemgetter
 from settings import f_dense_hashtag_distribution_in_locations
@@ -94,6 +96,22 @@ class DataAnalysis():
         plt.setp(a)
         
 #        plt.show()
+        savefig(output_file)
+    @staticmethod
+    def top_k_locations_on_world_map(input_files_start_time, input_files_end_time, no_of_hashtags):
+        output_file = fld_data_analysis_results%GeneralMethods.get_method_id() + '.png'
+        ltuo_location_and_occurrence_count = []
+        for location_object in\
+                FileIO.iterateJsonFromFile(f_dense_hashtag_distribution_in_locations, remove_params_dict=True):
+            ltuo_location_and_occurrence_count.append([
+                                                      location_object['location'],
+                                                      location_object['occurrences_count']
+                                                    ])
+        total_occurrences = sum(zip(*ltuo_location_and_occurrence_count)[1]) + 0.0
+        ltuo_lid_and_r_occurrence_count = sorted(ltuo_location_and_occurrence_count, key=itemgetter(1), reverse=True)
+        lids = zip(*ltuo_lid_and_r_occurrence_count)[0][:200]
+        points = map(UTMConverter.getLatLongUTMIdInLatLongForm, lids)
+        plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='m',  lw = 0, alpha=1.)
         savefig(output_file)
 #    @staticmethod
 #    def write_top_locations():
