@@ -9,15 +9,17 @@ from itertools import chain
 from library.classes import GeneralMethods
 from library.mrjobwrapper import ModifiedMRJob
 from library.geo import UTMConverter
+from library.geo import getHaversineDistance
 from library.twitter import getDateTimeObjectFromTweetTimestamp
 from operator import itemgetter
 import cjson
+import numpy as np
 import time
 
 LOCATION_ACCURACY = 10**4 # UTM boxes in sq.m
 MIN_HASHTAG_OCCURRENCES = 50
 
-MIN_HASHTAG_OCCURRENCES_PER_LOCATION = 0
+MIN_HASHTAG_OCCURRENCES_PER_LOCATION = 5
 
 # Start time for data analysis
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 9, 30)
@@ -222,20 +224,8 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
         for location, occurrence_time in ltuo_location_and_occurrence_time:
             self.mf_location_to_ltuo_hashtag_and_min_occ_time[location].append([hashtag, occurrence_time])
             for neighbor_location, _ in ltuo_location_and_occurrence_time:
-#                if location!=neighbor_location:
+                if location!=neighbor_location:
                     self.mf_location_to_neighbor_locations[location].add(neighbor_location)
-#                if location<neighbor_location:
-#                    if neighbor_location not in\
-#                            self.mf_location_to_mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time\
-#                                                                                                            [location]:
-#                        self.mf_location_to_mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time\
-#                                                                                    [location][neighbor_location] = []
-#                    self.mf_location_to_mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time\
-#                                                    [location][neighbor_location].append([
-#                                                                                         hashtag,
-#                                                                                         occurrence_time,
-#                                                                                         neighbor_occurrence_time
-#                                                                                        ])
     def mapper_final1(self):
         for location, neighbor_locations in self.mf_location_to_neighbor_locations.iteritems():
             location_object = {
@@ -244,31 +234,32 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
                            'ltuo_hashtag_and_min_occ_time': self.mf_location_to_ltuo_hashtag_and_min_occ_time[location]
                         }
             yield location, location_object
-    
-#        for location, mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time in\
-#                self.mf_location_to_mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time.iteritems():
-#            yield location, mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time.items()
     def reducer1(self, location, it_location_objects):
         location_objects = list(it_location_objects)
-#        neighbor_locations = 
         neighbor_locations = set(chain(*map(itemgetter('neighbor_locations'), location_objects)))
         ltuo_hashtag_and_min_occ_time = list(chain(*map(itemgetter('ltuo_hashtag_and_min_occ_time'), location_objects)))
         yield location, [location, ltuo_hashtag_and_min_occ_time]
         for neighbor_location in neighbor_locations:
-            yield neighbor_location, [location, ltuo_hashtag_and_min_occ_time]
-#        ltuo_neighbor_location_and_ltuo_hashtag_and_occ_time_and_nei_occ_time =\
-#                                        list(it_tuo_neighbor_location_and_ltuo_hashtag_and_occ_time_and_nei_occ_time)
-#        mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time = defaultdict(list)
-#        for neighbor_location, ltuo_hashtag_and_occ_time_and_nei_occ_time in\
-#                ltuo_neighbor_location_and_ltuo_hashtag_and_occ_time_and_nei_occ_time:
-#            mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time[neighbor_location] +=\
-#                                                                            ltuo_hashtag_and_occ_time_and_nei_occ_time
-    def similarity(self, ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time):
+            if location < neighbor_location: yield neighbor_location, [location, ltuo_hashtag_and_min_occ_time]
+    def _similarity(self, ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time):
         hashtags = set(zip(*ltuo_hashtag_and_min_occ_time)[0])
         neighbor_hashtags = set(zip(*neighbor_ltuo_hashtag_and_min_occ_time)[0])
         num_common_hashtags = len(hashtags.intersection(neighbor_hashtags)) + 0.0
         num_hashtags = len(hashtags.union(neighbor_hashtags))
         return num_common_hashtags/num_hashtags
+    def _adoption_lag(self, ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time):
+        mf_hashtag_to_min_occ_time = dict(ltuo_hashtag_and_min_occ_time)
+        neighbor_mf_hashtag_and_min_occ_time = dict(neighbor_ltuo_hashtag_and_min_occ_time)
+        common_hashtags = set(mf_hashtag_to_min_occ_time).intersection(neighbor_mf_hashtag_and_min_occ_time)
+        total_adoption_lag = 0.0
+        for common_hashtag in common_hashtags:
+            total_adoption_lag+=\
+                np.abs(mf_hashtag_to_min_occ_time[common_hashtag]-neighbor_mf_hashtag_and_min_occ_time[common_hashtag])
+        return total_adoption_lag/len(common_hashtags)
+    def _haversine_distance(self, location, neighbor_location):
+        loc_lat_long = UTMConverter.getLatLongUTMIdInLatLongForm(location)
+        nei_loc_lat_long = UTMConverter.getLatLongUTMIdInLatLongForm(neighbor_location)
+        return getHaversineDistance(loc_lat_long, nei_loc_lat_long)
     def reducer2(self, location, it_tuo_neighbor_location_and_ltuo_hashtag_and_min_occ_time):
         ltuo_neighbor_location_and_ltuo_hashtag_and_min_occ_time =\
                                                     list(it_tuo_neighbor_location_and_ltuo_hashtag_and_min_occ_time)
@@ -277,8 +268,14 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
         ltuo_hashtag_and_min_occ_time = mf_neighbor_location_to_ltuo_hashtag_and_min_occ_time[location]
         for neighbor_location, neighbor_ltuo_hashtag_and_min_occ_time in\
                 mf_neighbor_location_to_ltuo_hashtag_and_min_occ_time.iteritems():
-#            if location!=neighbor_location:
-                print self.similarity(ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time)
+            if location!=neighbor_location:
+                similarity_and_lag_object = {'location': location, 'neighbor_location': neighbor_location}
+                similarity_and_lag_object['haversine_distance'] = self._haversine_distance(location, neighbor_location)
+                similarity_and_lag_object['similarity'] =\
+                                self._similarity(ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time)
+                similarity_and_lag_object['adoption_lag'] =\
+                            self._adoption_lag(ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time)
+                yield '', similarity_and_lag_object
                                          
     def steps(self): 
         return self.get_dense_hashtags.get_jobs() +\
