@@ -185,19 +185,24 @@ class DenseHashtagsDistributionInLocations(ModifiedMRJob):
         ltuo_location_and_items = GeneralMethods.group_items_by(ltuo_occ_time_and_occ_location, key=itemgetter(1))
         for location, items in ltuo_location_and_items:
             self.mf_location_to_unique_hashtags[location].add(hashtag)
-            self.mf_location_to_occurrences_count[location]+=1
+            self.mf_location_to_occurrences_count[location]+=len(items)
     def mapper_final(self):
         for location, unique_hashtags in self.mf_location_to_unique_hashtags.iteritems():
             location_object = {
                                 'location': location,
-                                'unique_hashtags': unique_hashtags,
+                                'unique_hashtags': list(unique_hashtags),
                                 'occurrences_count': self.mf_location_to_occurrences_count[location]
                             }
             yield location, location_object
-#    def reducer(self, key, values): yield key, {key: sum(values)}
+    def reducer(self, location, it_location_object):
+        location_objects = list(it_location_object)
+        location_object = {'location': location, 'num_unique_hashtags': 0.0, 'occurrences_count': 0.0}
+        location_object['occurrences_count'] = sum(map(itemgetter('occurrences_count'), location_objects))
+        location_object['num_unique_hashtags'] = len(set(chain(*map(itemgetter('unique_hashtags'), location_objects))))
+        yield location, location_object
     def steps(self): 
         return self.get_dense_hashtags.get_jobs() +\
-                [self.mr(mapper=self.mapper, mapper_final=self.mapper_final)]
+                [self.mr(mapper=self.mapper, mapper_final=self.mapper_final, reducer=self.reducer)]
         
 if __name__ == '__main__':
 #    DataStats.run()
