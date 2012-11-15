@@ -98,7 +98,7 @@ class DataAnalysis():
 #        plt.show()
         savefig(output_file)
     @staticmethod
-    def top_k_locations_on_world_map(input_files_start_time, input_files_end_time, no_of_hashtags):
+    def top_k_locations_on_world_map():
         output_file = fld_data_analysis_results%GeneralMethods.get_method_id() + '.png'
         ltuo_location_and_occurrence_count = []
         for location_object in\
