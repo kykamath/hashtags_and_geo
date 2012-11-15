@@ -168,7 +168,7 @@ class DenseHashtagStats(ModifiedMRJob):
     def mapper(self, key, hashtag_object):
         yield 'unique_hashtags', 1
         yield 'total_hashtag_tuples', len(hashtag_object['ltuo_occ_time_and_occ_location'])
-    def reducer(self, key, values): yield key, sum(values)
+    def reducer(self, key, values): yield key, {key: sum(values)}
     def steps(self): return self.get_dense_hashtags.get_jobs() + [self.mr(mapper=self.mapper, reducer=self.reducer)]
         
 if __name__ == '__main__':
