@@ -17,7 +17,7 @@ import time
 LOCATION_ACCURACY = 10**4 # UTM boxes in sq.m
 MIN_HASHTAG_OCCURRENCES = 50
 
-MIN_HASHTAG_OCCURRENCES_PER_LOCATION = 5
+MIN_HASHTAG_OCCURRENCES_PER_LOCATION = 0
 
 # Start time for data analysis
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 9, 30)
@@ -203,11 +203,93 @@ class DenseHashtagsDistributionInLocations(ModifiedMRJob):
     def steps(self): 
         return self.get_dense_hashtags.get_jobs() +\
                 [self.mr(mapper=self.mapper, mapper_final=self.mapper_final, reducer=self.reducer)]
-        
+
+class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(DenseHashtagsSimilarityAndLag, self).__init__(*args, **kwargs)
+        self.get_dense_hashtags = GetDenseHashtags()
+#        self.mf_location_to_mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time = defaultdict(dict)
+        self.mf_location_to_neighbor_locations = defaultdict(set)
+        self.mf_location_to_ltuo_hashtag_and_min_occ_time = defaultdict(list)
+    def mapper1(self, key, hashtag_object):
+        if False: yield
+        hashtag = hashtag_object['hashtag']
+        ltuo_occ_time_and_occ_location = hashtag_object['ltuo_occ_time_and_occ_location']
+        ltuo_location_and_items = GeneralMethods.group_items_by(ltuo_occ_time_and_occ_location, key=itemgetter(1))
+        ltuo_location_and_occurrence_time =\
+                            [(location, min(items, key=itemgetter(0))[0])for location, items in ltuo_location_and_items]
+        for location, occurrence_time in ltuo_location_and_occurrence_time:
+            self.mf_location_to_ltuo_hashtag_and_min_occ_time[location].append([hashtag, occurrence_time])
+            for neighbor_location, _ in ltuo_location_and_occurrence_time:
+#                if location!=neighbor_location:
+                    self.mf_location_to_neighbor_locations[location].add(neighbor_location)
+#                if location<neighbor_location:
+#                    if neighbor_location not in\
+#                            self.mf_location_to_mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time\
+#                                                                                                            [location]:
+#                        self.mf_location_to_mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time\
+#                                                                                    [location][neighbor_location] = []
+#                    self.mf_location_to_mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time\
+#                                                    [location][neighbor_location].append([
+#                                                                                         hashtag,
+#                                                                                         occurrence_time,
+#                                                                                         neighbor_occurrence_time
+#                                                                                        ])
+    def mapper_final1(self):
+        for location, neighbor_locations in self.mf_location_to_neighbor_locations.iteritems():
+            location_object = {
+                           'location': location,
+                           'neighbor_locations': list(neighbor_locations),
+                           'ltuo_hashtag_and_min_occ_time': self.mf_location_to_ltuo_hashtag_and_min_occ_time[location]
+                        }
+            yield location, location_object
+    
+#        for location, mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time in\
+#                self.mf_location_to_mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time.iteritems():
+#            yield location, mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time.items()
+    def reducer1(self, location, it_location_objects):
+        location_objects = list(it_location_objects)
+#        neighbor_locations = 
+        neighbor_locations = set(chain(*map(itemgetter('neighbor_locations'), location_objects)))
+        ltuo_hashtag_and_min_occ_time = list(chain(*map(itemgetter('ltuo_hashtag_and_min_occ_time'), location_objects)))
+        yield location, [location, ltuo_hashtag_and_min_occ_time]
+        for neighbor_location in neighbor_locations:
+            yield neighbor_location, [location, ltuo_hashtag_and_min_occ_time]
+#        ltuo_neighbor_location_and_ltuo_hashtag_and_occ_time_and_nei_occ_time =\
+#                                        list(it_tuo_neighbor_location_and_ltuo_hashtag_and_occ_time_and_nei_occ_time)
+#        mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time = defaultdict(list)
+#        for neighbor_location, ltuo_hashtag_and_occ_time_and_nei_occ_time in\
+#                ltuo_neighbor_location_and_ltuo_hashtag_and_occ_time_and_nei_occ_time:
+#            mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time[neighbor_location] +=\
+#                                                                            ltuo_hashtag_and_occ_time_and_nei_occ_time
+    def similarity(self, ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time):
+        hashtags = set(zip(*ltuo_hashtag_and_min_occ_time)[0])
+        neighbor_hashtags = set(zip(*neighbor_ltuo_hashtag_and_min_occ_time)[0])
+        num_common_hashtags = len(hashtags.intersection(neighbor_hashtags)) + 0.0
+        num_hashtags = len(hashtags.union(neighbor_hashtags))
+        return num_common_hashtags/num_hashtags
+    def reducer2(self, location, it_tuo_neighbor_location_and_ltuo_hashtag_and_min_occ_time):
+        ltuo_neighbor_location_and_ltuo_hashtag_and_min_occ_time =\
+                                                    list(it_tuo_neighbor_location_and_ltuo_hashtag_and_min_occ_time)
+        mf_neighbor_location_to_ltuo_hashtag_and_min_occ_time =\
+                                                        dict(ltuo_neighbor_location_and_ltuo_hashtag_and_min_occ_time)
+        ltuo_hashtag_and_min_occ_time = mf_neighbor_location_to_ltuo_hashtag_and_min_occ_time[location]
+        for neighbor_location, neighbor_ltuo_hashtag_and_min_occ_time in\
+                mf_neighbor_location_to_ltuo_hashtag_and_min_occ_time.iteritems():
+#            if location!=neighbor_location:
+                print self.similarity(ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time)
+                                         
+    def steps(self): 
+        return self.get_dense_hashtags.get_jobs() +\
+                [self.mr(mapper=self.mapper1, mapper_final=self.mapper_final1, reducer=self.reducer1)]+\
+                [self.mr(reducer=self.reducer2)]
+                
 if __name__ == '__main__':
 #    DataStats.run()
 #    HashtagObjects.run()
 #    HashtagAndLocationDistribution.run()
 #    GetDenseHashtags.run()
 #    DenseHashtagStats.run()
-    DenseHashtagsDistributionInLocations.run()
+#    DenseHashtagsDistributionInLocations.run()
+    DenseHashtagsSimilarityAndLag.run()
