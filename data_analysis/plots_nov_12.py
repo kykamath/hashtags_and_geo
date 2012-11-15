@@ -107,7 +107,6 @@ class DataAnalysis():
                                                       location_object['location'],
                                                       location_object['occurrences_count']
                                                     ])
-        total_occurrences = sum(zip(*ltuo_location_and_occurrence_count)[1]) + 0.0
         ltuo_lid_and_r_occurrence_count = sorted(ltuo_location_and_occurrence_count, key=itemgetter(1), reverse=True)
         lids = zip(*ltuo_lid_and_r_occurrence_count)[0][:200]
         points = map(UTMConverter.getLatLongUTMIdInLatLongForm, lids)
@@ -137,7 +136,8 @@ class DataAnalysis():
     def run():
 #        DataAnalysis.hashtag_distribution_loglog()
 #        DataAnalysis.hashtag_locations_distribution_loglog()
-        DataAnalysis.fraction_of_occurrences_vs_rank_of_location()
+#        DataAnalysis.fraction_of_occurrences_vs_rank_of_location()
+        DataAnalysis.top_k_locations_on_world_map()
 
 if __name__ == '__main__':
     DataAnalysis.run()
