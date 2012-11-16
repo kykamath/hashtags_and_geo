@@ -16,7 +16,7 @@ import cjson
 import numpy as np
 import time
 
-LOCATION_ACCURACY = 10**4 # UTM boxes in sq.m
+LOCATION_ACCURACY = 10**6 # UTM boxes in sq.m
 MIN_HASHTAG_OCCURRENCES = 50
 
 MIN_HASHTAG_OCCURRENCES_PER_LOCATION = 5
@@ -294,9 +294,9 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
                 
 if __name__ == '__main__':
 #    DataStats.run()
-#    HashtagObjects.run()
+    HashtagObjects.run()
 #    HashtagAndLocationDistribution.run()
 #    GetDenseHashtags.run()
 #    DenseHashtagStats.run()
 #    DenseHashtagsDistributionInLocations.run()
-    DenseHashtagsSimilarityAndLag.run()
+#    DenseHashtagsSimilarityAndLag.run()
