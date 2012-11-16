@@ -21,6 +21,8 @@ MIN_HASHTAG_OCCURRENCES = 50
 
 MIN_HASHTAG_OCCURRENCES_PER_LOCATION = 5
 
+TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes bucket
+
 # Start time for data analysis
 START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 9, 30)
 
@@ -34,7 +36,8 @@ PARAMS_DICT = dict(
                    MIN_HASHTAG_OCCURRENCES = MIN_HASHTAG_OCCURRENCES,
                    HASHTAG_STARTING_WINDOW = HASHTAG_STARTING_WINDOW,
                    HASHTAG_ENDING_WINDOW = HASHTAG_ENDING_WINDOW,
-                   MIN_HASHTAG_OCCURRENCES_PER_LOCATION = MIN_HASHTAG_OCCURRENCES_PER_LOCATION
+                   MIN_HASHTAG_OCCURRENCES_PER_LOCATION = MIN_HASHTAG_OCCURRENCES_PER_LOCATION,
+                   TIME_UNIT_IN_SECONDS = TIME_UNIT_IN_SECONDS
                 )
 
 
@@ -222,7 +225,10 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
         ltuo_location_and_occurrence_time =\
                             [(location, min(items, key=itemgetter(0))[0])for location, items in ltuo_location_and_items]
         for location, occurrence_time in ltuo_location_and_occurrence_time:
-            self.mf_location_to_ltuo_hashtag_and_min_occ_time[location].append([hashtag, occurrence_time])
+            self.mf_location_to_ltuo_hashtag_and_min_occ_time[location].append([
+                                                hashtag,
+                                                GeneralMethods.approximateEpoch(occurrence_time, TIME_UNIT_IN_SECONDS)
+                                            ])
             for neighbor_location, _ in ltuo_location_and_occurrence_time:
                 if location!=neighbor_location:
                     self.mf_location_to_neighbor_locations[location].add(neighbor_location)
@@ -272,15 +278,15 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
                 hashtags = set(zip(*ltuo_hashtag_and_min_occ_time)[0])
                 neighbor_hashtags = set(zip(*neighbor_ltuo_hashtag_and_min_occ_time)[0])
                 num_common_hashtags = len(hashtags.intersection(neighbor_hashtags)) + 0.0
-                if num_common_hashtags>50:
+                if num_common_hashtags>100:
                     similarity_and_lag_object = {'location': location, 'neighbor_location': neighbor_location}
-                    similarity_and_lag_object['haversine_distance'] = self._haversine_distance(location, neighbor_location)
+                    similarity_and_lag_object['haversine_distance'] =\
+                                                                self._haversine_distance(location, neighbor_location)
                     similarity_and_lag_object['similarity'] =\
-                                    self._similarity(ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time)
+                                self._similarity(ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time)
                     similarity_and_lag_object['adoption_lag'] =\
-                                self._adoption_lag(ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time)
+                            self._adoption_lag(ltuo_hashtag_and_min_occ_time, neighbor_ltuo_hashtag_and_min_occ_time)
                     yield '', similarity_and_lag_object
-                                         
     def steps(self): 
         return self.get_dense_hashtags.get_jobs() +\
                 [self.mr(mapper=self.mapper1, mapper_final=self.mapper_final1, reducer=self.reducer1)]+\

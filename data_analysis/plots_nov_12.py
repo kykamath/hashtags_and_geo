@@ -117,21 +117,23 @@ class DataAnalysis():
         savefig(output_file)
     @staticmethod
     def _plot_affinities(type):
-        TIME_UNIT_IN_SECONDS = 60*10
+#        TIME_UNIT_IN_SECONDS = 60*10
         mf_distance_to_affinity_scores = defaultdict(list)
         for similarity_and_lag_object in\
                 FileIO.iterateJsonFromFile(f_dense_hashtags_similarity_and_lag, remove_params_dict=True):
             distance=int(similarity_and_lag_object['haversine_distance']/100)*100+100
             mf_distance_to_affinity_scores[distance].append(similarity_and_lag_object[type])
-        ltuo_distance_and_num_samples = [(distance, len(affinity_scores)) for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()]
-        for distance, num_samples in ltuo_distance_and_num_samples:
-            print distance, num_samples
-        exit()
+#        ltuo_distance_and_num_samples = [(distance, len(affinity_scores)) for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()]
+#        ltuo_distance_and_num_samples.sort(key=itemgetter(0))
+#        for distance, num_samples in ltuo_distance_and_num_samples:
+#            print distance, num_samples
+#        exit()
         ltuo_distance_and_affinity_score = [(distance, np.mean(affinity_scores)) 
                                             for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()
                                                 if len(affinity_scores)>100]
         x_distances, y_affinity_scores = zip(*sorted(ltuo_distance_and_affinity_score, key=itemgetter(0)))
-        if type=='adoption_lag': y_affinity_scores = [y*TIME_UNIT_IN_SECONDS/(60.*60.) for y in y_affinity_scores]
+        if type=='adoption_lag': 
+            y_affinity_scores = [y/(60.*60.) for y in y_affinity_scores]
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
         x_distances, y_affinity_scores = splineSmooth(x_distances, y_affinity_scores)
@@ -160,8 +162,8 @@ class DataAnalysis():
 #        DataAnalysis.hashtag_locations_distribution_loglog()
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location()
 #        DataAnalysis.top_k_locations_on_world_map()
-        DataAnalysis.content_affinity_vs_distance()
-#        DataAnalysis.temporal_affinity_vs_distance()
+#        DataAnalysis.content_affinity_vs_distance()
+        DataAnalysis.temporal_affinity_vs_distance()
 
 if __name__ == '__main__':
     DataAnalysis.run()
