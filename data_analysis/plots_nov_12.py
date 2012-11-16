@@ -130,7 +130,7 @@ class DataAnalysis():
 #        exit()
         ltuo_distance_and_affinity_score = [(distance, np.mean(affinity_scores)) 
                                             for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()
-                                                if len(affinity_scores)>100]
+                                                if len(affinity_scores)>0]
         x_distances, y_affinity_scores = zip(*sorted(ltuo_distance_and_affinity_score, key=itemgetter(0)))
         if type=='adoption_lag': 
             y_affinity_scores = [y/(60.*60.) for y in y_affinity_scores]
