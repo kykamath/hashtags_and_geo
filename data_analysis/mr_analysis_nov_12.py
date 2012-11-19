@@ -11,6 +11,7 @@ from library.mrjobwrapper import ModifiedMRJob
 from library.geo import UTMConverter
 from library.geo import getHaversineDistance
 from library.twitter import getDateTimeObjectFromTweetTimestamp
+from library.stats import filter_outliers
 from operator import itemgetter
 import cjson
 import numpy as np
@@ -224,11 +225,16 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
         ltuo_location_and_items = GeneralMethods.group_items_by(ltuo_occ_time_and_occ_location, key=itemgetter(1))
         ltuo_location_and_occurrence_time =\
                             [(location, min(items, key=itemgetter(0))[0])for location, items in ltuo_location_and_items]
+        ltuo_location_and_occurrence_time = [(
+                                              location, 
+                                              GeneralMethods.approximateEpoch(occurrence_time, TIME_UNIT_IN_SECONDS)
+                                              ) 
+                                             for location, occurrence_time in ltuo_location_and_occurrence_time]
+        occurrence_times = filter_outliers(zip(*ltuo_location_and_occurrence_time)[1])
+        ltuo_location_and_occurrence_time =\
+                                        filter(lambda (l, o): o in occurrence_times, ltuo_location_and_occurrence_time)
         for location, occurrence_time in ltuo_location_and_occurrence_time:
-            self.mf_location_to_ltuo_hashtag_and_min_occ_time[location].append([
-                                                hashtag,
-                                                GeneralMethods.approximateEpoch(occurrence_time, TIME_UNIT_IN_SECONDS)
-                                            ])
+            self.mf_location_to_ltuo_hashtag_and_min_occ_time[location].append([hashtag, occurrence_time])
             for neighbor_location, _ in ltuo_location_and_occurrence_time:
                 if location!=neighbor_location:
                     self.mf_location_to_neighbor_locations[location].add(neighbor_location)
