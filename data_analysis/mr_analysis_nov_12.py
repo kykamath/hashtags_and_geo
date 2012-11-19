@@ -161,7 +161,7 @@ class GetDenseHashtags(ModifiedMRJob):
                                              ltuo_location_and_items
                                              )
             hashtag_object['ltuo_occ_time_and_occ_location'] =\
-                                                        list(chain(*map(lambda (_, items): items, ltuo_location_and_items)))
+                                                    list(chain(*map(lambda (_, items): items, ltuo_location_and_items)))
             yield hashtag_object['hashtag'], hashtag_object
     def get_jobs(self): return self.steps()
 
