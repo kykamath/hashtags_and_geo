@@ -278,7 +278,7 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
                 hashtags = set(zip(*ltuo_hashtag_and_min_occ_time)[0])
                 neighbor_hashtags = set(zip(*neighbor_ltuo_hashtag_and_min_occ_time)[0])
                 num_common_hashtags = len(hashtags.intersection(neighbor_hashtags)) + 0.0
-                if num_common_hashtags>100:
+                if num_common_hashtags>50:
                     similarity_and_lag_object = {'location': location, 'neighbor_location': neighbor_location}
                     similarity_and_lag_object['haversine_distance'] =\
                                                                 self._haversine_distance(location, neighbor_location)
@@ -298,5 +298,5 @@ if __name__ == '__main__':
 #    HashtagAndLocationDistribution.run()
 #    GetDenseHashtags.run()
 #    DenseHashtagStats.run()
-    DenseHashtagsDistributionInLocations.run()
-#    DenseHashtagsSimilarityAndLag.run()
+#    DenseHashtagsDistributionInLocations.run()
+    DenseHashtagsSimilarityAndLag.run()
