@@ -111,7 +111,10 @@ class DataAnalysis():
                                                       location_object['occurrences_count']
                                                     ])
         ltuo_lid_and_r_occurrence_count = sorted(ltuo_location_and_occurrence_count, key=itemgetter(1), reverse=True)
-        lids = zip(*ltuo_lid_and_r_occurrence_count)[0][:200]
+        for i, d in enumerate(ltuo_lid_and_r_occurrence_count):
+            print i, d
+        exit()
+        lids = zip(*ltuo_lid_and_r_occurrence_count)[0][:500]
         points = map(UTMConverter.getLatLongUTMIdInLatLongForm, lids)
         plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='m',  lw = 0, alpha=1.)
         savefig(output_file)
@@ -161,9 +164,9 @@ class DataAnalysis():
 #        DataAnalysis.hashtag_distribution_loglog()
 #        DataAnalysis.hashtag_locations_distribution_loglog()
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location()
-#        DataAnalysis.top_k_locations_on_world_map()
+        DataAnalysis.top_k_locations_on_world_map()
 #        DataAnalysis.content_affinity_vs_distance()
-        DataAnalysis.temporal_affinity_vs_distance()
+#        DataAnalysis.temporal_affinity_vs_distance()
 
 if __name__ == '__main__':
     DataAnalysis.run()
