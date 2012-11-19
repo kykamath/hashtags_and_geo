@@ -230,14 +230,15 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
                                               GeneralMethods.approximateEpoch(occurrence_time, TIME_UNIT_IN_SECONDS)
                                               ) 
                                              for location, occurrence_time in ltuo_location_and_occurrence_time]
-        occurrence_times = filter_outliers(zip(*ltuo_location_and_occurrence_time)[1])
-        ltuo_location_and_occurrence_time =\
-                                        filter(lambda (l, o): o in occurrence_times, ltuo_location_and_occurrence_time)
-        for location, occurrence_time in ltuo_location_and_occurrence_time:
-            self.mf_location_to_ltuo_hashtag_and_min_occ_time[location].append([hashtag, occurrence_time])
-            for neighbor_location, _ in ltuo_location_and_occurrence_time:
-                if location!=neighbor_location:
-                    self.mf_location_to_neighbor_locations[location].add(neighbor_location)
+        if ltuo_location_and_occurrence_time:
+            occurrence_times = filter_outliers(zip(*ltuo_location_and_occurrence_time)[1])
+            ltuo_location_and_occurrence_time =\
+                                            filter(lambda (l, o): o in occurrence_times, ltuo_location_and_occurrence_time)
+            for location, occurrence_time in ltuo_location_and_occurrence_time:
+                self.mf_location_to_ltuo_hashtag_and_min_occ_time[location].append([hashtag, occurrence_time])
+                for neighbor_location, _ in ltuo_location_and_occurrence_time:
+                    if location!=neighbor_location:
+                        self.mf_location_to_neighbor_locations[location].add(neighbor_location)
     def mapper_final1(self):
         for location, neighbor_locations in self.mf_location_to_neighbor_locations.iteritems():
             location_object = {
