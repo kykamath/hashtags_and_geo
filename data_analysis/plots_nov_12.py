@@ -10,6 +10,7 @@ from library.geo import UTMConverter
 from library.geo import plotPointsOnWorldMap
 from library.plotting import savefig
 from library.plotting import splineSmooth
+from library.stats import filter_outliers
 from operator import itemgetter
 from settings import f_dense_hashtag_distribution_in_locations
 from settings import f_hashtag_and_location_distribution
@@ -131,7 +132,7 @@ class DataAnalysis():
 #        for distance, num_samples in ltuo_distance_and_num_samples:
 #            print distance, num_samples
 #        exit()
-        ltuo_distance_and_affinity_score = [(distance, np.mean(affinity_scores)) 
+        ltuo_distance_and_affinity_score = [(distance, np.mean(filter_outliers(affinity_scores))) 
                                             for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()
                                                 if len(affinity_scores)>0]
         x_distances, y_affinity_scores = zip(*sorted(ltuo_distance_and_affinity_score, key=itemgetter(0)))
