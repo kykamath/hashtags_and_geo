@@ -297,6 +297,6 @@ if __name__ == '__main__':
 #    HashtagObjects.run()
 #    HashtagAndLocationDistribution.run()
 #    GetDenseHashtags.run()
-    DenseHashtagStats.run()
-#    DenseHashtagsDistributionInLocations.run()
+#    DenseHashtagStats.run()
+    DenseHashtagsDistributionInLocations.run()
 #    DenseHashtagsSimilarityAndLag.run()
