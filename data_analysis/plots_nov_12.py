@@ -127,10 +127,10 @@ class DataAnalysis():
                 FileIO.iterateJsonFromFile(f_dense_hashtags_similarity_and_lag, remove_params_dict=True):
             distance=int(similarity_and_lag_object['haversine_distance']/100)*100+100
             mf_distance_to_affinity_scores[distance].append(similarity_and_lag_object[type])
-        ltuo_distance_and_num_samples = [(distance, len(affinity_scores)) for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()]
+        ltuo_distance_and_num_samples = [(distance, affinity_scores) for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()]
         ltuo_distance_and_num_samples.sort(key=itemgetter(0))
         for distance, num_samples in ltuo_distance_and_num_samples:
-            print distance, num_samples
+            print distance, np.mean(num_samples), np.mean(filter_outliers(num_samples))
         exit()
         ltuo_distance_and_affinity_score = [(distance, np.mean(filter_outliers(affinity_scores))) 
                                             for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()
