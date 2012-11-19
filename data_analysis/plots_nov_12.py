@@ -111,9 +111,9 @@ class DataAnalysis():
                                                       location_object['occurrences_count']
                                                     ])
         ltuo_lid_and_r_occurrence_count = sorted(ltuo_location_and_occurrence_count, key=itemgetter(1), reverse=True)
-        for i, d in enumerate(ltuo_lid_and_r_occurrence_count):
-            print i, d
-        exit()
+#        for i, d in enumerate(ltuo_lid_and_r_occurrence_count):
+#            print i, d
+#        exit()
         lids = zip(*ltuo_lid_and_r_occurrence_count)[0][:500]
         points = map(UTMConverter.getLatLongUTMIdInLatLongForm, lids)
         plotPointsOnWorldMap(points, blueMarble=False, bkcolor='#CFCFCF', c='m',  lw = 0, alpha=1.)
