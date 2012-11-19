@@ -294,8 +294,8 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
                 
 if __name__ == '__main__':
 #    DataStats.run()
-    HashtagObjects.run()
-#    HashtagAndLocationDistribution.run()
+#    HashtagObjects.run()
+    HashtagAndLocationDistribution.run()
 #    GetDenseHashtags.run()
 #    DenseHashtagStats.run()
 #    DenseHashtagsDistributionInLocations.run()
