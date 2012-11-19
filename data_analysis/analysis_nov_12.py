@@ -83,10 +83,10 @@ class MRAnalysis():
     def run():
         input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2012, 10, 31)
 #        MRAnalysis.data_stats(input_files_start_time, input_files_end_time)
-        MRAnalysis.hashtag_objects(input_files_start_time, input_files_end_time)
+#        MRAnalysis.hashtag_objects(input_files_start_time, input_files_end_time)
 #        MRAnalysis.hashtag_and_location_distribution(input_files_start_time, input_files_end_time)
 #        MRAnalysis.dense_data_stats()
-#        MRAnalysis.dense_hashtag_distribution_in_locations()
+        MRAnalysis.dense_hashtag_distribution_in_locations()
 #        MRAnalysis.dense_hashtags_similarity_and_lag()
                     
 if __name__ == '__main__':
