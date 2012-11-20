@@ -13,8 +13,9 @@ from library.plotting import splineSmooth
 from library.stats import filter_outliers
 from operator import itemgetter
 from settings import f_dense_hashtag_distribution_in_locations
-from settings import f_hashtag_and_location_distribution
 from settings import f_dense_hashtags_similarity_and_lag
+from settings import f_hashtag_and_location_distribution
+from settings import f_hashtag_spatial_metrics
 from settings import fld_data_analysis_results
 import matplotlib.pyplot as plt
 import numpy as np
@@ -161,13 +162,43 @@ class DataAnalysis():
 #        plt.show()
         savefig(output_file)
     @staticmethod
+    def spatial_metrics_cdf():
+        output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
+        def plot_graph(locality_measures, id):
+            mf_apprx_to_count = defaultdict(float)
+            for measure in locality_measures:
+                mf_apprx_to_count[round(measure,3)]+=1
+            total_hashtags = sum(mf_apprx_to_count.values())
+            current_val = 0.0
+            x_measure, y_distribution = [], []
+            for apprx, count in sorted(mf_apprx_to_count.iteritems(), key=itemgetter(0)):
+                current_val+=count
+                x_measure.append(apprx)
+                y_distribution.append(current_val/total_hashtags)
+            plt.figure(num=None, figsize=(4.3,3))
+            plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15, wspace=0)
+            plt.scatter(x_measure, y_distribution, lw=0, marker='o', c='k', s=25)
+            plt.ylim(ymax=1.2)
+            if id!='Coverage': plt.xlabel('%s'%id)
+            else: plt.xlabel('%s (miles)'%id)
+            plt.ylabel('CDF')
+            plt.grid(True)
+            savefig(output_file_format%('cdf_'+id))
+        data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
+        focuses = map(itemgetter(1), map(itemgetter('focus'), data))
+        entropies = map(itemgetter('entropy'), data)
+        plot_graph(focuses, 'Focus')
+        print entropies
+        plot_graph(entropies, 'Entropy')
+    @staticmethod
     def run():
 #        DataAnalysis.hashtag_distribution_loglog()
 #        DataAnalysis.hashtag_locations_distribution_loglog()
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location()
 #        DataAnalysis.top_k_locations_on_world_map()
-        DataAnalysis.content_affinity_vs_distance()
-        DataAnalysis.temporal_affinity_vs_distance()
+#        DataAnalysis.content_affinity_vs_distance()
+#        DataAnalysis.temporal_affinity_vs_distance()
+        DataAnalysis.spatial_metrics_cdf()
 
 if __name__ == '__main__':
     DataAnalysis.run()

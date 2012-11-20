@@ -94,8 +94,8 @@ class MRAnalysis():
 #        MRAnalysis.hashtag_and_location_distribution(input_files_start_time, input_files_end_time)
 #        MRAnalysis.dense_data_stats()
 #        MRAnalysis.dense_hashtag_distribution_in_locations()
+#        MRAnalysis.dense_hashtags_similarity_and_lag()
         MRAnalysis.hashtag_spatial_metrics()
-        MRAnalysis.dense_hashtags_similarity_and_lag()
                     
 if __name__ == '__main__':
     MRAnalysis.run()

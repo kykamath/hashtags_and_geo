@@ -330,7 +330,7 @@ class HashtagSpatialMetrics(ModifiedMRJob):
                                  'num_of_occurrenes': len(ltuo_occ_time_and_occ_location),
                                  'peak_iid': max(ltuo_iid_and_occ_count, key=itemgetter(1))[0],
                                  'focus': focus(mf_location_to_occ_count),
-                                 'entropy': entropy(mf_location_to_occ_count),
+                                 'entropy': entropy(mf_location_to_occ_count, as_bits=False),
                                  'spread': getRadiusOfGyration(points)
                              }
             yield hashtag, spatial_metrics
