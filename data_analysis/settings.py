@@ -45,3 +45,4 @@ f_hashtag_and_location_distribution = fld_data_analysis+'/hashtag_and_location_d
 f_dense_hashtag_distribution_in_locations = fld_data_analysis+'/dense_hashtag_distribution_in_locations'
 f_dense_hashtags_similarity_and_lag = fld_data_analysis+'/dense_hashtags_similarity_and_lag'
 f_hashtag_spatial_metrics = fld_data_analysis+'/hashtag_spatial_metrics'
+f_iid_spatial_metrics = fld_data_analysis+'/iid_spatial_metrics'

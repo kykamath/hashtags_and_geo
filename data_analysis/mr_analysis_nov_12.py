@@ -335,9 +335,55 @@ class HashtagSpatialMetrics(ModifiedMRJob):
                              }
             yield hashtag, spatial_metrics
     def steps(self): 
-        return self.get_dense_hashtags.get_jobs() +\
-                [self.mr(mapper=self.mapper)]
-                
+        return self.get_dense_hashtags.get_jobs() + [self.mr(mapper=self.mapper)]
+
+class IIDSpatialMetrics(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(IIDSpatialMetrics, self).__init__(*args, **kwargs)
+        self.get_dense_hashtags = GetDenseHashtags()
+    def mapper(self, key, hashtag_object):
+        ltuo_occ_time_and_occ_location = hashtag_object['ltuo_occ_time_and_occ_location']
+        if ltuo_occ_time_and_occ_location:
+            ltuo_intvl_time_and_occ_location = [(
+                                               GeneralMethods.approximateEpoch(occ_time, TIME_UNIT_IN_SECONDS),
+                                               occ_location
+                                                ) 
+                                              for occ_time, occ_location in ltuo_occ_time_and_occ_location]
+            ltuo_intvl_time_and_items =\
+                                    GeneralMethods.group_items_by(ltuo_intvl_time_and_occ_location, key=itemgetter(0))
+            ltuo_intvl_time_and_items.sort(key=itemgetter(0))
+            first_time = ltuo_intvl_time_and_items[0][0]
+            intvl_method = lambda (t, it): ((t-first_time)/TIME_UNIT_IN_SECONDS, (t, len(it)))
+            ltuo_iid_and_tuo_interval_and_occurrence_count = map(intvl_method, ltuo_intvl_time_and_items)
+            peak_tuo_iid_and_tuo_interval_and_occurrence_count = \
+                                                            max(
+                                                                ltuo_iid_and_tuo_interval_and_occurrence_count,
+                                                                key=lambda (_, (__, occurrence_count)): occurrence_count
+                                                            )
+            peak_iid = peak_tuo_iid_and_tuo_interval_and_occurrence_count[0]
+            current_val = 0.0
+            total_occurrences = sum(data[1][1] for data in ltuo_iid_and_tuo_interval_and_occurrence_count)
+            for iid, (_, occurrence_count) in ltuo_iid_and_tuo_interval_and_occurrence_count:
+                is_peak = 0.0
+                if iid==peak_iid: is_peak=1.0
+                current_val+=occurrence_count
+                yield iid, [is_peak, occurrence_count/total_occurrences, current_val/total_occurrences]
+    def reducer(self, iid, ito_interval_stats):
+        total_is_peaks = 0.0
+        red_percentage_of_occurrences = []
+        red_cumulative_percentage_of_occurrences = []
+        for (is_peak, percentage_of_occurrences, cumulative_percentage_of_occurrences) in ito_interval_stats:
+            total_is_peaks+=is_peak
+            red_percentage_of_occurrences.append(percentage_of_occurrences)
+            red_cumulative_percentage_of_occurrences.append(cumulative_percentage_of_occurrences)
+        yield iid, [iid, [total_is_peaks, 
+                          np.mean(red_percentage_of_occurrences), 
+                          np.mean(red_cumulative_percentage_of_occurrences), 
+                    ]]
+    def steps(self): 
+        return self.get_dense_hashtags.get_jobs() + [self.mr(mapper=self.mapper, reducer=self.reducer)]
+
 if __name__ == '__main__':
 #    DataStats.run()
 #    HashtagObjects.run()
@@ -346,5 +392,6 @@ if __name__ == '__main__':
 #    DenseHashtagStats.run()
 #    DenseHashtagsDistributionInLocations.run()
 #    DenseHashtagsSimilarityAndLag.run()
-    HashtagSpatialMetrics.run()
+#    HashtagSpatialMetrics.run()
+    IIDSpatialMetrics.run()
     

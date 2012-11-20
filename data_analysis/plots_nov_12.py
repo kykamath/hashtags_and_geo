@@ -367,7 +367,7 @@ class DataAnalysis():
         output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
         data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
         peaks = map(itemgetter('peak_iid'), data)
-#        peaks = filter(lambda i: i<288, peaks)
+        peaks = filter(lambda i: i<288, peaks)
         ltuo_peak_and_count = [(peak, len(list(ito_peaks)))
                             for peak, ito_peaks in groupby(sorted(peaks))
                             ]
@@ -407,6 +407,41 @@ class DataAnalysis():
         plt.ylim(ymax=1., ymin=0.00005)
         plt.grid(True)
         savefig(output_file_format%'peak_dist')
+#    @staticmethod
+#    def iid_vs_cumulative_distribution_and_peak_distribution():
+#        TIME_UNIT_IN_SECONDS = 10.*60.
+#        output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
+#        data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
+#        ltuo_iid_and_interval_stats = [data for data in iterateJsonFromFile(input_file)]
+#        ltuo_s_iid_and_interval_stats = sorted(ltuo_iid_and_interval_stats, key=itemgetter(0))
+#        ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences = [(data[0], (data[1][0], data[1][2])) for data in ltuo_s_iid_and_interval_stats]
+#        total_peaks = sum([data[1][0] for data in ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences])+0.0
+#        x_iids = []
+#        y_is_peaks = []
+#        z_cumulative_percentage_of_occurrencess = []
+#        for (iid, (is_peak, cumulative_percentage_of_occurrences)) in ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences[:100]: 
+#            print (iid, (is_peak, cumulative_percentage_of_occurrences)) 
+#            x_iids.append((iid+1)*TIME_UNIT_IN_SECONDS/60)
+#            y_is_peaks.append(is_peak/total_peaks)
+#            z_cumulative_percentage_of_occurrencess.append(cumulative_percentage_of_occurrences)
+#        plt.figure(num=None, figsize=(4.3,3))
+#        plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
+#        plt.plot(x_iids, y_is_peaks, marker='o', c='k')
+#        plt.ylabel('Distribution of hashtags')
+#        plt.xlabel('Hashtag peak (minutes)')
+#        plt.grid(True)
+#        plt.xlim(xmax=600)
+#        savefig(output_file%'peaks')
+#        plt.clf()
+#        plt.figure(num=None, figsize=(6,3))
+#        plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
+#        plt.plot(x_iids, z_cumulative_percentage_of_occurrencess, lw=0, marker='o', c='k')
+##        plt.xlabel('Minutes')
+#        plt.ylabel('CDF of occurrences')
+#        plt.xlabel('Time (Minutes)')
+#        plt.grid(True)
+#        plt.xlim(xmax=600)
+#        savefig(output_file%'cdf_occurrences_peak')
     @staticmethod
     def run():
 #        DataAnalysis.hashtag_distribution_loglog()

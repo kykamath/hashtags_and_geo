@@ -14,6 +14,7 @@ from mr_analysis_nov_12 import DenseHashtagsSimilarityAndLag
 from mr_analysis_nov_12 import HashtagAndLocationDistribution
 from mr_analysis_nov_12 import HashtagObjects
 from mr_analysis_nov_12 import HashtagSpatialMetrics
+from mr_analysis_nov_12 import IIDSpatialMetrics
 from mr_analysis_nov_12 import PARAMS_DICT
 from pprint import pprint
 from settings import hdfs_input_folder
@@ -21,6 +22,7 @@ from settings import f_data_stats
 from settings import f_dense_data_stats
 from settings import f_dense_hashtag_distribution_in_locations
 from settings import f_dense_hashtags_similarity_and_lag
+from settings import f_iid_spatial_metrics
 from settings import f_hashtag_and_location_distribution
 from settings import f_hashtag_objects
 from settings import f_hashtag_objects_on_dfs
@@ -87,6 +89,11 @@ class MRAnalysis():
         output_file = f_hashtag_spatial_metrics
         MRAnalysis.run_job_with_input_files(mr_class, output_file, [f_hashtag_objects_on_dfs])
     @staticmethod
+    def iid_spatial_metrics():
+        mr_class = IIDSpatialMetrics
+        output_file = f_iid_spatial_metrics
+        MRAnalysis.run_job_with_input_files(mr_class, output_file, [f_hashtag_objects_on_dfs])
+    @staticmethod
     def run():
         input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2012, 10, 31)
 #        MRAnalysis.data_stats(input_files_start_time, input_files_end_time)
@@ -95,7 +102,8 @@ class MRAnalysis():
 #        MRAnalysis.dense_data_stats()
 #        MRAnalysis.dense_hashtag_distribution_in_locations()
 #        MRAnalysis.dense_hashtags_similarity_and_lag()
-        MRAnalysis.hashtag_spatial_metrics()
+#        MRAnalysis.hashtag_spatial_metrics()
+        MRAnalysis.iid_spatial_metrics()
                     
 if __name__ == '__main__':
     MRAnalysis.run()
