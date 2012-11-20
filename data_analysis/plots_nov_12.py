@@ -17,7 +17,9 @@ from settings import f_dense_hashtag_distribution_in_locations
 from settings import f_dense_hashtags_similarity_and_lag
 from settings import f_hashtag_and_location_distribution
 from settings import f_hashtag_spatial_metrics
+from settings import f_iid_spatial_metrics
 from settings import fld_data_analysis_results
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -407,41 +409,163 @@ class DataAnalysis():
         plt.ylim(ymax=1., ymin=0.00005)
         plt.grid(True)
         savefig(output_file_format%'peak_dist')
+    @staticmethod
+    def iid_vs_cumulative_distribution_and_peak_distribution():
+        TIME_UNIT_IN_SECONDS = 10.*60.
+        output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
+        ltuo_iid_and_interval_stats = [data for data in 
+                                        FileIO.iterateJsonFromFile(f_iid_spatial_metrics, remove_params_dict=True)]
+        ltuo_s_iid_and_interval_stats = sorted(ltuo_iid_and_interval_stats, key=itemgetter(0))
+        ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences = [(data[0], (data[1][0], data[1][2])) for data in ltuo_s_iid_and_interval_stats]
+        total_peaks = sum([data[1][0] for data in ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences])+0.0
+        x_iids = []
+        y_is_peaks = []
+        z_cumulative_percentage_of_occurrencess = []
+        for (iid, (is_peak, cumulative_percentage_of_occurrences)) in ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences[:100]: 
+            print (iid, (is_peak, cumulative_percentage_of_occurrences)) 
+            x_iids.append((iid+1)*TIME_UNIT_IN_SECONDS/60)
+            y_is_peaks.append(is_peak/total_peaks)
+            z_cumulative_percentage_of_occurrencess.append(cumulative_percentage_of_occurrences)
+        plt.figure(num=None, figsize=(4.3,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
+        plt.plot(x_iids, y_is_peaks, marker='o', c='k')
+        plt.ylabel('Distribution of hashtags')
+        plt.xlabel('Hashtag peak (minutes)')
+        plt.grid(True)
+        plt.xlim(xmax=600)
+        savefig(output_file_format%'peaks')
+        plt.clf()
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
+        plt.plot(x_iids, z_cumulative_percentage_of_occurrencess, lw=0, marker='o', c='k')
+#        plt.xlabel('Minutes')
+        plt.ylabel('CDF of occurrences')
+        plt.xlabel('Time (Minutes)')
+        plt.grid(True)
+        plt.xlim(xmax=600)
+        savefig(output_file_format%'cdf_occurrences_peak')
+    @staticmethod
+    def ef_plots_for_peak():
+        output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
+        def getNearestNumber(num): return  (int(round(num,2)*100/100)*100 + int((round(num,2)*100%100)/3)*3)/100.
+        def plot_correlation_ef_plot(condition, id, hashtags, focuses, entropies, peaks):
+            TIME_UNIT_IN_SECONDS = 10.*60.
+            mf_norm_focus_to_entropies = defaultdict(list)
+            mf_norm_focus_to_peaks = defaultdict(list)
+            for focus, entropy, peak in zip(focuses,entropies, peaks):
+                if condition(peak):
+                    mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
+                    mf_norm_focus_to_peaks[round(focus, 2)].append(peak)
+            x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies)) for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems() if len(entropies)>5])
+            _, z_peak = zip(*[(norm_focus, np.mean(peaks)*TIME_UNIT_IN_SECONDS/60) for norm_focus, peaks in mf_norm_focus_to_peaks.iteritems() if len(peaks)>5])
+            plt.figure(num=None, figsize=(6,3))
+            plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
+            cm = matplotlib.cm.get_cmap('cool')
+            sc = plt.scatter(x_focus, y_entropy, c=z_peak, cmap=cm, s=50, lw=0,)
+            plt.colorbar(sc)
+            plt.xlim(xmin=-0.1, xmax=1.1)
+            plt.ylim(ymin=-1, ymax=9)
+            plt.xlabel('Mean hashtag focus')
+            plt.ylabel('Mean hashtag entropy')
+            plt.grid(True)
+            savefig(output_file_format%id)
+            ltuo_hashtag_and_entropy_and_focus = zip(hashtags, entropies, focuses)
+            ltuo_hashtag_and_r_entropy_and_focus = sorted(ltuo_hashtag_and_entropy_and_focus, key=itemgetter(1), reverse=True)
+            ltuo_hashtag_and_r_entropy_and_s_focus = sorted(ltuo_hashtag_and_r_entropy_and_focus, key=itemgetter(2))
+            hashtags = zip(*ltuo_hashtag_and_r_entropy_and_s_focus)[0]
+            print id, list(hashtags)
+            print id, list(reversed(hashtags))
+        data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
+        hashtags = map(itemgetter('hashtag'), data)
+        focuses = map(itemgetter(1), map(itemgetter('focus'), data))
+        entropies = map(itemgetter('entropy'), data)
+        peaks = map(itemgetter('peak_iid'), data)
+        def gt_288(peak):
+            if 288>peak and peak<1008: return True
+        def lt_6(peak):
+            if peak < 6: return True
+        def lt_144(peak):
+            if peak < 144: return True
+        plot_correlation_ef_plot(gt_288, 'gt_288', hashtags, focuses, entropies, peaks)
+        plot_correlation_ef_plot(lt_6, 'lt_6', hashtags, focuses, entropies, peaks)
 #    @staticmethod
-#    def iid_vs_cumulative_distribution_and_peak_distribution():
-#        TIME_UNIT_IN_SECONDS = 10.*60.
-#        output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
-#        data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
-#        ltuo_iid_and_interval_stats = [data for data in iterateJsonFromFile(input_file)]
-#        ltuo_s_iid_and_interval_stats = sorted(ltuo_iid_and_interval_stats, key=itemgetter(0))
-#        ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences = [(data[0], (data[1][0], data[1][2])) for data in ltuo_s_iid_and_interval_stats]
-#        total_peaks = sum([data[1][0] for data in ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences])+0.0
-#        x_iids = []
-#        y_is_peaks = []
-#        z_cumulative_percentage_of_occurrencess = []
-#        for (iid, (is_peak, cumulative_percentage_of_occurrences)) in ltuo_s_iid_and_tuo_is_peak_and_cumulative_percentage_of_occurrences[:100]: 
-#            print (iid, (is_peak, cumulative_percentage_of_occurrences)) 
-#            x_iids.append((iid+1)*TIME_UNIT_IN_SECONDS/60)
-#            y_is_peaks.append(is_peak/total_peaks)
-#            z_cumulative_percentage_of_occurrencess.append(cumulative_percentage_of_occurrences)
-#        plt.figure(num=None, figsize=(4.3,3))
-#        plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
-#        plt.plot(x_iids, y_is_peaks, marker='o', c='k')
-#        plt.ylabel('Distribution of hashtags')
-#        plt.xlabel('Hashtag peak (minutes)')
-#        plt.grid(True)
-#        plt.xlim(xmax=600)
-#        savefig(output_file%'peaks')
-#        plt.clf()
+#    def norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags):
+#        input_file = f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
+#        output_file = \
+#                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
+#                + GeneralMethods.get_method_id() + '/%s.png'
+#        ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage = \
+#            [data for data in iterateJsonFromFile(input_file)]
+#        x_normalized_iids, y_entropies, y_focuses, y_distance_from_overall_entropy, y_distance_from_overall_focus, y_coverages = \
+#                                                     zip(*sorted([(data[0]*TIME_UNIT_IN_SECONDS/60, data[1][1], data[1][2], data[1][4], data[1][5], data[1][3]) 
+#                                                                      for data in 
+#                                                                        ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
+#                                                                  ])
+#                                                        )
 #        plt.figure(num=None, figsize=(6,3))
-#        plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
-#        plt.plot(x_iids, z_cumulative_percentage_of_occurrencess, lw=0, marker='o', c='k')
-##        plt.xlabel('Minutes')
-#        plt.ylabel('CDF of occurrences')
-#        plt.xlabel('Time (Minutes)')
+#        plt.subplots_adjust(bottom=0.2, top=0.9)
+#        plt.subplot(111)
+#        plt.xlim(xmin=-20, xmax=200)
+##        plt.ylim(ymin=0.5, ymax=1.0)
+#        plt.plot(x_normalized_iids, y_coverages,  lw=1, c='k')
+#        plt.scatter(x_normalized_iids, y_coverages, lw=0, marker='o', s=50, c='k')
+#        plt.ylabel('Interval coverage')
+#        plt.xlabel('Minutes since peak')
 #        plt.grid(True)
-#        plt.xlim(xmax=600)
-#        savefig(output_file%'cdf_occurrences_peak')
+#        savefig(output_file%'coverage')
+#        plt.clf() 
+#        
+#        plt.figure(num=None, figsize=(6,3))
+#        plt.subplots_adjust(bottom=0.2, top=0.9)
+#        plt.subplot(111)
+#        plt.xlim(xmin=-20, xmax=120)
+#        plt.ylim(ymin=0.65, ymax=0.95)
+#        plt.plot(x_normalized_iids, y_entropies,  lw=1, c='k')
+#        plt.scatter(x_normalized_iids, y_entropies, lw=0, marker='o', s=50, c='k')
+#        plt.ylabel('Interval entropy')
+#        plt.xlabel('Minutes since peak')
+#        plt.grid(True)
+#        savefig(output_file%'entropy')
+#        plt.clf() 
+#        
+#        plt.figure(num=None, figsize=(6,3))
+#        plt.subplots_adjust(bottom=0.2, top=0.9)
+#        plt.subplot(111)
+#        plt.xlim(xmin=-20, xmax=400)
+#        plt.ylim(ymin=1, ymax=3)
+#        plt.plot(x_normalized_iids, y_distance_from_overall_entropy, lw=1, c='k')                               
+#        plt.scatter(x_normalized_iids,  y_distance_from_overall_entropy, marker='o', s=50, c='k')
+#        plt.xlabel('Minutes since peak')
+#        plt.ylabel('Distance from overall entropy')
+#        plt.grid(True)
+#        savefig(output_file%'distace_from_overall_entropy')
+#        plt.clf()   
+#        
+#        plt.figure(num=None, figsize=(6,3))
+#        plt.subplots_adjust(bottom=0.2, top=0.9)
+#        plt.subplot(111)
+#        plt.xlim(xmin=-20, xmax=120)
+#        plt.ylim(ymin=0.738, ymax=0.79)
+#        plt.plot(x_normalized_iids, y_focuses, lw=1, c='k')
+#        plt.scatter(x_normalized_iids, y_focuses, lw=1, marker='o', s=50, c='k')     
+#        plt.xlabel('Minutes since peak')
+#        plt.ylabel('Interval focus')
+#        plt.grid(True)
+#        savefig(output_file%'focus')
+#        plt.clf()
+#        
+#        plt.figure(num=None, figsize=(6,3))
+#        plt.subplots_adjust(bottom=0.2, top=0.9)
+#        plt.subplot(111)
+#        plt.xlim(xmin=-20, xmax=400)
+#        plt.ylim(ymin=-0.43, ymax=-0.19)
+#        plt.plot(x_normalized_iids, y_distance_from_overall_focus, lw=1, c='k')                               
+#        plt.scatter(x_normalized_iids, y_distance_from_overall_focus, marker='o', s=50, c='k')   
+#        plt.xlabel('Minutes since peak')
+#        plt.ylabel('Distance from overall focus')
+#        plt.grid(True)
+#        savefig(output_file%'distace_from_overall_focus')
+
     @staticmethod
     def run():
 #        DataAnalysis.hashtag_distribution_loglog()
@@ -454,7 +578,9 @@ class DataAnalysis():
 #        DataAnalysis.spatial_metrics_vs_occurrence_count()
 #        DataAnalysis.ef_plot()
 #        DataAnalysis.coverage_vs_spatial_properties()
-        DataAnalysis.peak_stats()
+#        DataAnalysis.peak_stats()
+#        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution()
+        DataAnalysis.ef_plots_for_peak()
 
 if __name__ == '__main__':
     DataAnalysis.run()

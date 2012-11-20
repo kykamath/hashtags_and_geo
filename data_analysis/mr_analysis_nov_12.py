@@ -383,6 +383,81 @@ class IIDSpatialMetrics(ModifiedMRJob):
                     ]]
     def steps(self): 
         return self.get_dense_hashtags.get_jobs() + [self.mr(mapper=self.mapper, reducer=self.reducer)]
+class NormIIDSpatialMetrics(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(NormIIDSpatialMetrics, self).__init__(*args, **kwargs)
+        self.get_dense_hashtags = GetDenseHashtags()
+    def mapper(self, hashtag, hashtag_object):
+        def distance_from_overall_locality_stat(overall_stat, current_stat): return overall_stat-current_stat
+        ltuo_occ_time_and_occ_location = hashtag_object['ltuo_occ_time_and_occ_location']
+        if ltuo_occ_time_and_occ_location:
+            ltuo_intvl_time_and_occ_location = [(
+                                               GeneralMethods.approximateEpoch(occ_time, TIME_UNIT_IN_SECONDS),
+                                               occ_location
+                                                ) 
+                                              for occ_time, occ_location in ltuo_occ_time_and_occ_location]
+            ltuo_intvl_time_and_items =\
+                                    GeneralMethods.group_items_by(ltuo_intvl_time_and_occ_location, key=itemgetter(0))
+            ltuo_intvl_time_and_items.sort(key=itemgetter(0))
+            first_time = ltuo_intvl_time_and_items[0][0]
+            intvl_method = lambda (t, it): ((t-first_time)/TIME_UNIT_IN_SECONDS, (t, map(itemgetter(1), it)))
+            ltuo_iid_and_tuo_interval_and_lids = map(intvl_method, ltuo_intvl_time_and_items)
+            peak_tuo_iid_and_tuo_interval_and_lids = \
+                max(ltuo_iid_and_tuo_interval_and_lids, key=lambda (_, (__, lids)): len(lids))
+            peak_iid = peak_tuo_iid_and_tuo_interval_and_lids[0]
+            ltuo_location_and_items =\
+                                    GeneralMethods.group_items_by(ltuo_intvl_time_and_occ_location, key=itemgetter(1))
+            overall_mf_lid_to_occurrence_count = dict(map(lambda (l, it): (l, len(it)), ltuo_location_and_items))
+            overall_points =\
+                        [UTMConverter.getLatLongUTMIdInLatLongForm(loc) for _, loc in ltuo_occ_time_and_occ_location]
+            overall_entropy = entropy(overall_mf_lid_to_occurrence_count, False)
+            overall_focus = focus(overall_mf_lid_to_occurrence_count)[1]
+            overall_coverage = getRadiusOfGyration(overall_points)
+            total_occurrences = sum(len(lids) for (iid, (interval, lids)) in ltuo_iid_and_tuo_interval_and_lids)
+            for iid, (_, lids) in ltuo_iid_and_tuo_interval_and_lids:
+                mf_lid_to_occurrence_count = defaultdict(float)
+                for lid in lids: mf_lid_to_occurrence_count[lid]+=1
+                points = [UTMConverter.getLatLongUTMIdInLatLongForm(lid) for lid in lids]
+                current_entropy = entropy(mf_lid_to_occurrence_count, False)
+                current_focus = focus(mf_lid_to_occurrence_count)[1]
+                current_coverage = getRadiusOfGyration(points)
+                
+                yield iid-peak_iid, [len(lids)/total_occurrences, current_entropy, current_focus, current_coverage, 
+                                        distance_from_overall_locality_stat(overall_entropy, current_entropy),
+                                        distance_from_overall_locality_stat(overall_focus, current_focus),
+                                        distance_from_overall_locality_stat(overall_coverage, current_coverage),]
+    def reducer(self, norm_iid, ito_interval_stats):
+        red_percentage_of_occurrences = []
+        red_cumulative_entropy = []
+        red_cumulative_focus = []
+        red_cumulative_coverage = []
+        red_distance_from_overall_entropy = []
+        red_distance_from_overall_focus = []
+        red_distance_from_overall_coverage = []
+        for (percentage_of_occurrences, entropy, focus, coverage, 
+                    distance_from_overall_entropy, distance_from_overall_focus, distance_from_overall_coverage)  in\
+                ito_interval_stats:
+            red_percentage_of_occurrences.append(percentage_of_occurrences)
+            red_cumulative_entropy.append(entropy)
+            red_cumulative_focus.append(focus)
+            red_cumulative_coverage.append(coverage)
+            red_distance_from_overall_entropy.append(distance_from_overall_entropy)
+            red_distance_from_overall_focus.append(distance_from_overall_focus)
+            red_distance_from_overall_coverage.append(distance_from_overall_coverage)
+        yield norm_iid, [norm_iid, 
+                         [ 
+                          np.mean(red_percentage_of_occurrences), 
+                          np.mean(red_cumulative_entropy), 
+                          np.mean(red_cumulative_focus), 
+                          np.mean(red_cumulative_coverage),
+                          np.mean(red_distance_from_overall_entropy), 
+                          np.mean(red_distance_from_overall_focus), 
+                          np.mean(red_distance_from_overall_coverage),
+                    ]]
+
+    def steps(self): 
+        return self.get_dense_hashtags.get_jobs() + [self.mr(mapper=self.mapper, reducer=self.reducer)]
 
 if __name__ == '__main__':
 #    DataStats.run()
@@ -393,5 +468,6 @@ if __name__ == '__main__':
 #    DenseHashtagsDistributionInLocations.run()
 #    DenseHashtagsSimilarityAndLag.run()
 #    HashtagSpatialMetrics.run()
-    IIDSpatialMetrics.run()
+#    IIDSpatialMetrics.run()
+    NormIIDSpatialMetrics.run()
     
