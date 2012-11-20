@@ -13,6 +13,7 @@ from mr_analysis_nov_12 import DenseHashtagsDistributionInLocations
 from mr_analysis_nov_12 import DenseHashtagsSimilarityAndLag
 from mr_analysis_nov_12 import HashtagAndLocationDistribution
 from mr_analysis_nov_12 import HashtagObjects
+from mr_analysis_nov_12 import HashtagSpatialMetrics
 from mr_analysis_nov_12 import PARAMS_DICT
 from pprint import pprint
 from settings import hdfs_input_folder
@@ -23,6 +24,7 @@ from settings import f_dense_hashtags_similarity_and_lag
 from settings import f_hashtag_and_location_distribution
 from settings import f_hashtag_objects
 from settings import f_hashtag_objects_on_dfs
+from settings import f_hashtag_spatial_metrics
 import time
 
 class MRAnalysis():
@@ -78,6 +80,11 @@ class MRAnalysis():
     def dense_hashtags_similarity_and_lag():
         mr_class = DenseHashtagsSimilarityAndLag
         output_file = f_dense_hashtags_similarity_and_lag
+        MRAnalysis.run_job_with_input_files(mr_class, output_file, [f_hashtag_objects_on_dfs])
+    @staticmethod
+    def hashtag_spatial_metrics():
+        mr_class = HashtagSpatialMetrics
+        output_file = f_hashtag_spatial_metrics
         MRAnalysis.run_job_with_input_files(mr_class, output_file, [f_hashtag_objects_on_dfs])
     @staticmethod
     def run():

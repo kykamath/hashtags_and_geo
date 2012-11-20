@@ -10,8 +10,11 @@ from library.classes import GeneralMethods
 from library.mrjobwrapper import ModifiedMRJob
 from library.geo import UTMConverter
 from library.geo import getHaversineDistance
+from library.geo import getRadiusOfGyration
 from library.twitter import getDateTimeObjectFromTweetTimestamp
+from library.stats import entropy
 from library.stats import filter_outliers
+from library.stats import focus
 from operator import itemgetter
 import cjson
 import numpy as np
@@ -299,19 +302,41 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
                 [self.mr(mapper=self.mapper1, mapper_final=self.mapper_final1, reducer=self.reducer1)]+\
                 [self.mr(reducer=self.reducer2)]
 
-class HashtagsEntropyAndFocus(ModifiedMRJob):
+class HashtagSpatialMetrics(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
-        super(HashtagsEntropyAndFocus, self).__init__(*args, **kwargs)
+        super(HashtagSpatialMetrics, self).__init__(*args, **kwargs)
         self.get_dense_hashtags = GetDenseHashtags()
-#        self.mf_location_to_mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time = defaultdict(dict)
-        self.mf_location_to_neighbor_locations = defaultdict(set)
-        self.mf_location_to_ltuo_hashtag_and_min_occ_time = defaultdict(list)
-
+    def mapper(self, key, hashtag_object):
+        hashtag = hashtag_object['hashtag']
+        ltuo_occ_time_and_occ_location = hashtag_object['ltuo_occ_time_and_occ_location']
+        if ltuo_occ_time_and_occ_location:
+            ltuo_intvl_time_and_occ_location = [(
+                                               GeneralMethods.approximateEpoch(occ_time, TIME_UNIT_IN_SECONDS),
+                                               occ_location
+                                                ) 
+                                              for occ_time, occ_location in ltuo_occ_time_and_occ_location]
+            points = [UTMConverter.getLatLongUTMIdInLatLongForm(loc) for _, loc in ltuo_occ_time_and_occ_location]
+            ltuo_intvl_time_and_items =\
+                                    GeneralMethods.group_items_by(ltuo_intvl_time_and_occ_location, key=itemgetter(0))
+            ltuo_intvl_time_and_items.sort(key=itemgetter(0))
+            first_time = ltuo_intvl_time_and_items[0][0]
+            ltuo_iid_and_occ_count = map(lambda (t, it): (first_time-t, len(it)), ltuo_intvl_time_and_items)
+            ltuo_location_and_items =\
+                                    GeneralMethods.group_items_by(ltuo_intvl_time_and_occ_location, key=itemgetter(1))
+            mf_location_to_occ_count = dict(map(lambda (l, it): (l, len(it)), ltuo_location_and_items))
+            spatial_metrics = {
+                                 'hashtag': hashtag,
+                                 'num_of_occurrenes': len(ltuo_occ_time_and_occ_location),
+                                 'peak_iid': max(ltuo_iid_and_occ_count, key=itemgetter(1))[0],
+                                 'focus': focus(mf_location_to_occ_count),
+                                 'entropy': entropy(mf_location_to_occ_count),
+                                 'spread': getRadiusOfGyration(points)
+                             }
+            yield hashtag, spatial_metrics
     def steps(self): 
         return self.get_dense_hashtags.get_jobs() +\
-                [self.mr(mapper=self.mapper1, mapper_final=self.mapper_final1, reducer=self.reducer1)]+\
-                [self.mr(reducer=self.reducer2)]
+                [self.mr(mapper=self.mapper)]
                 
 if __name__ == '__main__':
 #    DataStats.run()
@@ -320,4 +345,6 @@ if __name__ == '__main__':
 #    GetDenseHashtags.run()
 #    DenseHashtagStats.run()
 #    DenseHashtagsDistributionInLocations.run()
-    DenseHashtagsSimilarityAndLag.run()
+#    DenseHashtagsSimilarityAndLag.run()
+    HashtagSpatialMetrics.run()
+    
