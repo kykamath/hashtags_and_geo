@@ -4,6 +4,7 @@ Created on Nov 14, 2012
 @author: krishnakamath
 '''
 from collections import defaultdict
+from itertools import groupby
 from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.geo import UTMConverter
@@ -162,6 +163,43 @@ class DataAnalysis():
 #        plt.show()
         savefig(output_file)
     @staticmethod
+    def spatial_metrics_vs_occurrence_count():
+        output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
+        def plot_graph(ltuo_locality_measure_and_occurrences_count, id):
+            mf_normalized_occurrences_count_to_locality_measures = defaultdict(list)
+            for locality_measure, occurrences_count in \
+                    ltuo_locality_measure_and_occurrences_count:
+                normalized_occurrence_count =\
+                int(occurrences_count/ACCURACY_NO_OF_OCCURRANCES)*ACCURACY_NO_OF_OCCURRANCES+ACCURACY_NO_OF_OCCURRANCES
+                mf_normalized_occurrences_count_to_locality_measures[normalized_occurrence_count].append(
+                                                                                                        locality_measure
+                                                                                                    )
+            x_occurrance_counts, y_locality_measures = [], []
+            for k in sorted(mf_normalized_occurrences_count_to_locality_measures):
+                if len(mf_normalized_occurrences_count_to_locality_measures[k]) > 10:
+                    x_occurrance_counts.append(k), y_locality_measures.append(
+                                                     np.mean(mf_normalized_occurrences_count_to_locality_measures[k])
+                                                    )
+            x_occurrance_counts = [x/1000. for x in x_occurrance_counts]
+            plt.figure(num=None, figsize=(4.3,3.0))
+            plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15, wspace=0.)
+            plt.scatter(x_occurrance_counts, y_locality_measures, lw=0, marker='o', c='k', s=50)
+            plt.xlabel('Hashtag occurrences in thousands')
+            plt.ylabel('Mean hashtag %s'%id)
+            plt.grid(True)
+            savefig(output_file_format%('locality_vs_occurrences_'+id))
+        ACCURACY_NO_OF_OCCURRANCES = 25
+#        import matplotlib as mpl
+#        mpl.rcParams['text.usetex']=True
+        data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
+        ltuo_entropy_and_occurrences_count = map(itemgetter('entropy', 'num_of_occurrenes'), data)
+        ltuo_focus_and_occurrences_count = map(itemgetter('focus', 'num_of_occurrenes'), data)
+        ltuo_focus_and_occurrences_count = [(s, c) for ((_, s), c) in ltuo_focus_and_occurrences_count]
+        ltuo_coverage_and_occurrences_count = map(itemgetter('spread', 'num_of_occurrenes'), data)
+        plot_graph(ltuo_entropy_and_occurrences_count, 'entropy')
+        plot_graph(ltuo_focus_and_occurrences_count, 'focus')
+        plot_graph(ltuo_coverage_and_occurrences_count, 'spread')
+    @staticmethod
     def spatial_metrics_cdf():
         output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
         def plot_graph(locality_measures, id):
@@ -184,12 +222,191 @@ class DataAnalysis():
             plt.ylabel('CDF')
             plt.grid(True)
             savefig(output_file_format%('cdf_'+id))
+        def plot_coverage(locality_measures, id):
+            mf_apprx_to_count = defaultdict(float)
+            for measure in locality_measures:
+                mf_apprx_to_count[round(measure,3)]+=1
+            total_hashtags = sum(mf_apprx_to_count.values())
+            current_val = 0.0
+            x_measure, y_distribution = [], []
+            for apprx, count in sorted(mf_apprx_to_count.iteritems(), key=itemgetter(0)):
+                current_val+=count
+                x_measure.append(apprx)
+                y_distribution.append(current_val/total_hashtags)
+            plt.figure(num=None, figsize=(4.3,3))
+            ax = plt.subplot(111)
+            ax.set_xscale('log')
+            plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15, wspace=0)
+            plt.scatter(x_measure, y_distribution, lw=0, marker='o', c='k', s=25)
+            plt.ylim(ymax=1.2)
+            if id!='Coverage': plt.xlabel('%s'%id)
+            else: plt.xlabel('Spread (miles)')
+            plt.ylabel('CDF')
+            plt.xlim(xmin=1.)
+            plt.grid(True)
+            savefig(output_file_format%('cdf_'+id))
         data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
         focuses = map(itemgetter(1), map(itemgetter('focus'), data))
         entropies = map(itemgetter('entropy'), data)
+        coverages = map(itemgetter('spread'), data)
+        print 'Mean entropy: ', np.mean(entropies)
+        print 'Mean focus: ', np.mean(focuses)
+        print 'Median entropy: ', np.median(entropies)
+        print 'Median focus: ', np.median(focuses)
         plot_graph(focuses, 'Focus')
-        print entropies
         plot_graph(entropies, 'Entropy')
+        plot_coverage(coverages, 'Spread')
+    @staticmethod
+    def ef_plot():
+        output_file = fld_data_analysis_results%GeneralMethods.get_method_id()+'.png'
+        data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
+        ltuo_hashtag_and_entropy_and_focus = map(itemgetter('hashtag', 'entropy', 'focus'), data)
+        mf_norm_focus_to_entropies = defaultdict(list)
+        for _, entropy, (_, focus) in ltuo_hashtag_and_entropy_and_focus:
+            mf_norm_focus_to_entropies[round(focus, 2)].append(entropy)
+        plt.figure(num=None, figsize=(6,3))
+        x_focus, y_entropy = zip(*[(norm_focus, np.mean(entropies))
+                                    for norm_focus, entropies in mf_norm_focus_to_entropies.iteritems()
+                                    if len(entropies)>0])
+        plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
+        plt.scatter(x_focus, y_entropy, s=50, lw=0, c='k')
+        plt.xlim(xmin=-0.1, xmax=1.1)
+        plt.ylim(ymin=-1, ymax=9)
+        plt.xlabel('Mean hashtag focus')
+        plt.ylabel('Mean hashtag entropy')
+        plt.grid(True)
+        savefig(output_file)
+        ltuo_hashtag_and_r_entropy_and_focus =\
+                                            sorted(ltuo_hashtag_and_entropy_and_focus, key=itemgetter(1), reverse=True)
+        ltuo_hashtag_and_r_entropy_and_s_focus = sorted(ltuo_hashtag_and_r_entropy_and_focus, key=itemgetter(2))
+        hashtags = zip(*ltuo_hashtag_and_r_entropy_and_s_focus)[0]
+        print list(hashtags[:20])
+        print list(reversed(hashtags))[:20]
+    @staticmethod
+    def coverage_vs_spatial_properties():
+        output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'_%s.png'
+        output_text_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.txt'
+        data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
+        keys = ['entropy', 'focus', 'spread', 'hashtag', 'num_of_occurrenes', 'focus']
+        ltuo_entropy_focus_coverage_hashtag_occurrence_count_and_focus_location = map(itemgetter(*keys), data)
+        ltuo_entropy_focus_coverage_hashtag_occurrence_count_and_focus_location =\
+                                        map(
+                                              lambda (a,b,c,d,e,f): (a,b[1],c,d,e,f[0]),
+                                              ltuo_entropy_focus_coverage_hashtag_occurrence_count_and_focus_location
+                                        )
+#        ltuo_entropy_focus_coverage_hashtag_occurrence_count_and_focus_location = [(data[2], data[3][1], data[4], data[0], data[1], data[3][0]) for data in iterateJsonFromFile(input_file)]
+        mf_coverage_to_entropies = defaultdict(list)
+        mf_coverage_to_focuses = defaultdict(list)
+        mf_coverage_boundary_to_tuo_entropy_and_focus_and_hashtag_and_occurrence_count_and_focus_location =\
+                                                                                                    defaultdict(list)
+        total_hashtags = len(ltuo_entropy_focus_coverage_hashtag_occurrence_count_and_focus_location)+0.
+        for entropy, focus, coverage, hashtag, occurrence_count, focus_location in\
+                ltuo_entropy_focus_coverage_hashtag_occurrence_count_and_focus_location:
+            coverage = int(coverage/100)*100+100
+            mf_coverage_to_entropies[coverage].append(entropy)
+            mf_coverage_to_focuses[coverage].append(focus)
+            coverage_boundary = 800
+            if 800<coverage<1600: coverage_boundary=1600
+            elif 1600<coverage: coverage_boundary=4000
+            mf_coverage_boundary_to_tuo_entropy_and_focus_and_hashtag_and_occurrence_count_and_focus_location\
+                                [coverage_boundary].append((entropy, focus, hashtag, occurrence_count, focus_location))
+        
+        for coverage_boundary, ltuo_entropy_and_focus_and_hashtag_and_occurrence_count_and_focus_location in \
+                mf_coverage_boundary_to_tuo_entropy_and_focus_and_hashtag_and_occurrence_count_and_focus_location\
+                                                                                                        .iteritems():
+            ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location = \
+                sorted(ltuo_entropy_and_focus_and_hashtag_and_occurrence_count_and_focus_location, key=itemgetter(3), reverse=True)
+            for entropy, focus, hashtag, occurrence_count, focus_location in \
+                    ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location:
+                FileIO.writeToFileAsJson(
+                                         [hashtag, occurrence_count, entropy, focus, focus_location],
+                                         output_text_file_format%coverage_boundary
+                                        )
+            print coverage_boundary,\
+                        len(ltuo_entropy_and_focus_and_hashtag_and_occurrence_count_and_focus_location)/total_hashtags
+            print 'median entropy: ',\
+                        np.median(zip(*ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location)[0])
+            print 'median focus: ',\
+                        np.median(zip(*ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location)[1])
+#            print 'var entropy: ', np.var(zip(*ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location)[0])
+#            print 'var focus: ', np.var(zip(*ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location)[1])
+
+#            print 'range entropy: ', getOutliersRangeUsingIRQ(zip(*ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location)[0])
+#            print 'range focus: ', getOutliersRangeUsingIRQ(zip(*ltuo_entropy_and_focus_and_hashtag_and_s_occurrence_count_and_focus_location)[1])
+            
+        x_coverages, y_entropies = zip(*[(coverage, np.mean(entropies)) 
+                                         for coverage, entropies in mf_coverage_to_entropies.iteritems()
+                                         if len(entropies) > 250])
+        x_coverages, y_focuses = zip(*[(coverage, np.mean(focuses)) 
+                                         for coverage, focuses in mf_coverage_to_focuses.iteritems()
+                                         if len(focuses) > 250])
+        plt.figure(num=None, figsize=(4.3,3))
+        ax = plt.subplot(111)
+        plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15)
+        plt.scatter(x_coverages, y_entropies, lw=0, marker='o', c='k', s=25)
+#        plt.ylim(ymax=1.2)
+        plt.xlabel('Spread (miles)')
+        plt.ylabel('Entropy')
+#        ax.set_xscale('log')
+        plt.grid(True)
+        savefig(output_file_format%'entropy')
+        
+        plt.figure(num=None, figsize=(4.3,3))
+        ax = plt.subplot(111)
+        plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15)
+        plt.scatter(x_coverages, y_focuses, lw=0, marker='o', c='k', s=25)
+#        plt.ylim(ymax=1.2)
+        plt.xlabel('Spread (miles)')
+        plt.ylabel('Focus')
+#        ax.set_xscale('log')
+        plt.grid(True)
+        savefig(output_file_format%'focus')
+    @staticmethod
+    def peak_stats():
+        TIME_UNIT_IN_SECONDS = 10.*60.
+        output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
+        data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
+        peaks = map(itemgetter('peak_iid'), data)
+        peaks = filter(lambda i: i<288, peaks)
+        ltuo_peak_and_count = [(peak, len(list(ito_peaks)))
+                            for peak, ito_peaks in groupby(sorted(peaks))
+                            ]
+        ltuo_s_peak_and_count = sorted(ltuo_peak_and_count, key=itemgetter(0))        
+        current_count = 0.0
+        total_count = len(peaks)+0.
+        print total_count
+        ltuo_peak_and_cdf = []
+        for peak, count, in ltuo_s_peak_and_count:
+            current_count+=count
+            ltuo_peak_and_cdf.append([(peak+1)*TIME_UNIT_IN_SECONDS/(60.), current_count/total_count ])
+        x_peaks, y_cdf = zip(*ltuo_peak_and_cdf)
+        plt.figure(num=None, figsize=(4.3,3))
+        ax=plt.subplot(111)
+        ax.set_xscale('log')
+        plt.subplots_adjust(bottom=0.2, top=0.9, left=0.15)
+        plt.scatter(x_peaks, y_cdf, c='k', s=50, lw=0)
+        plt.xlabel('Time (minutes)')
+        plt.ylabel('CDF')
+        plt.xlim(xmin=5.)
+        plt.grid(True)
+#        plt.show()             
+        savefig(output_file_format%'peak_cdf')
+        plt.clf()
+        
+#        plt.figure(num=None, figsize=(4.3,3))
+        ax=plt.subplot(111)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        x_peaks, y_counts = zip(*ltuo_s_peak_and_count)
+        x_peaks = [(peak+1)*TIME_UNIT_IN_SECONDS/(60.) for peak in x_peaks]
+        y_counts = [count/total_count for count in y_counts]
+        plt.scatter(x_peaks, y_counts, c='k', s=50, lw=0)
+        plt.xlabel('Time (minutes)')
+        plt.ylabel('Distribution of hashtags')
+        plt.xlim(xmin=5)
+        plt.ylim(ymax=1., ymin=0.00005)
+        plt.grid(True)
+        savefig(output_file_format%'peak_dist')
     @staticmethod
     def run():
 #        DataAnalysis.hashtag_distribution_loglog()
@@ -198,7 +415,11 @@ class DataAnalysis():
 #        DataAnalysis.top_k_locations_on_world_map()
 #        DataAnalysis.content_affinity_vs_distance()
 #        DataAnalysis.temporal_affinity_vs_distance()
-        DataAnalysis.spatial_metrics_cdf()
+#        DataAnalysis.spatial_metrics_cdf()
+#        DataAnalysis.spatial_metrics_vs_occurrence_count()
+#        DataAnalysis.ef_plot()
+#        DataAnalysis.coverage_vs_spatial_properties()
+        DataAnalysis.peak_stats()
 
 if __name__ == '__main__':
     DataAnalysis.run()

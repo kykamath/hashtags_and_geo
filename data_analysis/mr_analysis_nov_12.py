@@ -321,7 +321,7 @@ class HashtagSpatialMetrics(ModifiedMRJob):
                                     GeneralMethods.group_items_by(ltuo_intvl_time_and_occ_location, key=itemgetter(0))
             ltuo_intvl_time_and_items.sort(key=itemgetter(0))
             first_time = ltuo_intvl_time_and_items[0][0]
-            ltuo_iid_and_occ_count = map(lambda (t, it): (first_time-t, len(it)), ltuo_intvl_time_and_items)
+            ltuo_iid_and_occ_count = map(lambda (t, it): (t-first_time, len(it)), ltuo_intvl_time_and_items)
             ltuo_location_and_items =\
                                     GeneralMethods.group_items_by(ltuo_intvl_time_and_occ_location, key=itemgetter(1))
             mf_location_to_occ_count = dict(map(lambda (l, it): (l, len(it)), ltuo_location_and_items))
