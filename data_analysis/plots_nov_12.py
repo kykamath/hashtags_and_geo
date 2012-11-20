@@ -367,7 +367,7 @@ class DataAnalysis():
         output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
         data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
         peaks = map(itemgetter('peak_iid'), data)
-        peaks = filter(lambda i: i<288, peaks)
+#        peaks = filter(lambda i: i<288, peaks)
         ltuo_peak_and_count = [(peak, len(list(ito_peaks)))
                             for peak, ito_peaks in groupby(sorted(peaks))
                             ]
