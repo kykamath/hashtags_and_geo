@@ -23,9 +23,9 @@ TIME_UNIT_IN_SECONDS = 60*10 # 10 minutes Used for iid only
 
 MIN_HASHTAG_OCCURENCES = 50
 #MAX_HASHTAG_OCCURENCES = 100000
-START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
+#START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 3, 31)
 #START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2011, 4, 28)
-
+START_TIME, END_TIME = datetime(2011, 3, 1), datetime(2012, 9, 30)
 
 #Distribution Paramter
 DISTRIBUTION_ACCURACY = 100
@@ -793,13 +793,13 @@ class MRAnalysis(ModifiedMRJob):
         pass
 #        return self.job_load_hashtag_object()
 #        return self.job_tuo_high_accuracy_lid_and_distribution()
-        return self.job_tuo_no_of_hashtags_and_count()
+#        return self.job_tuo_no_of_hashtags_and_count()
 #        return self.job_tuo_no_of_locations_and_count()
 #        return self.job_load_preprocessed_hashtag_object()
 #        return self.job_write_tuo_normalized_occurrence_count_and_distribution_value()
 #        return self.job_write_tweet_count_stats()
 #        return self.job_write_tuo_lid_and_distribution_value()
-#        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak()
+        return self.job_write_tuo_hashtag_and_occurrence_count_and_entropy_and_focus_and_coverage_and_peak()
 #        return self.job_write_tuo_rank_and_average_percentage_of_occurrences()
 #        return self.job_write_tuo_iid_and_interval_stats()
 #        return self.job_write_tuo_iid_and_perct_of_occurrence_difference()

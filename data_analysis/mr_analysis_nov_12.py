@@ -298,6 +298,20 @@ class DenseHashtagsSimilarityAndLag(ModifiedMRJob):
         return self.get_dense_hashtags.get_jobs() +\
                 [self.mr(mapper=self.mapper1, mapper_final=self.mapper_final1, reducer=self.reducer1)]+\
                 [self.mr(reducer=self.reducer2)]
+
+class HashtagsEntropyAndFocus(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(HashtagsEntropyAndFocus, self).__init__(*args, **kwargs)
+        self.get_dense_hashtags = GetDenseHashtags()
+#        self.mf_location_to_mf_neighbor_location_to_ltuo_hashtag_and_occ_time_and_nei_occ_time = defaultdict(dict)
+        self.mf_location_to_neighbor_locations = defaultdict(set)
+        self.mf_location_to_ltuo_hashtag_and_min_occ_time = defaultdict(list)
+
+    def steps(self): 
+        return self.get_dense_hashtags.get_jobs() +\
+                [self.mr(mapper=self.mapper1, mapper_final=self.mapper_final1, reducer=self.reducer1)]+\
+                [self.mr(reducer=self.reducer2)]
                 
 if __name__ == '__main__':
 #    DataStats.run()

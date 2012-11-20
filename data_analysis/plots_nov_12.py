@@ -129,15 +129,15 @@ class DataAnalysis():
             mf_distance_to_affinity_scores[distance].append(similarity_and_lag_object[type])
         ltuo_distance_and_num_samples = [(distance, affinity_scores) for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()]
         ltuo_distance_and_num_samples.sort(key=itemgetter(0))
-        for distance, num_samples in ltuo_distance_and_num_samples:
-            print distance, np.mean(num_samples), np.mean(filter_outliers(num_samples))
-        exit()
+#        for distance, num_samples in ltuo_distance_and_num_samples:
+#            print distance, len(num_samples), np.mean(num_samples), np.mean(filter_outliers(num_samples))
+#        exit()
         ltuo_distance_and_affinity_score = [(distance, np.mean(filter_outliers(affinity_scores))) 
                                             for distance, affinity_scores in mf_distance_to_affinity_scores.iteritems()
                                                 if len(affinity_scores)>100]
         x_distances, y_affinity_scores = zip(*sorted(ltuo_distance_and_affinity_score, key=itemgetter(0)))
         if type=='adoption_lag': 
-            y_affinity_scores = [y/(60.*60.) for y in y_affinity_scores]
+            y_affinity_scores = [y/(60.*60.*60) for y in y_affinity_scores]
         plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
         x_distances, y_affinity_scores = splineSmooth(x_distances, y_affinity_scores)
@@ -166,7 +166,7 @@ class DataAnalysis():
 #        DataAnalysis.hashtag_locations_distribution_loglog()
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location()
 #        DataAnalysis.top_k_locations_on_world_map()
-#        DataAnalysis.content_affinity_vs_distance()
+        DataAnalysis.content_affinity_vs_distance()
         DataAnalysis.temporal_affinity_vs_distance()
 
 if __name__ == '__main__':
