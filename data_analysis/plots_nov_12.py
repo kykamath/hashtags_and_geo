@@ -568,7 +568,7 @@ class DataAnalysis():
     @staticmethod
     def run():
 #        DataAnalysis.hashtag_distribution_loglog()
-#        DataAnalysis.hashtag_locations_distribution_loglog()
+        DataAnalysis.hashtag_locations_distribution_loglog()
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location()
 #        DataAnalysis.top_k_locations_on_world_map()
 #        DataAnalysis.content_affinity_vs_distance()
@@ -580,7 +580,7 @@ class DataAnalysis():
 #        DataAnalysis.peak_stats()
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution()
 #        DataAnalysis.ef_plots_for_peak()
-        DataAnalysis.norm_iid_vs_locality_measuers()
+#        DataAnalysis.norm_iid_vs_locality_measuers()
 
 if __name__ == '__main__':
     DataAnalysis.run()

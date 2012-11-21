@@ -462,12 +462,12 @@ class NormIIDSpatialMetrics(ModifiedMRJob):
 if __name__ == '__main__':
 #    DataStats.run()
 #    HashtagObjects.run()
-#    HashtagAndLocationDistribution.run()
+    HashtagAndLocationDistribution.run()
 #    GetDenseHashtags.run()
 #    DenseHashtagStats.run()
 #    DenseHashtagsDistributionInLocations.run()
 #    DenseHashtagsSimilarityAndLag.run()
 #    HashtagSpatialMetrics.run()
 #    IIDSpatialMetrics.run()
-    NormIIDSpatialMetrics.run()
+#    NormIIDSpatialMetrics.run()
     
