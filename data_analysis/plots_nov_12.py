@@ -18,6 +18,7 @@ from settings import f_dense_hashtags_similarity_and_lag
 from settings import f_hashtag_and_location_distribution
 from settings import f_hashtag_spatial_metrics
 from settings import f_iid_spatial_metrics
+from settings import f_norm_iid_spatial_metrics
 from settings import fld_data_analysis_results
 import matplotlib
 import matplotlib.pyplot as plt
@@ -488,83 +489,81 @@ class DataAnalysis():
             if peak < 144: return True
         plot_correlation_ef_plot(gt_288, 'gt_288', hashtags, focuses, entropies, peaks)
         plot_correlation_ef_plot(lt_6, 'lt_6', hashtags, focuses, entropies, peaks)
-#    @staticmethod
-#    def norm_iid_vs_locality_measuers(input_files_start_time, input_files_end_time, min_no_of_hashtags):
-#        input_file = f_tuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags)
-#        output_file = \
-#                fld_sky_drive_data_analysis_images%(input_files_start_time.strftime('%Y-%m-%d'), input_files_end_time.strftime('%Y-%m-%d'), min_no_of_hashtags) \
-#                + GeneralMethods.get_method_id() + '/%s.png'
-#        ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage = \
-#            [data for data in iterateJsonFromFile(input_file)]
-#        x_normalized_iids, y_entropies, y_focuses, y_distance_from_overall_entropy, y_distance_from_overall_focus, y_coverages = \
-#                                                     zip(*sorted([(data[0]*TIME_UNIT_IN_SECONDS/60, data[1][1], data[1][2], data[1][4], data[1][5], data[1][3]) 
-#                                                                      for data in 
-#                                                                        ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
-#                                                                  ])
-#                                                        )
-#        plt.figure(num=None, figsize=(6,3))
-#        plt.subplots_adjust(bottom=0.2, top=0.9)
-#        plt.subplot(111)
-#        plt.xlim(xmin=-20, xmax=200)
-##        plt.ylim(ymin=0.5, ymax=1.0)
-#        plt.plot(x_normalized_iids, y_coverages,  lw=1, c='k')
-#        plt.scatter(x_normalized_iids, y_coverages, lw=0, marker='o', s=50, c='k')
-#        plt.ylabel('Interval coverage')
-#        plt.xlabel('Minutes since peak')
-#        plt.grid(True)
-#        savefig(output_file%'coverage')
-#        plt.clf() 
-#        
-#        plt.figure(num=None, figsize=(6,3))
-#        plt.subplots_adjust(bottom=0.2, top=0.9)
-#        plt.subplot(111)
-#        plt.xlim(xmin=-20, xmax=120)
-#        plt.ylim(ymin=0.65, ymax=0.95)
-#        plt.plot(x_normalized_iids, y_entropies,  lw=1, c='k')
-#        plt.scatter(x_normalized_iids, y_entropies, lw=0, marker='o', s=50, c='k')
-#        plt.ylabel('Interval entropy')
-#        plt.xlabel('Minutes since peak')
-#        plt.grid(True)
-#        savefig(output_file%'entropy')
-#        plt.clf() 
-#        
-#        plt.figure(num=None, figsize=(6,3))
-#        plt.subplots_adjust(bottom=0.2, top=0.9)
-#        plt.subplot(111)
-#        plt.xlim(xmin=-20, xmax=400)
+    @staticmethod
+    def norm_iid_vs_locality_measuers():
+        TIME_UNIT_IN_SECONDS = 10.*60.
+        output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
+        ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage = \
+                    [data for data in FileIO.iterateJsonFromFile(f_norm_iid_spatial_metrics, remove_params_dict=True)]
+        x_normalized_iids, y_entropies, y_focuses, y_distance_from_overall_entropy, y_distance_from_overall_focus, y_coverages = \
+                                                     zip(*sorted([(data[0]*TIME_UNIT_IN_SECONDS/60, data[1][1], data[1][2], data[1][4], data[1][5], data[1][3]) 
+                                                                      for data in 
+                                                                        ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
+                                                                  ])
+                                                        )
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9)
+        plt.subplot(111)
+        plt.xlim(xmin=-20, xmax=200)
+#        plt.ylim(ymin=0.5, ymax=1.0)
+        plt.plot(x_normalized_iids, y_coverages,  lw=1, c='k')
+        plt.scatter(x_normalized_iids, y_coverages, lw=0, marker='o', s=50, c='k')
+        plt.ylabel('Interval coverage')
+        plt.xlabel('Minutes since peak')
+        plt.grid(True)
+        savefig(output_file_format%'coverage')
+        plt.clf() 
+        
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9)
+        plt.subplot(111)
+        plt.xlim(xmin=-20, xmax=120)
+        plt.ylim(ymin=0.55, ymax=0.70)
+        plt.plot(x_normalized_iids, y_entropies,  lw=1, c='k')
+        plt.scatter(x_normalized_iids, y_entropies, lw=0, marker='o', s=50, c='k')
+        plt.ylabel('Interval entropy')
+        plt.xlabel('Minutes since peak')
+        plt.grid(True)
+        savefig(output_file_format%'entropy')
+        plt.clf() 
+        
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9)
+        plt.subplot(111)
+        plt.xlim(xmin=-20, xmax=400)
 #        plt.ylim(ymin=1, ymax=3)
-#        plt.plot(x_normalized_iids, y_distance_from_overall_entropy, lw=1, c='k')                               
-#        plt.scatter(x_normalized_iids,  y_distance_from_overall_entropy, marker='o', s=50, c='k')
-#        plt.xlabel('Minutes since peak')
-#        plt.ylabel('Distance from overall entropy')
-#        plt.grid(True)
-#        savefig(output_file%'distace_from_overall_entropy')
-#        plt.clf()   
-#        
-#        plt.figure(num=None, figsize=(6,3))
-#        plt.subplots_adjust(bottom=0.2, top=0.9)
-#        plt.subplot(111)
-#        plt.xlim(xmin=-20, xmax=120)
-#        plt.ylim(ymin=0.738, ymax=0.79)
-#        plt.plot(x_normalized_iids, y_focuses, lw=1, c='k')
-#        plt.scatter(x_normalized_iids, y_focuses, lw=1, marker='o', s=50, c='k')     
-#        plt.xlabel('Minutes since peak')
-#        plt.ylabel('Interval focus')
-#        plt.grid(True)
-#        savefig(output_file%'focus')
-#        plt.clf()
-#        
-#        plt.figure(num=None, figsize=(6,3))
-#        plt.subplots_adjust(bottom=0.2, top=0.9)
-#        plt.subplot(111)
-#        plt.xlim(xmin=-20, xmax=400)
+        plt.plot(x_normalized_iids, y_distance_from_overall_entropy, lw=1, c='k')                               
+        plt.scatter(x_normalized_iids,  y_distance_from_overall_entropy, marker='o', s=50, c='k')
+        plt.xlabel('Minutes since peak')
+        plt.ylabel('Distance from overall entropy')
+        plt.grid(True)
+        savefig(output_file_format%'distace_from_overall_entropy')
+        plt.clf()   
+        
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9)
+        plt.subplot(111)
+        plt.xlim(xmin=-20, xmax=120)
+        plt.ylim(ymin=0.797, ymax=0.84)
+        plt.plot(x_normalized_iids, y_focuses, lw=1, c='k')
+        plt.scatter(x_normalized_iids, y_focuses, lw=1, marker='o', s=50, c='k')     
+        plt.xlabel('Minutes since peak')
+        plt.ylabel('Interval focus')
+        plt.grid(True)
+        savefig(output_file_format%'focus')
+        plt.clf()
+        
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9)
+        plt.subplot(111)
+        plt.xlim(xmin=-20, xmax=400)
 #        plt.ylim(ymin=-0.43, ymax=-0.19)
-#        plt.plot(x_normalized_iids, y_distance_from_overall_focus, lw=1, c='k')                               
-#        plt.scatter(x_normalized_iids, y_distance_from_overall_focus, marker='o', s=50, c='k')   
-#        plt.xlabel('Minutes since peak')
-#        plt.ylabel('Distance from overall focus')
-#        plt.grid(True)
-#        savefig(output_file%'distace_from_overall_focus')
+        plt.plot(x_normalized_iids, y_distance_from_overall_focus, lw=1, c='k')                               
+        plt.scatter(x_normalized_iids, y_distance_from_overall_focus, marker='o', s=50, c='k')   
+        plt.xlabel('Minutes since peak')
+        plt.ylabel('Distance from overall focus')
+        plt.grid(True)
+        savefig(output_file_format%'distace_from_overall_focus')
 
     @staticmethod
     def run():
@@ -580,7 +579,8 @@ class DataAnalysis():
 #        DataAnalysis.coverage_vs_spatial_properties()
 #        DataAnalysis.peak_stats()
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution()
-        DataAnalysis.ef_plots_for_peak()
+#        DataAnalysis.ef_plots_for_peak()
+        DataAnalysis.norm_iid_vs_locality_measuers()
 
 if __name__ == '__main__':
     DataAnalysis.run()
