@@ -567,7 +567,7 @@ class DataAnalysis():
 
     @staticmethod
     def run():
-#        DataAnalysis.hashtag_distribution_loglog()
+        DataAnalysis.hashtag_distribution_loglog()
         DataAnalysis.hashtag_locations_distribution_loglog()
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location()
 #        DataAnalysis.top_k_locations_on_world_map()
