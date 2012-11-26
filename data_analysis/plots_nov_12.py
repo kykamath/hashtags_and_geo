@@ -260,6 +260,25 @@ class DataAnalysis():
         plot_graph(entropies, 'Entropy')
         plot_coverage(coverages, 'Spread')
     @staticmethod
+    def entropy_examples():
+        output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
+        data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
+        ltuo_hashtag_and_num_of_occurrences_and_entropy =\
+                                                    map(
+                                                        itemgetter('hashtag', 'num_of_occurrenes', 'entropy'),
+                                                        data
+                                                        )
+        ltuo_hashtag_and_num_of_occurrences_and_entropy =\
+                                                    map(
+                                                        lambda (h, n, e): (h, n, round(e,0)),
+                                                        ltuo_hashtag_and_num_of_occurrences_and_entropy
+                                                        )
+        for entropy, entropy_data in \
+                GeneralMethods.group_items_by(ltuo_hashtag_and_num_of_occurrences_and_entropy, itemgetter(2)):
+            entropy_data.sort(key=itemgetter(1))
+            hashtags = map(itemgetter(0), entropy_data)
+            print entropy, len(entropy_data), hashtags[:25]
+    @staticmethod
     def ef_plot():
         output_file = fld_data_analysis_results%GeneralMethods.get_method_id()+'.png'
         data = [d for d in FileIO.iterateJsonFromFile(f_hashtag_spatial_metrics, remove_params_dict=True)]
@@ -567,8 +586,8 @@ class DataAnalysis():
 
     @staticmethod
     def run():
-        DataAnalysis.hashtag_distribution_loglog()
-        DataAnalysis.hashtag_locations_distribution_loglog()
+#        DataAnalysis.hashtag_distribution_loglog()
+#        DataAnalysis.hashtag_locations_distribution_loglog()
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location()
 #        DataAnalysis.top_k_locations_on_world_map()
 #        DataAnalysis.content_affinity_vs_distance()
@@ -581,6 +600,7 @@ class DataAnalysis():
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution()
 #        DataAnalysis.ef_plots_for_peak()
 #        DataAnalysis.norm_iid_vs_locality_measuers()
+        DataAnalysis.entropy_examples()
 
 if __name__ == '__main__':
     DataAnalysis.run()
