@@ -83,6 +83,9 @@ class DataStats(ModifiedMRJob):
             hashtags = list(chain(*values))
             yield 'num_of_unique_hashtags', {'num_of_unique_hashtags': len(set(hashtags))}
             
+class ExampleForCaverlee(ModifiedMRJob):
+    pass
+            
 class HashtagObjects(ModifiedMRJob):
     '''
     hashtag_object = {
