@@ -84,7 +84,30 @@ class DataStats(ModifiedMRJob):
             yield 'num_of_unique_hashtags', {'num_of_unique_hashtags': len(set(hashtags))}
             
 class ExampleForCaverlee(ModifiedMRJob):
-    pass
+    def __init__(self, *args, **kwargs):
+        super(ExampleForCaverlee, self).__init__(*args, **kwargs)
+        self.mf_location_to_occ_times = defaultdict(list)
+        self.valid_locations = ['18T_5857E_45125N', '18T_5849E_45115N']
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def mapper(self, key, line):
+        if False: yield # I'm a generator!
+        for hashtag, (location, occ_time) in iterateHashtagObjectInstances(line):
+            location = UTMConverter.getUTMIdFromLatLong(location[0], location[1], accuracy=100)
+            if location in self.valid_locations:
+                self.mf_location_to_occ_times[location].append(GeneralMethods.approximateEpoch(occ_time, 60*60))
+    def mapper_final(self):
+        for location, occ_times in self.mf_location_to_occ_times.iteritems():
+            ltuo_occ_time_and_count = [(t, len(l))
+                                                for t, l in GeneralMethods.group_items_by(occ_times, lambda item: item)]
+            yield location, ltuo_occ_time_and_count
+    def reducer(self, location, it_ltuo_occ_time_and_count):
+        ltuo_occ_time_and_count = [(t, sum(zip(*l)[1]))
+                                    for t, l in GeneralMethods.group_items_by(
+                                                                              list(chain(*it_ltuo_occ_time_and_count)),
+                                                                              key=itemgetter(0)
+                                                                              )
+                                   ]
+        yield location, {'location': location, 'ltuo_occ_time_and_count': ltuo_occ_time_and_count}
             
 class HashtagObjects(ModifiedMRJob):
     '''
@@ -464,8 +487,9 @@ class NormIIDSpatialMetrics(ModifiedMRJob):
 
 if __name__ == '__main__':
 #    DataStats.run()
+    ExampleForCaverlee.run()
 #    HashtagObjects.run()
-    HashtagAndLocationDistribution.run()
+#    HashtagAndLocationDistribution.run()
 #    GetDenseHashtags.run()
 #    DenseHashtagStats.run()
 #    DenseHashtagsDistributionInLocations.run()

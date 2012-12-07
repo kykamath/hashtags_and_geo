@@ -23,6 +23,7 @@ from settings import f_data_stats
 from settings import f_dense_data_stats
 from settings import f_dense_hashtag_distribution_in_locations
 from settings import f_dense_hashtags_similarity_and_lag
+from settings import f_example_for_caverlee
 from settings import f_iid_spatial_metrics
 from settings import f_hashtag_and_location_distribution
 from settings import f_hashtag_objects
@@ -59,6 +60,11 @@ class MRAnalysis():
     def data_stats(input_files_start_time, input_files_end_time):
         mr_class = DataStats
         output_file = f_data_stats
+        MRAnalysis.run_job(mr_class, output_file, input_files_start_time, input_files_end_time)
+    @staticmethod
+    def example_for_caverlee(input_files_start_time, input_files_end_time):
+        mr_class = ExampleForCaverlee
+        output_file = f_example_for_caverlee
         MRAnalysis.run_job(mr_class, output_file, input_files_start_time, input_files_end_time)
     @staticmethod
     def hashtag_objects(input_files_start_time, input_files_end_time):
@@ -104,8 +110,9 @@ class MRAnalysis():
     def run():
         input_files_start_time, input_files_end_time = datetime(2011, 2, 1), datetime(2012, 10, 31)
 #        MRAnalysis.data_stats(input_files_start_time, input_files_end_time)
+        MRAnalysis.example_for_caverlee(input_files_start_time, input_files_end_time)
 #        MRAnalysis.hashtag_objects(input_files_start_time, input_files_end_time)
-        MRAnalysis.hashtag_and_location_distribution(input_files_start_time, input_files_end_time)
+#        MRAnalysis.hashtag_and_location_distribution(input_files_start_time, input_files_end_time)
 #        MRAnalysis.dense_data_stats()
 #        MRAnalysis.dense_hashtag_distribution_in_locations()
 #        MRAnalysis.dense_hashtags_similarity_and_lag()
