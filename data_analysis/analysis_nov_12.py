@@ -11,6 +11,7 @@ from mr_analysis_nov_12 import DataStats
 from mr_analysis_nov_12 import DenseHashtagStats
 from mr_analysis_nov_12 import DenseHashtagsDistributionInLocations
 from mr_analysis_nov_12 import DenseHashtagsSimilarityAndLag
+from mr_analysis_nov_12 import ExampleForCaverlee
 from mr_analysis_nov_12 import HashtagAndLocationDistribution
 from mr_analysis_nov_12 import HashtagObjects
 from mr_analysis_nov_12 import HashtagSpatialMetrics
