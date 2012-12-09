@@ -87,12 +87,13 @@ class ExampleForCaverlee(ModifiedMRJob):
     def __init__(self, *args, **kwargs):
         super(ExampleForCaverlee, self).__init__(*args, **kwargs)
         self.mf_location_to_occ_times = defaultdict(list)
-        self.valid_locations = ['18T_5857E_45125N', '18T_5849E_45115N']
+#        self.valid_locations = ['18T_5857E_45125N', '18T_5849E_45115N']
+        self.valid_locations = ['18T_584E_4511N', '18T_585E_4512N']
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def mapper(self, key, line):
         if False: yield # I'm a generator!
         for hashtag, (location, occ_time) in iterateHashtagObjectInstances(line):
-            location = UTMConverter.getUTMIdFromLatLong(location[0], location[1], accuracy=100)
+            location = UTMConverter.getUTMIdFromLatLong(location[0], location[1], accuracy=1000)
             if location in self.valid_locations:
                 self.mf_location_to_occ_times[location].append(GeneralMethods.approximateEpoch(occ_time, 60*60))
     def mapper_final(self):
