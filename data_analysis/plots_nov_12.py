@@ -11,6 +11,8 @@ from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.geo import UTMConverter
 from library.geo import plotPointsOnWorldMap
+from library.plotting import AnchoredText
+from library.plotting import plot_anchored_text
 from library.plotting import savefig
 from library.plotting import splineSmooth
 from library.stats import filter_outliers
@@ -588,32 +590,41 @@ class DataAnalysis():
         savefig(output_file_format%'distace_from_overall_focus')
     @staticmethod
     def example_for_caverlee():
+#        valid_locations = ['18T_585E_4512N', '18T_587E_4514N']
+        mf_lid_to_location = dict([
+                                   ('18T_585E_4512N', 'Times Square'),
+                                   ('18T_587E_4514N', 'Central Park'),
+                                   ('18T_584E_4511N', 'Penn Station'),
+                                   ('18T_585E_4511N', 'Empire State Building'),
+                                   ])
+        output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
         for data in FileIO.iterateJsonFromFile(f_example_for_caverlee, remove_params_dict=True):
-            td = timedelta(hours=-5)
-            ltuo_occ_time_and_count = data['ltuo_occ_time_and_count']
-            ltuo_occ_time_and_count.sort(key=itemgetter(0))
-            occ_times, counts = zip(*ltuo_occ_time_and_count)
-            occ_times = map(datetime.fromtimestamp, occ_times)
-            occ_times = map(lambda d: d+td, occ_times)
-#            occ_hours = map(lambda d: d.weekday(), occ_times)
-            occ_hours = map(lambda d: d.hour, occ_times)
-            ltuo_occ_hour_and_count = zip(occ_hours, counts)
-            
-#            for h, l in GeneralMethods.group_items_by(ltuo_occ_hour_and_count, key=itemgetter(0)):
-#                print h, len(l)
-            
-            ltuo_occ_hour_and_count = [(h, sum(zip(*h_c)[1])) for h, h_c in
+            location = data['location']
+            if location in mf_lid_to_location:
+                td = timedelta(hours=-5)
+                ltuo_occ_time_and_count = data['ltuo_occ_time_and_count']
+                ltuo_occ_time_and_count.sort(key=itemgetter(0))
+                occ_times, counts = zip(*ltuo_occ_time_and_count)
+                occ_times = map(datetime.fromtimestamp, occ_times)
+                occ_times = map(lambda d: d+td, occ_times)
+                occ_hours = map(lambda d: d.hour, occ_times)
+                ltuo_occ_hour_and_count = zip(occ_hours, counts)
+                ltuo_occ_hour_and_count = [(h, sum(zip(*h_c)[1])) for h, h_c in
                                             GeneralMethods.group_items_by(ltuo_occ_hour_and_count, key=itemgetter(0))]
-#            for occ_hour, count in ltuo_occ_hour_and_count:
-#                print occ_hour, count
-                
-                
-#                exit()
-#            plt.plot_date(x_occ_times, counts, '-')
-            print data['location']
-            occ_hours, counts = zip(*ltuo_occ_hour_and_count)
-            plt.plot(occ_hours, counts)
-            plt.show()
+                occ_hours, counts = zip(*ltuo_occ_hour_and_count)
+                total_counts = sum(counts)+0.0
+                counts = map(lambda c: c/total_counts, counts)
+                plt.figure(num=None, figsize=(6,3))
+                plt.subplots_adjust(bottom=0.2, top=0.9)
+                plt.plot(occ_hours, counts, color='#EA00FF', lw=1)
+                plt.fill_between(occ_hours, counts, color='#EA00FF', alpha=0.25)
+                plt.ylabel('% of tweets')
+                plt.xlabel('Time of day')
+                plt.xlim(xmax=23)
+                plt.ylim(ymax=0.09)
+                plot_anchored_text(mf_lid_to_location[location], loc=2)
+                plt.grid(True)
+                savefig(output_file_format%mf_lid_to_location[location].replace(' ', '_'))
     @staticmethod
     def run():
 #        DataAnalysis.hashtag_distribution_loglog()
