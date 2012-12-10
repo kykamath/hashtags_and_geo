@@ -88,7 +88,7 @@ class ExampleForCaverlee(ModifiedMRJob):
         super(ExampleForCaverlee, self).__init__(*args, **kwargs)
         self.mf_location_to_occ_times = defaultdict(list)
 #        self.valid_locations = ['18T_5857E_45125N', '18T_5849E_45115N']
-        self.valid_locations = ['18T_584E_4511N', '18T_585E_4512N']
+        self.valid_locations = ['18T_584E_4511N', '18T_585E_4512N', '18T_585E_4511N', '18T_587E_4514N']
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def mapper(self, key, line):
         if False: yield # I'm a generator!

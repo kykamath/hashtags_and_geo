@@ -5,6 +5,7 @@ Created on Nov 14, 2012
 '''
 from collections import defaultdict
 from datetime import datetime
+from datetime import timedelta
 from itertools import groupby
 from library.classes import GeneralMethods
 from library.file_io import FileIO
@@ -588,21 +589,31 @@ class DataAnalysis():
     @staticmethod
     def example_for_caverlee():
         for data in FileIO.iterateJsonFromFile(f_example_for_caverlee, remove_params_dict=True):
+            td = timedelta(hours=-5)
             ltuo_occ_time_and_count = data['ltuo_occ_time_and_count']
             ltuo_occ_time_and_count.sort(key=itemgetter(0))
             occ_times, counts = zip(*ltuo_occ_time_and_count)
             occ_times = map(datetime.fromtimestamp, occ_times)
-            occ_hours = map(lambda d: d.weekday(), occ_times)
+            occ_times = map(lambda d: d+td, occ_times)
+#            occ_hours = map(lambda d: d.weekday(), occ_times)
+            occ_hours = map(lambda d: d.hour, occ_times)
             ltuo_occ_hour_and_count = zip(occ_hours, counts)
-            ltuo_occ_hour_and_count = [(h, sum(zip(*h_c)[0])) for h, h_c in
+            
+#            for h, l in GeneralMethods.group_items_by(ltuo_occ_hour_and_count, key=itemgetter(0)):
+#                print h, len(l)
+            
+            ltuo_occ_hour_and_count = [(h, sum(zip(*h_c)[1])) for h, h_c in
                                             GeneralMethods.group_items_by(ltuo_occ_hour_and_count, key=itemgetter(0))]
-            for occ_hour, count in ltuo_occ_hour_and_count:
-                print occ_hour, count
+#            for occ_hour, count in ltuo_occ_hour_and_count:
+#                print occ_hour, count
+                
+                
 #                exit()
 #            plt.plot_date(x_occ_times, counts, '-')
-#            occ_hours, counts = zip(*ltuo_occ_hour_and_count)
-#            plt.plot(occ_hours, counts)
-#            plt.show()
+            print data['location']
+            occ_hours, counts = zip(*ltuo_occ_hour_and_count)
+            plt.plot(occ_hours, counts)
+            plt.show()
     @staticmethod
     def run():
 #        DataAnalysis.hashtag_distribution_loglog()
