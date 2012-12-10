@@ -598,6 +598,8 @@ class DataAnalysis():
                                    ('18T_585E_4511N', 'Empire State Building'),
                                    ])
         output_file_format = fld_data_analysis_results%GeneralMethods.get_method_id()+'/%s.png'
+        subplot_num = 221
+#        plt.figure(num=None, figsize=(6,3))
         for data in FileIO.iterateJsonFromFile(f_example_for_caverlee, remove_params_dict=True):
             location = data['location']
             if location in mf_lid_to_location:
@@ -614,17 +616,19 @@ class DataAnalysis():
                 occ_hours, counts = zip(*ltuo_occ_hour_and_count)
                 total_counts = sum(counts)+0.0
                 counts = map(lambda c: c/total_counts, counts)
-                plt.figure(num=None, figsize=(6,3))
-                plt.subplots_adjust(bottom=0.2, top=0.9)
+                plt.subplot(subplot_num)
+#                plt.subplots_adjust(bottom=0.2, top=0.9)
+                subplot_num+=1
                 plt.plot(occ_hours, counts, color='#EA00FF', lw=1)
                 plt.fill_between(occ_hours, counts, color='#EA00FF', alpha=0.25)
-                plt.ylabel('% of tweets')
+#                plt.ylabel('% of tweets')
                 plt.xlabel('Time of day')
                 plt.xlim(xmax=23)
                 plt.ylim(ymax=0.09)
                 plot_anchored_text(mf_lid_to_location[location], loc=2)
                 plt.grid(True)
-                savefig(output_file_format%mf_lid_to_location[location].replace(' ', '_'))
+#                savefig(output_file_format%mf_lid_to_location[location].replace(' ', '_'))
+        savefig(output_file_format%'ny_locations')
     @staticmethod
     def run():
 #        DataAnalysis.hashtag_distribution_loglog()
