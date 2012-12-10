@@ -4,6 +4,7 @@ Created on Nov 14, 2012
 @author: krishnakamath
 '''
 from collections import defaultdict
+from datetime import datetime
 from itertools import groupby
 from library.classes import GeneralMethods
 from library.file_io import FileIO
@@ -15,6 +16,7 @@ from library.stats import filter_outliers
 from operator import itemgetter
 from settings import f_dense_hashtag_distribution_in_locations
 from settings import f_dense_hashtags_similarity_and_lag
+from settings import f_example_for_caverlee
 from settings import f_hashtag_and_location_distribution
 from settings import f_hashtag_spatial_metrics
 from settings import f_iid_spatial_metrics
@@ -583,7 +585,24 @@ class DataAnalysis():
         plt.ylabel('Distance from overall focus')
         plt.grid(True)
         savefig(output_file_format%'distace_from_overall_focus')
-
+    @staticmethod
+    def example_for_caverlee():
+        for data in FileIO.iterateJsonFromFile(f_example_for_caverlee, remove_params_dict=True):
+            ltuo_occ_time_and_count = data['ltuo_occ_time_and_count']
+            ltuo_occ_time_and_count.sort(key=itemgetter(0))
+            occ_times, counts = zip(*ltuo_occ_time_and_count)
+            occ_times = map(datetime.fromtimestamp, occ_times)
+            occ_hours = map(lambda d: d.weekday(), occ_times)
+            ltuo_occ_hour_and_count = zip(occ_hours, counts)
+            ltuo_occ_hour_and_count = [(h, sum(zip(*h_c)[0])) for h, h_c in
+                                            GeneralMethods.group_items_by(ltuo_occ_hour_and_count, key=itemgetter(0))]
+            for occ_hour, count in ltuo_occ_hour_and_count:
+                print occ_hour, count
+#                exit()
+#            plt.plot_date(x_occ_times, counts, '-')
+#            occ_hours, counts = zip(*ltuo_occ_hour_and_count)
+#            plt.plot(occ_hours, counts)
+#            plt.show()
     @staticmethod
     def run():
 #        DataAnalysis.hashtag_distribution_loglog()
@@ -600,8 +619,8 @@ class DataAnalysis():
 #        DataAnalysis.iid_vs_cumulative_distribution_and_peak_distribution()
 #        DataAnalysis.ef_plots_for_peak()
 #        DataAnalysis.norm_iid_vs_locality_measuers()
-        DataAnalysis.entropy_examples()
-
+#        DataAnalysis.entropy_examples()
+        DataAnalysis.example_for_caverlee()
 if __name__ == '__main__':
     DataAnalysis.run()
     
