@@ -1178,16 +1178,19 @@ class PredictHashtagsForLocationsPlots():
 class PerformanceByLocationAnalysis(object):
     @staticmethod
     def model_distribution():
+#        impact_ltuo_model_and_score = map(itemgetter('impact'), performances)
+#        accuracy_ltuo_model_and_score = map(itemgetter('accuracy'), performances)
+        
+        def plot_distribution(key):
+            ltuo_model_and_score = map(itemgetter(key), performances)
+            models = [sorted(lt_m_and_s, key=itemgetter(1))[-1][0] for lt_m_and_s in ltuo_model_and_score]
+            print key, [(m, len(list(l_items))) for m, l_items in GeneralMethods.group_items_by(models, key=lambda i:i)]
         performances = map(
                            itemgetter('performance_summary'),
                            FileIO.iterateJsonFromFile(f_performance_by_location, True)
                            )
-        impact_ltuo_model_and_score = map(itemgetter('impact'), performances)
-        accuracy_ltuo_model_and_score = map(itemgetter('accuracy'), performances)
-        
-        models = [sorted(lt_m_and_s, key=itemgetter(1))[-1][0] for lt_m_and_s in impact_ltuo_model_and_score]
-#        impact_models = [sorted(lt_m_and_s, key=itemgetter(1))[-1][0] for lt_m_and_s in accuracy_ltuo_model_and_score]
-        print [(m, len(list(l_items))) for m, l_items in GeneralMethods.group_items_by(models, key=lambda i:i)]
+        plot_distribution('impact')
+        plot_distribution('accuracy')
         
         
     @staticmethod
