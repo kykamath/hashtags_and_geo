@@ -1182,8 +1182,12 @@ class PerformanceByLocationAnalysis(object):
                            itemgetter('performance_summary'),
                            FileIO.iterateJsonFromFile(f_performance_by_location, True)
                            )
-        for p in performances:
-            print p
+        impact_ltuo_model_and_score = map(itemgetter('impact'), performances)
+        accuracy_ltuo_model_and_score = map(itemgetter('accuracy'), performances)
+        
+        impact_models = [sorted(lt_m_and_s, key=itemgetter(1)) for lt_m_and_s in impact_ltuo_model_and_score]
+        for i in impact_models: print i
+        
     @staticmethod
     def run():
         PerformanceByLocationAnalysis.model_distribution()
