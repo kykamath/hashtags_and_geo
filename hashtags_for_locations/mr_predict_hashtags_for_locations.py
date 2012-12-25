@@ -564,8 +564,8 @@ class PerformanceByLocation(ModifiedMRJob):
             yield location, performance_values
     def reducer(self, location, it_performance_values):
         performance_values = list(it_performance_values)
-        for pv in performance_values:
-            yield location, 1
+#        for pv in performance_values:
+        yield location, len(performance_values)
     def steps(self):
         return [self.mr(mapper=self.map, mapper_final=self.mapper_final, reducer=self.reducer)]
 #            self.mf_varying_parameter_to_metric_values[num_of_hashtags].append(performance_data['metric_value'])
