@@ -550,15 +550,15 @@ class PerformanceByLocation(ModifiedMRJob):
                                                                  float,
                                                                  performance_data['window_id'].split('_')
                                                                  )
-        if historical_time_interval == 21600 and \
-                prediction_time_interval == 7200 and \
-                performance_data['num_of_hashtags'] == 10:
-            performance = {
-                             'metric': performance_data['metric'],
-                             'prediction_method': performance_data['prediction_method'],
-                             'metric_value' : performance_data['metric_value']
-                         }
-            self.mf_location_to_performance_values[performance_data['location']].append(performance)
+#        if historical_time_interval == 21600 and \
+#                prediction_time_interval == 7200 and \
+#                performance_data['num_of_hashtags'] == 10:
+        performance = {
+                         'metric': performance_data['metric'],
+                         'prediction_method': performance_data['prediction_method'],
+                         'metric_value' : performance_data['metric_value']
+                     }
+        self.mf_location_to_performance_values[performance_data['location']].append(performance)
     def mapper_final(self):
         for location, performance_values in self.mf_location_to_performance_values.iteritems():
             yield location, [len(performance_values), performance_values]
