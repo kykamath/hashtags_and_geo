@@ -559,6 +559,8 @@ class PerformanceByLocation(ModifiedMRJob):
                 performance_data['num_of_hashtags'] == 10:
             print performance_data
         yield 1, 1
+    def steps(self):
+        return [self.mr(mapper=self.map)]
 #            self.mf_varying_parameter_to_metric_values[num_of_hashtags].append(performance_data['metric_value'])
 
 if __name__ == '__main__':
