@@ -1187,4 +1187,4 @@ class PerformanceByLocationAnalysis(object):
 if __name__ == '__main__':
 #    MRAnalysis.run()
 #    PredictHashtagsForLocationsPlots.run()
-    PerformanceByLocation.run()
+    PerformanceByLocationAnalysis.run()
