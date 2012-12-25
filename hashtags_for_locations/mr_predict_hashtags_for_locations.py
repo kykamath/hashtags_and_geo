@@ -568,7 +568,12 @@ class PerformanceByLocation(ModifiedMRJob):
                                 GeneralMethods.group_items_by(performance_values, key=itemgetter('prediction_method')):
             for metric, pvs_for_prediction_method_and_metric in \
                             GeneralMethods.group_items_by(pvs_for_prediction_method, key=itemgetter('metric')):
-                yield location, [prediction_method, metric, pvs_for_prediction_method[0]]
+                yield '', dict(
+                               location=location,
+                               prediction_method=prediction_method,
+                               metric=metric,
+                               metric_value=pvs_for_prediction_method[0]['metric_value']
+                            )
 #            for pv in pvs_for_prediction_method:
 #                yield prediction_method
     def steps(self):
