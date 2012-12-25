@@ -540,6 +540,8 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
 
 class PerformanceByLocation(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
+    def __init__(self, *args, **kwargs):
+        super(PerformanceByLocation, self).__init__(*args, **kwargs)
     def map(self, key, performance_data):
 #        if False: yield # I'm a generator!
         performance_data = cjson.decode(performance_data)
