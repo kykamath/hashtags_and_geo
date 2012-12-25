@@ -1184,6 +1184,7 @@ class PerformanceByLocationAnalysis(object):
         def plot_distribution(key):
             ltuo_model_and_score = map(itemgetter(key), performances)
             models = [sorted(lt_m_and_s, key=itemgetter(1))[-1][0] for lt_m_and_s in ltuo_model_and_score]
+            print len(models)
             print key, [(m, len(list(l_items))) for m, l_items in GeneralMethods.group_items_by(models, key=lambda i:i)]
         performances = map(
                            itemgetter('performance_summary'),
