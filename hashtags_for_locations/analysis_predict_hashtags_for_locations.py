@@ -1187,7 +1187,8 @@ class PerformanceByLocationAnalysis(object):
         
         models = [sorted(lt_m_and_s, key=itemgetter(1))[-1][0] for lt_m_and_s in impact_ltuo_model_and_score]
 #        impact_models = [sorted(lt_m_and_s, key=itemgetter(1))[-1][0] for lt_m_and_s in accuracy_ltuo_model_and_score]
-        for i in models: print i
+        print [(m, len(list(l_items))) for m, l_items in GeneralMethods.group_items_by(models, key=lambda i:i)]
+        
         
     @staticmethod
     def run():
