@@ -538,7 +538,28 @@ class PerformanceOfPredictingMethodsByVaryingParameter(ModifiedMRJob):
 #        return self.jobs_for_performance_of_predicting_by_varying_prediction_time_interval()
         return self.jobs_for_performance_of_predicting_by_varying_historical_time_interval()
 
+class PerformanceByLocation(ModifiedMRJob):
+    DEFAULT_INPUT_PROTOCOL='raw_value'
+    def map(self, key, performance_data):
+#        if False: yield # I'm a generator!
+        performance_data = cjson.decode(performance_data)
+#        num_of_hashtags = '%s::%s::%s'%(
+#                                        performance_data['num_of_hashtags'],
+#                                        performance_data['metric'],
+#                                        performance_data['prediction_method']
+#                                    )
+        historical_time_interval, prediction_time_interval = map(
+                                                                 float,
+                                                                 performance_data['window_id'].split('_')
+                                                                 )
+        if historical_time_interval == 21600 and \
+                prediction_time_interval == 7200 and \
+                performance_data['num_of_hashtags'] == 10:
+            print performance_data
+#            self.mf_varying_parameter_to_metric_values[num_of_hashtags].append(performance_data['metric_value'])
+
 if __name__ == '__main__':
 #    PredictingHastagsForLocations.run()
-    PerformanceOfPredictingMethodsByVaryingParameter.run()
+#    PerformanceOfPredictingMethodsByVaryingParameter.run()
+    PerformanceByLocation.run()
     
