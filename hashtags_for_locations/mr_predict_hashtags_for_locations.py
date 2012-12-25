@@ -563,7 +563,7 @@ class PerformanceByLocation(ModifiedMRJob):
         for location, performance_values in self.mf_location_to_performance_values.iteritems():
             yield location, performance_values
     def reducer(self, location, it_performance_values):
-        performance_values = list(it_performance_values)
+        performance_values = list(chain(*it_performance_values))
 #        for pv in performance_values:
         yield location, len(performance_values)
     def steps(self):
