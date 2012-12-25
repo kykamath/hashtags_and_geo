@@ -542,23 +542,28 @@ class PerformanceByLocation(ModifiedMRJob):
     DEFAULT_INPUT_PROTOCOL='raw_value'
     def __init__(self, *args, **kwargs):
         super(PerformanceByLocation, self).__init__(*args, **kwargs)
+        self.mf_location_to_performance_values = defaultdict(list)
     def map(self, key, performance_data):
-#        if False: yield # I'm a generator!
+        if False: yield # I'm a generator!
         performance_data = cjson.decode(performance_data)
         historical_time_interval, prediction_time_interval = map(
                                                                  float,
                                                                  performance_data['window_id'].split('_')
                                                                  )
-#        if historical_time_interval == 21600 and \
-#                prediction_time_interval == 7200 and \
-#                performance_data['num_of_hashtags'] == 10:
-        yield performance_data['location'], {
-                                             'metric': performance_data['metric'],
-                                             'prediction_method': performance_data['prediction_method'],
-                                             'metric_value' : performance_data['metric_value']
-                                             }
+        if historical_time_interval == 21600 and \
+                prediction_time_interval == 7200 and \
+                performance_data['num_of_hashtags'] == 10:
+            performance = {
+                             'metric': performance_data['metric'],
+                             'prediction_method': performance_data['prediction_method'],
+                             'metric_value' : performance_data['metric_value']
+                         }
+            self.mf_location_to_performance_values[performance_data['location']].append(performance)
+    def mapper_final(self):
+        for location, performance_values in self.mf_location_to_performance_values.iteritems():
+            yield location, [len(performance_values), performance_values]
     def steps(self):
-        return [self.mr(mapper=self.map)]
+        return [self.mr(mapper=self.map, mapper_final=self.mapper_final)]
 #            self.mf_varying_parameter_to_metric_values[num_of_hashtags].append(performance_data['metric_value'])
 
 if __name__ == '__main__':
