@@ -26,6 +26,7 @@ from mr_predict_hashtags_analysis import PARAMS_DICT
 from mr_predict_hashtags_analysis import TIME_UNIT_IN_SECONDS as BUCKET_WIDTH
 from mr_predict_hashtags_for_locations import EvaluationMetric
 from mr_predict_hashtags_for_locations import PredictingHastagsForLocations
+from mr_predict_hashtags_for_locations import PerformanceByLocation
 from mr_predict_hashtags_for_locations import PerformanceOfPredictingMethodsByVaryingParameter
 from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_FOLLOW_THE_LEADER
 from mr_predict_hashtags_for_locations import PREDICTION_METHOD_ID_HEDGING
@@ -68,7 +69,8 @@ f_impact_of_using_locations_to_predict = analysis_folder%'impact_of_using_locati
                                                                                 'impact_of_using_locations_to_predict'
 f_impact_of_using_location_to_predict_hashtag_with_mc_simulation = analysis_folder%\
                                                                 'impact_using_mc_simulation/impact_using_mc_simulation' 
-f_location_clusters = analysis_folder%'location_clusters/location_clusters'                                                                              
+f_location_clusters = analysis_folder%'location_clusters/location_clusters'
+f_performance_by_location = analysis_folder%'performance_by_location'                                                                      
 
 def with_gaussian_kde(y_values, x_range = (-1,1,100)):
     density = gaussian_kde(y_values)
@@ -123,6 +125,16 @@ class MRAnalysis():
         runMRJob(
                  PerformanceOfPredictingMethodsByVaryingParameter,
                  output_file,
+                 [input_file],
+                 jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
+                 )
+    @staticmethod
+    def performance_by_location():
+        input_file = '%s/prediction_performance_max_time_12/prediction_performance'%dfs_data_folder
+        print input_file
+        runMRJob(
+                 PerformanceByLocation,
+                 f_performance_by_location,
                  [input_file],
                  jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
                  )
@@ -197,6 +209,7 @@ class MRAnalysis():
 #        MRAnalysis.performance_of_predicting_by_varying_parameter(
 #                                                        f_performance_of_predicting_by_varying_historical_time_interval
 #                                                    )
+        MRAnalysis.performance_by_location()
 #        input_files_start_time, input_files_end_time = \
 #                                datetime(2011, 2, 1), datetime(2012, 8, 31)
 #        MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
@@ -208,7 +221,7 @@ class MRAnalysis():
 #        MRAnalysis.impact_using_mc_simulation()
 #        MRAnalysis.gap_occurrence_time_during_hashtag_lifetime()
 
-        MRAnalysis.location_clusters()
+#        MRAnalysis.location_clusters()
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
@@ -1163,5 +1176,5 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.location_clusters()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
+    MRAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
