@@ -550,15 +550,15 @@ class PerformanceByLocation(ModifiedMRJob):
                                                                  float,
                                                                  performance_data['window_id'].split('_')
                                                                  )
-        if historical_time_interval == 21600 and \
-                prediction_time_interval == 7200 and \
-                performance_data['num_of_hashtags'] == 10:
-            performance = {
-                             'metric': performance_data['metric'],
-                             'prediction_method': performance_data['prediction_method'],
-                             'metric_value' : performance_data['metric_value']
-                         }
-            self.mf_location_to_performance_values[performance_data['location']].append(performance)
+#        if historical_time_interval == 21600 and \
+#                prediction_time_interval == 7200 and \
+#                performance_data['num_of_hashtags'] == 10:
+        performance = {
+                         'metric': performance_data['metric'],
+                         'prediction_method': performance_data['prediction_method'],
+                         'metric_value' : performance_data['metric_value']
+                     }
+        self.mf_location_to_performance_values[performance_data['location']].append(performance)
     def mapper_final(self):
         for location, performance_values in self.mf_location_to_performance_values.iteritems():
             yield location, performance_values
@@ -566,7 +566,9 @@ class PerformanceByLocation(ModifiedMRJob):
         performance_values = list(chain(*it_performance_values))
         for prediction_method, pvs_for_prediction_method in \
                                 GeneralMethods.group_items_by(performance_values, key=itemgetter('prediction_method')):
-            yield location, [prediction_method, len(pvs_for_prediction_method)]
+            for metric, pvs_for_prediction_method_and_metric in \
+                            GeneralMethods.group_items_by(pvs_for_prediction_method, key=itemgetter('metric')):
+                yield location, [prediction_method, metric, pvs_for_prediction_method[0]]
 #            for pv in pvs_for_prediction_method:
 #                yield prediction_method
     def steps(self):
