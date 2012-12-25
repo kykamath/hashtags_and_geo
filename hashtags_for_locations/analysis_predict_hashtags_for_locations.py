@@ -1174,7 +1174,17 @@ class PredictHashtagsForLocationsPlots():
 #        PredictHashtagsForLocationsPlots.temp1()
 
 #        PredictHashtagsForLocationsPlots.location_clusters()
+
+class PerformanceByLocationAnalysis(object):
+    @staticmethod
+    def model_distribution():
+        for data in FileIO.iterateJsonFromFile(f_performance_by_location, remove_params_dict=True):
+            print data.keys()
+    @staticmethod
+    def run():
+        PerformanceByLocationAnalysis.model_distribution()
         
 if __name__ == '__main__':
-    MRAnalysis.run()
+#    MRAnalysis.run()
 #    PredictHashtagsForLocationsPlots.run()
+    PerformanceByLocation.run()
