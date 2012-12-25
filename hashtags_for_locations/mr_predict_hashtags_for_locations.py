@@ -564,18 +564,14 @@ class PerformanceByLocation(ModifiedMRJob):
             yield location, performance_values
     def reducer(self, location, it_performance_values):
         performance_values = list(chain(*it_performance_values))
+        performance_summary = []
         for prediction_method, pvs_for_prediction_method in \
                                 GeneralMethods.group_items_by(performance_values, key=itemgetter('prediction_method')):
             for metric, pvs_for_prediction_method_and_metric in \
                             GeneralMethods.group_items_by(pvs_for_prediction_method, key=itemgetter('metric')):
-                yield '', dict(
-                               location=location,
-                               prediction_method=prediction_method,
-                               metric=metric,
-                               metric_value=pvs_for_prediction_method[0]['metric_value']
-                            )
-#            for pv in pvs_for_prediction_method:
-#                yield prediction_method
+                performance_summary.append([prediction_method, metric, pvs_for_prediction_method[0]['metric_value']])
+        performance_summary.sort(key=itemgetter(0, 1))
+        yield '', dict(location=location, performance_summary=performance_summary)
     def steps(self):
         return [self.mr(mapper=self.map, mapper_final=self.mapper_final, reducer=self.reducer)]
 #            self.mf_varying_parameter_to_metric_values[num_of_hashtags].append(performance_data['metric_value'])
