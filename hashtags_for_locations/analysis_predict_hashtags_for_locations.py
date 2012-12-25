@@ -1185,8 +1185,9 @@ class PerformanceByLocationAnalysis(object):
         impact_ltuo_model_and_score = map(itemgetter('impact'), performances)
         accuracy_ltuo_model_and_score = map(itemgetter('accuracy'), performances)
         
-        impact_models = [sorted(lt_m_and_s, key=itemgetter(1)) for lt_m_and_s in impact_ltuo_model_and_score]
-        for i in impact_models: print i
+        models = [sorted(lt_m_and_s, key=itemgetter(1))[-1][0] for lt_m_and_s in impact_ltuo_model_and_score]
+#        impact_models = [sorted(lt_m_and_s, key=itemgetter(1))[-1][0] for lt_m_and_s in accuracy_ltuo_model_and_score]
+        for i in models: print i
         
     @staticmethod
     def run():
