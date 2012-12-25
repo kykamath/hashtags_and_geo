@@ -554,10 +554,10 @@ class PerformanceByLocation(ModifiedMRJob):
                                                                  float,
                                                                  performance_data['window_id'].split('_')
                                                                  )
-        if historical_time_interval == 21600 and \
-                prediction_time_interval == 7200 and \
-                performance_data['num_of_hashtags'] == 10:
-            yield 1, performance_data
+#        if historical_time_interval == 21600 and \
+#                prediction_time_interval == 7200 and \
+#                performance_data['num_of_hashtags'] == 10:
+        yield 1, performance_data
     def steps(self):
         return [self.mr(mapper=self.map)]
 #            self.mf_varying_parameter_to_metric_values[num_of_hashtags].append(performance_data['metric_value'])
