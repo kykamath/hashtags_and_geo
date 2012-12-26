@@ -1193,6 +1193,7 @@ class PerformanceByLocationAnalysis(object):
     def metric_distribution():
         def plot_distribution(key):
             ltuo_model_and_score = map(itemgetter(key), performances)
+            print ltuo_model_and_score[:5]
             scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
             print len(scores)
             print key, np.histogram(scores)
