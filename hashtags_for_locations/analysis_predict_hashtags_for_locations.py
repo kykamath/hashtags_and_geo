@@ -1178,9 +1178,6 @@ class PredictHashtagsForLocationsPlots():
 class PerformanceByLocationAnalysis(object):
     @staticmethod
     def model_distribution():
-#        impact_ltuo_model_and_score = map(itemgetter('impact'), performances)
-#        accuracy_ltuo_model_and_score = map(itemgetter('accuracy'), performances)
-        
         def plot_distribution(key):
             ltuo_model_and_score = map(itemgetter(key), performances)
             models = [sorted(lt_m_and_s, key=itemgetter(1))[-1][0] for lt_m_and_s in ltuo_model_and_score]
@@ -1192,11 +1189,22 @@ class PerformanceByLocationAnalysis(object):
                            )
         plot_distribution('impact')
         plot_distribution('accuracy')
-        
+    @staticmethod
+    def metric_distribution():
+        def plot_distribution(key):
+            ltuo_model_and_score = map(itemgetter(key), performances)
+            scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
+            print len(scores)
+            print key, np.histogram(scores)
+        performances = map(
+                           itemgetter('performance_summary'),
+                           FileIO.iterateJsonFromFile(f_performance_by_location, True)
+                           )
         
     @staticmethod
     def run():
-        PerformanceByLocationAnalysis.model_distribution()
+#        PerformanceByLocationAnalysis.model_distribution()
+        PerformanceByLocationAnalysis.metric_distribution()
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
