@@ -1200,6 +1200,8 @@ class PerformanceByLocationAnalysis(object):
                            itemgetter('performance_summary'),
                            FileIO.iterateJsonFromFile(f_performance_by_location, True)
                            )
+        plot_distribution('impact')
+        plot_distribution('accuracy')
         
     @staticmethod
     def run():
