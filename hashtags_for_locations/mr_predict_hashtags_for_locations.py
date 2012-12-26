@@ -569,7 +569,10 @@ class PerformanceByLocation(ModifiedMRJob):
                                 GeneralMethods.group_items_by(performance_values, key=itemgetter('prediction_method')):
             for metric, pvs_for_prediction_method_and_metric in \
                             GeneralMethods.group_items_by(pvs_for_prediction_method, key=itemgetter('metric')):
-                performance_summary[metric].append([prediction_method, pvs_for_prediction_method[0]['metric_value']])
+                performance_summary[metric].append([
+                                                    prediction_method,
+                                                    pvs_for_prediction_method_and_metric[0]['metric_value']
+                                            ])
         yield '', dict(location=location, performance_summary=performance_summary)
     def steps(self):
         return [self.mr(mapper=self.map, mapper_final=self.mapper_final, reducer=self.reducer)]

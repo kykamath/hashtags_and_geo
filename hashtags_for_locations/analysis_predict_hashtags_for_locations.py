@@ -1210,6 +1210,6 @@ class PerformanceByLocationAnalysis(object):
         PerformanceByLocationAnalysis.metric_distribution()
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
+    MRAnalysis.run()
 #    PredictHashtagsForLocationsPlots.run()
-    PerformanceByLocationAnalysis.run()
+#    PerformanceByLocationAnalysis.run()
