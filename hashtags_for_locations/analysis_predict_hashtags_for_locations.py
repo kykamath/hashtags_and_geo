@@ -1247,8 +1247,8 @@ class PerformanceByLocationAnalysis(object):
     @staticmethod
     def run():
 #        PerformanceByLocationAnalysis.model_distribution()
-        PerformanceByLocationAnalysis.metric_distribution()
-#        PerformanceByLocationAnalysis.geo_area_specific_distribution()
+#        PerformanceByLocationAnalysis.metric_distribution()
+        PerformanceByLocationAnalysis.geo_area_specific_distribution()
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
