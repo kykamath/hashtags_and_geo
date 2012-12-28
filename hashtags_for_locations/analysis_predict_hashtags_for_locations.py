@@ -1212,6 +1212,7 @@ class PerformanceByLocationAnalysis(object):
         def plot_distribution(key, locations):
             ltuo_model_and_score = map(itemgetter(key), performances)
             scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
+            print locations[:5]
             print len(scores), len(locations)
         raw_data = list(FileIO.iterateJsonFromFile(f_performance_by_location, True))
         locations = map(itemgetter('location'), raw_data)
