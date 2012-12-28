@@ -77,7 +77,7 @@ f_location_clusters = analysis_folder%'location_clusters/location_clusters'
 f_performance_by_location = analysis_folder%'performance_by_location'                                                                      
 
 us_boundary = [[24.527135,-127.792969], [49.61071,-59.765625]]
-south_america_boundary = [[-56.658016,-83.346357], 16.801425,-33.424482]
+south_america_boundary = [[-56.658016,-83.346357], [16.801425,-33.424482]]
 eu_boundary = [[34.883261,-16.022138], [71.015901,46.204425]]
 sea_boundry = [[-51.291441,92.259112], [28.918782,175.930987]]
 
