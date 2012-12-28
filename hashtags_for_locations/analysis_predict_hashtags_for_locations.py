@@ -1224,8 +1224,8 @@ class PerformanceByLocationAnalysis(object):
                         mf_us_boundary_to_scores[id].append(score)
                         break
             print np.histogram(scores, bins=20)
-            for us_boundary, scores_b in mf_us_boundary_to_scores.iteritems():
-                print us_boundary, np.histogram(scores_b, bins=20)
+            for boundary, scores_b in mf_us_boundary_to_scores.iteritems():
+                print boundary, np.histogram(scores_b, bins=20)
         raw_data = list(FileIO.iterateJsonFromFile(f_performance_by_location, True))
         getLocation = lambda lid: getLocationFromLid(lid.replace('_', ' '))
         locations = map(getLocation, map(itemgetter('location'), raw_data))
