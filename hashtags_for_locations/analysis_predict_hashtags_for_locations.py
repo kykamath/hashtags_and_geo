@@ -1198,7 +1198,6 @@ class PerformanceByLocationAnalysis(object):
     def metric_distribution():
         def plot_distribution(key):
             ltuo_model_and_score = map(itemgetter(key), performances)
-#            print ltuo_model_and_score[:5]
             scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
             print len(scores)
             print key, np.histogram(scores, bins=20)
@@ -1210,9 +1209,15 @@ class PerformanceByLocationAnalysis(object):
         plot_distribution('accuracy')
     @staticmethod
     def geo_area_specific_distribution():
-        for data in FileIO.iterateJsonFromFile(f_performance_by_location, True):
-            print data.keys()
-        
+        def plot_distribution(key, locations):
+            ltuo_model_and_score = map(itemgetter(key), performances)
+            scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
+            print len(scores), len(locations)
+        raw_data = FileIO.iterateJsonFromFile(f_performance_by_location, True)
+        locations = map(itemgetter('location'), raw_data)
+        performances = map(itemgetter('performance_summary'), raw_data)
+        plot_distribution('impact')
+        plot_distribution('accuracy')
     @staticmethod
     def run():
 #        PerformanceByLocationAnalysis.model_distribution()
