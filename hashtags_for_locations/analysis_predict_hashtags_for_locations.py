@@ -1237,7 +1237,7 @@ class PerformanceByLocationAnalysis(object):
                         break
             values, bins = np.histogram(scores, bins=20)
             values, bins = list(values), list(bins[:-1])
-            total = sum(values)
+            total = sum(values)+0.0
             values = map(lambda v: '%0.2f'%(v/total), values)
             print 9, values
             for boundary, scores_b in mf_us_boundary_to_scores.iteritems():
