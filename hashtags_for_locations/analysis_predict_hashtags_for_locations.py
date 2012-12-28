@@ -1237,11 +1237,11 @@ class PerformanceByLocationAnalysis(object):
                         break
             values, bins = np.histogram(scores, bins=10, density=True)
             values, bins = list(values), list(bins[:-1])
-            print values
+            print map(lambda v: '%0.2f'%v, values)
             for boundary, scores_b in mf_us_boundary_to_scores.iteritems():
                 values, bins = np.histogram(scores_b, bins=10, density=True)
                 values, bins = list(values), list(bins[:-1])
-                print boundary, values
+                print boundary, map(lambda v: '%0.2f'%v, values)
         raw_data = list(FileIO.iterateJsonFromFile(f_performance_by_location, True))
         getLocation = lambda lid: getLocationFromLid(lid.replace('_', ' '))
         locations = map(getLocation, map(itemgetter('location'), raw_data))
