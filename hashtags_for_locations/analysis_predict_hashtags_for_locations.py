@@ -1213,7 +1213,7 @@ class PerformanceByLocationAnalysis(object):
             ltuo_model_and_score = map(itemgetter(key), performances)
             scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
             print len(scores), len(locations)
-        raw_data = FileIO.iterateJsonFromFile(f_performance_by_location, True)
+        raw_data = list(FileIO.iterateJsonFromFile(f_performance_by_location, True))
         locations = map(itemgetter('location'), raw_data)
         performances = map(itemgetter('performance_summary'), raw_data)
         plot_distribution('impact', locations)
