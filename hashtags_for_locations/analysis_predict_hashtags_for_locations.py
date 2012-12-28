@@ -1200,11 +1200,21 @@ class PerformanceByLocationAnalysis(object):
         plot_distribution('accuracy')
     @staticmethod
     def metric_distribution():
+        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'_%s.png'
         def plot_distribution(key):
             ltuo_model_and_score = map(itemgetter(key), performances)
             scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
             values, bins = np.histogram(scores, bins=20)
             values, bins = list(values), list(bins[:-1])
+            values = map(lambda v: v+0.025, values)
+            plt.plot(bins, values, c='k')
+            plt.scatter(bins, values, c='k')
+            plt.grid(True)
+            ax = plt.subplot(111)
+#            ax.set_xscale('log')
+            plt.xlabel(key)
+            plt.ylabel('Distribution')
+            savefig(output_file_format%key)
             print len(values), len(bins)
             print list(values), list(bins)
         performances = map(
