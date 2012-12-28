@@ -1210,13 +1210,13 @@ class PerformanceByLocationAnalysis(object):
             plt.plot(bins, values, c='k')
             plt.scatter(bins, values, c='k')
             plt.grid(True)
+            print len(values), len(bins)
+            print list(values), list(bins)
             ax = plt.subplot(111)
 #            ax.set_xscale('log')
             plt.xlabel(key)
             plt.ylabel('Distribution')
             savefig(output_file_format%key)
-            print len(values), len(bins)
-            print list(values), list(bins)
         performances = map(
                            itemgetter('performance_summary'),
                            FileIO.iterateJsonFromFile(f_performance_by_location, True)
