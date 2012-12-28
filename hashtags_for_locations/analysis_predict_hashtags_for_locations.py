@@ -1216,8 +1216,8 @@ class PerformanceByLocationAnalysis(object):
         raw_data = FileIO.iterateJsonFromFile(f_performance_by_location, True)
         locations = map(itemgetter('location'), raw_data)
         performances = map(itemgetter('performance_summary'), raw_data)
-        plot_distribution('impact')
-        plot_distribution('accuracy')
+        plot_distribution('impact', locations)
+        plot_distribution('accuracy', locations)
     @staticmethod
     def run():
 #        PerformanceByLocationAnalysis.model_distribution()
