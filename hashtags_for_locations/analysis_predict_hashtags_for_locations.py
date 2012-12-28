@@ -1203,8 +1203,9 @@ class PerformanceByLocationAnalysis(object):
         def plot_distribution(key):
             ltuo_model_and_score = map(itemgetter(key), performances)
             scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
-            print len(scores)
-            print key, np.histogram(scores, bins=20)
+            values, bins = np.histogram(scores, bins=20)
+            print len(values), len(bins)
+            print list(values)
         performances = map(
                            itemgetter('performance_summary'),
                            FileIO.iterateJsonFromFile(f_performance_by_location, True)
@@ -1235,8 +1236,8 @@ class PerformanceByLocationAnalysis(object):
     @staticmethod
     def run():
 #        PerformanceByLocationAnalysis.model_distribution()
-#        PerformanceByLocationAnalysis.metric_distribution()
-        PerformanceByLocationAnalysis.geo_area_specific_distribution()
+        PerformanceByLocationAnalysis.metric_distribution()
+#        PerformanceByLocationAnalysis.geo_area_specific_distribution()
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
