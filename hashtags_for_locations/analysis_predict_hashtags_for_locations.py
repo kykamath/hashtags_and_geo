@@ -1205,7 +1205,7 @@ class PerformanceByLocationAnalysis(object):
             scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
             values, bins = np.histogram(scores, bins=20)
             print len(values), len(bins)
-            print list(values)
+            print list(values), list(bins[:-1])
         performances = map(
                            itemgetter('performance_summary'),
                            FileIO.iterateJsonFromFile(f_performance_by_location, True)
