@@ -1220,6 +1220,7 @@ class PerformanceByLocationAnalysis(object):
             mf_us_boundary_to_scores = defaultdict(list)
             for location, score in ltuo_location_and_score:
                 for id, boundary in zip(range(4), [us_boundary, south_america_boundary, eu_boundary, sea_boundry]):
+                    print id, boundary
                     if isWithinBoundingBox(location, boundary):
                         mf_us_boundary_to_scores[id].append(score)
                         break
