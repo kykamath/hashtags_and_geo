@@ -10,6 +10,9 @@ from dateutil.relativedelta import relativedelta
 from itertools import chain, groupby
 from library.classes import GeneralMethods
 from library.file_io import FileIO
+from library.geo import getLocationFromLid
+from library.geo import UTMConverter, plot_graph_clusters_on_world_map, plotPointsOnWorldMap
+from library.geo import UTMConverter, plot_graph_clusters_on_world_map, plotPointsOnWorldMap
 from library.geo import UTMConverter, plot_graph_clusters_on_world_map, plotPointsOnWorldMap
 from library.graphs import clusterUsingAffinityPropagation, clusterUsingMCLClustering
 from library.mrjobwrapper import runMRJob
@@ -1215,7 +1218,8 @@ class PerformanceByLocationAnalysis(object):
             print locations[:5]
             print len(scores), len(locations)
         raw_data = list(FileIO.iterateJsonFromFile(f_performance_by_location, True))
-        locations = map(itemgetter('location'), raw_data)
+        getLocation = lambda lid: getLocationFromLid(lid.replace('_', ' '))
+        locations = map(getLocation, map(itemgetter('location'), raw_data))
         performances = map(itemgetter('performance_summary'), raw_data)
         plot_distribution('impact', locations)
         plot_distribution('accuracy', locations)
