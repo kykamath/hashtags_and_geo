@@ -1223,7 +1223,7 @@ class PerformanceByLocationAnalysis(object):
                     if isWithinBoundingBox(location, boundary):
                         mf_us_boundary_to_scores[id].append(score)
                         break
-            print len(scores), len(locations), mf_us_boundary_to_scores.items()
+            print len(scores), len(locations), [(k, len(v)) for k, v in mf_us_boundary_to_scores.iteritems()]
         raw_data = list(FileIO.iterateJsonFromFile(f_performance_by_location, True))
         getLocation = lambda lid: getLocationFromLid(lid.replace('_', ' '))
         locations = map(getLocation, map(itemgetter('location'), raw_data))
