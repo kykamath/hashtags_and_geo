@@ -11,6 +11,7 @@ from itertools import chain, groupby
 from library.classes import GeneralMethods
 from library.file_io import FileIO
 from library.geo import getLocationFromLid
+from library.geo import isWithinBoundingBox
 from library.geo import UTMConverter, plot_graph_clusters_on_world_map, plotPointsOnWorldMap
 from library.geo import UTMConverter, plot_graph_clusters_on_world_map, plotPointsOnWorldMap
 from library.geo import UTMConverter, plot_graph_clusters_on_world_map, plotPointsOnWorldMap
@@ -1215,8 +1216,14 @@ class PerformanceByLocationAnalysis(object):
         def plot_distribution(key, locations):
             ltuo_model_and_score = map(itemgetter(key), performances)
             scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
-            print locations[:5]
-            print len(scores), len(locations)
+            ltuo_location_and_score = zip(locations, scores)
+            mf_us_boundary_to_scores = defaultdict(list)
+            for location, score in ltuo_location_and_score:
+                for id, boundary in zip(range(4), [us_boundary, south_america_boundary, eu_boundary, sea_boundry]):
+                    if isWithinBoundingBox(location, boundary):
+                        mf_us_boundary_to_scores[id].append(score)
+                        break
+            print len(scores), len(locations), sum([len(v) for k, v in mf_us_boundary_to_scores.iteritems()])
         raw_data = list(FileIO.iterateJsonFromFile(f_performance_by_location, True))
         getLocation = lambda lid: getLocationFromLid(lid.replace('_', ' '))
         locations = map(getLocation, map(itemgetter('location'), raw_data))
