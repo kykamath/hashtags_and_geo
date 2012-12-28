@@ -72,6 +72,11 @@ f_impact_of_using_location_to_predict_hashtag_with_mc_simulation = analysis_fold
 f_location_clusters = analysis_folder%'location_clusters/location_clusters'
 f_performance_by_location = analysis_folder%'performance_by_location'                                                                      
 
+us_boundary = [[24.527135,-127.792969], [49.61071,-59.765625]]
+south_america_boundary = [[-56.658016,-83.346357], 16.801425,-33.424482]
+eu_boundary = [[34.883261,-16.022138], [71.015901,46.204425]]
+sea_boundry = [[-51.291441,92.259112], [28.918782,175.930987]]
+
 def with_gaussian_kde(y_values, x_range = (-1,1,100)):
     density = gaussian_kde(y_values)
     xs = np.linspace(*x_range)
@@ -1203,11 +1208,16 @@ class PerformanceByLocationAnalysis(object):
                            )
         plot_distribution('impact')
         plot_distribution('accuracy')
+    @staticmethod
+    def geo_area_specific_distribution():
+        for data in FileIO.iterateJsonFromFile(f_performance_by_location, True):
+            print data.keys()
         
     @staticmethod
     def run():
-        PerformanceByLocationAnalysis.model_distribution()
-        PerformanceByLocationAnalysis.metric_distribution()
+#        PerformanceByLocationAnalysis.model_distribution()
+#        PerformanceByLocationAnalysis.metric_distribution()
+        PerformanceByLocationAnalysis.geo_area_specific_distribution()
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
