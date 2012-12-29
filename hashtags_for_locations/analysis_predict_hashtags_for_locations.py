@@ -1225,33 +1225,50 @@ class PerformanceByLocationAnalysis(object):
         plot_distribution('accuracy')
     @staticmethod
     def geo_area_specific_distribution():
+        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
         def plot_distribution(key, locations):
             ltuo_model_and_score = map(itemgetter(key), performances)
             scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
             ltuo_location_and_score = zip(locations, scores)
             mf_us_boundary_to_scores = defaultdict(list)
             for location, score in ltuo_location_and_score:
-                for id, boundary in zip(range(4), [us_boundary, south_america_boundary, eu_boundary, sea_boundry]):
+                for id, boundary in zip(
+                                        ['us', 'sa', 'eu', 'sea'],
+                                        [us_boundary, south_america_boundary, eu_boundary, sea_boundry]
+                                    ):
                     if isWithinBoundingBox(location, boundary):
                         mf_us_boundary_to_scores[id].append(score)
                         break
             values, bins = np.histogram(scores, bins=20)
             values, bins = list(values), list(bins[:-1])
             total = sum(values)+0.0
-            values = map(lambda v: '%0.2f'%(v/total), values)
-            print 9, values
+            values = map(lambda v: v/total, values)
+            PerformanceByLocationAnalysis.plot_distribution(bins, values, output_file_format%(key+'_global'))
             for boundary, scores_b in mf_us_boundary_to_scores.iteritems():
                 values, bins = np.histogram(scores_b, bins=20)
                 values, bins = list(values), list(bins[:-1])
                 total = sum(values)+0.0
-                values = map(lambda v: '%0.2f'%(v/total), values)
-                print boundary, values
+                values = map(lambda v: v/total, values)
+                PerformanceByLocationAnalysis.plot_distribution(bins, values, output_file_format%(key+'_'+boundary))
         raw_data = list(FileIO.iterateJsonFromFile(f_performance_by_location, True))
         getLocation = lambda lid: getLocationFromLid(lid.replace('_', ' '))
         locations = map(getLocation, map(itemgetter('location'), raw_data))
         performances = map(itemgetter('performance_summary'), raw_data)
         plot_distribution('impact', locations)
         plot_distribution('accuracy', locations)
+    @staticmethod
+    def plot_distribution(bins, values, output_file):
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9)
+        plt.subplot(111)
+        plt.plot(bins, values, lw=2, c='k')
+        plt.scatter(bins, values)
+        plt.xlim(xmin=-0.05, xmax=1.0)
+        plt.ylim(ymin=-0.05, ymax=0.30)
+        plt.ylabel('Distribution')
+        plt.xlabel('Score')
+        plt.grid(True)
+        savefig(output_file)
     @staticmethod
     def run():
 #        PerformanceByLocationAnalysis.model_distribution()
