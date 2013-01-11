@@ -1186,47 +1186,108 @@ class PredictHashtagsForLocationsPlots():
 
 class PerformanceByLocationAnalysis(object):
     @staticmethod
+    def location_distribution():
+        def get_boundary(location):
+            for id, boundary in zip(
+                                            ['us', 'sa', 'eu', 'sea'],
+                                            [us_boundary, south_america_boundary, eu_boundary, sea_boundry]
+                                        ):
+                        if isWithinBoundingBox(location, boundary): return id
+                        
+        raw_data = list(FileIO.iterateJsonFromFile(f_performance_by_location, True))
+        getLocation = lambda lid: getLocationFromLid(lid.replace('_', ' '))
+        locations = map(getLocation, map(itemgetter('location'), raw_data))
+        boundaries = filter(lambda b: b, map(get_boundary, locations))
+        mf_boundary_to_count = defaultdict(float)
+        for boundary in boundaries: mf_boundary_to_count[boundary]+=1
+        total = sum(mf_boundary_to_count.values())
+        ltuo_boundary_and_count = sorted(mf_boundary_to_count.items(), key=itemgetter(0))
+        print '\t'.join(list(zip(*ltuo_boundary_and_count)[0]))
+        print '\t'.join(map(str, map(lambda c: c/total, zip(*ltuo_boundary_and_count)[1])))
+    @staticmethod
     def model_distribution():
         def plot_distribution(key):
             ltuo_model_and_score = map(itemgetter(key), performances)
             models = [sorted(lt_m_and_s, key=itemgetter(1))[-1][0] for lt_m_and_s in ltuo_model_and_score]
-            print len(models)
-            print key, [(m, len(list(l_items))) for m, l_items in GeneralMethods.group_items_by(models, key=lambda i:i)]
-        performances = map(
-                           itemgetter('performance_summary'),
-                           FileIO.iterateJsonFromFile(f_performance_by_location, True)
-                           )
+            total = len(models) + 0.0
+            ltuo_model_and_value = [(m, len(list(l_items))/total) 
+                                                for m, l_items in GeneralMethods.group_items_by(models, key=lambda i:i)]
+            print key
+            values = zip(*ltuo_model_and_value)[1]
+            print '\t'.join(['overall'] + map(str, list(values)))
+            ltuo_location_and_model = zip(locations, models)
+            mf_boundary_to_models= defaultdict(dict)
+            for location, model in ltuo_location_and_model:
+                for id, boundary in zip(
+                                        ['us', 'sa', 'eu', 'sea'],
+                                        [us_boundary, south_america_boundary, eu_boundary, sea_boundry]
+                                    ):
+                    if isWithinBoundingBox(location, boundary):
+                        if model not in mf_boundary_to_models[id]: mf_boundary_to_models[id][model]=0.0
+                        mf_boundary_to_models[id][model]+=1
+                        break
+            
+            for boundary, mf_model_to_count in mf_boundary_to_models.iteritems():
+                total = sum(mf_model_to_count.values()) + 0.0
+                ltuo_model_and_value = sorted([(m, c/total)for m, c in mf_model_to_count.items()], key=itemgetter(0))
+                values = zip(*ltuo_model_and_value)[1]
+                print '\t'.join([boundary] + map(str, list(values)))
+            print '\t'.join(list(zip(*ltuo_model_and_value)[0]))
+        raw_data = list(FileIO.iterateJsonFromFile(f_performance_by_location, True))
+        getLocation = lambda lid: getLocationFromLid(lid.replace('_', ' '))
+        locations = map(getLocation, map(itemgetter('location'), raw_data))
+        performances = map(itemgetter('performance_summary'), raw_data)
         plot_distribution('impact')
         plot_distribution('accuracy')
     @staticmethod
     def metric_distribution():
-        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'_%s.png'
+        output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
         def plot_distribution(key):
-            ltuo_model_and_score = map(itemgetter(key), performances)
-#            ax = plt.subplot(111)
+            plt.figure(num=None, figsize=(4.3,3))
+            ltuo_model_and_score = map(itemgetter(key.lower()), performances)
             scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
             values, bins = np.histogram(scores, bins=20)
             values, bins = list(values), list(bins[:-1])
+            total = sum(values) + 0.0
             bins = map(lambda v: v+0.025, bins)
-            print len(values), len(bins)
-            print list(values), list(bins)
-            plt.plot(bins, values, c='k')
+            values = map(lambda v: v/total, values)
+            plt.plot(bins, values, c='k', lw=2)
             plt.scatter(bins, values, c='k')
             plt.grid(True)
-#            ax.set_xscale('log')
             plt.xlabel(key)
-            plt.ylabel('Distribution')
-            savefig(output_file_format%key)
+            plt.ylabel('% of locations')
+            savefig(output_file_format%(GeneralMethods.get_method_id()+ '_' +key))
+        def plot_cdf(key):
+            plt.figure(num=None, figsize=(4.3,3))
+            ltuo_model_and_score = map(itemgetter(key.lower()), performances)
+            scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
+            values, bins = np.histogram(scores, bins=20)
+            values, bins = list(values), list(bins[:-1])
+            total = sum(values) + 0.0
+            bins = map(lambda v: v+0.025, bins)
+            values = map(lambda v: v/total, values)
+            values = getInverseCumulativeDistribution(values)
+            plt.plot(bins, values, c='k', lw=2)
+            plt.scatter(bins, values, c='k')
+            plt.grid(True)
+            plt.xlabel(key)
+            plt.ylabel('CCDF of locations')
+            savefig(output_file_format%(GeneralMethods.get_method_id()+ '_' +key))
         performances = map(
                            itemgetter('performance_summary'),
                            FileIO.iterateJsonFromFile(f_performance_by_location, True)
                            )
-        plot_distribution('impact')
-        plot_distribution('accuracy')
+        plot_distribution('Impact')
+        plot_distribution('Accuracy')
+        plot_cdf('Impact')
+        plot_cdf('Accuracy')
     @staticmethod
     def geo_area_specific_distribution():
         output_file_format = fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'/%s.png'
         def plot_distribution(key, locations):
+            plt.figure(num=None, figsize=(6,3))
+            plt.subplots_adjust(bottom=0.2, top=0.9)
+            plt.subplot(111)
             ltuo_model_and_score = map(itemgetter(key), performances)
             scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
             ltuo_location_and_score = zip(locations, scores)
@@ -1243,13 +1304,28 @@ class PerformanceByLocationAnalysis(object):
             values, bins = list(values), list(bins[:-1])
             total = sum(values)+0.0
             values = map(lambda v: v/total, values)
-            PerformanceByLocationAnalysis.plot_distribution(bins, values, output_file_format%(key+'_global'))
+            values = getInverseCumulativeDistribution(values)
+            plt.plot(bins, values, label='WW')
+#            PerformanceByLocationAnalysis.plot_distribution(bins, values, output_file_format%(key+'_global'))
             for boundary, scores_b in mf_us_boundary_to_scores.iteritems():
                 values, bins = np.histogram(scores_b, bins=20)
                 values, bins = list(values), list(bins[:-1])
-                total = sum(values)+0.0
-                values = map(lambda v: v/total, values)
-                PerformanceByLocationAnalysis.plot_distribution(bins, values, output_file_format%(key+'_'+boundary))
+                total = sum(values) + 0.0
+                values = map(lambda v: v / total, values)
+                values = getInverseCumulativeDistribution(values)
+#                PerformanceByLocationAnalysis.plot_distribution(
+#                                                                bins, 
+#                                                                values, 
+#                                                                output_file_format % (key + '_' + boundary)
+#                                                                )
+                plt.plot(bins, values, label=boundary)
+            plt.legend(loc=3)
+            plt.xlim(xmin=-0.1, xmax=1.2)
+            plt.ylim(ymin=-0.1, ymax=1.2)
+            plt.ylabel('Distribution')
+            plt.xlabel('Score')
+            plt.grid(True)
+            savefig(output_file_format%key)
         raw_data = list(FileIO.iterateJsonFromFile(f_performance_by_location, True))
         getLocation = lambda lid: getLocationFromLid(lid.replace('_', ' '))
         locations = map(getLocation, map(itemgetter('location'), raw_data))
@@ -1271,9 +1347,10 @@ class PerformanceByLocationAnalysis(object):
         savefig(output_file)
     @staticmethod
     def run():
+        PerformanceByLocationAnalysis.location_distribution()
 #        PerformanceByLocationAnalysis.model_distribution()
 #        PerformanceByLocationAnalysis.metric_distribution()
-        PerformanceByLocationAnalysis.geo_area_specific_distribution()
+#        PerformanceByLocationAnalysis.geo_area_specific_distribution()
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
