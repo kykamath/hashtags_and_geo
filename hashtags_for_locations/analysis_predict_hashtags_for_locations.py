@@ -3,12 +3,15 @@ Created on Sep 26, 2012
 
 @author: krishnakamath
 '''
+import sys
+sys.path.append('../')
 from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from itertools import chain, groupby
-from hashtags_for_locations.models import PREDICTION_MODELS_PROPERTIES, ModelSelectionHistory
+from hashtags_for_locations.models import ModelSelectionHistory
+from hashtags_for_locations.models import PREDICTION_MODELS_PROPERTIES
 from hashtags_for_locations.plots import MAP_FROM_MODEL_TO_COLOR
 from hashtags_for_locations.plots import MAP_FROM_MODEL_TO_MARKER
 from hashtags_for_locations.plots import MAP_FROM_MODEL_TO_MODEL_TYPE
