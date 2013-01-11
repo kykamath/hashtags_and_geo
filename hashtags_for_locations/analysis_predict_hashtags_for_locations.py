@@ -1482,7 +1482,7 @@ class PerformanceByLocationAnalysis(object):
             plt.plot(x_no_of_occurrences_at_location_bins, y_fitted_mean_flipping_ratios, lw=2, c=MAP_FROM_MODEL_TO_COLOR[learning_type])
         plt.xlabel('Footprint density', fontsize=18), plt.ylabel('Flipping ratio', fontsize=18)
         plt.legend()
-        savefig(fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png')    
+        savefig(fld_google_drive_data_analysis%(GeneralMethods.get_method_id()+'.png'))    
 #        file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
 #        FileIO.createDirectoryForFile(file_learning_analysis)
 #        plt.show()
