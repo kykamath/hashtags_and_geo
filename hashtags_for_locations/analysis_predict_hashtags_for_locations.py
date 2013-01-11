@@ -1428,11 +1428,9 @@ class PerformanceByLocationAnalysis(object):
                      )
         plt.legend()
         plt.xlabel('Learning lag (hours)', fontsize=18), plt.ylabel('Percentage of locations that flipped', fontsize=18)
-        savefig(fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png')    
+        savefig(fld_google_drive_data_analysis%'learner_flipping_time_series.png')    
     @staticmethod
     def flipping_ratio_correlation_with_no_of_occurrences_at_location(learning_types, no_of_hashtags):
-        print fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
-        exit()
         for learning_type in learning_types:
             NO_OF_OCCURRENCES_BIN_SIZE= 2000
             # Load flipping ratio data.
@@ -1484,7 +1482,7 @@ class PerformanceByLocationAnalysis(object):
             plt.plot(x_no_of_occurrences_at_location_bins, y_fitted_mean_flipping_ratios, lw=2, c=MAP_FROM_MODEL_TO_COLOR[learning_type])
         plt.xlabel('Footprint density', fontsize=18), plt.ylabel('Flipping ratio', fontsize=18)
         plt.legend()
-        savefig(fld_google_drive_data_analysis%(GeneralMethods.get_method_id()+'.png'))    
+        savefig(fld_google_drive_data_analysis%'flipping_ratio_correlation_with_no_of_occurrences_at_location.png')    
 #        file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
 #        FileIO.createDirectoryForFile(file_learning_analysis)
 #        plt.show()
@@ -1497,12 +1495,12 @@ class PerformanceByLocationAnalysis(object):
 #        PerformanceByLocationAnalysis.metric_distribution()
 #        PerformanceByLocationAnalysis.geo_area_specific_distribution()
 #        PerformanceByLocationAnalysis.top_and_bottom_locations()
-#        PerformanceByLocationAnalysis.learner_flipping_time_series(
-#                                                                   [
-#                                                                    ModelSelectionHistory.FOLLOW_THE_LEADER,
-#                                                                    ModelSelectionHistory.HEDGING_METHOD
-#                                                                    ],
-#                                                                   4)
+        PerformanceByLocationAnalysis.learner_flipping_time_series(
+                                                                   [
+                                                                    ModelSelectionHistory.FOLLOW_THE_LEADER,
+                                                                    ModelSelectionHistory.HEDGING_METHOD
+                                                                    ],
+                                                                   4)
         PerformanceByLocationAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location(
                                                                    [
                                                                     ModelSelectionHistory.FOLLOW_THE_LEADER,
