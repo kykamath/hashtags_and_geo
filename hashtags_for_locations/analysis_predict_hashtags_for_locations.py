@@ -1431,6 +1431,8 @@ class PerformanceByLocationAnalysis(object):
         savefig(fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png')    
     @staticmethod
     def flipping_ratio_correlation_with_no_of_occurrences_at_location(learning_types, no_of_hashtags):
+        print fld_google_drive_data_analysis%GeneralMethods.get_method_id()+'.png'
+        exit()
         for learning_type in learning_types:
             NO_OF_OCCURRENCES_BIN_SIZE= 2000
             # Load flipping ratio data.
