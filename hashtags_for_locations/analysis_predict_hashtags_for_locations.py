@@ -1495,7 +1495,13 @@ class PerformanceByLocationAnalysis(object):
 #        PerformanceByLocationAnalysis.metric_distribution()
 #        PerformanceByLocationAnalysis.geo_area_specific_distribution()
 #        PerformanceByLocationAnalysis.top_and_bottom_locations()
-        PerformanceByLocationAnalysis.learner_flipping_time_series(
+#        PerformanceByLocationAnalysis.learner_flipping_time_series(
+#                                                                   [
+#                                                                    ModelSelectionHistory.FOLLOW_THE_LEADER,
+#                                                                    ModelSelectionHistory.HEDGING_METHOD
+#                                                                    ],
+#                                                                   4)
+        PerformanceByLocationAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location(
                                                                    [
                                                                     ModelSelectionHistory.FOLLOW_THE_LEADER,
                                                                     ModelSelectionHistory.HEDGING_METHOD
