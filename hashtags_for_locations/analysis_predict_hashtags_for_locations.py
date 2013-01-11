@@ -62,6 +62,11 @@ import time
 
 TIME_UNIT_IN_SECONDS = 60*60
 
+PREDICTION_MODELS_PROPERTIES = {
+                                 'follow_the_leader': {'label': 'Deterministic Rein. Learning', 'marker': 'd'},
+                                 'hedging_method': {'label': 'Randomized Rein. Learning', 'marker': '>'},
+                                 }
+
 dfs_data_folder = 'hdfs:///user/kykamath/geo/hashtags/'
 hdfs_input_folder = 'hdfs:///user/kykamath/geo/hashtags/%s/'
 analysis_folder = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/predict_hashtags_for_locations/%s'
@@ -1389,6 +1394,9 @@ class PerformanceByLocationAnalysis(object):
 #        get_top_and_bottom_locations('accuracy', locations)
     @staticmethod
     def learner_flipping_time_series(learning_types, no_of_hashtags):
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9)
+        plt.subplot(111)
         for learning_type in learning_types:
             input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/'+\
                             'testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
@@ -1426,13 +1434,17 @@ class PerformanceByLocationAnalysis(object):
                         label=PREDICTION_MODELS_PROPERTIES[learning_type]['label'],
                         marker=MAP_FROM_MODEL_TO_MARKER[learning_type]
                      )
+        plt.grid(True)
         plt.legend()
-        plt.xlabel('Learning lag (hours)', fontsize=18), plt.ylabel('Percentage of locations that flipped', fontsize=18)
+        plt.xlabel('Time (hours)'), plt.ylabel('% of locations that flipped')
         savefig(fld_google_drive_data_analysis%'learner_flipping_time_series.png')    
     @staticmethod
     def flipping_ratio_correlation_with_no_of_occurrences_at_location(learning_types, no_of_hashtags):
+        plt.figure(num=None, figsize=(6,3))
+        plt.subplots_adjust(bottom=0.2, top=0.9)
+        plt.subplot(111)
         for learning_type in learning_types:
-            NO_OF_OCCURRENCES_BIN_SIZE= 2000
+            NO_OF_OCCURRENCES_BIN_SIZE= 200
             # Load flipping ratio data.
             map_from_location_to_flipping_ratio = dict(LearningAnalysis._get_flipping_ratio_for_all_locations(learning_type, no_of_hashtags))
             # Load no. of occurrences data
@@ -1469,18 +1481,25 @@ class PerformanceByLocationAnalysis(object):
                 if len(flipping_ratios) >= 5: map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin] = flipping_ratios
                 else: del map_from_no_of_occurrences_at_location_bin_to_flipping_ratios[no_of_occurrences_at_location_bin]
             # Plot data.
+#            for no_of_occurrences_at_location_bin, flipping_ratios in \
+#                  sorted(map_from_no_of_occurrences_at_location_bin_to_flipping_ratios.iteritems(), key=itemgetter(0)):
+#                print no_of_occurrences_at_location_bin, len(flipping_ratios)
             x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios = zip(*[ (no_of_occurrences_at_location_bin, np.mean(flipping_ratios)) 
                   for no_of_occurrences_at_location_bin, flipping_ratios in 
                   sorted(map_from_no_of_occurrences_at_location_bin_to_flipping_ratios.iteritems(), key=itemgetter(0))
+#                  if len(flipping_ratios) > 10
                   ])
             pearsonCoeff, p_value = scipy.stats.pearsonr(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios)
             print round(pearsonCoeff,2), round(p_value, 2)
             x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios = np.array(list(x_no_of_occurrences_at_location_bins)), np.array(list(y_mean_flipping_ratios))
             parameters_after_fitting = CurveFit.getParamsAfterFittingData(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios, CurveFit.lineFunction, [0., 0.])
             y_fitted_mean_flipping_ratios = CurveFit.getYValues(CurveFit.lineFunction, parameters_after_fitting, x_no_of_occurrences_at_location_bins)
-            plt.scatter(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios, lw=0, c=MAP_FROM_MODEL_TO_COLOR[learning_type], label=PREDICTION_MODELS_PROPERTIES[learning_type]['label'], marker=MAP_FROM_MODEL_TO_MARKER[learning_type])
-            plt.plot(x_no_of_occurrences_at_location_bins, y_fitted_mean_flipping_ratios, lw=2, c=MAP_FROM_MODEL_TO_COLOR[learning_type])
-        plt.xlabel('Footprint density', fontsize=18), plt.ylabel('Flipping ratio', fontsize=18)
+            plt.scatter(x_no_of_occurrences_at_location_bins, y_mean_flipping_ratios, lw=0, c='k', marker=MAP_FROM_MODEL_TO_MARKER[learning_type])
+            plt.plot(x_no_of_occurrences_at_location_bins, y_fitted_mean_flipping_ratios, lw=1, c='k')
+        plt.grid(True)
+#        plt.legend()
+        plt.xlim(xmin=0.0)
+        plt.xlabel('Hastag density'), plt.ylabel('Flipping ratio')
         plt.legend()
         savefig(fld_google_drive_data_analysis%'flipping_ratio_correlation_with_no_of_occurrences_at_location.png')    
 #        file_learning_analysis = './images/%s.png'%GeneralMethods.get_method_id()
@@ -1501,12 +1520,12 @@ class PerformanceByLocationAnalysis(object):
                                                                     ModelSelectionHistory.HEDGING_METHOD
                                                                     ],
                                                                    4)
-        PerformanceByLocationAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location(
-                                                                   [
-                                                                    ModelSelectionHistory.FOLLOW_THE_LEADER,
-                                                                    ModelSelectionHistory.HEDGING_METHOD
-                                                                    ],
-                                                                   4)
+#        PerformanceByLocationAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location(
+#                                                                   [
+#                                                                    ModelSelectionHistory.FOLLOW_THE_LEADER,
+##                                                                    ModelSelectionHistory.HEDGING_METHOD
+#                                                                    ],
+#                                                                   4)
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
