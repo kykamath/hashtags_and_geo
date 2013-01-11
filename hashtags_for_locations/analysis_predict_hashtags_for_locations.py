@@ -1383,7 +1383,8 @@ class PerformanceByLocationAnalysis(object):
     @staticmethod
     def learner_flipping_time_series(learning_types, no_of_hashtags):
         for learning_type in learning_types:
-            input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
+            input_weight_file = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/'+\
+                            'testing/models/2011-09-01_2011-11-01/30_60/%s/%s_weights'%(no_of_hashtags, learning_type)
             map_from_ep_time_unit_to_no_of_locations_that_didnt_flip = {}
             map_from_location_to_previously_selected_model = {}
             for data in FileIO.iterateJsonFromFile(input_weight_file, True):
@@ -1392,22 +1393,31 @@ class PerformanceByLocationAnalysis(object):
                     ep_time_unit = data['tu']
                     no_of_locations_that_didnt_flip = 0.0 
                     for location, map_from_model_to_weight in map_from_location_to_map_from_model_to_weight.iteritems():
-        #                model_selected = LearningAnalysis.MAP_FROM_LEARNING_TYPE_TO_MODEL_SELECION_METHOD[learning_type](map_from_model_to_weight)
-                        model_selected = MAP_FROM_MODEL_TO_MODEL_TYPE[LearningAnalysis.MAP_FROM_LEARNING_TYPE_TO_MODEL_SELECION_METHOD[learning_type](map_from_model_to_weight)]
-                        if location in map_from_location_to_previously_selected_model and map_from_location_to_previously_selected_model[location]==model_selected: 
+                        model_selected = MAP_FROM_MODEL_TO_MODEL_TYPE\
+                            [LearningAnalysis.MAP_FROM_LEARNING_TYPE_TO_MODEL_SELECION_METHOD[learning_type]\
+                                                                                            (map_from_model_to_weight)]
+                        if location in map_from_location_to_previously_selected_model and \
+                                            map_from_location_to_previously_selected_model[location]==model_selected: 
                             no_of_locations_that_didnt_flip+=1
                         map_from_location_to_previously_selected_model[location] = model_selected
-                    map_from_ep_time_unit_to_no_of_locations_that_didnt_flip[ep_time_unit] = no_of_locations_that_didnt_flip
+                    map_from_ep_time_unit_to_no_of_locations_that_didnt_flip[ep_time_unit] = \
+                                                                                        no_of_locations_that_didnt_flip
             total_no_of_locations = len(map_from_location_to_previously_selected_model)
-            tuples_of_ep_time_unit_and_percentage_of_locations_that_flipped = [(ep_time_unit, 1.0 - (map_from_ep_time_unit_to_no_of_locations_that_didnt_flip[ep_time_unit]/total_no_of_locations)) 
-                                                                               for ep_time_unit in sorted(map_from_ep_time_unit_to_no_of_locations_that_didnt_flip)
+            tuples_of_ep_time_unit_and_percentage_of_locations_that_flipped = [
+                (ep_time_unit, 
+                 1.0 - (
+                        map_from_ep_time_unit_to_no_of_locations_that_didnt_flip[ep_time_unit]/total_no_of_locations)) 
+                                   for ep_time_unit in sorted(map_from_ep_time_unit_to_no_of_locations_that_didnt_flip)
                                                                             ]
             ep_first_time_unit = tuples_of_ep_time_unit_and_percentage_of_locations_that_flipped[0][0]
             x_data, y_data = zip(*tuples_of_ep_time_unit_and_percentage_of_locations_that_flipped)
             x_data, y_data = splineSmooth(x_data, y_data)
             plt.plot(
-                     [(x-ep_first_time_unit)/(60*60) for x in x_data], y_data, c=MAP_FROM_MODEL_TO_COLOR[learning_type], lw=2,
-                     label=PREDICTION_MODELS_PROPERTIES[learning_type]['label'], marker=MAP_FROM_MODEL_TO_MARKER[learning_type]
+                     [(x-ep_first_time_unit)/(60*60) 
+                        for x in x_data], y_data, c=MAP_FROM_MODEL_TO_COLOR[learning_type],
+                        lw=2,
+                        label=PREDICTION_MODELS_PROPERTIES[learning_type]['label'],
+                        marker=MAP_FROM_MODEL_TO_MARKER[learning_type]
                      )
         plt.legend()
         plt.xlabel('Learning lag (hours)', fontsize=18), plt.ylabel('Percentage of locations that flipped', fontsize=18)
