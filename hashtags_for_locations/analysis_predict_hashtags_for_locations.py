@@ -1346,11 +1346,39 @@ class PerformanceByLocationAnalysis(object):
         plt.grid(True)
         savefig(output_file)
     @staticmethod
+    def top_and_bottom_locations():
+        def get_top_and_bottom_locations(key):
+            ltuo_model_and_score = map(itemgetter(key), performances)
+            scores = [sorted(lt_m_and_s, key=itemgetter(1))[-1][1] for lt_m_and_s in ltuo_model_and_score]
+            ltuo_location_and_score = zip(locations, scores)
+            mf_boundary_to_ltuo_location_and_score = defaultdict(list)
+            for location, score in ltuo_location_and_score:
+                for id, boundary in zip(
+                                        ['us', 'sa', 'eu', 'sea'],
+                                        [us_boundary, south_america_boundary, eu_boundary, sea_boundry]
+                                    ):
+                    if isWithinBoundingBox(location, boundary):
+                        mf_boundary_to_ltuo_location_and_score[id].append((location, score))
+                        break
+            for boundary, ltuo_location_and_score in mf_boundary_to_ltuo_location_and_score.iteritems():
+                ltuo_location_and_score.sort(key=itemgetter(1))
+                print boundary
+                print ltuo_location_and_score[-5:]
+                print ltuo_location_and_score[:5]
+                exit()
+        raw_data = list(FileIO.iterateJsonFromFile(f_performance_by_location, True))
+        getLocation = lambda lid: getLocationFromLid(lid.replace('_', ' '))
+        locations = map(getLocation, map(itemgetter('location'), raw_data))
+        performances = map(itemgetter('performance_summary'), raw_data)
+        get_top_and_bottom_locations('impact')
+#        get_top_and_bottom_locations('accuracy', locations)
+    @staticmethod
     def run():
-        PerformanceByLocationAnalysis.location_distribution()
+#        PerformanceByLocationAnalysis.location_distribution()
 #        PerformanceByLocationAnalysis.model_distribution()
 #        PerformanceByLocationAnalysis.metric_distribution()
 #        PerformanceByLocationAnalysis.geo_area_specific_distribution()
+        PerformanceByLocationAnalysis.top_and_bottom_locations()
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
