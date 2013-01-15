@@ -56,7 +56,8 @@ from scipy.stats.stats import pearsonr
 ALL_LOCATIONS = 'all_locations'
 MAP_FROM_MODEL_TO_COLOR = dict([
                                 (PredictionModels.COVERAGE_DISTANCE, 'b'), (PredictionModels.COVERAGE_PROBABILITY, 'm'), (PredictionModels.SHARING_PROBABILITY, 'r'), (PredictionModels.TRANSMITTING_PROBABILITY, 'k'),
-                                (ModelSelectionHistory.FOLLOW_THE_LEADER, '#FF0A0A'), (ModelSelectionHistory.HEDGING_METHOD, '#9661FF'),
+#                                (ModelSelectionHistory.FOLLOW_THE_LEADER, '#FF0A0A'), (ModelSelectionHistory.HEDGING_METHOD, '#9661FF'),
+                                (ModelSelectionHistory.FOLLOW_THE_LEADER, 'r'), (ModelSelectionHistory.HEDGING_METHOD, 'b'),
                                 (PredictionModels.COMMUNITY_AFFINITY, '#436DFC'), (PredictionModels.SPATIAL, '#F15CFF'), (ALL_LOCATIONS, '#FFB44A')
                                 ])
 MAP_FROM_MODEL_TO_MARKER = dict([ 

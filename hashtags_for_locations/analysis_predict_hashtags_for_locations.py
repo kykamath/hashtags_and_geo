@@ -1428,11 +1428,12 @@ class PerformanceByLocationAnalysis(object):
             x_data, y_data = zip(*tuples_of_ep_time_unit_and_percentage_of_locations_that_flipped)
             x_data, y_data = splineSmooth(x_data, y_data)
             plt.plot(
-                     [(x-ep_first_time_unit)/(60*60) 
-                        for x in x_data], y_data, c=MAP_FROM_MODEL_TO_COLOR[learning_type],
+                        [(x-ep_first_time_unit)/(60*60) for x in x_data], 
+                        y_data,
+                        c=MAP_FROM_MODEL_TO_COLOR[learning_type],
                         lw=2,
                         label=PREDICTION_MODELS_PROPERTIES[learning_type]['label'],
-                        marker=MAP_FROM_MODEL_TO_MARKER[learning_type]
+#                        marker=MAP_FROM_MODEL_TO_MARKER[learning_type]
                      )
         plt.grid(True)
         plt.legend()
