@@ -8,9 +8,6 @@ Created on Jan 22, 2013
 
 from library.mrjobwrapper import runMRJob
 from mr_predict_hashtags_for_locations_jan_13 import HashtagsByModelsByLocations
-from mr_predict_hashtags_for_locations import PerformanceOfPredictingMethodsByVaryingParameter
-exit()
-
 
 dfs_input = 'hdfs:///user/kykamath/geo/hashtags/2011-09-01_2011-11-01/360_120/100/linear_regression'
 
