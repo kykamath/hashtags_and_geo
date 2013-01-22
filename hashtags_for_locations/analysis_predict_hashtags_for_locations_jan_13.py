@@ -3,6 +3,8 @@ Created on Jan 22, 2013
 
 @author: krishnakamath
 '''
+import sys
+sys.path.append('../')
 from library.file_io import FileIO
 from library.mrjobwrapper import runMRJob
 from mr_predict_hashtags_for_locations_jan_13 import HashtagsByModelsByLocations
