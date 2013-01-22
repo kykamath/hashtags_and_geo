@@ -1532,9 +1532,6 @@ class PerformanceByLocationAnalysis(object):
 #                                                                   4)
         
 if __name__ == '__main__':
-#    MRAnalysis.run()
+    MRAnalysis.run()
 #    PredictHashtagsForLocationsPlots.run()
 #    PerformanceByLocationAnalysis.run()
-    f_name = '/mnt/chevron/kykamath/data_from_dfs/geo/hashtags//2011-09-01_2011-11-01/360_120/100/linear_regression'
-    for data in FileIO.iterateJsonFromFile(f_name, remove_params_dict=True):
-        print data.keys()
