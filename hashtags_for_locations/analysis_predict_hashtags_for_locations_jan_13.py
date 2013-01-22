@@ -7,7 +7,7 @@ Created on Jan 22, 2013
 #sys.path.append('../')
 
 from library.mrjobwrapper import runMRJob
-#from mr_predict_hashtags_for_locations_jan_13 import HashtagsByModelsByLocations
+from mr_predict_hashtags_for_locations_jan_13 import HashtagsByModelsByLocations
 from mr_predict_hashtags_for_locations import PerformanceOfPredictingMethodsByVaryingParameter
 exit()
 
