@@ -238,7 +238,7 @@ class MRAnalysis():
 #        MRAnalysis.performance_of_predicting_by_varying_parameter(
 #                                                        f_performance_of_predicting_by_varying_historical_time_interval
 #                                                    )
-        MRAnalysis.performance_by_location()
+#        MRAnalysis.performance_by_location()
 #        input_files_start_time, input_files_end_time = \
 #                                datetime(2011, 2, 1), datetime(2012, 8, 31)
 #        MRAnalysis.hashtags_extractor(input_files_start_time, input_files_end_time)
@@ -251,6 +251,9 @@ class MRAnalysis():
 #        MRAnalysis.gap_occurrence_time_during_hashtag_lifetime()
 
 #        MRAnalysis.location_clusters()
+
+        for i in MRAnalysis.get_input_files(max_time=25):
+            print i
         
 class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
@@ -1531,4 +1534,7 @@ class PerformanceByLocationAnalysis(object):
 if __name__ == '__main__':
 #    MRAnalysis.run()
 #    PredictHashtagsForLocationsPlots.run()
-    PerformanceByLocationAnalysis.run()
+#    PerformanceByLocationAnalysis.run()
+    f_name = '/mnt/chevron/kykamath/data_from_dfs/geo/hashtags//2011-09-01_2011-11-01/360_120/100/linear_regression'
+    for data in FileIO.iterateJsonFromFile(f_name, remove_params_dict=True):
+        print data.keys()
