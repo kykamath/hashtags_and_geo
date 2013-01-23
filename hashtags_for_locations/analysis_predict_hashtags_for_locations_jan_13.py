@@ -24,11 +24,11 @@ class MRAnalysis(object):
     def get_input_files():
         for j in range(1, 7):
             predictionTimeInterval = timedelta(seconds=j*TIME_UNIT_IN_SECONDS)
-            yield '%s2011-09-01_2011-11-01/%s_%s/100/linear_regression'%(
-                                                                          dfs_data_folder,
-                                                                          360,
-                                                                          predictionTimeInterval.seconds/60
-                                                                        )
+            yield dfs_data_folder+'/%s_%s/100/linear_regression'%(
+                                                                  dfs_data_folder,
+                                                                  360,
+                                                                  predictionTimeInterval.seconds/60
+                                                                )
     @staticmethod
     def hashtags_by_models_by_locations():
         runMRJob(
