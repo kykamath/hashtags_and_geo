@@ -7,7 +7,7 @@ from library.mrjobwrapper import ModifiedMRJob
 from operator import itemgetter
 
 class HashtagsByModelsByLocations(ModifiedMRJob):
-    NUM_OF_HASHTAGS = 4
+    NUM_OF_HASHTAGS = 5
     def get_valid_locations(self, input_data):
         so_valid_locations = set(input_data['mf_location_to_ideal_hashtags_rank'])
         for model_id, locations in input_data['mf_model_id_to_mf_location_to_hashtags_ranked_by_model'].iteritems():
