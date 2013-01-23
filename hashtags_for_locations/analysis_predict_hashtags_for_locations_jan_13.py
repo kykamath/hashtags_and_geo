@@ -10,6 +10,7 @@ from library.geo import getLocationFromLid
 from library.geo import isWithinBoundingBox
 from library.mrjobwrapper import runMRJob
 from mr_predict_hashtags_for_locations_jan_13 import HashtagsByModelsByLocations
+from mr_predict_hashtags_for_locations_jan_13 import ModelPerformance
 from pprint import pprint
 import cjson
 
@@ -21,6 +22,7 @@ dfs_input = dfs_data_folder + '360_120/100/linear_regression'
 
 analysis_folder = '/mnt/chevron/kykamath/data/geo/hashtags/hashtags_for_locations/predict_hashtags_for_locations/%s'
 f_hashtags_by_models_by_locations = analysis_folder % 'hashtags_by_models_by_locations'
+f_model_performance = analysis_folder % 'model_performance'
 
 class MRAnalysis(object):
     @staticmethod
@@ -38,8 +40,17 @@ class MRAnalysis(object):
                     jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
                  )
     @staticmethod
+    def model_performance():
+        runMRJob(
+                    ModelPerformance,
+                    f_model_performance,
+                    [dfs_input],
+                    jobconf={'mapred.reduce.tasks':500, 'mapred.task.timeout': 86400000}
+                 )
+    @staticmethod
     def run():
-        MRAnalysis.hashtags_by_models_by_locations()
+#        MRAnalysis.hashtags_by_models_by_locations()
+        MRAnalysis.model_performance()
 
 class ModelAnalysis(object):
     @staticmethod
@@ -82,5 +93,5 @@ class ModelAnalysis(object):
     def run():
         ModelAnalysis.hashtags_by_models_by_locations()
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    ModelAnalysis.run()    
+    MRAnalysis.run()
+#    ModelAnalysis.run()    
