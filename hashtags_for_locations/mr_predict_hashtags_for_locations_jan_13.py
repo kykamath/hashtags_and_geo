@@ -68,6 +68,14 @@ class EvaluationMetric(object):
         return total_perct_for_predicted_hashtags / float(total_perct_for_best_hashtags)
 
 class ModelPerformance(ModifiedMRJob):
+    '''
+    {"impact": 0.604764725024, "model_id": "coverage_probability", "accuracy": 0.6034044844}
+    {"impact": 0.624693747479, "model_id": "sharing_probability", "accuracy": 0.624862579138}
+    {"impact": 0.55400380168, "model_id": "random", "accuracy": 0.546494249374}
+    {"impact": 0.554855005622, "model_id": "greedy", "accuracy": 0.547185442956}
+    {"impact": 0.643436165267, "model_id": "coverage_distance", "accuracy": 0.642744052605}
+    {"impact": 0.62860791449, "model_id": "transmitting_probability", "accuracy": 0.628443667028}
+    '''
     NUM_OF_HASHTAGS = 10
     def __init__(self, *args, **kwargs):
         super(ModelPerformance, self).__init__(*args, **kwargs)
