@@ -97,5 +97,5 @@ class ModelAnalysis(object):
     def run():
         ModelAnalysis.hashtags_by_models_by_locations()
 if __name__ == '__main__':
-#    MRAnalysis.run()
-    ModelAnalysis.run()    
+    MRAnalysis.run()
+#    ModelAnalysis.run()    
