@@ -49,8 +49,8 @@ class MRAnalysis(object):
                  )
     @staticmethod
     def run():
-#        MRAnalysis.hashtags_by_models_by_locations()
-        MRAnalysis.model_performance()
+        MRAnalysis.hashtags_by_models_by_locations()
+#        MRAnalysis.model_performance()
 
 class ModelAnalysis(object):
     @staticmethod
