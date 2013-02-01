@@ -76,7 +76,7 @@ class ModelPerformance(ModifiedMRJob):
     {"impact": 0.643436165267, "model_id": "coverage_distance", "accuracy": 0.642744052605}
     {"impact": 0.62860791449, "model_id": "transmitting_probability", "accuracy": 0.628443667028}
     '''
-    NUM_OF_HASHTAGS = 10
+    NUM_OF_HASHTAGS = 5
     def __init__(self, *args, **kwargs):
         super(ModelPerformance, self).__init__(*args, **kwargs)
         self.hashtags_by_models_by_locations = HashtagsByModelsByLocations(num_of_hashtags=1)
