@@ -25,6 +25,7 @@ class HashtagsByModelsByLocations(ModifiedMRJob):
                 if location not in output_data['locations']: output_data['locations'][location] = {}
                 output_data['locations'][location]['ideal_ranking'] = \
                                                     ideal_hashtags_rank[:self.num_of_hashtags]
+                output_data['locations'][location]['all_ideal_hashtags'] = ideal_hashtags_rank                  
     def get_model_predicted_hashtags(
                                      self,
                                      mf_model_id_to_mf_location_to_hashtags_ranked_by_model,
@@ -36,8 +37,8 @@ class HashtagsByModelsByLocations(ModifiedMRJob):
             for location, hashtags_ranked_by_model in mf_location_to_hashtags_ranked_by_model.iteritems():
                 if location in valid_locations:
                     hashtags_ranked_by_model.sort(key=itemgetter(1), reverse=True)
-#                    hashtags = zip(*hashtags_ranked_by_model[:self.num_of_hashtags])[0]
-                    hashtags = hashtags_ranked_by_model[:self.num_of_hashtags]
+                    hashtags = zip(*hashtags_ranked_by_model[:self.num_of_hashtags])[0]
+#                    hashtags = hashtags_ranked_by_model[:self.num_of_hashtags]
                     if location not in output_data['locations']: output_data['locations'][location] = {}
                     output_data['locations'][location][model_id] = list(hashtags)
     def filter_locations(self, output_data):

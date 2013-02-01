@@ -73,7 +73,8 @@ class ModelAnalysis(object):
         def get_distance(ltuo_meta_and_ltuo_model_id_and_similarity_score):
             _, _, _, ltuo_model_id_and_similarity_score = ltuo_meta_and_ltuo_model_id_and_similarity_score
             mf_model_id_to_similarity_score = dict(ltuo_model_id_and_similarity_score)
-            return mf_model_id_to_similarity_score['transmitting_probability'] - mf_model_id_to_similarity_score['greedy']
+            return mf_model_id_to_similarity_score['transmitting_probability'] - \
+                                                                            mf_model_id_to_similarity_score['greedy']
         ltuo_meta_and_ltuo_model_id_and_similarity_score = []
         for data in FileIO.iterateJsonFromFile(f_hashtags_by_models_by_locations, True):
             ltuo_location_and_mf_model_id_to_hashtags = filter(get_valid_location, data['locations'].iteritems())
@@ -82,16 +83,19 @@ class ModelAnalysis(object):
                 ideal_ranking = set(zip(*mf_model_id_to_hashtags['ideal_ranking'])[0])
                 for model_id, hashtags in mf_model_id_to_hashtags.iteritems():
                     if model_id not in 'ideal_ranking':
-                        ltuo_model_id_and_similarity_score += [(model_id, len(ideal_ranking.intersection(set(hashtags))))]
+                        hashtags = list(set(zip(*hashtags)[0]))
+                        ltuo_model_id_and_similarity_score += \
+                                                        [(model_id, len(ideal_ranking.intersection(set(hashtags))))]
                 ltuo_meta_and_ltuo_model_id_and_similarity_score += \
-                                    [[data['tu'], location, mf_model_id_to_hashtags, ltuo_model_id_and_similarity_score]]
+                                [[data['tu'], location, mf_model_id_to_hashtags, ltuo_model_id_and_similarity_score]]
         ltuo_meta_and_ltuo_model_id_and_similarity_score.sort(key=get_distance)
         for data in ltuo_meta_and_ltuo_model_id_and_similarity_score:
-            print cjson.encode(data)
-            print data[1], data[-1]
+            if data[0] == 1316570400 and data[1] == '40.7450_-73.9500':
+                print cjson.encode(data)
+#            print data[1], data[-1]
     @staticmethod
     def run():
         ModelAnalysis.hashtags_by_models_by_locations()
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    ModelAnalysis.run()    
+#    MRAnalysis.run()
+    ModelAnalysis.run()    
