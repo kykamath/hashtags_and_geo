@@ -71,11 +71,11 @@ class ModelAnalysis(object):
                                         '["dudesthatsaynohomo",0.142857142857],["takewallstreet",0.142857142857]]'
         mf_hashtag_to_value = dict(cjson.decode(data))
         def accuracy(hashtags, mf_hashtag_to_value):
-            return set(hashtags).intersection(set(mf_hashtag_to_value.keys()))/5.
+            return len(set(hashtags).intersection(set(mf_hashtag_to_value.keys())))/5.
         def impact(hashtags, mf_hashtag_to_value): 
             total = sum(mf_hashtag_to_value.values())
             val = sum([mf_hashtag_to_value.get(h, 0.0) for h in hashtags])
-            return total/val
+            return val/total
         def get_valid_location((location, mf_model_id_to_hashtags)):
             location = getLocationFromLid(location.replace('_', ' '))
             return isWithinBoundingBox(location, US_BOUNDARY)
@@ -100,11 +100,17 @@ class ModelAnalysis(object):
         ltuo_meta_and_ltuo_model_id_and_similarity_score.sort(key=get_distance)
         for data in ltuo_meta_and_ltuo_model_id_and_similarity_score:
             if data[0] == 1316570400 and data[1] == '40.7450_-73.9500':
-                print cjson.encode(data)
+                print data[:2]
+                mf_model_to_hashtags = data[2]
+                for model, hashtags in mf_model_to_hashtags.iteritems():
+                    if type(hashtags[0]) != type([]):
+                        print '%0.2f'%accuracy(hashtags, mf_hashtag_to_value), \
+                                                        '%0.2f'%impact(hashtags, mf_hashtag_to_value), model, hashtags
+                exit()
 #            print data[1], data[-1]
     @staticmethod
     def run():
         ModelAnalysis.hashtags_by_models_by_locations()
 if __name__ == '__main__':
-    MRAnalysis.run()
-#    ModelAnalysis.run()    
+#    MRAnalysis.run()
+    ModelAnalysis.run()    
