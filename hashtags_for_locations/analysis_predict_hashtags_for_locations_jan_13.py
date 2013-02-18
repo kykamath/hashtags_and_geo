@@ -67,6 +67,15 @@ class ModelAnalysis(object):
         },
         [["sharing_probability",3],["transmitting_probability",4],["coverage_distance",4],["coverage_probability",2],["random",1],["greedy",1]]]
         '''
+        data = '[["faze3",0.285714285714],["terriblenamesforavagina",0.285714285714],["cgi2011",0.142857142857],' + \
+                                        '["dudesthatsaynohomo",0.142857142857],["takewallstreet",0.142857142857]]'
+        mf_hashtag_to_value = dict(cjson.decode(data))
+        def accuracy(hashtags, mf_hashtag_to_value):
+            return set(hashtags).intersection(set(mf_hashtag_to_value.keys()))/5.
+        def impact(hashtags, mf_hashtag_to_value): 
+            total = sum(mf_hashtag_to_value.values())
+            val = sum([mf_hashtag_to_value.get(h, 0.0) for h in hashtags])
+            return total/val
         def get_valid_location((location, mf_model_id_to_hashtags)):
             location = getLocationFromLid(location.replace('_', ' '))
             return isWithinBoundingBox(location, US_BOUNDARY)
