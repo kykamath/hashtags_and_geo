@@ -63,8 +63,8 @@ import time
 TIME_UNIT_IN_SECONDS = 60*60
 
 PREDICTION_MODELS_PROPERTIES = {
-                                 'follow_the_leader': {'label': 'Deterministic Rein. Learning', 'marker': 'd'},
-                                 'hedging_method': {'label': 'Randomized Rein. Learning', 'marker': '>'},
+                                 'follow_the_leader': {'label': 'Det. Rein. Learning', 'marker': 'd'},
+                                 'hedging_method': {'label': 'Ran. Rein. Learning', 'marker': '>'},
                                  }
 
 dfs_data_folder = 'hdfs:///user/kykamath/geo/hashtags/'
@@ -1397,7 +1397,7 @@ class PerformanceByLocationAnalysis(object):
 #        get_top_and_bottom_locations('accuracy', locations)
     @staticmethod
     def learner_flipping_time_series(learning_types, no_of_hashtags):
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
         for learning_type in learning_types:
@@ -1439,12 +1439,14 @@ class PerformanceByLocationAnalysis(object):
 #                        marker=MAP_FROM_MODEL_TO_MARKER[learning_type]
                      )
         plt.grid(True)
-        plt.legend()
+#        plt.legend()
+        leg = plt.legend(loc=1, ncol=1, fancybox=True)
+        leg.get_frame().set_alpha(0.5)
         plt.xlabel('Time (hours)'), plt.ylabel('% of locations that flipped')
         savefig(fld_google_drive_data_analysis%'learner_flipping_time_series.png')    
     @staticmethod
     def flipping_ratio_correlation_with_no_of_occurrences_at_location(learning_types, no_of_hashtags):
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.3,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
         for learning_type in learning_types:
@@ -1533,5 +1535,5 @@ class PerformanceByLocationAnalysis(object):
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
-    PredictHashtagsForLocationsPlots.run()
-#    PerformanceByLocationAnalysis.run()
+#    PredictHashtagsForLocationsPlots.run()
+    PerformanceByLocationAnalysis.run()
