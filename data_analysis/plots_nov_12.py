@@ -148,7 +148,7 @@ class DataAnalysis():
         x_distances, y_affinity_scores = zip(*sorted(ltuo_distance_and_affinity_score, key=itemgetter(0)))
         if type=='adoption_lag': 
             y_affinity_scores = [y/(60.*60.*60) for y in y_affinity_scores]
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.3,3))
         plt.subplots_adjust(bottom=0.2, top=0.9, wspace=0, hspace=0)
         x_distances, y_affinity_scores = splineSmooth(x_distances, y_affinity_scores)
         plt.semilogx(x_distances, y_affinity_scores, c='k', lw=2)
@@ -525,7 +525,7 @@ class DataAnalysis():
                                                                         ltuo_normalized_iid_and_tuo_prct_of_occurrences_and_entropy_and_focus_and_coverage
                                                                   ])
                                                         )
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.3,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
         plt.xlim(xmin=-20, xmax=200)
@@ -538,7 +538,7 @@ class DataAnalysis():
         savefig(output_file_format%'coverage')
         plt.clf() 
         
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.3,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
         plt.xlim(xmin=-20, xmax=120)
@@ -551,7 +551,7 @@ class DataAnalysis():
         savefig(output_file_format%'entropy')
         plt.clf() 
         
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.3,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
         plt.xlim(xmin=-20, xmax=400)
@@ -564,7 +564,7 @@ class DataAnalysis():
         savefig(output_file_format%'distace_from_overall_entropy')
         plt.clf()   
         
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.3,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
         plt.xlim(xmin=-20, xmax=120)
@@ -577,7 +577,7 @@ class DataAnalysis():
         savefig(output_file_format%'focus')
         plt.clf()
         
-        plt.figure(num=None, figsize=(6,3))
+        plt.figure(num=None, figsize=(4.3,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
         plt.xlim(xmin=-20, xmax=400)
@@ -635,8 +635,8 @@ class DataAnalysis():
 #        DataAnalysis.hashtag_locations_distribution_loglog()
 #        DataAnalysis.fraction_of_occurrences_vs_rank_of_location()
 #        DataAnalysis.top_k_locations_on_world_map()
-#        DataAnalysis.content_affinity_vs_distance()
-#        DataAnalysis.temporal_affinity_vs_distance()
+        DataAnalysis.content_affinity_vs_distance()
+        DataAnalysis.temporal_affinity_vs_distance()
 #        DataAnalysis.spatial_metrics_cdf()
 #        DataAnalysis.spatial_metrics_vs_occurrence_count()
 #        DataAnalysis.ef_plot()
@@ -646,7 +646,7 @@ class DataAnalysis():
 #        DataAnalysis.ef_plots_for_peak()
 #        DataAnalysis.norm_iid_vs_locality_measuers()
 #        DataAnalysis.entropy_examples()
-        DataAnalysis.example_for_caverlee()
+#        DataAnalysis.example_for_caverlee()
 if __name__ == '__main__':
     DataAnalysis.run()
     
