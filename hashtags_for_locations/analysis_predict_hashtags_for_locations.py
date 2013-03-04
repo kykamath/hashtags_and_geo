@@ -259,17 +259,17 @@ class PredictHashtagsForLocationsPlots():
     mf_prediction_method_to_properties_dict =\
                                  {
                                    PREDICTION_METHOD_ID_FOLLOW_THE_LEADER : {
-                                                                             'label': 'Follow the leader',
+                                                                             'label': 'Det. Rein. Learning',
                                                                              'marker': 'o',
                                                                              'color': 'r',
                                                                              },
                                    PREDICTION_METHOD_ID_HEDGING : {
-                                                                     'label': 'Hedging',
+                                                                     'label': 'Ran. Rein. Learning',
                                                                      'marker': '*',
                                                                      'color': 'b',
                                                                  },
                                    PREDICTION_METHOD_ID_LEARNING_TO_RANK : {
-                                                                             'label': 'Learning to rank',
+                                                                             'label': 'Linear regression',
                                                                              'marker': 's',
                                                                              'color': 'g',
                                                                              }
@@ -1179,8 +1179,8 @@ class PredictHashtagsForLocationsPlots():
         
     @staticmethod
     def run():
-#        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
-#        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
+        PredictHashtagsForLocationsPlots.performance_by_varying_num_of_hashtags()
+        PredictHashtagsForLocationsPlots.performance_by_varying_prediction_time_interval()
         PredictHashtagsForLocationsPlots.performance_by_varying_historical_time_interval()
 #        PredictHashtagsForLocationsPlots.ccdf_num_of_utmids_where_hashtag_propagates()
 
@@ -1397,7 +1397,7 @@ class PerformanceByLocationAnalysis(object):
 #        get_top_and_bottom_locations('accuracy', locations)
     @staticmethod
     def learner_flipping_time_series(learning_types, no_of_hashtags):
-        plt.figure(num=None, figsize=(4.,3))
+        plt.figure(num=None, figsize=(6.,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
         for learning_type in learning_types:
@@ -1439,14 +1439,14 @@ class PerformanceByLocationAnalysis(object):
 #                        marker=MAP_FROM_MODEL_TO_MARKER[learning_type]
                      )
         plt.grid(True)
-#        plt.legend()
-        leg = plt.legend(loc=1, ncol=1, fancybox=True)
-        leg.get_frame().set_alpha(0.5)
+        plt.legend()
+#        leg = plt.legend(loc=1, ncol=1, fancybox=True)
+#        leg.get_frame().set_alpha(0.5)
         plt.xlabel('Time (hours)'), plt.ylabel('% of locations that flipped')
         savefig(fld_google_drive_data_analysis%'learner_flipping_time_series.png')    
     @staticmethod
     def flipping_ratio_correlation_with_no_of_occurrences_at_location(learning_types, no_of_hashtags):
-        plt.figure(num=None, figsize=(4.3,3))
+        plt.figure(num=None, figsize=(6,3))
         plt.subplots_adjust(bottom=0.2, top=0.9)
         plt.subplot(111)
         for learning_type in learning_types:
@@ -1526,14 +1526,14 @@ class PerformanceByLocationAnalysis(object):
                                                                     ModelSelectionHistory.HEDGING_METHOD
                                                                     ],
                                                                    4)
-#        PerformanceByLocationAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location(
-#                                                                   [
-#                                                                    ModelSelectionHistory.FOLLOW_THE_LEADER,
-##                                                                    ModelSelectionHistory.HEDGING_METHOD
-#                                                                    ],
-#                                                                   4)
+        PerformanceByLocationAnalysis.flipping_ratio_correlation_with_no_of_occurrences_at_location(
+                                                                   [
+                                                                    ModelSelectionHistory.FOLLOW_THE_LEADER,
+#                                                                    ModelSelectionHistory.HEDGING_METHOD
+                                                                    ],
+                                                                   4)
         
 if __name__ == '__main__':
 #    MRAnalysis.run()
-#    PredictHashtagsForLocationsPlots.run()
-    PerformanceByLocationAnalysis.run()
+    PredictHashtagsForLocationsPlots.run()
+#    PerformanceByLocationAnalysis.run()
