@@ -492,12 +492,13 @@ class GenerateDataForPublic(ModifiedMRJob):
     def mapper(self, key, hashtag_object):
         def get_time_and_lat_long((t, lid)):
             return {'t': t, 'loc': UTMConverter.getLatLongUTMIdInLatLongForm(lid)}
-        hashtag = hashtag_object['hashtag']
-        ltuo_occ_time_and_occ_location = hashtag_object['ltuo_occ_time_and_occ_location']
-        if ltuo_occ_time_and_occ_location:
-            output_data = {'hashtag': hashtag, 'num_of_occurrences': len(ltuo_occ_time_and_occ_location)}
-            output_data['occurrences'] = map(get_time_and_lat_long, ltuo_occ_time_and_occ_location)
-            yield hashtag, output_data
+        if hashtag_object and 'hashtag' in hashtag_object:
+            hashtag = hashtag_object['hashtag']
+            ltuo_occ_time_and_occ_location = hashtag_object['ltuo_occ_time_and_occ_location']
+            if ltuo_occ_time_and_occ_location:
+                output_data = {'hashtag': hashtag, 'num_of_occurrences': len(ltuo_occ_time_and_occ_location)}
+                output_data['occurrences'] = map(get_time_and_lat_long, ltuo_occ_time_and_occ_location)
+                yield hashtag, output_data
 
 if __name__ == '__main__':
 #    DataStats.run()
