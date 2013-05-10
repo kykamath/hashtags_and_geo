@@ -41,6 +41,7 @@ f_hashtag_objects_on_dfs = 'hdfs:///user/kykamath/geo/hashtags/2011_2_to_2012_10
 f_data_stats = fld_data_analysis+'/data_stats'
 f_dense_data_stats = fld_data_analysis+'/dense_data_stats'
 f_example_for_caverlee = fld_data_analysis+'/example_for_caverlee' 
+f_generate_data_for_public = fld_data_analysis+'/hashtag_occurrence_data' 
 f_hashtag_objects = fld_data_analysis+'/hashtag_objects'
 f_hashtag_and_location_distribution = fld_data_analysis+'/hashtag_and_location_distribution'
 f_dense_hashtag_distribution_in_locations = fld_data_analysis+'/dense_hashtag_distribution_in_locations'
